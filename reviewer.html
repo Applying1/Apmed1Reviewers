@@ -637,9 +637,13 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 .exmin{width:72px;padding:5px 8px}
 .exmin+span{font-size:13px;color:var(--mute)}
 #excard .typein{margin-top:4px}
+/* "All courses" sits above the course name as a small back link, apart from the page tabs */
+.homelink{display:inline-flex;align-items:center;gap:3px;margin:-4px 0 12px 4px;padding:3px 8px 3px 4px;border-radius:7px;font-size:12.5px;font-weight:500;color:var(--faint);text-decoration:none;transition:color .15s,background .15s}
+.homelink:hover,.homelink:focus-visible{color:var(--text);background:var(--raised)}
 </style></head><body>
 <div class="app" id="app">
  <aside class="side" id="side" aria-label="Navigation">
+  <a class="homelink" id="homelink" hidden><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>All courses</a>
   <div class="brand"><img class="logo" id="logo" src="icons/icon-192.png" alt="" width="34" height="34"><div><b id="brandtitle">Study Reviewer</b><span id="brandsub"></span></div></div>
   <div class="scopesw" id="scopesw" hidden></div>
   <div class="pages" id="pages"></div>
