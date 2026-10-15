@@ -509,8 +509,13 @@ const NOTES_PARSED=(NOTES_DATA||[]).map(([ch,groups])=>({ch:String(ch),groups:gr
 let notesCh='all',notesQ='';
 function openNotes(ch){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh&&inScopeCh(n.ch)))notesCh='all';notesQ='';
  if(page==='notes'){draw();window.scrollTo(0,0)}else setPage('notes')}
+/* Full documents (e.g. the transes PDF): CONFIG.docs = [{title, file}], file relative to the website.
+   The file version opens the website's copy (through CONFIG.shareUrl). */
+const DOCS=(CONFIG.docs||[]).filter(d=>d&&d.file);
+function docURL(d){if(/^https?:/i.test(d.file)||/^https?:$/.test(location.protocol))return d.file;try{return new URL(d.file,CONFIG.shareUrl).href}catch(e){return ''}}
 function drawNotes(){
  $('nChartBtn').hidden=!chartsOn();
+ $('ndocs').innerHTML=DOCS.map(d=>{const u=docURL(d);return u?'<a class="btn sm docbtn" href="'+esc(u)+'" target="_blank" rel="noopener" title="Opens in a new tab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>'+esc(d.title||'Full transes')+'</a>':''}).join('');
  document.title='Notes · '+CONFIG.title;
  const chips=[['all','All']].concat(NOTES_PARSED.filter(n=>inScopeCh(n.ch)).map(n=>[n.ch,esc(UNIT)+' '+esc(n.ch)+' · '+esc(CH_NAMES[n.ch]||'')]));
  $('nchips').innerHTML=chips.map(([k,t])=>'<button class="fchip '+(k===notesCh?'on':'')+'" aria-pressed="'+(k===notesCh)+'" onclick="notesCh=\''+k+'\';drawNotes()">'+t+'</button>').join('');
@@ -985,6 +990,7 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ ...(DOCS.length?[{v:'16',date:'Oct 17, 2026',title:'Full transes',items:['<b>Notes → Full transes</b> opens the complete transes (PDF) in a new tab, to read or download.']}]:[]),
  {v:'15',date:'Oct 17, 2026',title:'Answer sheet exams',items:[
   '<b>Mock exam → Format → Answer sheet:</b> like the real exam. The whole test paper is on one page and you shade A–D on a separate answer sheet (beside the paper on a computer, a slide-up drawer on a phone). Tap a question to find its row; tap a shaded bubble again to erase it.']},
  ...(cloudOn()?[{v:'14',date:'Oct 16, 2026',title:'Smoother sync',items:[
