@@ -1,6 +1,6 @@
 // Offline support. Pages, code and course files are fetched fresh when online (so fixes show up right away)
 // and served from the cache when offline. Fonts are cached after first use.
-const CACHE = 'reviewers-v2';
+const CACHE = 'reviewers-v3';
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
@@ -31,16 +31,18 @@ self.addEventListener('fetch', e => {
   if (url.origin === location.origin) {
     e.respondWith((async () => {
       const c = await caches.open(CACHE);
+      const nav = req.mode === 'navigate';
       try {
-        // no-cache: always ask GitHub whether the file changed (a cheap check when it did not),
-        // instead of trusting the browser's 10-minute cache.
-        const res = await (req.mode === 'navigate' ? fetch(req.url, { cache: 'no-cache' }) : fetch(req, { cache: 'no-cache' }));
-        if (res.ok) c.put(req, res.clone());
+        // Pages load exactly as the browser asked. Code and course files use no-cache: always ask GitHub
+        // whether they changed (a cheap check when they did not) instead of trusting the 10-minute cache.
+        const res = await (nav ? fetch(req) : fetch(req, { cache: 'no-cache' }));
+        if (res.ok && !url.search) c.put(req, res.clone());
         return res;
       } catch (err) {
-        // reviewer.html?course=x is cached once as reviewer.html, so ignore the query for it.
-        return (await c.match(req, { ignoreSearch: url.pathname.endsWith('reviewer.html') }))
-          || (req.mode === 'navigate' && await c.match('index.html')) || Response.error();
+        // Offline or blocked: serve the saved copy. Links shared on Facebook/Messenger carry ?fbclid=...,
+        // so match without the query; a page we never saved falls back to the home screen.
+        const page = url.pathname.endsWith('reviewer.html') ? 'reviewer.html' : nav ? 'index.html' : null;
+        return (await c.match(req, { ignoreSearch: true })) || (page && await c.match(page)) || Response.error();
       }
     })());
   } else if (/^fonts\.(googleapis|gstatic)\.com$/.test(url.hostname)) {

@@ -74,6 +74,8 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
 </main>
 <script>
+// Links shared on Facebook/Messenger get ?fbclid=... added; drop it so the address stays clean when copied again.
+if(/[?&](fbclid|utm_[a-z]+|gclid)=/.test(location.search))history.replaceState(null,'',location.pathname);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function ago(t){const d=Math.floor((Date.now()-t)/864e5);return d<=0?'today':d===1?'yesterday':d+' days ago'}
 function summary(key){try{return JSON.parse(localStorage.getItem(key+'_summary'))}catch(e){return null}}
