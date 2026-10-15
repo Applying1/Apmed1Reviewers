@@ -1,6 +1,6 @@
 // Offline support. Pages, code and course files are fetched fresh when online (so fixes show up right away)
 // and served from the cache when offline. Fonts are cached after first use.
-const CACHE = 'reviewers-v1';
+const CACHE = 'reviewers-v2';
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
@@ -32,7 +32,9 @@ self.addEventListener('fetch', e => {
     e.respondWith((async () => {
       const c = await caches.open(CACHE);
       try {
-        const res = await fetch(req);
+        // no-cache: always ask GitHub whether the file changed (a cheap check when it did not),
+        // instead of trusting the browser's 10-minute cache.
+        const res = await (req.mode === 'navigate' ? fetch(req.url, { cache: 'no-cache' }) : fetch(req, { cache: 'no-cache' }));
         if (res.ok) c.put(req, res.clone());
         return res;
       } catch (err) {
