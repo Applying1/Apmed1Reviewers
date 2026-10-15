@@ -587,6 +587,41 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
  .ngrid{grid-template-columns:1fr}
  .meter .labels{flex-wrap:wrap}
 }
+/* Class challenge, your own question sets, flags */
+.prow .ctl{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.setsw.many{display:flex;flex-wrap:wrap}
+.setsw.many button{flex:1 1 40%}
+.flagbtn{margin-right:-2px}
+.flagbtn:hover{color:var(--accent)}
+.box.setbox{max-width:640px;width:100%;max-height:92vh;overflow-y:auto}
+.fl{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600}
+.fl .txt{flex:1;width:auto;min-width:0}
+.setta{display:block;width:100%;min-height:200px;margin-top:12px;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical}
+.setbar{display:flex;align-items:flex-start;gap:12px;margin-top:10px}
+.setbar .btn{flex:none}
+.setinfo{font-size:13.5px;color:var(--mute);padding-top:6px;min-width:0}
+.setinfo b{color:var(--text)}
+.setprob{margin:6px 0 0;padding-left:18px;color:var(--bad);font-size:12.5px}
+.sethelp{margin-top:14px;font-size:13.5px;color:var(--mute)}
+.sethelp summary{cursor:pointer;font-weight:600;color:var(--text)}
+.modal .sethelp p{margin:8px 0;font-size:13.5px}
+.sethelp pre{margin:8px 0;padding:10px 12px;border-radius:9px;background:var(--raised);border:1px solid var(--line);font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--text);white-space:pre-wrap}
+.setacts{display:flex;align-items:center;gap:10px;margin-top:18px}
+.setacts span{flex:1}
+.exstart{gap:10px;flex-wrap:wrap}
+.exstart .btn svg{flex:none}
+.chalbox{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.chalrow{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13.5px;font-weight:600}
+.chalbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chalurl{flex:1;min-width:200px;width:auto;font-size:13px;color:var(--mute)}
+.chalfoot{margin:8px 0 0;font-size:13px;color:var(--mute)}
+.chalnote{color:var(--mute);font-size:14px;margin:10px 0 0;max-width:62ch}
+.chalnote b{color:var(--text)}
+.chalwarn{font-size:13.5px;margin:12px 0 0;padding:9px 12px;border-radius:10px;background:var(--amber-bg);color:var(--amber)}
+.exres .eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+.sqrow{margin-top:12px;font-size:17px;letter-spacing:2px;line-height:1.5;word-break:break-all}
+.toast{position:fixed;left:50%;bottom:24px;z-index:40;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:11px 16px;border-radius:12px;background:var(--text);color:var(--bg);font-size:14px;font-weight:500;box-shadow:0 6px 24px #0003;animation:toastin .2s var(--ease)}
+@keyframes toastin{from{opacity:0;transform:translate(-50%,8px)}}
 </style></head><body>
 <div class="app" id="app">
  <aside class="side" id="side" aria-label="Navigation">
@@ -663,7 +698,7 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
   <div class="view" id="examView" hidden>
    <div class="top">
     <button class="icon menu" onclick="toggleNav(true)" aria-label="Open navigation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <div style="min-width:0"><div class="crumb">Mock exam</div><h1 id="extitle">Mock exam</h1></div>
+    <div style="min-width:0"><div class="crumb" id="excrumb">Mock exam</div><h1 id="extitle">Mock exam</h1></div>
     <button class="icon" id="exChartBtn" onclick="openCharts()" aria-label="Charts" title="Charts" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg></button>
     <span class="extimer" id="extimer" role="timer" aria-label="Time left" hidden></span>
    </div>
@@ -683,6 +718,32 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 <div class="modal" id="charts" hidden onclick="if(event.target===this)closeCharts()"><div class="box chartbox" role="dialog" aria-modal="true" aria-labelledby="chh"><div class="chhead"><h2 id="chh">Charts</h2><span class="seg" id="chtabs" role="tablist" aria-label="Chart"></span><button class="icon close" onclick="closeCharts()" aria-label="Close charts"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div id="chbody"></div></div></div>
 <div class="modal" id="news" hidden onclick="if(event.target===this)closeNews()"><div class="box news" role="dialog" aria-modal="true" aria-labelledby="newsh"><h2 id="newsh">What's new</h2><p>How the reviewer has changed, newest first.</p><div id="newsbody"></div><button class="btn primary" onclick="closeNews()">Close</button></div></div>
 <div class="modal" id="dialog" hidden><div class="box"><h2>All done</h2><p id="modalbody"></p><button class="btn primary" onclick="closeDialog()">Close</button></div></div>
+<div class="modal" id="setmodal" hidden><div class="box setbox" role="dialog" aria-modal="true" aria-labelledby="seth">
+ <h2 id="seth">Add a question set</h2>
+ <p>Paste questions or upload a .txt or .csv file. The set gets its own tab with its own progress, saved in this browser.</p>
+ <label class="fl"><span>Name</span><input class="txt" id="setname" maxlength="30" placeholder="For example: Yuri's set" autocomplete="off"></label>
+ <textarea class="txt setta" id="settext" spellcheck="false" aria-label="Questions" placeholder="Q: Who is called the father of medicine?&#10;A: Hippocrates&#10;X: Galen&#10;X: Imhotep&#10;X: Avicenna" oninput="clearTimeout(setTimer);setTimer=setTimeout(setPreview,250)"></textarea>
+ <div class="setbar"><button class="btn sm" onclick="setUpload()">Upload file</button><div class="setinfo" id="setinfo" aria-live="polite"></div></div>
+ <details class="sethelp"><summary>How to write questions</summary>
+  <p>Leave a blank line between questions. Give the right answer on an A: line and wrong ones on X: lines, or number the question and mark the right choice with *. Up to 5 choices.</p>
+  <pre># Topic name (optional)
+Q: Who is called the father of medicine?
+A: Hippocrates
+X: Galen
+X: Imhotep
+Why: An explanation (optional)
+Hint: A hint (optional)
+
+1. Which river runs through Egypt?
+a. Tigris
+*b. Nile
+c. Euphrates</pre>
+  <p><b>CSV or Google Sheets:</b> one question per row: question, answer, then the wrong answers. A header row can name the columns question, answer, wrong, why, hint and topic. You can also paste the cells straight from the sheet.</p>
+  <p>A topic that starts with a section number of this reviewer, like <b id="secex">1-1</b>, puts its questions into that section.</p>
+ </details>
+ <div class="setacts"><button class="link danger" id="setdel" onclick="deleteSet()" hidden>Delete this set</button><span></span><button class="btn" onclick="closeSetEditor()">Cancel</button><button class="btn primary" id="setsave" onclick="saveSet()" disabled>Save set</button></div>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script>
 // Load the course named in ?course=<id> from courses/<id>.json, then start the shared engine.
 (async function(){
