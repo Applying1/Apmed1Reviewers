@@ -7,11 +7,16 @@
   "itemWord": "question",
   "count": 460,
   "storageKey": "study_reviewer_iml_history_of_medicine_2026_v1",
-  "image": "",
+  "image": "courses/iml/topic-1.jpg",
   "extras": [
    "Yuri"
   ],
-  "assets": []
+  "assets": [
+   "courses/iml/topic-1.jpg",
+   "courses/iml/topic-2.jpg",
+   "courses/iml/topic-3.jpg",
+   "courses/iml/topic-4.jpg"
+  ]
  },
  {
   "id": "psych",
@@ -34,13 +39,17 @@
  {
   "id": "purcom",
   "title": "PurCom Reviewer",
-  "scope": "Midterm: Phonetics, Inclusive Language, Registers",
+  "scope": "Midterm: Registers, Inclusive Language, Phonetics",
   "unit": "Topic",
   "itemWord": "question",
   "count": 299,
   "storageKey": "study_reviewer_purcom_midterm_2026_v1",
-  "image": "",
+  "image": "courses/purcom/topic-1.jpg",
   "extras": [],
-  "assets": []
+  "assets": [
+   "courses/purcom/topic-1.jpg",
+   "courses/purcom/topic-2.jpg",
+   "courses/purcom/topic-3.jpg"
+  ]
  }
 ]
