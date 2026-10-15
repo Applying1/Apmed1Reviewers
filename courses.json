@@ -1,0 +1,34 @@
+[
+ {
+  "id": "iml",
+  "title": "IML Reviewer",
+  "scope": "History of Medicine",
+  "unit": "Topic",
+  "itemWord": "question",
+  "count": 460,
+  "storageKey": "study_reviewer_iml_history_of_medicine_2026_v1",
+  "image": "",
+  "extras": [
+   "Yuri"
+  ],
+  "assets": []
+ },
+ {
+  "id": "psych",
+  "title": "Psychology Midterm",
+  "scope": "Chapters 5–9",
+  "unit": "Chapter",
+  "itemWord": "concept",
+  "count": 438,
+  "storageKey": "psych_midterm_tutor_2026_v1",
+  "image": "courses/psych/chapter-5.jpg",
+  "extras": [],
+  "assets": [
+   "courses/psych/chapter-5.jpg",
+   "courses/psych/chapter-6.jpg",
+   "courses/psych/chapter-7.jpg",
+   "courses/psych/chapter-8.jpg",
+   "courses/psych/chapter-9.jpg"
+  ]
+ }
+]
