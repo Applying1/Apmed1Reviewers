@@ -87,9 +87,10 @@ const secCh=s=>isCh(s)?s.slice(3):chOf(s);
 const KEY=CONFIG.storageKey;
 // Cloud (optional): CONFIG.cloud = {url, key} turns on class stats and device sync (see "cloud" further down).
 const CLOUD=CONFIG.cloud||{},cloudOn=()=>!!(CLOUD.url&&CLOUD.key),SYNC_KEY='reviewer_sync';
-let CSTATS=null,classMemo={k:'',list:[]},crowdQ=[],crowdT=null,syncCode='',syncT=null,syncBusy=false,syncHold=false,syncEntry=false,syncInfo={at:0,err:''};
+let prefSigLast=null,lastPutSig='',syncBoot=true,CSTATS=null,classMemo={k:'',list:[]},crowdQ=[],crowdT=null,syncCode='',syncT=null,syncBusy=false,syncHold=false,syncEntry=false,syncInfo={at:0,err:''};
 try{CSTATS=JSON.parse(localStorage.getItem(KEY+'_class'))}catch(e){}
 try{syncCode=(JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||'';syncInfo.at=+localStorage.getItem(KEY+'_synced')||0}catch(e){}
+syncBoot=!!syncCode;
 const ITEM=CONFIG.itemWord||'concept',ITEMS=ITEM+'s',Items=ITEMS.charAt(0).toUpperCase()+ITEMS.slice(1);
 const UNIT=CONFIG.unit||'Chapter',unitW=UNIT.toLowerCase(),unitsW=unitW+'s';
 const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
@@ -173,7 +174,7 @@ const openCh=new Set(isX(state.section)?[]:[secCh(state.section)]);
 let lastCardKey='';
 
 // The summary lets a courses home screen show progress without loading the whole reviewer.
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
+function save(){const ps=prefSig();if(ps!==prefSigLast){if(prefSigLast!==null)state.prefsAt=Date.now();prefSigLast=ps}try{localStorage.setItem(KEY,JSON.stringify(state));const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function stableHash(s){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0}
 function shuffle(a,seed){let b=a.slice(),x=seed||1;for(let i=b.length-1;i>0;i--){x^=x<<13;x^=x>>>17;x^=x<<5;let j=(x>>>0)%(i+1);[b[i],b[j]]=[b[j],b[i]]}return b}
@@ -222,7 +223,7 @@ function chooseNext(){const s=state.section;let pool=poolFor(s);if(!pool.length)
 function ensure(){
  const ac=state.active&&byId[state.active.cid];
  if(state.active&&(!ac||!inSection(state.section).includes(ac)||(!state.feedback&&!poolFor(state.section).includes(ac)))){state.active=null;state.feedback=null;state.selected=null}
- if(!state.active&&!state.feedback){state.active=chooseNext();state.selected=null;if(state.active)state.active.typed=canType(state.active)}
+ if(!state.active&&!state.feedback){state.active=chooseNext();state.selected=null;state.curAt=syncBoot?0:Date.now();if(state.active)state.active.typed=canType(state.active)}
  save()}
 
 /* ---------- answer log / back button ---------- */
@@ -849,9 +850,15 @@ function crowdFlush(keep){if(!crowdQ.length)return;const items=crowdQ.splice(0,1
 const fmtCode=c=>c.replace(/(.{4})(?=.)/g,'$1-');
 function agoShort(t){const m=Math.round((Date.now()-t)/6e4);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
 function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=new Uint8Array(12);crypto.getRandomValues(b);return Array.from(b,x=>A[x%32]).join('')}
-function syncPayload(){const c={};for(const id in state.concepts){const k=state.concepts[id];if(k.seen||k.star||k.lookups||k.srs)c[id]=Object.assign({},k,{history:(k.history||[]).slice(-8)})}
- return {v:1,at:Date.now(),concepts:c,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},name:state.name||'',history:(state.history||[]).slice(-300),sets:USER_SETS}}
-function mergeRemote(r){let changed=false,reload=false;if(!r||!r.concepts)return {changed,reload};const t=r.tot||{},remoteMore=(t.correct||0)+(t.wrong||0)>state.correct+state.wrong;
+// Compact upload: per question [seen, right, wrong, lookups, hints, star, spaced level, due time, lucky].
+// Also the settings (newest change wins) and the question on screen (the device used last decides).
+function prefSig(){return JSON.stringify([state.prefs,state.exSetup||null])}
+function syncPayload(){const c={};for(const id in state.concepts){const k=state.concepts[id];if(k.seen||k.star||k.lookups||k.srs)c[id]=[k.seen||0,k.right||0,k.wrong||0,k.lookups||0,k.hints||0,k.star?1:0,k.srs?k.srs.lvl:0,k.srs?k.srs.due:0,k.lucky||0]}
+ return {v:2,at:Date.now(),c,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,
+  prefs:state.prefs,exSetup:state.exSetup||null,prefsAt:state.prefsAt||0,
+  cur:state.pmatch?null:{at:state.curAt||0,section:state.section,active:state.active,feedback:state.feedback,selected:state.selected,pass:state.pass||null,starDone:state.starDone||[],dueDone:state.dueDone||[],classDone:state.classDone||[]}}}
+function unpack(r){const c={};for(const id in r.c||{}){const x=r.c[id];c[id]={seen:x[0],right:x[1],wrong:x[2],lookups:x[3],hints:x[4],star:!!x[5],srs:x[7]?{lvl:x[6],due:x[7]}:null,lucky:x[8]||0,history:[]}}return Object.assign({},r,{concepts:c})}
+function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r);if(!r||!r.concepts)return {changed,reload};const t=r.tot||{},remoteMore=(t.correct||0)+(t.wrong||0)>state.correct+state.wrong;
  for(const id in r.concepts){const a=state.concepts[id],b=r.concepts[id];if(!b)continue;
   if(!a){state.concepts[id]=b;changed=true;continue}
   if((b.seen||0)>(a.seen||0)||(b.seen||0)===(a.seen||0)&&(b.right||0)>(a.right||0)){state.concepts[id]=Object.assign({},b,{history:(a.history||[]).length>(b.history||[]).length?a.history:b.history||[]});changed=true}
@@ -862,6 +869,12 @@ function mergeRemote(r){let changed=false,reload=false;if(!r||!r.concepts)return
  if((r.exams||[]).length>(state.exams||[]).length){state.exams=r.exams;changed=true}
  for(const k in r.chalLog||{})if(!(state.chalLog||{})[k]){state.chalLog=state.chalLog||{};state.chalLog[k]=r.chalLog[k];changed=true}
  if(r.name&&!state.name){state.name=r.name;changed=true}
+ if(r.prefs&&(r.prefsAt||0)>(state.prefsAt||0)){state.prefs=Object.assign({},DEFAULT_PREFS,r.prefs);if(r.exSetup)state.exSetup=r.exSetup;state.prefsAt=r.prefsAt;prefSigLast=prefSig();refreshBank();changed=true}
+ // Continue on the question the other device showed last, unless you are in the middle of answering one here.
+ const C=r.cur,typing=$('typed')&&$('typed').value.trim();
+ if(C&&(C.at||0)>(state.curAt||0)&&!(state.selected&&!state.feedback)&&!typing&&!state.pmatch&&validSection(C.section)&&(!C.active||byId[C.active.cid])){
+  Object.assign(state,{section:C.section,active:C.active,feedback:C.feedback,selected:C.feedback?C.selected:null,pass:C.pass,starDone:C.starDone,dueDone:C.dueDone,classDone:C.classDone,curAt:C.at});
+  view=null;if(!isX(C.section))openCh.add(secCh(C.section));changed=true}
  const used=new Set(Object.keys(COURSE_CH).concat(USER_SETS.map(x=>x.ch)));
  for(const x of r.sets||[])if(x&&x.id&&!USER_SETS.some(y=>y.id===x.id)){const ch=used.has(x.ch)?'ABCDEFGHJKLMNPQRSTUVWXYZ'.split('').find(c=>!used.has(c))||'Z':x.ch;used.add(ch);USER_SETS.push(Object.assign({},x,{ch}));reload=true}
  if(reload)try{localStorage.setItem(SETS_KEY,JSON.stringify(USER_SETS))}catch(e){}
@@ -869,15 +882,17 @@ function mergeRemote(r){let changed=false,reload=false;if(!r||!r.concepts)return
 function syncNow(){if(!cloudOn()||!syncCode||syncBusy)return Promise.resolve();syncBusy=true;clearTimeout(syncT);syncT=null;
  return rpc('sync_get',{p_code:syncCode,p_course:KEY}).then(rows=>{const row=Array.isArray(rows)?rows[0]:rows,m=row&&row.data?mergeRemote(row.data):{};
    if(m.changed){syncHold=true;save();syncHold=false}
-   return rpc('sync_put',{p_code:syncCode,p_course:KEY,p_data:syncPayload()}).then(()=>{syncInfo={at:Date.now(),err:''};try{localStorage.setItem(KEY+'_synced',syncInfo.at)}catch(e){}
+   const data=syncPayload(),sig=JSON.stringify(Object.assign({},data,{at:0})),done=()=>{syncInfo={at:Date.now(),err:''};try{localStorage.setItem(KEY+'_synced',syncInfo.at)}catch(e){}
     if(m.reload){location.reload();return}
-    if(m.changed){refreshBank();draw()}else if(page==='prefs')drawPrefs()})})
+    if(m.changed){refreshBank();draw()}else if(page==='prefs')drawPrefs()};
+   if(sig===lastPutSig&&!m.changed)return done();   // nothing new on either side: skip the upload
+   return rpc('sync_put',{p_code:syncCode,p_course:KEY,p_data:data}).then(()=>{lastPutSig=sig;done()})})
   .catch(()=>{syncInfo.err='Could not reach the sync server. Your progress is safe here and will sync later';if(page==='prefs')drawPrefs()})
-  .finally(()=>{syncBusy=false})}
+  .finally(()=>{syncBusy=false;syncBoot=false})}
 function syncStart(){syncCode=newCode();try{localStorage.setItem(SYNC_KEY,JSON.stringify({code:syncCode}))}catch(e){}syncInfo={at:0,err:''};drawPrefs();syncNow()}
 function syncLink(){const v=($('synccode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(v.length!==12){toast('A sync code has 12 letters and numbers.');return}
  rpc('sync_known',{p_code:v}).then(ok=>{if(!ok){toast('Nothing is saved under that code yet. Check it, or tap Sync now on the other device first.');return}
-  syncCode=v;syncEntry=false;try{localStorage.setItem(SYNC_KEY,JSON.stringify({code:v}))}catch(e){}syncInfo={at:0,err:''};drawPrefs();syncNow().then(()=>toast('Linked. Your progress from both devices is combined.'))})
+  syncCode=v;syncEntry=false;state.curAt=0;state.prefsAt=0;try{localStorage.setItem(SYNC_KEY,JSON.stringify({code:v}))}catch(e){}syncInfo={at:0,err:''};drawPrefs();syncNow().then(()=>toast('Linked. Your progress from both devices is combined.'))})
   .catch(()=>toast('Could not reach the sync server. Check your connection.'))}
 function syncStop(){if(!confirm('Stop syncing this device? Your progress stays here, and the other device keeps its own.'))return;syncCode='';clearTimeout(syncT);try{localStorage.removeItem(SYNC_KEY)}catch(e){}drawPrefs()}
 function syncRowHTML(row){if(!cloudOn())return '';const t='Sync between devices';
@@ -930,6 +945,10 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ ...(cloudOn()?[{v:'14',date:'Oct 16, 2026',title:'Smoother sync',items:[
+  'Sync now runs when you switch back to the tab or app, so there is no need to reload.',
+  'Your devices continue on the <b>same question</b>: whichever you used last decides.',
+  'Your <b>settings</b> (recall goal, question order, study tools and the rest) sync too; the most recent change wins. Light or dark theme stays per device.']}]:[]),
  {v:'13',date:'Oct 16, 2026',title:'Fairer mock exams',items:[
   '<b>Custom timer:</b> the Mock exam timer can be Off, 1 minute per question, or any number of minutes you choose.',
   '<b>Skipped questions</b> no longer count as missed: they lower that exam\'s score, but don\'t touch your mastery or your Missed list. Finishing with nothing answered just discards the exam.',
@@ -1137,6 +1156,9 @@ takeLink();
 addEventListener('hashchange',()=>{if(takeLink()){toggleNav(false);draw();window.scrollTo(0,0)}});
 draw();
 if(cloudOn()){loadClassStats();if(syncCode)syncNow();
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else loadClassStats()})}
+ const back=()=>{if(syncCode&&Date.now()-syncInfo.at>4000)syncNow()};
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else{loadClassStats();back()}});
+ addEventListener('focus',back)}
+else syncBoot=false;
 // Show What's new once: on the first visit, and again only when a newer entry is added to CHANGELOG (not over a challenge).
 if(state.seenNews!==CHANGELOG[0].v&&!CHAL)setTimeout(openNews,350);
