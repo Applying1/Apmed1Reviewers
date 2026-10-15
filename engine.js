@@ -632,7 +632,7 @@ function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters
 function exPool(){const st=exSetup();return BANK.filter(c=>st.chs.includes(chOf(c.section)))}
 function exLeft(){const ex=state.exam;return ex.limit?ex.start+ex.limit-Date.now():Infinity}
 function clock(ms){const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
-function drawExam(){const ex=state.exam,C=CHAL||ex&&ex.chal;document.title=(C?'Class challenge':'Mock exam')+' · '+CONFIG.title;$('excrumb').textContent=C?'Class challenge':'Mock exam';
+function drawExam(){const ex=state.exam,C=CHAL||ex&&ex.chal;$('main').classList.toggle('wide',!CHAL&&!!ex&&!!ex.sheet&&!ex.done);document.title=(C?'Class challenge':'Mock exam')+' · '+CONFIG.title;$('excrumb').textContent=C?'Class challenge':'Mock exam';
  $('exChartBtn').hidden=!chartsOn();clearInterval(exTick);$('extimer').hidden=true;
  if(CHAL)drawChalIntro();else if(ex&&!ex.done)drawExamRun();else if(ex&&ex.done)drawExamResult();else drawExamSetup()}
 function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);$('extitle').textContent='Mock exam';
@@ -643,6 +643,7 @@ function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,po
   '<section class="panel" style="margin-top:20px"><h2>Set up</h2>'+
   row('Questions',pool.length+' '+ITEMS+' in the '+unitsW+' you picked, drawn at random.',segHTML('setExCount',counts,st.count>=pool.length?9999:st.count,'Number of questions'))+
   row(UNIT+'s','Tap to include or leave out.','<div class="fchips">'+chapters.map(ch=>'<button class="fchip '+(st.chs.includes(ch)?'on':'')+'" aria-pressed="'+st.chs.includes(ch)+'" onclick="toggleExCh(\''+ch+'\')" title="'+esc(CH_NAMES[ch])+'">'+esc(chLabel(ch))+'</button>').join('')+'</div>')+
+  row('Format',st.format==='sheet'?'Answer sheet: the whole test paper on one page and a separate sheet where you shade A–D, like the real exam.':'One question at a time.',segHTML('setExFormat',[['one','One at a time'],['sheet','Answer sheet']],st.format==='sheet'?'sheet':'one','Format'))+
   row('Timer',typeof st.timer==='number'?st.timer+' minutes in total. The exam ends when time runs out.':st.timer?n+' minutes, one per question. The exam ends when time runs out.':'No time limit.',
    segHTML('setExTimer',[[false,'Off'],[true,'1 min each'],['c','Custom']],typeof st.timer==='number'?'c':!!st.timer,'Timer')+(typeof st.timer==='number'?'<input class="txt exmin" type="number" min="1" max="300" value="'+st.timer+'" onchange="setExMin(this.value)" aria-label="Minutes"><span>min</span>':''))+
   '<div class="exstart"><button class="btn" onclick="toggleChal()" aria-expanded="'+chalOpen+'" title="A link that gives your group chat the same questions">'+LINK_SM+'Class challenge</button><button class="btn primary" onclick="startExam()" '+(n?'':'disabled')+'>Start exam · '+n+' '+ITEMS+'</button></div>'+(chalOpen?chalBoxHTML():'')+'</section>'+
@@ -650,15 +651,17 @@ function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,po
 function setExCount(v){exSetup().count=v;save();drawExam()}
 function toggleExCh(ch){const st=exSetup(),on=st.chs.includes(ch);if(on&&st.chs.length===1)return;st.chs=on?st.chs.filter(c=>c!==ch):chapters.filter(c=>c===ch||st.chs.includes(c));save();drawExam()}
 function setExTimer(v){const st=exSetup(),n=Math.min(st.count,exPool().length);st.timer=v==='c'?(typeof st.timer==='number'?st.timer:Math.max(1,n)):v;save();drawExam()}
+function setExFormat(v){exSetup().format=v;save();drawExam()}
 function setExMin(v){exSetup().timer=Math.max(1,Math.min(300,Math.round(+v)||1));save();drawExam()}
 function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;
  state.exam={qs:shuffle(pool,rnd()).slice(0,n).map(c=>exQ(makeQuestion(c))),
-  ans:{},i:0,start:Date.now(),limit:exMinutes(st,n)*60000,done:false};
+  ans:{},i:0,start:Date.now(),limit:exMinutes(st,n)*60000,done:false,sheet:st.format==='sheet'||undefined};
  save();drawExam();window.scrollTo(0,0)}
 function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered=Object.keys(ex.ans).length;if(q.ident)setTimeout(()=>{const i=$('extyped');if(i)i.focus({preventScroll:true})},0);
  if(ex.limit&&exLeft()<=0){finishExam(true);return}
  $('extitle').textContent='Question '+(ex.i+1)+' of '+n;
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
+ if(ex.sheet){$('extitle').textContent=n+' '+ITEMS;$('exbody').innerHTML=sheetHTML(ex);return}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
   '<section class="card" id="excard"><div class="qhead"><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+esc(q.stem)+'</p>'+
   (q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
@@ -666,6 +669,23 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
   '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button> · <button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button></span>'+
   '<button class="btn primary" onclick="'+(ex.i<n-1?'exGo(1)':'finishExam()')+'">'+(ex.i<n-1?'Next':'Finish')+' <kbd>Enter</kbd></button></div></section>'+
   '<div class="qnav" aria-label="Jump to a question">'+ex.qs.map((_,j)=>'<button class="'+(ex.ans[j]?'a ':'')+(j===ex.i?'cur':'')+'" onclick="exJump('+j+')" aria-label="Question '+(j+1)+(ex.ans[j]?', answered':'')+'">'+(j+1)+'</button>').join('')+'</div>'}
+// Answer sheet format: read on the test paper, shade on the sheet. Shading updates only the sheet, so the paper keeps its place.
+function sheetHTML(ex){const n=ex.qs.length,done=Object.keys(ex.ans).length;
+ const paper=ex.qs.map((q,j)=>'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+esc(q.stem)+'</p>'+
+  (q.ident?'<p class="pqid">Write your answer on the answer sheet.</p>':'<ol class="pch">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+esc(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
+ const rows=ex.qs.map((q,j)=>'<div class="brow" id="br'+j+'"><button class="bn" onclick="sheetGo('+j+')" aria-label="Go to question '+(j+1)+'">'+(j+1)+'</button>'+
+  (q.ident?'<input class="txt bt" value="'+esc(ex.ans[j]||'')+'" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer to question '+(j+1)+'" oninput="sheetType('+j+',this.value)">'
+   :q.choices.map(x=>'<button class="bub'+(ex.ans[j]===x.letter?' on':'')+'" data-l="'+x.letter+'" onclick="sheetPick('+j+',\''+x.letter+'\')" aria-pressed="'+(ex.ans[j]===x.letter)+'" aria-label="Question '+(j+1)+', '+x.letter+'">'+x.letter+'</button>').join(''))+'</div>').join('');
+ return '<div class="sheetwrap"><div class="paper"><p class="lede" style="margin:0 0 14px">Read the questions here and shade your answers on the answer sheet. Tap a question to find its row; tap a shaded bubble again to erase it.</p>'+paper+'</div>'+
+  '<aside class="sheet" id="sheet" aria-label="Answer sheet"><button class="sheethead" onclick="$(\'sheet\').classList.toggle(\'open\')"><b>Answer sheet</b><span id="shct">'+done+' of '+n+' shaded</span></button><div class="bubbles">'+rows+'</div>'+
+  '<div class="sheetacts"><button class="link danger" onclick="discardExam()">Discard</button><button class="btn primary" onclick="finishExam()">Submit</button></div></aside></div>'}
+function sheetCount(){const ex=state.exam,c=$('shct');if(c)c.textContent=Object.keys(ex.ans).length+' of '+ex.qs.length+' shaded'}
+function sheetPick(j,l){const ex=state.exam;if(!ex||ex.done)return;if(ex.ans[j]===l)delete ex.ans[j];else ex.ans[j]=l;save();
+ document.querySelectorAll('#br'+j+' .bub').forEach(b=>{const on=b.dataset.l===ex.ans[j];b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});sheetCount()}
+function sheetType(j,v){const ex=state.exam;if(!ex||ex.done)return;if(v.trim())ex.ans[j]=v;else delete ex.ans[j];save();sheetCount()}
+function sheetMark(j){document.querySelectorAll('.brow.cur').forEach(x=>x.classList.remove('cur'));const r=$('br'+j);if(r)r.classList.add('cur');return r}
+function sheetFocus(j){const r=sheetMark(j);if(!r)return;$('sheet').classList.add('open');r.scrollIntoView({block:'nearest',behavior:reduceMotion?'auto':'smooth'})}
+function sheetGo(j){const p=$('pq'+j);if(!p)return;sheetMark(j);if(innerWidth<=900)$('sheet').classList.remove('open');p.scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
 function exType(v){const ex=state.exam;if(!ex||ex.done)return;if(v.trim())ex.ans[ex.i]=v;else delete ex.ans[ex.i];save();
  const b=document.querySelectorAll('.qnav button')[ex.i];if(b)b.classList.toggle('a',!!v.trim())}
 function discardExam(sure){const ex=state.exam;if(!ex||ex.done)return;if(!sure&&!confirm('Discard this '+(ex.chal?'challenge':'exam')+'? Nothing from it is saved.'))return;
@@ -698,7 +718,7 @@ function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*
     '<p class="exa bad"><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?esc(mine.letter+'. '+mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+esc(q.ident?ok.label:ok.letter+'. '+ok.label)+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+'</article>'}).join('')+'</div>':'')}
 function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
 function newExam(){state.exam=null;save();draw();window.scrollTo(0,0)}
-function examKey(e){const ex=state.exam;if(!ex||ex.done)return false;const k=e.key;
+function examKey(e){const ex=state.exam;if(!ex||ex.done||ex.sheet)return false;const k=e.key;
  if(/^[a-e]$/i.test(k)){if(ex.qs[ex.i].ident)return false;const l=k.toUpperCase();if(ex.qs[ex.i].choices.some(c=>c.letter===l)){exAnswer(l);return true}return false}
  if(k==='ArrowLeft'){exGo(-1);return true}
  if(k==='ArrowRight'||(k==='Enter'&&e.target.tagName!=='BUTTON')){if(ex.i<ex.qs.length-1)exGo(1);else finishExam();return true}
@@ -775,7 +795,7 @@ function drawChalIntro(){const c=CHAL,b=BANKS.find(x=>x.id===c.bank),pool=b?chal
 function dismissChallenge(){CHAL=null;clearHash();draw();window.scrollTo(0,0)}
 function startChallenge(c){const pool=chalPool(c)||[],n=Math.min(c.n,pool.length);if(!n)return;const fx={seed:c.seed,items:pool};
  state.exam={qs:shuffle(pool,stableHash('order|'+c.seed)).slice(0,n).map(it=>exQ(makeQuestion(it,fx))),
-  ans:{},i:0,start:Date.now(),limit:(c.m?c.m:c.t?n:0)*60000,done:false,chal:Object.assign({},c,{key:chalKey(c),label:chalLabel(c)})};
+  ans:{},i:0,start:Date.now(),limit:(c.m?c.m:c.t?n:0)*60000,done:false,sheet:exSetup().format==='sheet'||undefined,chal:Object.assign({},c,{key:chalKey(c),label:chalLabel(c)})};
  CHAL=null;chalOpen=false;clearHash();page='exam';state.page='exam';save();draw();window.scrollTo(0,0)}
 const squares=ex=>ex.qs.map((q,j)=>ex.ans[j]==null||ex.ans[j]===''?'⬜':exOK(q,ex.ans[j])?'🟩':'🟥').join('');
 function copyChalScore(){const ex=state.exam,C=ex&&ex.chal;if(!C)return;const n=ex.qs.length,link=chalLink(C);
@@ -964,6 +984,8 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'15',date:'Oct 17, 2026',title:'Answer sheet exams',items:[
+  '<b>Mock exam → Format → Answer sheet:</b> like the real exam. The whole test paper is on one page and you shade A–D on a separate answer sheet (beside the paper on a computer, a slide-up drawer on a phone). Tap a question to find its row; tap a shaded bubble again to erase it.']},
  ...(cloudOn()?[{v:'14',date:'Oct 16, 2026',title:'Smoother sync',items:[
   'Sync now runs when you switch back to the tab or app, so there is no need to reload.',
   'Your devices continue on the <b>same question</b>: whichever you used last decides.',
