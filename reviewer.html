@@ -633,6 +633,10 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 .crate{color:var(--faint)}
 .prow .pl b.code{display:inline;font:600 13px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.05em;color:var(--text)}
 #synccode{width:160px;text-transform:uppercase;letter-spacing:.05em}
+/* Mock exam timer, identification */
+.exmin{width:72px;padding:5px 8px}
+.exmin+span{font-size:13px;color:var(--mute)}
+#excard .typein{margin-top:4px}
 </style></head><body>
 <div class="app" id="app">
  <aside class="side" id="side" aria-label="Navigation">
@@ -737,7 +741,7 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
  <textarea class="txt setta" id="settext" spellcheck="false" aria-label="Questions" placeholder="Q: Who is called the father of medicine?&#10;A: Hippocrates&#10;X: Galen&#10;X: Imhotep&#10;X: Avicenna" oninput="clearTimeout(setTimer);setTimer=setTimeout(setPreview,250)"></textarea>
  <div class="setbar"><button class="btn sm" onclick="setUpload()">Upload file</button><div class="setinfo" id="setinfo" aria-live="polite"></div></div>
  <details class="sethelp"><summary>How to write questions</summary>
-  <p>Leave a blank line between questions. Give the right answer on an A: line and wrong ones on X: lines, or number the question and mark the right choice with *. Up to 5 choices.</p>
+  <p>Leave a blank line between questions. Give the right answer on an A: line and wrong ones on X: lines, or number the question and mark the right choice with *. Up to 5 choices. A question with only an A: line (no wrong choices) is identification: it is answered by typing.</p>
   <pre># Topic name (optional)
 Q: Who is called the father of medicine?
 A: Hippocrates

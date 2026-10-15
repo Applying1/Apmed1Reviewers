@@ -11,7 +11,7 @@ function userBank(s){const p=parseSet(s.text),secs={},seen={};let n=0;
  const items=p.items.map(it=>{const m=it.topic.match(/^(\S+)/);let sec=m&&COURSE_SECS[m[1]]?m[1]:null;
   if(!sec){const t=it.topic||'All questions';if(!secs[t]){secs[t]=s.ch+'-'+(++n);CONFIG.sections[secs[t]]=t}sec=secs[t]}
   let id=s.id+'_'+stableHash(it.q).toString(36);while(seen[id])id+='x';seen[id]=1;
-  return {id,section:sec,kind:'recall',term:it.a.length>60?it.a.slice(0,57)+'…':it.a,q:it.q,a:it.a,d:it.d,why:it.why,hint:it.hint}});
+  return {id,section:sec,kind:'recall',term:it.a.length>60?it.a.slice(0,57)+'…':it.a,q:it.q,a:it.a,d:it.d,why:it.why,hint:it.hint,...(it.ident?{type:'id'}:{})}});
  if(n)CONFIG.chapters[s.ch]=s.name;
  return {id:s.id,name:s.name,desc:'Your set, saved in this browser',items,user:true}}
 // Reads "Q: / A: / X:" lines, numbered questions with lettered choices (right one marked with *),
@@ -68,9 +68,8 @@ function addItem(out,where,it){const low=x=>String(x).toLowerCase().replace(/\s+
  if(!q){out.problems.push(where+'the question is missing.');return}
  if(!a){out.problems.push(where+'there is no answer.');return}
  let d=it.d.map(x=>String(x||'').trim()).filter((x,i,arr)=>x&&low(x)!==low(a)&&arr.findIndex(y=>low(y)===low(x))===i);
- if(!d.length){out.problems.push(where+'needs at least one wrong choice.');return}
  if(d.length>4){out.problems.push(where+'has more than 5 choices, so only the first 4 wrong ones are kept.');d=d.slice(0,4)}
- out.items.push({q,a,d,why:String(it.why||'').trim(),hint:String(it.hint||'').trim(),topic:String(it.topic||'').trim()})}
+ out.items.push({q,a,d,ident:!d.length,why:String(it.why||'').trim(),hint:String(it.hint||'').trim(),topic:String(it.topic||'').trim()})}
 // The text a set is saved and exported as (any format you paste is turned into this).
 function setText(items){let t='',top=null;
  items.forEach(it=>{if(it.topic!==top){const was=top;top=it.topic;if(top||was!==null)t+='\n# '+(top||'All questions')+'\n'}
@@ -152,7 +151,7 @@ function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='M
 function refreshBank(){const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
  sectionKeys=ALL_SECTIONS.filter(k=>BANK.some(c=>c.section===k));
  chapters=ALL_CHAPTERS.filter(ch=>sectionKeys.some(k=>chOf(k)===ch));
- AUTHORED=BANK.every(c=>c.q);NCHOICE=BANK.some(c=>!c.q)?5:Math.max(...BANK.map(c=>1+c.d.length));
+ AUTHORED=BANK.every(c=>c.q);NCHOICE=BANK.some(c=>!c.q)?5:Math.max(...BANK.map(c=>1+(c.d||[]).length));
  if(!validSection(state.section))state.section=sectionKeys[0]}
 refreshBank();
 
@@ -194,7 +193,7 @@ const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
 // fx (class challenges): a fixed seed and item list, so every device builds exactly the same question.
 function makeQuestion(c,fx){const src=fx?fx.items:BANK,sd=tag=>fx?stableHash(fx.seed+'|'+c.id+'|'+tag):seedFor(c,tag),stage=fx?sd('kind')%3:state.concepts[c.id].seen%3;
  // Authored question: q (stem), a (answer), d (distractors).
- if(c.q){const ch=shuffle([{label:c.a,correct:true},...c.d.map(x=>({label:x,correct:false}))],sd('choices'));
+ if(c.q){const ch=shuffle([{label:c.a,correct:true},...(c.d||[]).map(x=>({label:x,correct:false}))],sd('choices'));
   return {cid:c.id,kind:c.kind||'recall',stem:c.q,choices:ch.map((x,i)=>({...x,letter:LETTERS[i]})),why:c.why||'',hint:c.hint||'',usedHint:false}}
  let cand=src.filter(x=>x.section===c.section&&x.id!==c.id&&!x.q);
  if(cand.length<4)cand=src.filter(x=>x.id!==c.id&&!x.q&&chOf(x.section)===chOf(c.section));
@@ -240,7 +239,7 @@ try{$('favicon').href=$('logo').src}catch(e){}
 const CH_IMGS=CONFIG.images||{};
 const CH_IMG=ch=>CH_IMGS[ch]||'';
 const FBICON={good:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>',bad:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',look:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'};
-const KIND_NAMES={odd:'Odd one out',phonetic:'Phonetic spelling',best:'Best answer',definition:'Concept meaning',scenario:'Application',term:'Identification',recall:'Recall',situational:'Situational',era:'Which era?',civ:'Which civilization?',order:'Timeline'};
+const KIND_NAMES={identification:'Identification',odd:'Odd one out',phonetic:'Phonetic spelling',best:'Best answer',definition:'Concept meaning',scenario:'Application',term:'Identification',recall:'Recall',situational:'Situational',era:'Which era?',civ:'Which civilization?',order:'Timeline'};
 const kindName=k=>KIND_NAMES[k]||'Question';
 const pips=n=>'<span class="pips" aria-hidden="true">'+Array.from({length:T()},(_,i)=>'<i class="'+(n>i?'on':'')+'"></i>').join('')+'</span>';
 const lit=v=>typeof v==='string'?"'"+v+"'":String(v);
@@ -617,6 +616,10 @@ function mixKey(e){if(!MX)return false;const k=e.key;
 /* ---------- mock exam: no hints or answers until the end ---------- */
 const EX_COUNTS=[20,30,50];let exTick=null;
 const swHTML=(on,fn,label)=>'<button class="tgl" role="switch" aria-checked="'+on+'" aria-label="'+esc(label)+'" onclick="'+fn+'"><span class="sw"></span></button>';
+// One exam question, frozen when the exam starts. ident = typed answer instead of choices.
+function exQ(q){const o={cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))};if(isIdent(byId[q.cid]))o.ident=1;return o}
+function exOK(q,a){if(a==null||a==='')return false;if(q.ident){const t=(q.choices.find(x=>x.correct)||{}).label||'';return typedOK(a,t)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(a,x))}return q.choices.some(x=>x.correct&&x.letter===a)}
+const exMinutes=(st,n)=>typeof st.timer==='number'?st.timer:st.timer?n:0;
 function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters.slice(),timer:true});st.chs=st.chs.filter(c=>chapters.includes(c));if(!st.chs.length)st.chs=chapters.slice();return st}
 function exPool(){const st=exSetup();return BANK.filter(c=>st.chs.includes(chOf(c.section)))}
 function exLeft(){const ex=state.exam;return ex.limit?ex.start+ex.limit-Date.now():Infinity}
@@ -628,58 +631,67 @@ function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,po
  const row=(t,d,ctl)=>'<div class="prow"><div class="pl"><b>'+t+'</b><span>'+d+'</span></div><div class="ctl">'+ctl+'</div></div>';
  const counts=EX_COUNTS.filter(c=>c<pool.length).map(c=>[c,String(c)]).concat([[9999,'All '+pool.length]]);
  const past=(state.exams||[]).slice(-5).reverse();
- $('exbody').innerHTML='<p class="lede">A practice run with no hints and no answers until the end. Afterwards you get your score by '+unitW+' and can review every mistake. Wrong answers are added to your Missed '+ITEMS+'.</p>'+
+ $('exbody').innerHTML='<p class="lede">A practice run with no hints and no answers until the end. Afterwards you get your score by '+unitW+' and can review every mistake. Wrong answers are added to your Missed '+ITEMS+'; questions you skip are not counted against you.</p>'+
   '<section class="panel" style="margin-top:20px"><h2>Set up</h2>'+
   row('Questions',pool.length+' '+ITEMS+' in the '+unitsW+' you picked, drawn at random.',segHTML('setExCount',counts,st.count>=pool.length?9999:st.count,'Number of questions'))+
   row(UNIT+'s','Tap to include or leave out.','<div class="fchips">'+chapters.map(ch=>'<button class="fchip '+(st.chs.includes(ch)?'on':'')+'" aria-pressed="'+st.chs.includes(ch)+'" onclick="toggleExCh(\''+ch+'\')" title="'+esc(CH_NAMES[ch])+'">'+esc(chLabel(ch))+'</button>').join('')+'</div>')+
-  row('Timer',st.timer?n+' minutes, one per question. The exam ends when time runs out.':'No time limit.',swHTML(st.timer,'toggleExTimer()','Timer'))+
+  row('Timer',typeof st.timer==='number'?st.timer+' minutes in total. The exam ends when time runs out.':st.timer?n+' minutes, one per question. The exam ends when time runs out.':'No time limit.',
+   segHTML('setExTimer',[[false,'Off'],[true,'1 min each'],['c','Custom']],typeof st.timer==='number'?'c':!!st.timer,'Timer')+(typeof st.timer==='number'?'<input class="txt exmin" type="number" min="1" max="300" value="'+st.timer+'" onchange="setExMin(this.value)" aria-label="Minutes"><span>min</span>':''))+
   '<div class="exstart"><button class="btn" onclick="toggleChal()" aria-expanded="'+chalOpen+'" title="A link that gives your group chat the same questions">'+LINK_SM+'Class challenge</button><button class="btn primary" onclick="startExam()" '+(n?'':'disabled')+'>Start exam · '+n+' '+ITEMS+'</button></div>'+(chalOpen?chalBoxHTML():'')+'</section>'+
   (past.length?'<section class="panel" style="margin-top:12px"><h2>Recent exams</h2><ul class="exlist">'+past.map(r=>'<li><b class="num">'+Math.round(100*r.right/r.total)+'%</b><span>'+r.right+' of '+r.total+' · '+esc(r.date)+' · '+esc(r.time)+(r.chal?' · class challenge':'')+'</span></li>').join('')+'</ul></section>':'')}
 function setExCount(v){exSetup().count=v;save();drawExam()}
 function toggleExCh(ch){const st=exSetup(),on=st.chs.includes(ch);if(on&&st.chs.length===1)return;st.chs=on?st.chs.filter(c=>c!==ch):chapters.filter(c=>c===ch||st.chs.includes(c));save();drawExam()}
-function toggleExTimer(){const st=exSetup();st.timer=!st.timer;save();drawExam()}
+function setExTimer(v){const st=exSetup(),n=Math.min(st.count,exPool().length);st.timer=v==='c'?(typeof st.timer==='number'?st.timer:Math.max(1,n)):v;save();drawExam()}
+function setExMin(v){exSetup().timer=Math.max(1,Math.min(300,Math.round(+v)||1));save();drawExam()}
 function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;
- state.exam={qs:shuffle(pool,rnd()).slice(0,n).map(c=>{const q=makeQuestion(c);return {cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))}}),
-  ans:{},i:0,start:Date.now(),limit:st.timer?n*60000:0,done:false};
+ state.exam={qs:shuffle(pool,rnd()).slice(0,n).map(c=>exQ(makeQuestion(c))),
+  ans:{},i:0,start:Date.now(),limit:exMinutes(st,n)*60000,done:false};
  save();drawExam();window.scrollTo(0,0)}
-function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered=Object.keys(ex.ans).length;
+function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered=Object.keys(ex.ans).length;if(q.ident)setTimeout(()=>{const i=$('extyped');if(i)i.focus({preventScroll:true})},0);
  if(ex.limit&&exLeft()<=0){finishExam(true);return}
  $('extitle').textContent='Question '+(ex.i+1)+' of '+n;
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
   '<section class="card" id="excard"><div class="qhead"><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+esc(q.stem)+'</p>'+
-  '<div class="choices">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+esc(x.label)+'</span></button>').join('')+'</div>'+
-  '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button></span>'+
+  (q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
+   :'<div class="choices">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+esc(x.label)+'</span></button>').join('')+'</div>')+
+  '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button> · <button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button></span>'+
   '<button class="btn primary" onclick="'+(ex.i<n-1?'exGo(1)':'finishExam()')+'">'+(ex.i<n-1?'Next':'Finish')+' <kbd>Enter</kbd></button></div></section>'+
   '<div class="qnav" aria-label="Jump to a question">'+ex.qs.map((_,j)=>'<button class="'+(ex.ans[j]?'a ':'')+(j===ex.i?'cur':'')+'" onclick="exJump('+j+')" aria-label="Question '+(j+1)+(ex.ans[j]?', answered':'')+'">'+(j+1)+'</button>').join('')+'</div>'}
+function exType(v){const ex=state.exam;if(!ex||ex.done)return;if(v.trim())ex.ans[ex.i]=v;else delete ex.ans[ex.i];save();
+ const b=document.querySelectorAll('.qnav button')[ex.i];if(b)b.classList.toggle('a',!!v.trim())}
+function discardExam(sure){const ex=state.exam;if(!ex||ex.done)return;if(!sure&&!confirm('Discard this '+(ex.chal?'challenge':'exam')+'? Nothing from it is saved.'))return;
+ clearInterval(exTick);state.exam=null;save();draw();window.scrollTo(0,0)}
 function exAnswer(l){const ex=state.exam;if(!ex||ex.done)return;ex.ans[ex.i]=l;save();drawExam()}
 function exGo(d){const ex=state.exam;if(!ex||ex.done)return;ex.i=Math.max(0,Math.min(ex.qs.length-1,ex.i+d));save();drawExam()}
 function exJump(j){const ex=state.exam;if(!ex||ex.done)return;ex.i=j;save();drawExam()}
 function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=ex.qs.length,open=n-Object.keys(ex.ans).length;
- if(!timeUp&&open&&!confirm(open+' question'+(open>1?'s are':' is')+' still unanswered. Finish anyway?'))return;
+ if(!timeUp&&open===n){if(confirm('You haven\'t answered anything. Discard this '+(ex.chal?'challenge':'exam')+'?'))discardExam(true);return}
+ if(!timeUp&&open&&!confirm(open+' question'+(open>1?'s are':' is')+' still unanswered. Finish anyway? Skipped ones lower your score but are not counted as missed.'))return;
  clearInterval(exTick);ex.done=true;ex.end=Math.min(Date.now(),ex.limit?ex.start+ex.limit:Infinity);ex.timeUp=!!timeUp;let right=0;const byCh={};
- ex.qs.forEach((q,j)=>{const c=byId[q.cid],k=state.concepts[q.cid],ok=q.choices.some(x=>x.correct&&x.letter===ex.ans[j]),ch=chOf(c.section);
-  byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;k.seen++;
-  if(ok){right++;byCh[ch][0]++;state.correct++}else{k.wrong++;state.wrong++;masteryDown(k)}
-  if(ex.ans[j])crowdAdd(q.cid,!ok);state.history.push({cid:q.cid,correct:ok,lookup:false,term:c.term,section:c.section,mode:'EXAM'})});
+ ex.qs.forEach((q,j)=>{const c=byId[q.cid],k=state.concepts[q.cid],a=ex.ans[j],ok=exOK(q,a),ch=chOf(c.section);
+  byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;if(ok){right++;byCh[ch][0]++}
+  if(a==null||a==='')return;   // skipped: no effect on mastery, Missed or class stats
+  k.seen++;if(ok)state.correct++;else{k.wrong++;state.wrong++;masteryDown(k)}
+  crowdAdd(q.cid,!ok);state.history.push({cid:q.cid,correct:ok,lookup:false,term:c.term,section:c.section,mode:'EXAM'})});
  ex.right=right;ex.byCh=byCh;
  state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0}).slice(-20);
  // A challenge keeps your first score; later tries are shared as retakes.
  if(ex.chal){state.chalLog=state.chalLog||{};const k=ex.chal.key;ex.retake=!!state.chalLog[k];if(!ex.retake)state.chalLog[k]={right,total:n}}
  save();if(page==='exam'){drawExam();window.scrollTo(0,0)}}
 function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*ex.right/n);$('extitle').textContent='Results';
- const wrong=ex.qs.map((q,j)=>({q,j,a:ex.ans[j]})).filter(x=>!x.q.choices.some(c=>c.correct&&c.letter===x.a));
+ const wrong=ex.qs.map((q,j)=>({q,j,a:ex.ans[j]})).filter(x=>!exOK(x.q,x.a));
  $('exbody').innerHTML='<section class="card hero exres"><div>'+(ex.chal?'<div class="eyebrow">'+esc(ex.chal.label)+(ex.retake?' · retake':'')+'</div>':'')+'<div class="big num">'+pct+'%<small>'+ex.right+' of '+n+' right</small></div><p class="sub">Time: '+clock(ex.end-ex.start)+(ex.timeUp?' (time ran out)':'')+' · '+(wrong.length?wrong.length+' to review':'no mistakes')+'</p>'+(ex.chal?'<div class="sqrow" role="img" aria-label="Green: right, red: wrong, white: skipped">'+squares(ex)+'</div>':'')+'</div></section>'+
   '<section class="panel" style="margin-top:12px"><h2>By '+unitW+'</h2><div class="bars">'+Object.entries(ex.byCh).map(([ch,[r,t]])=>'<div class="bar-row"><span class="n"><span>'+esc(ch)+'</span>'+esc(CH_NAMES[ch]||'')+'</span><span class="p">'+r+' of '+t+'</span><span class="track"><span class="fill" style="display:block;width:'+(100*r/t)+'%"></span></span></div>').join('')+'</div></section>'+
   '<div class="exacts">'+(ex.chal?'<button class="btn primary" onclick="copyChalScore()">Copy my score</button><button class="btn" onclick="copyChalLink(state.exam.chal)">Copy challenge link</button>':'')+(wrong.length?'<button class="btn'+(ex.chal?'':' primary')+'" onclick="toggleExReview()">'+(ex.review?'Hide my mistakes':'Review my mistakes ('+wrong.length+')')+'</button>':'')+
   (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">'+(ex.chal?'Done':'New exam')+'</button></div>'+
-  (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.choices.find(c=>c.letter===a);
+  (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.ident?null:q.choices.find(c=>c.letter===a);
    return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+esc(byId[q.cid].section)+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div><p class="exq">'+esc(q.stem)+'</p>'+
-    '<p class="exa bad"><b>Your answer:</b> '+(mine?esc(mine.letter+'. '+mine.label):'none')+'</p><p class="exa good"><b>Correct:</b> '+esc(ok.letter+'. '+ok.label)+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+'</article>'}).join('')+'</div>':'')}
+    '<p class="exa bad"><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?esc(mine.letter+'. '+mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+esc(q.ident?ok.label:ok.letter+'. '+ok.label)+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+'</article>'}).join('')+'</div>':'')}
 function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
 function newExam(){state.exam=null;save();draw();window.scrollTo(0,0)}
 function examKey(e){const ex=state.exam;if(!ex||ex.done)return false;const k=e.key;
- if(/^[a-e]$/i.test(k)){const l=k.toUpperCase();if(ex.qs[ex.i].choices.some(c=>c.letter===l)){exAnswer(l);return true}return false}
+ if(/^[a-e]$/i.test(k)){if(ex.qs[ex.i].ident)return false;const l=k.toUpperCase();if(ex.qs[ex.i].choices.some(c=>c.letter===l)){exAnswer(l);return true}return false}
  if(k==='ArrowLeft'){exGo(-1);return true}
  if(k==='ArrowRight'||(k==='Enter'&&e.target.tagName!=='BUTTON')){if(ex.i<ex.qs.length-1)exGo(1);else finishExam();return true}
  return false}
@@ -709,7 +721,7 @@ function drawMatchSets(){
 const CH_COUNTS=[10,15,20];let chalOpen=false,chalSeed='',chalN=15;
 const LINK_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>';
 function readChallenge(){const h=location.hash.replace(/^#/,'');if(!/^challenge=/.test(h))return null;const p=new URLSearchParams(h),list=k=>(p.get(k)||'').split(',').filter(Boolean);
- const c={seed:(p.get('challenge')||'').slice(0,24),chs:list('ch'),n:Math.max(1,Math.min(100,+p.get('n')||15)),t:p.get('t')==='1',bank:p.get('bank')||'main',o:list('o'),x:p.get('x')!=='0',v:p.get('v')||''};
+ const c={seed:(p.get('challenge')||'').slice(0,24),chs:list('ch'),n:Math.max(1,Math.min(100,+p.get('n')||15)),t:p.get('t')==='1'||+p.get('m')>0,m:Math.max(0,Math.min(300,Math.round(+p.get('m'))||0)),bank:p.get('bank')||'main',o:list('o'),x:p.get('x')!=='0',v:p.get('v')||''};
  return c.seed?c:null}
 // Opening a challenge link: show its intro, or simply resume it if it is the one in progress.
 function takeLink(){const c=readChallenge();if(!c)return false;const ex=state.exam;
@@ -726,10 +738,10 @@ function chsText(chs){const all=Object.keys(COURSE_CH);if(chs.length>1&&chs.leng
 // Links point at the website. A file opened from the device uses CONFIG.shareUrl (the same course online) if set.
 function shareBase(){if(/^https?:$/.test(location.protocol)){const c=new URLSearchParams(location.search).get('course');return location.origin+location.pathname+(c?'?course='+encodeURIComponent(c):'')}return CONFIG.shareUrl||''}
 function chalLink(c){const b=shareBase();if(!b)return '';
- return b+'#challenge='+encodeURIComponent(c.seed)+'&ch='+c.chs.join(',')+'&n='+c.n+(c.t?'&t=1':'')+(c.bank!=='main'?'&bank='+encodeURIComponent(c.bank):'')+(c.o.length?'&o='+c.o.join(','):'')+(c.x?'':'&x=0')+'&v='+c.v}
+ return b+'#challenge='+encodeURIComponent(c.seed)+'&ch='+c.chs.join(',')+'&n='+c.n+(c.m?'&m='+c.m:c.t?'&t=1':'')+(c.bank!=='main'?'&bank='+encodeURIComponent(c.bank):'')+(c.o.length?'&o='+c.o.join(','):'')+(c.x?'':'&x=0')+'&v='+c.v}
 const todaySeed=()=>{const d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
 // Today's link is the same for anyone who picks the same topics and length; "Different questions" adds a letter.
-function chalDraft(){const st=exSetup(),c={seed:chalSeed.startsWith(todaySeed())?chalSeed:todaySeed(),chs:st.chs.slice(),n:chalN,t:!!st.timer,bank:state.bank,o:Object.keys(OPT).filter(optOn),x:!!state.prefs.extras,v:''};
+function chalDraft(){const st=exSetup(),c={seed:chalSeed.startsWith(todaySeed())?chalSeed:todaySeed(),chs:st.chs.slice(),n:chalN,t:!!st.timer,m:typeof st.timer==='number'?st.timer:0,bank:state.bank,o:Object.keys(OPT).filter(optOn),x:!!state.prefs.extras,v:''};
  const pool=chalPool(c)||[];c.n=Math.min(c.n,pool.length);c.v=poolSig(pool);return c}
 function toggleChal(){chalOpen=!chalOpen;drawExam()}
 function setChalN(v){chalN=v;drawExam()}
@@ -746,7 +758,7 @@ function drawChalIntro(){const c=CHAL,b=BANKS.find(x=>x.id===c.bank),pool=b?chal
  const ex=state.exam,busy=ex&&!ex.done,prev=(state.chalLog||{})[chalKey(c)],n=Math.min(c.n,pool.length);
  const box=inner=>'<section class="card hero exres"><div><div class="eyebrow">'+esc(chalLabel(c))+'</div>'+inner+'</div></section>';
  if(!b||!n){$('exbody').innerHTML=box('<p class="chalnote" style="margin-top:0">'+(b?'This challenge has no questions in this version of the reviewer.':'This challenge uses a question set that isn\'t in this browser. Ask whoever sent the link to export the set, then add it in Personalize → Question banks.')+'</p><div class="exacts"><button class="btn" onclick="dismissChallenge()">Close</button></div>');return}
- $('exbody').innerHTML=box('<div class="big num">'+n+'<small>'+ITEMS+'</small></div><p class="sub">'+esc(cap(chsText(c.chs)))+' · '+(c.t?n+'-minute timer':'no timer')+(c.bank!=='main'?' · '+esc(b.name)+' bank':'')+'</p>'+
+ $('exbody').innerHTML=box('<div class="big num">'+n+'<small>'+ITEMS+'</small></div><p class="sub">'+esc(cap(chsText(c.chs)))+' · '+(c.m?c.m+'-minute timer':c.t?n+'-minute timer':'no timer')+(c.bank!=='main'?' · '+esc(b.name)+' bank':'')+'</p>'+
   '<p class="chalnote">Everyone who opens this link gets the same questions in the same order. Answers are shown at the end; then copy your score into the group chat to compare.</p>'+
   (c.v&&c.v!==poolSig(pool)?'<p class="chalwarn">This reviewer was updated after the link was made, so some of your questions may differ from your classmates\'.</p>':'')+
   (prev?'<p class="chalnote">You already took this one: <b>'+prev.right+' of '+prev.total+'</b>. Another try is shared as a retake.</p>':'')+
@@ -754,10 +766,10 @@ function drawChalIntro(){const c=CHAL,b=BANKS.find(x=>x.id===c.bank),pool=b?chal
   '<div class="exacts"><button class="btn primary" onclick="startChallenge(CHAL)">Start challenge</button><button class="btn" onclick="dismissChallenge()">Not now</button></div>')}
 function dismissChallenge(){CHAL=null;clearHash();draw();window.scrollTo(0,0)}
 function startChallenge(c){const pool=chalPool(c)||[],n=Math.min(c.n,pool.length);if(!n)return;const fx={seed:c.seed,items:pool};
- state.exam={qs:shuffle(pool,stableHash('order|'+c.seed)).slice(0,n).map(it=>{const q=makeQuestion(it,fx);return {cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))}}),
-  ans:{},i:0,start:Date.now(),limit:c.t?n*60000:0,done:false,chal:Object.assign({},c,{key:chalKey(c),label:chalLabel(c)})};
+ state.exam={qs:shuffle(pool,stableHash('order|'+c.seed)).slice(0,n).map(it=>exQ(makeQuestion(it,fx))),
+  ans:{},i:0,start:Date.now(),limit:(c.m?c.m:c.t?n:0)*60000,done:false,chal:Object.assign({},c,{key:chalKey(c),label:chalLabel(c)})};
  CHAL=null;chalOpen=false;clearHash();page='exam';state.page='exam';save();draw();window.scrollTo(0,0)}
-const squares=ex=>ex.qs.map((q,j)=>ex.ans[j]==null?'⬜':q.choices.some(c=>c.correct&&c.letter===ex.ans[j])?'🟩':'🟥').join('');
+const squares=ex=>ex.qs.map((q,j)=>ex.ans[j]==null||ex.ans[j]===''?'⬜':exOK(q,ex.ans[j])?'🟩':'🟥').join('');
 function copyChalScore(){const ex=state.exam,C=ex&&ex.chal;if(!C)return;const n=ex.qs.length,link=chalLink(C);
  copyText((state.name?state.name.trim()+' · ':'')+CONFIG.title+' · '+C.label+'\n'+ex.right+'/'+n+' ('+Math.round(100*ex.right/n)+'%) in '+clock(ex.end-ex.start)+(ex.retake?' · retake':'')+'\n'+squares(ex)+(link?'\nTake it: '+link:''),'Score copied. Paste it in your group chat.')}
 function copyChalLink(c){const link=chalLink(c);if(!link)return;
@@ -784,9 +796,9 @@ function openSetEditor(id){const s=id?USER_SETS.find(x=>x.id===id):null;setEdit=
  $('secex').textContent='# '+(ALL_SECTIONS.find(k=>k in COURSE_SECS)||'1-1');
  setPreview();$('setmodal').hidden=false;$('setmodal').querySelector('.box').scrollTop=0;(s?$('settext'):$('setname')).focus({preventScroll:true})}
 function closeSetEditor(){$('setmodal').hidden=true;setEdit=null}
-function setPreview(){const v=$('settext').value,p=parseSet(v),N=p.items.length,tops=new Set(p.items.map(i=>i.topic)).size;
+function setPreview(){const v=$('settext').value,p=parseSet(v),N=p.items.length,nid=p.items.filter(i=>i.ident).length,tops=new Set(p.items.map(i=>i.topic)).size;
  if(p.name&&!$('setname').value.trim())$('setname').value=p.name.slice(0,30);
- $('setinfo').innerHTML=(N?'<b>'+N+' question'+(N>1?'s':'')+'</b>'+(tops>1?' in '+tops+' topics':'')+(p.problems.length?', and '+p.problems.length+' to fix:':', ready to save.'):v.trim()?'No questions found yet.':'Paste questions here or upload a file.')+
+ $('setinfo').innerHTML=(N?'<b>'+N+' question'+(N>1?'s':'')+'</b>'+(nid?' ('+nid+' identification)':'')+(tops>1?' in '+tops+' topics':'')+(p.problems.length?', and '+p.problems.length+' to fix:':', ready to save.'):v.trim()?'No questions found yet.':'Paste questions here or upload a file.')+
   (p.problems.length?'<ul class="setprob">'+p.problems.slice(0,6).map(x=>'<li>'+esc(x)+'</li>').join('')+(p.problems.length>6?'<li>and '+(p.problems.length-6)+' more</li>':'')+'</ul>':'');
  $('setsave').disabled=!N;$('setsave').textContent=N&&p.problems.length?'Save '+N+' question'+(N>1?'s':''):'Save set'}
 function setUpload(){const i=document.createElement('input');i.type='file';i.accept='.txt,.csv,.tsv,.md,text/plain,text/csv';
@@ -918,6 +930,11 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'13',date:'Oct 16, 2026',title:'Fairer mock exams',items:[
+  '<b>Custom timer:</b> the Mock exam timer can be Off, 1 minute per question, or any number of minutes you choose.',
+  '<b>Skipped questions</b> no longer count as missed: they lower that exam\'s score, but don\'t touch your mastery or your Missed list. Finishing with nothing answered just discards the exam.',
+  '<b>Discard</b> (next to Finish exam) throws away an exam you started by accident.',
+  'Ready for <b>identification</b> questions mixed with multiple choice: they are answered by typing, in practice and in the mock exam.']},
  ...(cloudOn()?[{v:'12',date:'Oct 16, 2026',title:'Class stats and sync',items:[
   '<b>Class\'s most missed:</b> a sidebar list of the '+CLASS_TOP+' '+ITEMS+' the class gets wrong most, and after each answer how many classmates missed it. It is built from anonymous right/wrong counts (no names); you can stop sharing yours in Personalize.',
   '<b>Sync between devices</b> (Personalize → Your data): turn it on, then type the code on your phone or laptop. Progress from both devices is combined, not overwritten.']}]:[]),
@@ -1029,7 +1046,9 @@ function masteryDown(k){if(k.right>=T()){k.right=T()-1;k.srs=null}}
 
 /* ---------- type the answer (identification) ---------- */
 // Short recall answers only; definitions and long answers keep their choices.
-function canType(q){if(!state.prefs.typeMode||!q)return false;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
+// Identification items ("type":"id") are always typed, in practice and in the mock exam; "alt" lists other accepted answers.
+const isIdent=c=>!!c&&c.type==='id';
+function canType(q){if(!q)return false;if(isIdent(byId[q.cid]))return true;if(!state.prefs.typeMode)return false;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
  if(c.q?q.kind!=='recall':q.kind==='definition')return false;return ans.length<=40&&ans.split(/\s+/).length<=5&&!/[,;]| to | and /.test(ans)&&!/^(as|in|by|for|to|of|on|at|with|from|through)\b/i.test(ans)&&(ans.match(/\d+/g)||[]).length<=1}
 function normAns(s){return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\(.*?\)/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\b(the|a|an)\b/g,' ').replace(/\s+/g,' ').trim()}
 function lev(a,b){let p=Array.from({length:b.length+1},(_,j)=>j);for(let i=1;i<=a.length;i++){const c=[i];for(let j=1;j<=b.length;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[b.length]}
@@ -1040,7 +1059,7 @@ function typedHTML(fb){
  if(!fb)return '<div class="typein"><input id="typed" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer, then press Enter" aria-label="Your answer" onkeydown="if(event.key===\'Enter\'){event.preventDefault();submitTyped()}"></div>';
  return '<div class="typein done '+(fb.correct?'ok':'bad')+'"><span class="yl">You typed</span><b>'+esc(fb.typed||'')+'</b>'+(fb.override?'<span class="ov">counted as right</span>':'')+'</div>'}
 function submitTyped(){const q=state.active;if(view!=null||state.pmatch||state.feedback||!q||!q.typed)return;const el=$('typed'),val=(el&&el.value||'').trim();if(!val){if(el)el.focus();return}
- const target=q.choices.find(x=>x.correct),ok=typedOK(val,target.label);state.selected=ok?target.letter:null;record(ok,false);
+ const target=q.choices.find(x=>x.correct),ok=typedOK(val,target.label)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(val,x));state.selected=ok?target.letter:null;record(ok,false);
  state.feedback.typed=val;state.feedback.correctLabel=target.label;const last=state.log[state.log.length-1];if(last)last.fb=state.feedback;save();draw()}
 // A typed answer marked wrong that was really right (a spelling the checker did not accept).
 function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct||!fb.typed||!state.active)return;
