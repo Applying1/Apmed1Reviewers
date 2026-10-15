@@ -376,8 +376,9 @@ const PG={
  match:['Drills','<circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6h7M8.2 7.8l7.6 8.4"/>'],
  exam:['Mock exam','<path d="M9 3h6v4H9z"/><path d="M15 5h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3"/><path d="m9 14 2 2 4-4"/>'],
  prefs:['Personalize','<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>']};
-if(CONFIG.home){$('homelink').href=CONFIG.home;$('homelink').hidden=false}
-function drawPages(){$('pages').innerHTML=Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')}
+// (A page saved before this version has no #homelink: fall back to a link in the page list.)
+let HOME_LINK='';if(CONFIG.home){const h=$('homelink');if(h){h.href=CONFIG.home;h.hidden=false}else HOME_LINK='<a class="page" href="'+esc(CONFIG.home)+'">All courses</a>'}
+function drawPages(){$('pages').innerHTML=HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')}
 function draw(){
  if(!pageOn(page))page='dashboard';
  for(const [p,v] of Object.entries(VIEWS))$(v).hidden=p!==page;
