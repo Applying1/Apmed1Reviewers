@@ -83,9 +83,14 @@ const SECTION_NAMES=CONFIG.sections,CH_NAMES=CONFIG.chapters;
 const ALL_SECTIONS=Object.keys(SECTION_NAMES),ALL_CHAPTERS=Object.keys(CH_NAMES);
 const chOf=s=>String(s).split('-')[0];              // chapter id of a section id like "12-3"
 const isCh=s=>String(s).startsWith('CH:');          // "CH:3" = the entire chapter 3 as one quiz
-const isX=s=>s==='ALL'||s==='MISSED'||s==='STAR'||s==='DUE'; // modes that mix every chapter
+const isX=s=>s==='ALL'||s==='MISSED'||s==='STAR'||s==='DUE'||s==='CLASS'; // modes that mix every chapter
 const secCh=s=>isCh(s)?s.slice(3):chOf(s);
 const KEY=CONFIG.storageKey;
+// Cloud (optional): CONFIG.cloud = {url, key} turns on class stats and device sync (see "cloud" further down).
+const CLOUD=CONFIG.cloud||{},cloudOn=()=>!!(CLOUD.url&&CLOUD.key),SYNC_KEY='reviewer_sync';
+let CSTATS=null,classMemo={k:'',list:[]},crowdQ=[],crowdT=null,syncCode='',syncT=null,syncBusy=false,syncHold=false,syncEntry=false,syncInfo={at:0,err:''};
+try{CSTATS=JSON.parse(localStorage.getItem(KEY+'_class'))}catch(e){}
+try{syncCode=(JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||'';syncInfo.at=+localStorage.getItem(KEY+'_synced')||0}catch(e){}
 const ITEM=CONFIG.itemWord||'concept',ITEMS=ITEM+'s',Items=ITEMS.charAt(0).toUpperCase()+ITEMS.slice(1);
 const UNIT=CONFIG.unit||'Chapter',unitW=UNIT.toLowerCase(),unitsW=unitW+'s';
 const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
@@ -113,7 +118,7 @@ const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -143,7 +148,7 @@ const examAll=e=>!e.chapters&&!e.sections;
 const inScopeCh=ch=>{const e=examObj();ch=String(ch);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).some(x=>chOf(x)===ch)};
 const inScope=sec=>{const e=examObj(),ch=chOf(sec);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).includes(sec)};
 const bankItems=b=>b.items.filter(c=>(state.prefs.extras||!c.extra)&&secOn(c.section)&&inScope(c.section));
-function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
+function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(s==='CLASS'&&classOn())||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
 function refreshBank(){const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
  sectionKeys=ALL_SECTIONS.filter(k=>BANK.some(c=>c.section===k));
  chapters=ALL_CHAPTERS.filter(ch=>sectionKeys.some(k=>chOf(k)===ch));
@@ -169,21 +174,21 @@ const openCh=new Set(isX(state.section)?[]:[secCh(state.section)]);
 let lastCardKey='';
 
 // The summary lets a courses home screen show progress without loading the whole reviewer.
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function stableHash(s){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0}
 function shuffle(a,seed){let b=a.slice(),x=seed||1;for(let i=b.length-1;i>0;i--){x^=x<<13;x^=x>>>17;x^=x<<5;let j=(x>>>0)%(i+1);[b[i],b[j]]=[b[j],b[i]]}return b}
 const rnd=()=>((Math.random()*4294967296)>>>0)||1;
 // Random order: a new seed every time, so answer letters can't be memorized. In order: stable per attempt.
 const seedFor=(c,tag)=>state.prefs.order==='random'?rnd():stableHash(c.id+tag+state.concepts[c.id].seen);
-function inSection(s){return s==='ALL'?BANK:s==='DUE'?BANK.filter(c=>isDue(c)||(state.dueDone||[]).includes(c.id)):s==='MISSED'?BANK.filter(isMissedC):s==='STAR'?BANK.filter(isStar):isCh(s)?BANK.filter(c=>chOf(c.section)===s.slice(3)):BANK.filter(c=>c.section===s)}
-function progress(s){const a=inSection(s);if(s==='STAR'||s==='DUE'){const d=(s==='STAR'?state.starDone:state.dueDone)||[];return {done:a.filter(c=>d.includes(c.id)).length,total:a.length}}return {done:a.filter(isM).length,total:a.length}}
+function inSection(s){return s==='ALL'?BANK:s==='DUE'?BANK.filter(c=>isDue(c)||(state.dueDone||[]).includes(c.id)):s==='MISSED'?BANK.filter(isMissedC):s==='STAR'?BANK.filter(isStar):s==='CLASS'?classList():isCh(s)?BANK.filter(c=>chOf(c.section)===s.slice(3)):BANK.filter(c=>c.section===s)}
+function progress(s){const a=inSection(s);if(s==='STAR'||s==='DUE'||s==='CLASS'){const d=(s==='STAR'?state.starDone:s==='CLASS'?state.classDone:state.dueDone)||[];return {done:a.filter(c=>d.includes(c.id)).length,total:a.length}}return {done:a.filter(isM).length,total:a.length}}
 // What is still to be asked: unmastered items, or for starred review the ones not yet seen this round.
 // Review pass: every item of the section once, mastered or not. Mastery only drops for the ones you miss.
 const onPass=s=>!!state.pass&&state.pass.sec===s;
-function poolFor(s){if(onPass(s)){const d=state.pass.done;return inSection(s).filter(c=>!d.includes(c.id))}if(s==='DUE')return BANK.filter(isDue);const a=inSection(s);if(s==='STAR'){const d=state.starDone||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
+function poolFor(s){if(onPass(s)){const d=state.pass.done;return inSection(s).filter(c=>!d.includes(c.id))}if(s==='DUE')return BANK.filter(isDue);const a=inSection(s);if(s==='STAR'||s==='CLASS'){const d=(s==='STAR'?state.starDone:state.classDone)||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
 function completed(s){const p=progress(s);return p.done===p.total}
-const secTitle=s=>s==='DUE'?'Due for review':s==='MISSED'?'Missed '+ITEMS:s==='STAR'?'Starred '+ITEMS:s==='ALL'?'All '+unitsW+', shuffled':isCh(s)?CH_NAMES[s.slice(3)]:s+' '+SECTION_NAMES[s];
+const secTitle=s=>s==='DUE'?'Due for review':s==='MISSED'?'Missed '+ITEMS:s==='STAR'?'Starred '+ITEMS:s==='CLASS'?'Class\'s most missed':s==='ALL'?'All '+unitsW+', shuffled':isCh(s)?CH_NAMES[s.slice(3)]:s+' '+SECTION_NAMES[s];
 const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
 
 // fx (class challenges): a fixed seed and item list, so every device builds exactly the same question.
@@ -261,7 +266,7 @@ function feedbackHTML(q,fb,live){
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
  const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' stays in your queue.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
   :'This '+ITEM+' will come back later, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
- out+='<p class="note">'+note+'</p></div>';
+ const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
  return out;
 }
 function backBtn(){return '<button class="btn back" onclick="goBack()" '+(canBack()?'':'disabled')+' title="Previous answered question (←)">'+LEFT+'Back</button>'}
@@ -287,13 +292,14 @@ function cardHTML(){
    (secLog().length?backBtn():'')+'<button class="btn" onclick="extraPractice()">Review again</button><button class="btn primary" id="go" onclick="endPass()">'+(slip?'Practice the '+slip+' you missed':'Done')+' <kbd>Enter</kbd></button></div></div>'}
  // Section finished
  if(!state.active){
-  const L=navList(s),last=!L.length||L.indexOf(s)===L.length-1,focus=s==='MISSED'||s==='STAR'||s==='DUE',none=!inSection(s).length;
-  const label=s==='ALL'?'Shuffle complete':s==='DUE'?(none?'Nothing due':'All reviewed'):s==='STAR'?(none?'Nothing starred':'Round complete'):s==='MISSED'?'All caught up':isCh(s)?esc(UNIT)+' complete':'Section complete';
+  const L=navList(s),last=!L.length||L.indexOf(s)===L.length-1,focus=s==='MISSED'||s==='STAR'||s==='DUE'||s==='CLASS',none=!inSection(s).length;
+  const label=s==='ALL'?'Shuffle complete':s==='DUE'?(none?'Nothing due':'All reviewed'):s==='STAR'?(none?'Nothing starred':'Round complete'):s==='MISSED'?'All caught up':s==='CLASS'?(none?'Nothing yet':'Round complete'):isCh(s)?esc(UNIT)+' complete':'Section complete';
   const text=s==='DUE'?(none?'Nothing is due right now. Mastered '+ITEMS+' come back for review after 1, 3, 7, 14 and 30 days.':'You reviewed everything that was due. Each one is now scheduled further out.'):s==='STAR'?(none?'No starred '+ITEMS+' yet. Tap the star on any question, or press S, to collect it here.':'You went through every starred '+ITEM+'. Go again the night before the exam.')
+   :s==='CLASS'?(none?'This list fills in once enough classmates have answered these '+ITEMS+'.':'You went through the '+ITEMS+' your class misses most. Go again before the exam.')
    :s==='MISSED'?(none?'Nothing missed yet. '+Items+' you get wrong, or check in your slides, will collect here.':'Every '+ITEM+' you had missed is now mastered.')
    :'You answered every '+ITEM+' here correctly '+(TIMES[T()]||T()+' times')+'. Move on, or do a review pass: every '+ITEM+' once, and you keep your mastery unless you miss one.';
   return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">'+label+'</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+text+'</p><div class="row">'+
-   (secLog().length?backBtn():'')+(none||s==='DUE'?'':'<button class="btn" onclick="extraPractice()"'+(s==='STAR'?'':' title="Every '+ITEM+' once. You keep your mastery unless you miss one."')+'>'+(s==='STAR'?'Go again':'Review pass')+'</button>')+
+   (secLog().length?backBtn():'')+(none||s==='DUE'?'':'<button class="btn" onclick="extraPractice()"'+(s==='STAR'||s==='CLASS'?'':' title="Every '+ITEM+' once. You keep your mastery unless you miss one."')+'>'+(s==='STAR'||s==='CLASS'?'Go again':'Review pass')+'</button>')+
    (focus?'<button class="btn primary" id="go" onclick="setPage(\'dashboard\')">Back to dashboard <kbd>Enter</kbd></button>'
     :'<button class="btn primary" id="go" onclick="advance()">'+(last?'Finish':'Next '+(isCh(s)?unitW:'section'))+' <kbd>Enter</kbd></button>')+'</div></div>';
  }
@@ -313,9 +319,10 @@ function focusNav(study){
  const nDue=state.prefs.srs?BANK.filter(isDue).length:0,dOn=state.section==='DUE'&&study;
  const nMiss=state.prefs.missed?BANK.filter(c=>isMissedC(c)&&!isM(c)).length:0,mOn=state.section==='MISSED'&&study;
  const nStar=state.prefs.stars?BANK.filter(isStar).length:0,sOn=state.section==='STAR'&&study;
+ const nClass=classOn()?classList().length:0,cOn=state.section==='CLASS'&&study;
  const b=(id,on,ic,name,ct,tip)=>'<button class="sec special '+(on?'on':'')+'" '+(on?'aria-current="page" ':'')+'onclick="selectSection(\''+id+'\')" title="'+tip+'"><span class="no">'+ic+'</span><span class="nm">'+name+'</span><span class="ct">'+ct+'</span></button>';
  return (nDue||dOn?b('DUE',dOn,CLOCK_SM,'Due for review',nDue,'Mastered '+ITEMS+' that are due for a spaced review'):'')+(nMiss||mOn?b('MISSED',mOn,MISS_SM,'Missed '+ITEMS,nMiss,'Only the '+ITEMS+' you got wrong or checked in your slides, until mastered'):'')+
-  (nStar||sOn?b('STAR',sOn,STAR_SM,'Starred',nStar,'Your starred '+ITEMS+', mastered or not'):'');
+  (nStar||sOn?b('STAR',sOn,STAR_SM,'Starred',nStar,'Your starred '+ITEMS+', mastered or not'):'')+(nClass||cOn?b('CLASS',cOn,CLASS_SM,'Class\'s most missed',nClass,'The '+ITEMS+' your class misses most right now'):'');
 }
 function navHTML(){
  const study=page==='study',ap=progress('ALL'),aOn=state.section==='ALL'&&study;
@@ -337,7 +344,7 @@ function drawStudy(){
  $('prevSec').disabled=!L.length||idx<=0;$('nextSec').disabled=!L.length||idx>=L.length-1;
  for(const [id,w] of [['prevSec','Previous '],['nextSec','Next ']]){$(id).title=w+what;$(id).setAttribute('aria-label',w+what)}
  $('notesBtn').hidden=!pageOn('notes');$('chartBtn').hidden=!chartsOn();
- $('mlabel').innerHTML=pp?'Review pass · <b>'+pp.done+'</b> of '+pp.total+' '+ITEMS+' gone through':'<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'?'starred '+ITEMS+' reviewed this round':s==='DUE'?ITEMS+' reviewed':ITEMS+' mastered');
+ $('mlabel').innerHTML=pp?'Review pass · <b>'+pp.done+'</b> of '+pp.total+' '+ITEMS+' gone through':'<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'||s==='CLASS'?(s==='STAR'?'starred ':'')+ITEMS+' reviewed this round':s==='DUE'?ITEMS+' reviewed':ITEMS+' mastered');
  $('goal').innerHTML=GOALS.length>1?'<span>Recall goal</span>'+goalSeg():'';
  $('fill').style.width=(100*(pp||p).done/Math.max(1,(pp||p).total))+'%';
  // Dots: in random order they are grouped by progress, so a dot's position never hints at a question.
@@ -456,7 +463,7 @@ function drawDash(){
   '<div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'" aria-label="Overall mastery"><div class="fill" style="width:'+pct+'%"></div></div></div>'+
   '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div>'+(secDone===sectionKeys.length?'<button class="btn primary" onclick="reviewAll()" title="Every '+ITEM+' once, shuffled. You keep your mastery unless you miss one.">Review pass · '+(ex?'all of '+esc(ex.name):'all '+unitsW)+'</button>':'<button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button>')+(nDue?'<button class="shuffle-link due" onclick="selectSection(\'DUE\')">'+CLOCK_SM+'Review '+nDue+' due today</button>':'')+'<button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
   (pageOn('notes')?'<button class="shuffle-link" onclick="openNotes(\'all\')">'+NOTE_SM+'Read the high-yield notes</button>':'')+
-  (state.prefs.stars&&nStar?'<button class="shuffle-link" onclick="selectSection(\'STAR\')">'+STAR_SM+'Review starred ('+nStar+')</button>':'')+'</div>';
+  (state.prefs.stars&&nStar?'<button class="shuffle-link" onclick="selectSection(\'STAR\')">'+STAR_SM+'Review starred ('+nStar+')</button>':'')+(classOn()?'<button class="shuffle-link" onclick="selectSection(\'CLASS\')">'+CLASS_SM+'Class\'s most missed ('+classList().length+')</button>':'')+'</div>';
 
  const tile=(ic,k,v,d)=>'<div class="kpi"><div class="k">'+ic+k+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div></div>';
  $('kpis').innerHTML=
@@ -654,7 +661,7 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
  ex.qs.forEach((q,j)=>{const c=byId[q.cid],k=state.concepts[q.cid],ok=q.choices.some(x=>x.correct&&x.letter===ex.ans[j]),ch=chOf(c.section);
   byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;k.seen++;
   if(ok){right++;byCh[ch][0]++;state.correct++}else{k.wrong++;state.wrong++;masteryDown(k)}
-  state.history.push({cid:q.cid,correct:ok,lookup:false,term:c.term,section:c.section,mode:'EXAM'})});
+  if(ex.ans[j])crowdAdd(q.cid,!ok);state.history.push({cid:q.cid,correct:ok,lookup:false,term:c.term,section:c.section,mode:'EXAM'})});
  ex.right=right;ex.byCh=byCh;
  state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0}).slice(-20);
  // A challenge keeps your first score; later tries are shared as retakes.
@@ -801,6 +808,72 @@ function exportSet(id){const s=USER_SETS.find(x=>x.id===id);if(!s)return;
  download((s.name.replace(/[^\w\- ']+/g,'').trim()||'question set')+'.txt','// A question set for '+CONFIG.title+'. To add it: open the reviewer, then Personalize → Question banks → Add a set → Upload file.\nName: '+s.name+'\n\n'+s.text);
  toast('Saved “'+s.name+'”. Send the file to your classmates.')}
 
+/* ---------- cloud (optional, Supabase): class stats and device sync ----------
+   CONFIG.cloud = {url:'https://<project>.supabase.co', key:'<publishable / anon key>'}. Without it none of this shows.
+   The database exposes only the functions in supabase_setup.sql: record_answers, class_stats, sync_put, sync_get, sync_known.
+   The course id in the database is the storageKey, so the file and website versions share class stats. */
+const CLASS_MIN=5,CLASS_TOP=20,BUILTIN=new Set(BANKS.filter(b=>!b.user).flatMap(b=>b.items.map(c=>c.id)));
+const CLASS_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.6a6.5 6.5 0 0 1 3.5 5.4"/></svg>';
+function rpc(fn,body,keep){const h={'Content-Type':'application/json',apikey:CLOUD.key};if(/^eyJ/.test(CLOUD.key))h.Authorization='Bearer '+CLOUD.key;
+ return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body),keepalive:!!keep})
+  .then(r=>{if(!r.ok)throw new Error('cloud '+r.status);return r.text()}).then(t=>t?JSON.parse(t):null)}
+// Most missed by the class: questions answered at least CLASS_MIN times, by miss rate, within the current bank and exam scope.
+function classList(){if(!CSTATS||!CSTATS.rows)return [];const k=state.bank+'|'+state.prefs.scope+'|'+CSTATS.at+'|'+BANK.length;if(classMemo.k===k)return classMemo.list;
+ const list=BANK.map(c=>({c,s:CSTATS.rows[c.id]})).filter(x=>x.s&&x.s[0]>=CLASS_MIN&&x.s[1]>0).sort((a,b)=>b.s[1]/b.s[0]-a.s[1]/a.s[0]||b.s[0]-a.s[0]).slice(0,CLASS_TOP).map(x=>x.c);
+ classMemo={k,list};return list}
+function classOn(){return cloudOn()&&!!state.prefs.classmiss&&classList().length>0}
+function classRate(id){const r=cloudOn()&&CSTATS&&CSTATS.rows&&CSTATS.rows[id];return r&&r[0]>=CLASS_MIN?Math.round(100*r[1]/r[0]):null}
+function loadClassStats(){if(!cloudOn()||CSTATS&&Date.now()-CSTATS.at<6e5)return;
+ rpc('class_stats',{p_course:KEY}).then(rows=>{const r={};(rows||[]).forEach(x=>{r[x.qid]=[x.attempts,x.missed]});CSTATS={at:Date.now(),rows:r};classMemo.k='';
+  try{localStorage.setItem(KEY+'_class',JSON.stringify(CSTATS))}catch(e){}
+  $('nav').innerHTML=navHTML();if(page==='dashboard')drawDash()}).catch(()=>{})}
+// Anonymous answers go out in small batches: {q: question id, m: 1 if missed}. Only built-in banks count.
+function crowdAdd(cid,missed){if(!cloudOn()||!state.prefs.crowd||!BUILTIN.has(cid))return;crowdQ.push({q:cid,m:missed?1:0});clearTimeout(crowdT);
+ if(crowdQ.length>=10)crowdFlush();else crowdT=setTimeout(crowdFlush,20000)}
+function crowdFlush(keep){if(!crowdQ.length)return;const items=crowdQ.splice(0,100);rpc('record_answers',{p_course:KEY,p_items:items},keep).catch(()=>{if(!keep&&crowdQ.length<300)crowdQ=items.concat(crowdQ)})}
+
+// Sync: one private code (saved for every course on this site) links devices. Each sync merges first, then uploads,
+// so no device ever loses answers: per question the copy with more answers wins; totals keep the higher count.
+const fmtCode=c=>c.replace(/(.{4})(?=.)/g,'$1-');
+function agoShort(t){const m=Math.round((Date.now()-t)/6e4);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
+function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=new Uint8Array(12);crypto.getRandomValues(b);return Array.from(b,x=>A[x%32]).join('')}
+function syncPayload(){const c={};for(const id in state.concepts){const k=state.concepts[id];if(k.seen||k.star||k.lookups||k.srs)c[id]=Object.assign({},k,{history:(k.history||[]).slice(-8)})}
+ return {v:1,at:Date.now(),concepts:c,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},name:state.name||'',history:(state.history||[]).slice(-300),sets:USER_SETS}}
+function mergeRemote(r){let changed=false,reload=false;if(!r||!r.concepts)return {changed,reload};const t=r.tot||{},remoteMore=(t.correct||0)+(t.wrong||0)>state.correct+state.wrong;
+ for(const id in r.concepts){const a=state.concepts[id],b=r.concepts[id];if(!b)continue;
+  if(!a){state.concepts[id]=b;changed=true;continue}
+  if((b.seen||0)>(a.seen||0)||(b.seen||0)===(a.seen||0)&&(b.right||0)>(a.right||0)){state.concepts[id]=Object.assign({},b,{history:(a.history||[]).length>(b.history||[]).length?a.history:b.history||[]});changed=true}
+  else if(b.star&&!a.star&&(b.seen||0)===(a.seen||0)){a.star=true;changed=true}}
+ ['correct','wrong','lookups','hints'].forEach(f=>{if((t[f]||0)>(state[f]||0)){state[f]=t[f];changed=true}});
+ if(remoteMore&&(r.history||[]).length){state.history=r.history;changed=true}
+ if(r.match&&(r.match.total||0)>(state.match.total||0)){state.match=r.match;changed=true}
+ if((r.exams||[]).length>(state.exams||[]).length){state.exams=r.exams;changed=true}
+ for(const k in r.chalLog||{})if(!(state.chalLog||{})[k]){state.chalLog=state.chalLog||{};state.chalLog[k]=r.chalLog[k];changed=true}
+ if(r.name&&!state.name){state.name=r.name;changed=true}
+ const used=new Set(Object.keys(COURSE_CH).concat(USER_SETS.map(x=>x.ch)));
+ for(const x of r.sets||[])if(x&&x.id&&!USER_SETS.some(y=>y.id===x.id)){const ch=used.has(x.ch)?'ABCDEFGHJKLMNPQRSTUVWXYZ'.split('').find(c=>!used.has(c))||'Z':x.ch;used.add(ch);USER_SETS.push(Object.assign({},x,{ch}));reload=true}
+ if(reload)try{localStorage.setItem(SETS_KEY,JSON.stringify(USER_SETS))}catch(e){}
+ return {changed,reload}}
+function syncNow(){if(!cloudOn()||!syncCode||syncBusy)return Promise.resolve();syncBusy=true;clearTimeout(syncT);syncT=null;
+ return rpc('sync_get',{p_code:syncCode,p_course:KEY}).then(rows=>{const row=Array.isArray(rows)?rows[0]:rows,m=row&&row.data?mergeRemote(row.data):{};
+   if(m.changed){syncHold=true;save();syncHold=false}
+   return rpc('sync_put',{p_code:syncCode,p_course:KEY,p_data:syncPayload()}).then(()=>{syncInfo={at:Date.now(),err:''};try{localStorage.setItem(KEY+'_synced',syncInfo.at)}catch(e){}
+    if(m.reload){location.reload();return}
+    if(m.changed){refreshBank();draw()}else if(page==='prefs')drawPrefs()})})
+  .catch(()=>{syncInfo.err='Could not reach the sync server. Your progress is safe here and will sync later';if(page==='prefs')drawPrefs()})
+  .finally(()=>{syncBusy=false})}
+function syncStart(){syncCode=newCode();try{localStorage.setItem(SYNC_KEY,JSON.stringify({code:syncCode}))}catch(e){}syncInfo={at:0,err:''};drawPrefs();syncNow()}
+function syncLink(){const v=($('synccode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(v.length!==12){toast('A sync code has 12 letters and numbers.');return}
+ rpc('sync_known',{p_code:v}).then(ok=>{if(!ok){toast('Nothing is saved under that code yet. Check it, or tap Sync now on the other device first.');return}
+  syncCode=v;syncEntry=false;try{localStorage.setItem(SYNC_KEY,JSON.stringify({code:v}))}catch(e){}syncInfo={at:0,err:''};drawPrefs();syncNow().then(()=>toast('Linked. Your progress from both devices is combined.'))})
+  .catch(()=>toast('Could not reach the sync server. Check your connection.'))}
+function syncStop(){if(!confirm('Stop syncing this device? Your progress stays here, and the other device keeps its own.'))return;syncCode='';clearTimeout(syncT);try{localStorage.removeItem(SYNC_KEY)}catch(e){}drawPrefs()}
+function syncRowHTML(row){if(!cloudOn())return '';const t='Sync between devices';
+ if(syncEntry)return row(t,'Type the code shown on your other device under Personalize → Sync between devices.','<input class="txt" id="synccode" maxlength="14" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" onkeydown="if(event.key===\'Enter\')syncLink()"><button class="btn sm primary" onclick="syncLink()">Link</button><button class="btn sm" onclick="syncEntry=false;drawPrefs()">Cancel</button>');
+ if(!syncCode)return row(t,'Keep the same progress on your phone and laptop. You get a private code to type on the other device; it covers every course here.','<button class="btn sm" onclick="syncStart()">Turn on</button><button class="btn sm" onclick="syncEntry=true;drawPrefs();setTimeout(()=>$(\'synccode\').focus(),0)">I have a code</button>');
+ return row(t,'Your code: <b class="code">'+fmtCode(syncCode)+'</b> · '+(syncInfo.err?esc(syncInfo.err):syncInfo.at?'synced '+agoShort(syncInfo.at):'syncing…')+'. Type it on your other device. Anyone with the code can see and change this progress, so keep it to yourself.',
+  '<button class="btn sm" onclick="syncNow()">Sync now</button><button class="btn sm" onclick="copyText(fmtCode(syncCode),\'Code copied.\')">Copy code</button><button class="btn sm" onclick="syncStop()">Turn off</button>')}
+
 /* ---------- personalize ---------- */
 function drawPrefs(){
  document.title='Personalize · '+CONFIG.title;
@@ -822,6 +895,7 @@ function drawPrefs(){
   row('Missed '+ITEMS+' drill','A sidebar list and a dashboard button that drill only the '+ITEMS+' you got wrong or checked in your slides, until they are mastered.',sw(state.prefs.missed,"setPref('missed',"+!state.prefs.missed+")",'Missed '+ITEMS+' drill'))+
   row('Spaced review','Mastered '+ITEMS+' come back as Due for review after 1, 3, 7, 14 and 30 days, so they stick until the exam. Missing one sends it back to practice.',sw(state.prefs.srs,"setPref('srs',"+!state.prefs.srs+")",'Spaced review'))+
   row('Flag button','A flag next to the star copies the '+ITEM+', its ID and the answer key, so you can paste it in your group chat to point out a typo or a wrong answer.',sw(state.prefs.flag,"setPref('flag',"+!state.prefs.flag+")",'Flag button'))+
+  (cloudOn()?row('Class\'s most missed','A sidebar list of the '+CLASS_TOP+' '+ITEMS+' your class misses most, and how many classmates missed each '+ITEM+' after you answer it.',sw(state.prefs.classmiss,"setPref('classmiss',"+!state.prefs.classmiss+")",'Class most missed')):'')+
   '</section>';
  h+='<section class="panel"><h2>Pages</h2>'+
   (NOTES_DATA?row('Notes','High-yield recognition notes to read before a mock exam, with a self-test mode.',sw(state.prefs.notes,"setPref('notes',"+!state.prefs.notes+")",'Show the Notes page')):'')+
@@ -834,7 +908,8 @@ function drawPrefs(){
  h+='<section class="panel"><h2>Appearance and you</h2>'+
   row('Theme','System follows your device setting.',segHTML('setThemeMode',[['system','System'],['light','Light'],['dark','Dark']],themeMode(),'Theme'))+
   row('Your name','Used to greet you on the dashboard. Saved only in this browser.','<input class="txt" id="pname" maxlength="40" placeholder="Your name" aria-label="Your name" autocomplete="given-name" value="'+esc(state.name||'')+'" onchange="state.name=this.value.trim().slice(0,40);save()">')+'</section>';
- h+='<section class="panel"><h2>Your data</h2>'+
+ h+='<section class="panel"><h2>Your data</h2>'+syncRowHTML(row)+
+  (cloudOn()?row('Share anonymous answer stats','Sends only which '+ITEMS+' were answered right or wrong, with no name and no device ID, so the class can see its most missed '+ITEMS+'.',sw(state.prefs.crowd,"setPref('crowd',"+!state.prefs.crowd+")",'Share anonymous answer stats')):'')+
   row('Export progress','Download a backup of your answers as a JSON file.','<button class="btn sm" onclick="exportProgress()">Export</button>')+
   row('Import progress','Load a file you exported, for example to move your answers from the file version to the website or to another browser. It replaces the progress saved here.','<button class="btn sm" onclick="importProgress()">Import</button>')+
   row('Reset progress','Erase every saved answer in this browser. This can\'t be undone.','<button class="btn sm danger" onclick="resetAll()">Reset</button>')+'</section>';
@@ -843,6 +918,9 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ ...(cloudOn()?[{v:'12',date:'Oct 16, 2026',title:'Class stats and sync',items:[
+  '<b>Class\'s most missed:</b> a sidebar list of the '+CLASS_TOP+' '+ITEMS+' the class gets wrong most, and after each answer how many classmates missed it. It is built from anonymous right/wrong counts (no names); you can stop sharing yours in Personalize.',
+  '<b>Sync between devices</b> (Personalize → Your data): turn it on, then type the code on your phone or laptop. Progress from both devices is combined, not overwritten.']}]:[]),
  {v:'11',date:'Oct 16, 2026',title:'Exam scope and review passes',items:[
   '<b>Exam scope:</b> a course can list its tests (quizzes, midterm, finals). Pick one under <b>Studying for</b> in the sidebar and the dashboard, '+unitsW+', notes, drills and the mock exam show only what that test covers. The next test is picked for you.',
   '<b>Review pass</b> replaces "Practice again": every '+ITEM+' once, and you <b>keep your mastery</b> unless you miss one. Missed ones go back into practice. When everything is mastered, the dashboard offers a review pass of all '+unitsW+'.',
@@ -973,7 +1051,8 @@ function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct|
 
 function record(correct,lookup){
  const q=state.active,k=state.concepts[q.cid],choice=q.choices.find(x=>x.letter===state.selected),target=q.choices.find(x=>x.correct);
- k.seen++;if(onPass(state.section)){const P=state.pass;if(!P.done.includes(q.cid))P.done.push(q.cid);if(!correct&&!P.miss.includes(q.cid))P.miss.push(q.cid)}
+ k.seen++;crowdAdd(q.cid,!correct);if(state.section==='CLASS'){state.classDone=state.classDone||[];if(!state.classDone.includes(q.cid))state.classDone.push(q.cid)}
+ if(onPass(state.section)){const P=state.pass;if(!P.done.includes(q.cid))P.done.push(q.cid);if(!correct&&!P.miss.includes(q.cid))P.miss.push(q.cid)}
  if(state.section==='STAR'){state.starDone=state.starDone||[];if(!state.starDone.includes(q.cid))state.starDone.push(q.cid)}
  if(state.section==='DUE'){state.dueDone=state.dueDone||[];if(!state.dueDone.includes(q.cid))state.dueDone.push(q.cid)}
  const prev={right:k.right,srs:k.srs?{...k.srs}:null};
@@ -990,12 +1069,12 @@ function record(correct,lookup){
  requestAnimationFrame(()=>{const f=document.querySelector('#card .fb'),r=f?.getBoundingClientRect();if(r&&r.bottom>innerHeight)f.scrollIntoView({block:'nearest',behavior:reduceMotion?'auto':'smooth'})});
 }
 function next(){if(!state.feedback)return;state.feedback=null;state.active=null;state.selected=null;maybeMix();if(completed(state.section)&&!state.complete.includes(state.section))state.complete.push(state.section);save();draw();scrollToCard()}
-function goSection(sec){if(sec===state.section)return;state.section=sec;state.pmatch=null;state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;if(!isX(sec))openCh.add(secCh(sec));if(sec==='STAR'&&completed('STAR'))state.starDone=[];if(sec==='DUE')state.dueDone=[];save();draw();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'})}
+function goSection(sec){if(sec===state.section)return;state.section=sec;state.pmatch=null;state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;if(!isX(sec))openCh.add(secCh(sec));if(sec==='STAR'&&completed('STAR'))state.starDone=[];if(sec==='CLASS'&&completed('CLASS'))state.classDone=[];if(sec==='DUE')state.dueDone=[];save();draw();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'})}
 function selectSection(sec){toggleNav(false);if(page!=='study'){page='study';state.page=page;if(sec===state.section){save();draw();window.scrollTo(0,0);return}}goSection(sec)}
 function stepSection(d){const L=navList(state.section),i=L.indexOf(state.section)+d;if(i>=0&&i<L.length)goSection(L[i])}
 function advance(){const L=navList(state.section),i=L.indexOf(state.section);if(!L.length||i===L.length-1){$('modalbody').textContent=completed('ALL')?'You have mastered all '+BANK.length+' '+ITEMS+(examObj()?' for '+examObj().name:' across '+scopeLabel())+'. Keep practicing any section to stay sharp.':'You reached the end. '+(BANK.length-mastered())+' '+ITEMS+' are still waiting elsewhere, so check the dashboard for what is left.';$('dialog').hidden=false;return}goSection(L[i+1])}
 // Starred review restarts its round; everything else starts a review pass (mastery is kept unless you miss).
-function extraPractice(){if(state.section==='STAR')state.starDone=[];else state.pass={sec:state.section,done:[],miss:[]};state.complete=state.complete.filter(x=>x!==state.section);state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
+function extraPractice(){if(state.section==='STAR')state.starDone=[];else if(state.section==='CLASS')state.classDone=[];else state.pass={sec:state.section,done:[],miss:[]};state.complete=state.complete.filter(x=>x!==state.section);state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
 function endPass(){state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
 function reviewAll(){selectSection('ALL');extraPractice()}
 function scrollToCard(){const r=$('card').getBoundingClientRect();if(r.top<0)$('card').scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
@@ -1038,5 +1117,7 @@ document.addEventListener('keydown',e=>{
 takeLink();
 addEventListener('hashchange',()=>{if(takeLink()){toggleNav(false);draw();window.scrollTo(0,0)}});
 draw();
+if(cloudOn()){loadClassStats();if(syncCode)syncNow();
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else loadClassStats()})}
 // Show What's new once: on the first visit, and again only when a newer entry is added to CHANGELOG (not over a challenge).
 if(state.seenNews!==CHANGELOG[0].v&&!CHAL)setTimeout(openNews,350);
