@@ -53,6 +53,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .body .s{color:var(--mute);font-size:13.5px}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .tag{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--raised);color:var(--mute)}
+.tag.exam{background:var(--accent-soft);color:var(--accent)}
 .prog{margin-top:auto;padding-top:12px}
 .track{height:6px;border-radius:9px;background:var(--raised);overflow:hidden}
 .fill{height:100%;border-radius:9px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
@@ -77,6 +78,8 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 // Links shared on Facebook/Messenger get ?fbclid=... added; drop it so the address stays clean when copied again.
 if(/[?&](fbclid|utm_[a-z]+|gclid)=/.test(location.search))history.replaceState(null,'',location.pathname);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// The course's next test, e.g. "Midterm · in 4 days" (from courses.json, set by activeExam).
+function examTag(e){if(!e)return '';let w='';if(e.date){const t=new Date();t.setHours(0,0,0,0);const n=Math.round((new Date(e.date+'T00:00')-t)/864e5);w=n<0?'':n===0?' · today':n===1?' · tomorrow':' · in '+n+' days'}return '<span class="tag exam">'+esc(e.name)+w+'</span>'}
 function ago(t){const d=Math.floor((Date.now()-t)/864e5);return d<=0?'today':d===1?'yesterday':d+' days ago'}
 function summary(key){try{return JSON.parse(localStorage.getItem(key+'_summary'))}catch(e){return null}}
 function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.endsWith('_summary'))continue;const v=JSON.parse(localStorage.getItem(k));if(v&&v.name)return v.name}}catch(e){}return ''}
@@ -89,8 +92,8 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
   return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+
    '<span class="art">'+(c.image?'<img src="'+esc(c.image)+'" alt="" loading="lazy">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>'+
    '<span class="body"><span class="t">'+esc(c.title)+'</span><span class="s">'+esc(c.scope)+' · '+c.count+' '+esc(c.itemWord)+'s</span>'+
-   (c.extras.length?'<span class="tags">'+c.extras.map(x=>'<span class="tag">+ '+esc(x)+'</span>').join('')+'</span>':'')+
-   '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('');
+   (c.exam||c.extras.length?'<span class="tags">'+examTag(c.exam)+c.extras.map(x=>'<span class="tag">+ '+esc(x)+'</span>').join('')+'</span>':'')+
+   '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?(s.scope&&!(c.exam&&c.exam.name===s.scope)?esc(s.scope)+': ':'')+pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('');
 })();
 // Install: Android/desktop Chrome offer a prompt; iPhone needs Share → Add to Home Screen.
 let deferred=null;

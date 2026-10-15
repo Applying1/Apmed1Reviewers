@@ -113,7 +113,7 @@ const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -132,7 +132,17 @@ const bankObj=()=>BANKS.find(b=>b.id===state.bank)||BANKS[0];
 const OPT=CONFIG.optionalSections||{};
 const optOn=k=>state.prefs.opt&&k in state.prefs.opt?!!state.prefs.opt[k]:!!(OPT[k]&&OPT[k].on);
 const secOn=k=>!k||!OPT[k]||optOn(k);
-const bankItems=b=>b.items.filter(c=>(state.prefs.extras||!c.extra)&&secOn(c.section));
+/* Exam scope: CONFIG.exams = [{id, name, chapters?, sections?, date?}], CONFIG.activeExam = the next test.
+   An exam without chapters or sections covers everything. Students can switch in the sidebar ("All <units>" too);
+   when the author changes activeExam (say Midterm → Finals), everyone is moved to it once. */
+const EXAMS=(CONFIG.exams||[]).filter(e=>e&&e.id&&e.name);
+if(EXAMS.length&&state.prefs.scopeSeen!==CONFIG.activeExam){state.prefs.scope=CONFIG.activeExam||EXAMS[0].id;state.prefs.scopeSeen=CONFIG.activeExam}
+function examObj(){if(!EXAMS.length||state.prefs.scope==='all')return null;return EXAMS.find(e=>e.id===state.prefs.scope)||EXAMS.find(e=>e.id===CONFIG.activeExam)||EXAMS[0]}
+const examAll=e=>!e.chapters&&!e.sections;
+// A set's own topic groups (not course chapters) are always in scope.
+const inScopeCh=ch=>{const e=examObj();ch=String(ch);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).some(x=>chOf(x)===ch)};
+const inScope=sec=>{const e=examObj(),ch=chOf(sec);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).includes(sec)};
+const bankItems=b=>b.items.filter(c=>(state.prefs.extras||!c.extra)&&secOn(c.section)&&inScope(c.section));
 function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
 function refreshBank(){const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
  sectionKeys=ALL_SECTIONS.filter(k=>BANK.some(c=>c.section===k));
@@ -159,7 +169,7 @@ const openCh=new Set(isX(state.section)?[]:[secCh(state.section)]);
 let lastCardKey='';
 
 // The summary lets a courses home screen show progress without loading the whole reviewer.
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));const main=BANKS[0].items;localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now()}))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function stableHash(s){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0}
 function shuffle(a,seed){let b=a.slice(),x=seed||1;for(let i=b.length-1;i>0;i--){x^=x<<13;x^=x>>>17;x^=x<<5;let j=(x>>>0)%(i+1);[b[i],b[j]]=[b[j],b[i]]}return b}
@@ -169,7 +179,9 @@ const seedFor=(c,tag)=>state.prefs.order==='random'?rnd():stableHash(c.id+tag+st
 function inSection(s){return s==='ALL'?BANK:s==='DUE'?BANK.filter(c=>isDue(c)||(state.dueDone||[]).includes(c.id)):s==='MISSED'?BANK.filter(isMissedC):s==='STAR'?BANK.filter(isStar):isCh(s)?BANK.filter(c=>chOf(c.section)===s.slice(3)):BANK.filter(c=>c.section===s)}
 function progress(s){const a=inSection(s);if(s==='STAR'||s==='DUE'){const d=(s==='STAR'?state.starDone:state.dueDone)||[];return {done:a.filter(c=>d.includes(c.id)).length,total:a.length}}return {done:a.filter(isM).length,total:a.length}}
 // What is still to be asked: unmastered items, or for starred review the ones not yet seen this round.
-function poolFor(s){if(s==='DUE')return BANK.filter(isDue);const a=inSection(s);if(s==='STAR'){const d=state.starDone||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
+// Review pass: every item of the section once, mastered or not. Mastery only drops for the ones you miss.
+const onPass=s=>!!state.pass&&state.pass.sec===s;
+function poolFor(s){if(onPass(s)){const d=state.pass.done;return inSection(s).filter(c=>!d.includes(c.id))}if(s==='DUE')return BANK.filter(isDue);const a=inSection(s);if(s==='STAR'){const d=state.starDone||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
 function completed(s){const p=progress(s);return p.done===p.total}
 const secTitle=s=>s==='DUE'?'Due for review':s==='MISSED'?'Missed '+ITEMS:s==='STAR'?'Starred '+ITEMS:s==='ALL'?'All '+unitsW+', shuffled':isCh(s)?CH_NAMES[s.slice(3)]:s+' '+SECTION_NAMES[s];
 const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
@@ -267,15 +279,21 @@ function cardHTML(){
  }
  // A matching set mixed into practice (Personalize → Mix matching into practice)
  if(state.pmatch)return matchCardHTML(state.pmatch,'p');
+ // Review pass finished
+ if(!state.active&&onPass(s)){const P=state.pass,n=P.done.length,miss=P.miss.length,slip=P.miss.filter(id=>byId[id]&&!isM(byId[id])).length;
+  return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">Review pass complete</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+
+   (miss?'You went through '+n+' '+ITEMS+': '+(n-miss)+' still solid, '+miss+' missed. '+(slip?'The '+(slip>1?slip+' you missed go':'one you missed goes')+' back into practice until you master '+(slip>1?'them':'it')+' again.':'')
+    :'You went through all '+n+' '+ITEMS+' without a miss. Your mastery is unchanged.')+'</p><div class="row">'+
+   (secLog().length?backBtn():'')+'<button class="btn" onclick="extraPractice()">Review again</button><button class="btn primary" id="go" onclick="endPass()">'+(slip?'Practice the '+slip+' you missed':'Done')+' <kbd>Enter</kbd></button></div></div>'}
  // Section finished
  if(!state.active){
   const L=navList(s),last=!L.length||L.indexOf(s)===L.length-1,focus=s==='MISSED'||s==='STAR'||s==='DUE',none=!inSection(s).length;
   const label=s==='ALL'?'Shuffle complete':s==='DUE'?(none?'Nothing due':'All reviewed'):s==='STAR'?(none?'Nothing starred':'Round complete'):s==='MISSED'?'All caught up':isCh(s)?esc(UNIT)+' complete':'Section complete';
   const text=s==='DUE'?(none?'Nothing is due right now. Mastered '+ITEMS+' come back for review after 1, 3, 7, 14 and 30 days.':'You reviewed everything that was due. Each one is now scheduled further out.'):s==='STAR'?(none?'No starred '+ITEMS+' yet. Tap the star on any question, or press S, to collect it here.':'You went through every starred '+ITEM+'. Go again the night before the exam.')
    :s==='MISSED'?(none?'Nothing missed yet. '+Items+' you get wrong, or check in your slides, will collect here.':'Every '+ITEM+' you had missed is now mastered.')
-   :'You answered every '+ITEM+' here correctly '+(TIMES[T()]||T()+' times')+'. Move on, or run through it again for extra practice.';
+   :'You answered every '+ITEM+' here correctly '+(TIMES[T()]||T()+' times')+'. Move on, or do a review pass: every '+ITEM+' once, and you keep your mastery unless you miss one.';
   return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">'+label+'</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+text+'</p><div class="row">'+
-   (secLog().length?backBtn():'')+(none||s==='DUE'?'':'<button class="btn" onclick="extraPractice()">'+(s==='STAR'?'Go again':'Practice again')+'</button>')+
+   (secLog().length?backBtn():'')+(none||s==='DUE'?'':'<button class="btn" onclick="extraPractice()"'+(s==='STAR'?'':' title="Every '+ITEM+' once. You keep your mastery unless you miss one."')+'>'+(s==='STAR'?'Go again':'Review pass')+'</button>')+
    (focus?'<button class="btn primary" id="go" onclick="setPage(\'dashboard\')">Back to dashboard <kbd>Enter</kbd></button>'
     :'<button class="btn primary" id="go" onclick="advance()">'+(last?'Finish':'Next '+(isCh(s)?unitW:'section'))+' <kbd>Enter</kbd></button>')+'</div></div>';
  }
@@ -309,7 +327,7 @@ function navHTML(){
 
 function drawStudy(){
  ensure();
- const s=state.section,p=progress(s),all=isX(s),ch=isCh(s),L=navList(s),idx=L.indexOf(s);
+ const s=state.section,p=progress(s),all=isX(s),ch=isCh(s),L=navList(s),idx=L.indexOf(s),pp=onPass(s)?{done:inSection(s).filter(c=>state.pass.done.includes(c.id)).length,total:inSection(s).length}:null;
  const bp=BANKS.length>1&&state.bank!=='main'?'<span class="pill set">'+esc(bankObj().name)+'</span>':'';
  $('crumb').innerHTML=all?bp+(s==='ALL'?'Mixed review':'Focused review'):'<span class="pill">'+esc(chLabel(secCh(s)))+'</span>'+(ch?'Entire '+unitW:esc(CH_NAMES[chOf(s)]))+(bp?' '+bp:'');
  $('title').textContent=secTitle(s);
@@ -319,9 +337,9 @@ function drawStudy(){
  $('prevSec').disabled=!L.length||idx<=0;$('nextSec').disabled=!L.length||idx>=L.length-1;
  for(const [id,w] of [['prevSec','Previous '],['nextSec','Next ']]){$(id).title=w+what;$(id).setAttribute('aria-label',w+what)}
  $('notesBtn').hidden=!pageOn('notes');$('chartBtn').hidden=!chartsOn();
- $('mlabel').innerHTML='<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'?'starred '+ITEMS+' reviewed this round':s==='DUE'?ITEMS+' reviewed':ITEMS+' mastered');
+ $('mlabel').innerHTML=pp?'Review pass · <b>'+pp.done+'</b> of '+pp.total+' '+ITEMS+' gone through':'<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'?'starred '+ITEMS+' reviewed this round':s==='DUE'?ITEMS+' reviewed':ITEMS+' mastered');
  $('goal').innerHTML=GOALS.length>1?'<span>Recall goal</span>'+goalSeg():'';
- $('fill').style.width=(100*p.done/Math.max(1,p.total))+'%';
+ $('fill').style.width=(100*(pp||p).done/Math.max(1,(pp||p).total))+'%';
  // Dots: in random order they are grouped by progress, so a dot's position never hints at a question.
  const items=inSection(s),rand=state.prefs.order==='random'||ch;
  $('dots').hidden=all||items.length>60;
@@ -368,9 +386,9 @@ function draw(){
 function drawSetSwitch(){const el=$('setsw');el.hidden=BANKS.length<2;el.classList.toggle('many',BANKS.length>3);
  if(BANKS.length>1)el.innerHTML=BANKS.map(b=>{const on=b.id===state.bank,n=bankItems(b).length;
   return '<button role="radio" aria-checked="'+on+'" class="'+(on?'on':'')+'" onclick="setBank(\''+b.id+'\')" data-tip="<b>'+esc(b.name)+' · '+n+' '+ITEMS+'</b>'+esc(b.desc||'')+'">'+esc(b.name)+'<span class="num">'+n+'</span></button>'}).join('');
- $('brandsub').textContent=CONFIG.scope+' · '+BANK.length+' '+ITEMS;$('brandtitle').textContent=CONFIG.title;
+ $('brandsub').textContent=scopeLabel()+' · '+BANK.length+' '+ITEMS;drawScopeSw();$('brandtitle').textContent=CONFIG.title;
 }
-function setBank(id){if(id===state.bank)return;state.bank=id;state.pmatch=null;refreshBank();state.active=null;state.feedback=null;state.selected=null;view=null;save();draw()}
+function setBank(id){if(id===state.bank)return;state.bank=id;state.pmatch=null;state.pass=null;refreshBank();state.active=null;state.feedback=null;state.selected=null;view=null;save();draw()}
 function setPref(k,v){if(state.prefs[k]===v)return;state.prefs[k]=v;
  if(k==='extras'){refreshBank();state.active=null;state.feedback=null;state.selected=null}
  if(k==='typeMode'&&state.active&&!state.feedback)state.active.typed=canType(state.active);
@@ -382,6 +400,17 @@ function setOrder(v){setPref('order',v)}
 function setTypeMode(v){setPref('typeMode',v)}
 function setMix(v){setPref('mix',v)}
 function setOpt(k){state.prefs.opt=Object.assign({},state.prefs.opt,{[k]:!optOn(k)});refreshBank();MX=null;
+ state.active=null;state.feedback=null;state.selected=null;state.pmatch=null;if(!validSection(state.section))state.section=sectionKeys[0];view=null;save();draw()}
+const fmtDay=d=>new Date(d+'T00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
+function examWhen(e){if(!e||!e.date)return '';const t=new Date();t.setHours(0,0,0,0);const n=Math.round((new Date(e.date+'T00:00')-t)/864e5);
+ return n<0?'':n===0?'today':n===1?'tomorrow':'in '+n+' days'}
+function scopeLabel(){const e=examObj();return e?e.name:EXAMS.length?'All '+unitsW:CONFIG.scope}
+// The switcher only appears when there is a real choice (one exam that covers everything needs none).
+function scopeOpts(){if(!EXAMS.length)return [];const o=EXAMS.map(e=>[e.id,(e.id===CONFIG.activeExam&&EXAMS.length>1?'★ ':'')+e.name+(e.date?' · '+fmtDay(e.date):'')]);
+ if(!EXAMS.some(examAll))o.push(['all','All '+unitsW]);return o}  // an exam covering everything already is "all"
+function drawScopeSw(){const el=$('scopesw'),o=scopeOpts();el.hidden=o.length<2;if(o.length<2)return;const e=examObj(),cur=e?e.id:'all';
+ el.innerHTML='<label><span>Studying for</span><select onchange="setScope(this.value)">'+o.map(([v,t])=>'<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select></label>'}
+function setScope(v){const e=examObj();if(v===(e?e.id:'all'))return;state.prefs.scope=v;state.exSetup=null;state.pass=null;refreshBank();M=null;MX=null;notesCh='all';matchCh='all';
  state.active=null;state.feedback=null;state.selected=null;state.pmatch=null;if(!validSection(state.section))state.section=sectionKeys[0];view=null;save();draw()}
 function setPage(p){toggleNav(false);if(p===page||!pageOn(p))return;page=p;state.page=p;view=null;save();draw();window.scrollTo(0,0)}
 
@@ -414,7 +443,7 @@ function editName(){
 }
 
 function drawDash(){
- drawGreeting();
+ drawGreeting();const ex=examObj(),when=examWhen(ex);$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
  document.title='Dashboard · '+CONFIG.title;
  const nMiss=BANK.filter(c=>isMissedC(c)&&!isM(c)).length,nStar=BANK.filter(isStar).length,nDue=state.prefs.srs?BANK.filter(isDue).length:0;
  $('weakgo').hidden=!(state.prefs.missed&&nMiss);$('weakgo').textContent='Practice missed only ('+nMiss+')';
@@ -423,9 +452,9 @@ function drawDash(){
  const secDone=sectionKeys.filter(completed).length,nx=nextSection(),np=progress(nx);
  const bn=BANKS.length>1?esc(bankObj().name)+' · ':'';
  $('hero').innerHTML='<div><div class="big num">'+pct+'%<small>mastered</small></div>'+
-  '<p class="sub">'+bn+'<b class="num">'+m+'</b> of <span class="num">'+BANK.length+'</span> '+ITEMS+' mastered across '+esc(CONFIG.scope)+' · <b class="num">'+secDone+'</b> of '+sectionKeys.length+' sections complete</p>'+
+  '<p class="sub">'+(when?'<span class="when">'+esc(ex.name)+' '+when+'</span> · ':'')+bn+'<b class="num">'+m+'</b> of <span class="num">'+BANK.length+'</span> '+ITEMS+' mastered '+(ex?'for '+esc(ex.name):'across '+esc(scopeLabel()))+' · <b class="num">'+secDone+'</b> of '+sectionKeys.length+' sections complete</p>'+
   '<div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'" aria-label="Overall mastery"><div class="fill" style="width:'+pct+'%"></div></div></div>'+
-  '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div><button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button>'+(nDue?'<button class="shuffle-link due" onclick="selectSection(\'DUE\')">'+CLOCK_SM+'Review '+nDue+' due today</button>':'')+'<button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
+  '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div>'+(secDone===sectionKeys.length?'<button class="btn primary" onclick="reviewAll()" title="Every '+ITEM+' once, shuffled. You keep your mastery unless you miss one.">Review pass · '+(ex?'all of '+esc(ex.name):'all '+unitsW)+'</button>':'<button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button>')+(nDue?'<button class="shuffle-link due" onclick="selectSection(\'DUE\')">'+CLOCK_SM+'Review '+nDue+' due today</button>':'')+'<button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
   (pageOn('notes')?'<button class="shuffle-link" onclick="openNotes(\'all\')">'+NOTE_SM+'Read the high-yield notes</button>':'')+
   (state.prefs.stars&&nStar?'<button class="shuffle-link" onclick="selectSection(\'STAR\')">'+STAR_SM+'Review starred ('+nStar+')</button>':'')+'</div>';
 
@@ -463,12 +492,12 @@ function drawDash(){
 // NOTES rows look like "Term — what it points to | Term — ..."; " = " and " – " also split a row.
 const NOTES_PARSED=(NOTES_DATA||[]).map(([ch,groups])=>({ch:String(ch),groups:groups.map(([title,txt,sec])=>({title,sec,rows:String(txt).split(/\s*\|\s*/).filter(Boolean).map(p=>{const m=p.match(/^(.+?)\s+[—–=]\s+(.+)$/);return m?[m[1],m[2]]:[p,'']})}))}));
 let notesCh='all',notesQ='';
-function openNotes(ch){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh))notesCh='all';notesQ='';
+function openNotes(ch){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh&&inScopeCh(n.ch)))notesCh='all';notesQ='';
  if(page==='notes'){draw();window.scrollTo(0,0)}else setPage('notes')}
 function drawNotes(){
  $('nChartBtn').hidden=!chartsOn();
  document.title='Notes · '+CONFIG.title;
- const chips=[['all','All']].concat(NOTES_PARSED.map(n=>[n.ch,esc(UNIT)+' '+esc(n.ch)+' · '+esc(CH_NAMES[n.ch]||'')]));
+ const chips=[['all','All']].concat(NOTES_PARSED.filter(n=>inScopeCh(n.ch)).map(n=>[n.ch,esc(UNIT)+' '+esc(n.ch)+' · '+esc(CH_NAMES[n.ch]||'')]));
  $('nchips').innerHTML=chips.map(([k,t])=>'<button class="fchip '+(k===notesCh?'on':'')+'" aria-pressed="'+(k===notesCh)+'" onclick="notesCh=\''+k+'\';drawNotes()">'+t+'</button>').join('');
  $('selftest').setAttribute('aria-checked',String(!!state.prefs.selftest));$('ntip').hidden=!state.prefs.selftest;
  if($('nq').value!==notesQ)$('nq').value=notesQ;
@@ -477,7 +506,7 @@ function drawNotes(){
 function hl(s){const t=esc(s),q=notesQ.trim();if(!q)return t;return t.replace(new RegExp('('+esc(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'),'<mark>$1</mark>')}
 function drawNotesBody(){
  const q=notesQ.trim().toLowerCase(),body=$('nbody');body.classList.toggle('selftest',!!state.prefs.selftest);
- const out=NOTES_PARSED.filter(n=>notesCh==='all'||n.ch===notesCh).map(n=>{
+ const out=NOTES_PARSED.filter(n=>inScopeCh(n.ch)&&(notesCh==='all'||n.ch===notesCh)).map(n=>{
   const cards=n.groups.filter(g=>secOn(g.sec)).map(g=>{const titleHit=q&&g.title.toLowerCase().includes(q);
    const rows=g.rows.filter(([a,b])=>!q||titleHit||(a+' '+b).toLowerCase().includes(q));if(!rows.length)return '';
    return '<article class="ncard"><h3>'+hl(g.title)+'</h3><dl class="nrows">'+rows.map(([a,b])=>'<div class="nrow" onclick="this.classList.toggle(\'show\');syncReveal()"><dt>'+hl(a)+'</dt><dd>'+hl(b)+'</dd></div>').join('')+'</dl></article>'}).join('');
@@ -494,7 +523,7 @@ function notesKey(e){if(!state.prefs.selftest||e.target.tagName==='BUTTON')retur
 
 /* ---------- matching type ---------- */
 let matchCh='all',M=null;
-function matchPool(){return MSETS.filter(m=>matchCh==='all'||m.ch===matchCh)}
+function matchPool(){return MSETS.filter(m=>inScopeCh(m.ch)&&(matchCh==='all'||m.ch===matchCh))}
 // One matching set in progress. The Matching page keeps it in M; a set mixed into practice lives in state.pmatch.
 function makeMatch(i){const m=MSETS[i],rand=state.prefs.order==='random',o=m.options.map((_,j)=>j),it=m.items.map((_,j)=>j);
  // Random order reshuffles both the items and which letter each choice gets.
@@ -515,7 +544,7 @@ function drawMatch(){
  $('dtabs').hidden=tabs.length<2;
  $('dtabs').innerHTML=tabs.map(([k,t])=>'<button role="tab" aria-selected="'+(k===drillTab)+'" class="'+(k===drillTab?'on':'')+'" onclick="setDrillTab(\''+k+'\')">'+t+'</button>').join('');
  $('dtitle').textContent=mix?'Don\'t mix up':'Matching';document.title=(mix?'Don\'t mix up':'Matching')+' · '+CONFIG.title;
- const chs=[...new Set((mix?MIXUP:MSETS).map(m=>m.ch))];if(matchCh!=='all'&&!chs.includes(matchCh))matchCh='all';
+ const chs=[...new Set((mix?MIXUP:MSETS).filter(m=>inScopeCh(m.ch)).map(m=>m.ch))];if(matchCh!=='all'&&!chs.includes(matchCh))matchCh='all';
  $('mchips').innerHTML=(chs.length>1?[['all','All']].concat(chs.map(c=>[c,esc(UNIT)+' '+esc(c)+' · '+esc(CH_NAMES[c]||'')])):[]).map(([k,t])=>'<button class="fchip '+(k===matchCh?'on':'')+'" aria-pressed="'+(k===matchCh)+'" onclick="setMatchCh(\''+k+'\')">'+t+'</button>').join('');
  $('mcard').hidden=mix;$('msetsPanel').hidden=mix;$('xcard').hidden=!mix;
  if(mix){if(!MX||(matchCh!=='all'&&MIXUP[MX.g].ch!==matchCh))newMix();drawMix();return}
@@ -548,7 +577,7 @@ function checkMatch(ctx){const X=getM(ctx);if(!X||X.checked)return;const m=MSETS
  X.checked=true;state.match.sets++;state.match.right+=hits;state.match.total+=n;state.match.best[m.title]=Math.max(hits,state.match.best[m.title]??0);save();
  if(ctx==='p')redrawMatch('p');else{drawMatchCard();drawMatchSets()}}
 /* Mixed into practice: after every N answered questions, the next card is a matching set from the same scope. */
-function mixPool(){const s=state.section;return isX(s)?MSETS:MSETS.filter(m=>m.ch===secCh(s))}
+function mixPool(){const s=state.section;return isX(s)?MSETS.filter(m=>inScopeCh(m.ch)):MSETS.filter(m=>m.ch===secCh(s))}
 function maybeMix(){const every=state.prefs.mix;if(!every||(state.sinceMix||0)<every)return;const pool=mixPool();if(!pool.length)return;
  state.pmatch=makeMatch(chooseSet(pool,state.lastMix).i);state.lastMix=state.pmatch.i;state.sinceMix=0}
 function endMix(){state.pmatch=null;save();draw();scrollToCard()}
@@ -556,7 +585,7 @@ function skipMix(){endMix()}
 
 /* ---------- Don't mix up: one clue, two look-alikes, pick the right one ---------- */
 let MX=null;const mixRun={right:0,total:0,streak:0};
-function dmPool(){return MIXUP.filter(g=>secOn(g.sec)&&(matchCh==='all'||g.ch===matchCh))}
+function dmPool(){return MIXUP.filter(g=>secOn(g.sec)&&inScopeCh(g.ch)&&(matchCh==='all'||g.ch===matchCh))}
 function newMix(){const pool=dmPool();if(!pool.length){MX=null;return}
  const others=pool.filter(g=>!MX||g.i!==MX.g),src=others.length?others:pool,g=src[Math.floor(Math.random()*src.length)];
  const ti=Math.floor(Math.random()*g.members.length);let oi=Math.floor(Math.random()*(g.members.length-1));if(oi>=ti)oi++;
@@ -814,6 +843,10 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'11',date:'Oct 16, 2026',title:'Exam scope and review passes',items:[
+  '<b>Exam scope:</b> a course can list its tests (quizzes, midterm, finals). Pick one under <b>Studying for</b> in the sidebar and the dashboard, '+unitsW+', notes, drills and the mock exam show only what that test covers. The next test is picked for you.',
+  '<b>Review pass</b> replaces "Practice again": every '+ITEM+' once, and you <b>keep your mastery</b> unless you miss one. Missed ones go back into practice. When everything is mastered, the dashboard offers a review pass of all '+unitsW+'.',
+  'A <b>lucky guess</b> on an already mastered '+ITEM+' now really sends it back into practice.']},
  {v:'10',date:'Oct 16, 2026',title:'Class challenges and your own sets',items:[
   '<b>Class challenge</b> (Mock exam → Class challenge): a link for your group chat. Everyone who opens it gets the same '+ITEMS+' in the same order. At the end, <b>Copy my score</b> gives your score and a row of 🟩🟥 to paste and compare.',
   '<b>Add a question set</b> (Personalize → Question banks): paste questions or upload a .txt or .csv file (Google Sheets works). It gets its own tab with its own progress, and <b>Export</b> saves it as a file classmates can add.',
@@ -901,7 +934,7 @@ function strike(l){if(view!=null||state.pmatch||state.feedback||!state.active||s
  state.active.struck=s.includes(l)?s.filter(x=>x!==l):s.concat(l);if(state.selected===l)state.selected=null;save();$('card').innerHTML=cardHTML()}
 // Correct, but only a guess: take the mastery point back so the question stays in the queue.
 function luckyGuess(){const fb=state.feedback;if(view!=null||!fb||!fb.correct||fb.lucky||!state.active)return;
- const k=state.concepts[state.active.cid];if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}else k.right=Math.max(0,k.right-1);k.lucky=(k.lucky||0)+1;fb.lucky=true;
+ const k=state.concepts[state.active.cid];if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}else k.right=Math.max(0,k.right-1);k.lucky=(k.lucky||0)+1;fb.lucky=true;if(k.right>=T())masteryDown(k);if(onPass(state.section)&&!state.pass.miss.includes(state.active.cid))state.pass.miss.push(state.active.cid);
  const last=state.log[state.log.length-1];if(last&&last.fb)last.fb.lucky=true;save();draw()}
 function starBtn(cid){if(!state.prefs.stars)return '';const on=!!state.concepts[cid].star;
  return '<button class="starbtn'+(on?' on':'')+'" onclick="toggleStar()" aria-pressed="'+on+'" aria-label="'+(on?'Remove star':'Star this '+ITEM)+'" title="'+(on?'Starred · click to remove':'Star this '+ITEM+' to review it later')+' (S)">'+STAR_SVG+'</button>'}
@@ -934,13 +967,14 @@ function submitTyped(){const q=state.active;if(view!=null||state.pmatch||state.f
 // A typed answer marked wrong that was really right (a spelling the checker did not accept).
 function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct||!fb.typed||!state.active)return;
  const k=state.concepts[state.active.cid];k.wrong=Math.max(0,k.wrong-1);state.wrong=Math.max(0,state.wrong-1);if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}
- fb.prev={right:k.right,srs:k.srs?{...k.srs}:null};masteryUp(k);state.correct++;fb.correct=true;fb.override=true;
+ fb.prev={right:k.right,srs:k.srs?{...k.srs}:null};masteryUp(k);state.correct++;fb.correct=true;fb.override=true;if(onPass(state.section))state.pass.miss=state.pass.miss.filter(x=>x!==state.active.cid);
  const h=state.history[state.history.length-1];if(h&&h.cid===state.active.cid)h.correct=true;const kh=k.history[k.history.length-1];if(kh)kh.correct=true;
  const last=state.log[state.log.length-1];if(last)last.fb=fb;save();draw()}
 
 function record(correct,lookup){
  const q=state.active,k=state.concepts[q.cid],choice=q.choices.find(x=>x.letter===state.selected),target=q.choices.find(x=>x.correct);
- k.seen++;if(state.section==='STAR'){state.starDone=state.starDone||[];if(!state.starDone.includes(q.cid))state.starDone.push(q.cid)}
+ k.seen++;if(onPass(state.section)){const P=state.pass;if(!P.done.includes(q.cid))P.done.push(q.cid);if(!correct&&!P.miss.includes(q.cid))P.miss.push(q.cid)}
+ if(state.section==='STAR'){state.starDone=state.starDone||[];if(!state.starDone.includes(q.cid))state.starDone.push(q.cid)}
  if(state.section==='DUE'){state.dueDone=state.dueDone||[];if(!state.dueDone.includes(q.cid))state.dueDone.push(q.cid)}
  const prev={right:k.right,srs:k.srs?{...k.srs}:null};
  state.sinceMix=(state.sinceMix||0)+1;if(correct){masteryUp(k);state.correct++}else{if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}masteryDown(k)}
@@ -956,11 +990,14 @@ function record(correct,lookup){
  requestAnimationFrame(()=>{const f=document.querySelector('#card .fb'),r=f?.getBoundingClientRect();if(r&&r.bottom>innerHeight)f.scrollIntoView({block:'nearest',behavior:reduceMotion?'auto':'smooth'})});
 }
 function next(){if(!state.feedback)return;state.feedback=null;state.active=null;state.selected=null;maybeMix();if(completed(state.section)&&!state.complete.includes(state.section))state.complete.push(state.section);save();draw();scrollToCard()}
-function goSection(sec){if(sec===state.section)return;state.section=sec;state.pmatch=null;state.active=null;state.feedback=null;state.selected=null;view=null;if(!isX(sec))openCh.add(secCh(sec));if(sec==='STAR'&&completed('STAR'))state.starDone=[];if(sec==='DUE')state.dueDone=[];save();draw();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'})}
+function goSection(sec){if(sec===state.section)return;state.section=sec;state.pmatch=null;state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;if(!isX(sec))openCh.add(secCh(sec));if(sec==='STAR'&&completed('STAR'))state.starDone=[];if(sec==='DUE')state.dueDone=[];save();draw();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'})}
 function selectSection(sec){toggleNav(false);if(page!=='study'){page='study';state.page=page;if(sec===state.section){save();draw();window.scrollTo(0,0);return}}goSection(sec)}
 function stepSection(d){const L=navList(state.section),i=L.indexOf(state.section)+d;if(i>=0&&i<L.length)goSection(L[i])}
-function advance(){const L=navList(state.section),i=L.indexOf(state.section);if(!L.length||i===L.length-1){$('modalbody').textContent=completed('ALL')?'You have mastered all '+BANK.length+' '+ITEMS+' across '+CONFIG.scope+'. Keep practicing any section to stay sharp.':'You reached the end. '+(BANK.length-mastered())+' '+ITEMS+' are still waiting elsewhere, so check the dashboard for what is left.';$('dialog').hidden=false;return}goSection(L[i+1])}
-function extraPractice(){if(state.section==='STAR')state.starDone=[];else inSection(state.section).forEach(c=>{let k=state.concepts[c.id];k.right=Math.min(k.right,T()-1)});state.complete=state.complete.filter(x=>x!==state.section);state.active=null;state.feedback=null;state.selected=null;view=null;save();draw()}
+function advance(){const L=navList(state.section),i=L.indexOf(state.section);if(!L.length||i===L.length-1){$('modalbody').textContent=completed('ALL')?'You have mastered all '+BANK.length+' '+ITEMS+(examObj()?' for '+examObj().name:' across '+scopeLabel())+'. Keep practicing any section to stay sharp.':'You reached the end. '+(BANK.length-mastered())+' '+ITEMS+' are still waiting elsewhere, so check the dashboard for what is left.';$('dialog').hidden=false;return}goSection(L[i+1])}
+// Starred review restarts its round; everything else starts a review pass (mastery is kept unless you miss).
+function extraPractice(){if(state.section==='STAR')state.starDone=[];else state.pass={sec:state.section,done:[],miss:[]};state.complete=state.complete.filter(x=>x!==state.section);state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
+function endPass(){state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
+function reviewAll(){selectSection('ALL');extraPractice()}
 function scrollToCard(){const r=$('card').getBoundingClientRect();if(r.top<0)$('card').scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
 function toggleNav(open){$('app').classList.toggle('nav-open',open)}
 function closeDialog(){$('dialog').hidden=true}

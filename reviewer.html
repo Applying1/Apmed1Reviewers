@@ -622,10 +622,18 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 .sqrow{margin-top:12px;font-size:17px;letter-spacing:2px;line-height:1.5;word-break:break-all}
 .toast{position:fixed;left:50%;bottom:24px;z-index:40;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:11px 16px;border-radius:12px;background:var(--text);color:var(--bg);font-size:14px;font-weight:500;box-shadow:0 6px 24px #0003;animation:toastin .2s var(--ease)}
 @keyframes toastin{from{opacity:0;transform:translate(-50%,8px)}}
+/* Exam scope */
+.scopesw{margin:0 2px 12px}
+.scopesw label{display:flex;flex-direction:column;gap:5px}
+.scopesw span{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding-left:2px}
+.scopesw select{font:600 14px/1.2 var(--sans);color:var(--text);background:var(--surface);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;width:100%;outline:0;cursor:pointer}
+.scopesw select:focus{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
+.hero .sub .when{color:var(--accent);font-weight:600}
 </style></head><body>
 <div class="app" id="app">
  <aside class="side" id="side" aria-label="Navigation">
   <div class="brand"><img class="logo" id="logo" src="icons/icon-192.png" alt="" width="34" height="34"><div><b id="brandtitle">Study Reviewer</b><span id="brandsub"></span></div></div>
+  <div class="scopesw" id="scopesw" hidden></div>
   <div class="pages" id="pages"></div>
   <div class="setsw" role="radiogroup" aria-label="Question bank" id="setsw" hidden></div>
   <div class="label">Topics</div>
@@ -638,7 +646,7 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
   <div class="view" id="dashView">
    <div class="top">
     <button class="icon menu" onclick="toggleNav(true)" aria-label="Open navigation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <div style="min-width:0"><div class="crumb">Dashboard</div><h1 id="greet">Welcome</h1></div>
+    <div style="min-width:0"><div class="crumb" id="dashcrumb">Dashboard</div><h1 id="greet">Welcome</h1></div>
     <button class="btn primary cta" onclick="setPage('study')">Continue practicing</button>
    </div>
    <section class="card hero" id="hero"></section>

@@ -16,7 +16,11 @@
    "courses/iml/topic-2.jpg",
    "courses/iml/topic-3.jpg",
    "courses/iml/topic-4.jpg"
-  ]
+  ],
+  "exam": {
+   "name": "Midterm",
+   "date": ""
+  }
  },
  {
   "id": "psych",
@@ -34,12 +38,16 @@
    "courses/psych/chapter-7.jpg",
    "courses/psych/chapter-8.jpg",
    "courses/psych/chapter-9.jpg"
-  ]
+  ],
+  "exam": {
+   "name": "Midterm",
+   "date": ""
+  }
  },
  {
   "id": "purcom",
   "title": "PurCom Reviewer",
-  "scope": "Midterm: Registers, Inclusive Language, Phonetics",
+  "scope": "Registers, Inclusive Language, Phonetics",
   "unit": "Topic",
   "itemWord": "question",
   "count": 299,
@@ -50,6 +58,10 @@
    "courses/purcom/topic-1.jpg",
    "courses/purcom/topic-2.jpg",
    "courses/purcom/topic-3.jpg"
-  ]
+  ],
+  "exam": {
+   "name": "Midterm",
+   "date": ""
+  }
  }
 ]
