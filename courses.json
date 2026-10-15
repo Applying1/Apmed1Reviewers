@@ -30,5 +30,17 @@
    "courses/psych/chapter-8.jpg",
    "courses/psych/chapter-9.jpg"
   ]
+ },
+ {
+  "id": "purcom",
+  "title": "PurCom Reviewer",
+  "scope": "Midterm: Phonetics, Inclusive Language, Registers",
+  "unit": "Topic",
+  "itemWord": "question",
+  "count": 299,
+  "storageKey": "study_reviewer_purcom_midterm_2026_v1",
+  "image": "",
+  "extras": [],
+  "assets": []
  }
 ]

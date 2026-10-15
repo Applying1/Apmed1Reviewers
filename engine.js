@@ -15,6 +15,8 @@ const UNIT=CONFIG.unit||'Chapter',unitW=UNIT.toLowerCase(),unitsW=unitW+'s';
 const NOTES_DATA=typeof NOTES!=='undefined'&&NOTES.length?NOTES:null;
 const MSETS=(typeof MATCHING!=='undefined'?MATCHING:[]).map((m,i)=>({i,ch:String(m[0]),title:m[1],options:m[2],items:m[3]}));
 const MIXUP=(typeof CONFUSABLES!=='undefined'?CONFUSABLES:[]).map(([ch,members],i)=>({i,ch:String(ch),members:members.map(([name,cues])=>({name,cues}))})).filter(g=>g.members.length>1);
+// Reference charts (e.g. a consonant chart the real exam also provides): [{title, html}]
+const CHART_DATA=typeof CHARTS!=='undefined'?CHARTS:[];let chartTab=0;
 const GOALS=CONFIG.recallGoals||[1,2];
 const LETTERS='ABCDE',THEME_KEY='reviewer_theme';
 const $=id=>document.getElementById(id);
@@ -33,7 +35,7 @@ const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -138,7 +140,7 @@ try{$('favicon').href=$('logo').src}catch(e){}
 const CH_IMGS=CONFIG.images||{};
 const CH_IMG=ch=>CH_IMGS[ch]||'';
 const FBICON={good:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>',bad:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',look:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'};
-const KIND_NAMES={definition:'Concept meaning',scenario:'Application',term:'Identification',recall:'Recall',situational:'Situational',era:'Which era?',civ:'Which civilization?',order:'Timeline'};
+const KIND_NAMES={odd:'Odd one out',phonetic:'Phonetic spelling',best:'Best answer',definition:'Concept meaning',scenario:'Application',term:'Identification',recall:'Recall',situational:'Situational',era:'Which era?',civ:'Which civilization?',order:'Timeline'};
 const kindName=k=>KIND_NAMES[k]||'Question';
 const pips=n=>'<span class="pips" aria-hidden="true">'+Array.from({length:T()},(_,i)=>'<i class="'+(n>i?'on':'')+'"></i>').join('')+'</span>';
 const lit=v=>typeof v==='string'?"'"+v+"'":String(v);
@@ -233,7 +235,7 @@ function drawStudy(){
  const what=ch?unitW:'section';
  $('prevSec').disabled=!L.length||idx<=0;$('nextSec').disabled=!L.length||idx>=L.length-1;
  for(const [id,w] of [['prevSec','Previous '],['nextSec','Next ']]){$(id).title=w+what;$(id).setAttribute('aria-label',w+what)}
- $('notesBtn').hidden=!pageOn('notes');
+ $('notesBtn').hidden=!pageOn('notes');$('chartBtn').hidden=!chartsOn();
  $('mlabel').innerHTML='<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'?'starred '+ITEMS+' reviewed this round':s==='DUE'?ITEMS+' reviewed':ITEMS+' mastered');
  $('goal').innerHTML=GOALS.length>1?'<span>Recall goal</span>'+goalSeg():'';
  $('fill').style.width=(100*p.done/Math.max(1,p.total))+'%';
@@ -379,6 +381,7 @@ let notesCh='all',notesQ='';
 function openNotes(ch){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh))notesCh='all';notesQ='';
  if(page==='notes'){draw();window.scrollTo(0,0)}else setPage('notes')}
 function drawNotes(){
+ $('nChartBtn').hidden=!chartsOn();
  document.title='Notes · '+CONFIG.title;
  const chips=[['all','All']].concat(NOTES_PARSED.map(n=>[n.ch,esc(UNIT)+' '+esc(n.ch)+' · '+esc(CH_NAMES[n.ch]||'')]));
  $('nchips').innerHTML=chips.map(([k,t])=>'<button class="fchip '+(k===notesCh?'on':'')+'" aria-pressed="'+(k===notesCh)+'" onclick="notesCh=\''+k+'\';drawNotes()">'+t+'</button>').join('');
@@ -497,7 +500,7 @@ function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters
 function exPool(){const st=exSetup();return BANK.filter(c=>st.chs.includes(chOf(c.section)))}
 function exLeft(){const ex=state.exam;return ex.limit?ex.start+ex.limit-Date.now():Infinity}
 function clock(ms){const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
-function drawExam(){document.title='Mock exam · '+CONFIG.title;clearInterval(exTick);$('extimer').hidden=true;const ex=state.exam;
+function drawExam(){document.title='Mock exam · '+CONFIG.title;$('exChartBtn').hidden=!chartsOn();clearInterval(exTick);$('extimer').hidden=true;const ex=state.exam;
  if(ex&&!ex.done)drawExamRun();else if(ex&&ex.done)drawExamResult();else drawExamSetup()}
 function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);$('extitle').textContent='Mock exam';
  const row=(t,d,ctl)=>'<div class="prow"><div class="pl"><b>'+t+'</b><span>'+d+'</span></div><div class="ctl">'+ctl+'</div></div>';
@@ -600,6 +603,7 @@ function drawPrefs(){
  h+='<section class="panel"><h2>Pages</h2>'+
   (NOTES_DATA?row('Notes','High-yield recognition notes to read before a mock exam, with a self-test mode.',sw(state.prefs.notes,"setPref('notes',"+!state.prefs.notes+")",'Show the Notes page')):'')+
   (MSETS.length||MIXUP.length?row('Drills',[MSETS.length?MSETS.length+' matching-type sets':'',MIXUP.length?MIXUP.length+' Don\'t mix up look-alike drills':''].filter(Boolean).join(' and ')+'.',sw(state.prefs.matching,"setPref('matching',"+!state.prefs.matching+")",'Show the Drills page')):'')+
+  (CHART_DATA.length?row('Charts','A Charts button on Practice, Notes and the Mock exam that opens the reference '+(CHART_DATA.length>1?'charts':'chart')+' ('+CHART_DATA.map(c=>c.title.toLowerCase()).join(', ')+').',sw(state.prefs.charts,"setPref('charts',"+!state.prefs.charts+")",'Show the Charts button')):'')+
   row('Mock exam','A timed run with no hints or answers until the end, then your score by '+unitW+' and a review of your mistakes.',sw(state.prefs.exam,"setPref('exam',"+!state.prefs.exam+")",'Show the Mock exam page'))+'</section>';
  if(BANKS.length>1)h+='<section class="panel"><h2>Question bank</h2><p class="desc">Main is the full reviewer. Each extra bank is its own question set with its own progress.</p>'+
   BANKS.map(b=>row(esc(b.name)+'<span class="pill set">'+bankItems(b).length+' '+ITEMS+'</span>',esc(b.desc||''),b.id===state.bank?'<span class="pill">In use</span>':'<button class="btn sm" onclick="setBank(\''+b.id+'\')">Use</button>')).join('')+'</section>';
@@ -615,6 +619,9 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'8',date:'Oct 16, 2026',title:'Reference charts',items:[
+  'Courses with reference charts (like a consonant or vowel chart) now have a <b>Charts</b> button on Practice, Notes and the Mock exam, the way the real exam hands you the table.',
+  'New question styles: <b>Odd one out</b>, <b>Phonetic spelling</b> and <b>Best answer</b>.']},
  {v:'7',date:'Oct 15, 2026',title:'Exam prep',items:[
   '<b>Mock exam</b> page: choose how many '+ITEMS+' and which '+unitsW+', with an optional timer. No hints or answers until the end, then your score by '+unitW+' and <b>Review my mistakes</b>.',
   '<b>Don\'t mix up</b> drill: one clue and two look-alikes side by side; pick which one it is.',
@@ -655,6 +662,14 @@ function drawNewsDot(){$('newsBtn').classList.toggle('dot',state.seenNews!==CHAN
 function openNews(){toggleNav(false);$('newsbody').innerHTML=CHANGELOG.map(r=>'<section class="rel"><h3>'+esc(r.title)+'<span>'+esc(r.date)+'</span></h3><ul>'+r.items.map(i=>'<li>'+i+'</li>').join('')+'</ul></section>').join('');
  $('news').hidden=false;state.seenNews=CHANGELOG[0].v;save();drawNewsDot();const bx=$('news').querySelector('.box');bx.scrollTop=0;bx.querySelector('.btn').focus({preventScroll:true})}
 function closeNews(){$('news').hidden=true}
+
+/* ---------- reference charts ---------- */
+function chartsOn(){return CHART_DATA.length>0&&state.prefs.charts}
+function drawCharts(){$('chtabs').hidden=CHART_DATA.length<2;
+ $('chtabs').innerHTML=CHART_DATA.map((c,i)=>'<button role="tab" aria-selected="'+(i===chartTab)+'" class="'+(i===chartTab?'on':'')+'" onclick="chartTab='+i+';drawCharts()">'+esc(c.title)+'</button>').join('');
+ $('chbody').innerHTML=CHART_DATA[chartTab].html;$('chh').textContent=CHART_DATA.length<2?CHART_DATA[0].title:'Charts'}
+function openCharts(){if(!CHART_DATA.length)return;drawCharts();$('charts').hidden=false;$('charts').querySelector('.close').focus({preventScroll:true})}
+function closeCharts(){$('charts').hidden=true}
 
 /* ---------- tooltip ---------- */
 (function(){const tip=$('tip');let cur=null;
@@ -760,6 +775,7 @@ function exportProgress(){let b=new Blob([JSON.stringify({exported:new Date().to
 
 document.addEventListener('keydown',e=>{
  if(e.ctrlKey||e.metaKey||e.altKey)return;
+ if(!$('charts').hidden){if(e.key==='Escape'){closeCharts();e.preventDefault()}return}
  if(!$('news').hidden){if(e.key==='Escape'){closeNews();e.preventDefault()}return}
  if(!$('dialog').hidden){if(e.key==='Escape'||e.key==='Enter'){closeDialog();e.preventDefault()}return}
  if(e.key==='Escape'){toggleNav(false);return}
