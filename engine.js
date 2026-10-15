@@ -14,7 +14,7 @@ const ITEM=CONFIG.itemWord||'concept',ITEMS=ITEM+'s',Items=ITEMS.charAt(0).toUpp
 const UNIT=CONFIG.unit||'Chapter',unitW=UNIT.toLowerCase(),unitsW=unitW+'s';
 const NOTES_DATA=typeof NOTES!=='undefined'&&NOTES.length?NOTES:null;
 const MSETS=(typeof MATCHING!=='undefined'?MATCHING:[]).map((m,i)=>({i,ch:String(m[0]),title:m[1],options:m[2],items:m[3]}));
-const MIXUP=(typeof CONFUSABLES!=='undefined'?CONFUSABLES:[]).map(([ch,members],i)=>({i,ch:String(ch),members:members.map(([name,cues])=>({name,cues}))})).filter(g=>g.members.length>1);
+const MIXUP=(typeof CONFUSABLES!=='undefined'?CONFUSABLES:[]).map(([ch,members,sec],i)=>({i,ch:String(ch),sec,members:members.map(([name,cues])=>({name,cues}))})).filter(g=>g.members.length>1);
 // Reference charts (e.g. a consonant chart the real exam also provides): [{title, html}]
 const CHART_DATA=typeof CHARTS!=='undefined'?CHARTS:[];let chartTab=0;
 const GOALS=CONFIG.recallGoals||[1,2];
@@ -35,7 +35,7 @@ const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -50,7 +50,11 @@ if(state.pmatch&&!MSETS[state.pmatch.i])state.pmatch=null;
 /* ---------- active question bank: Main, or a variant someone added ---------- */
 let BANK=[],sectionKeys=[],chapters=[],AUTHORED=true,NCHOICE=4;
 const bankObj=()=>BANKS.find(b=>b.id===state.bank)||BANKS[0];
-const bankItems=b=>state.prefs.extras?b.items:b.items.filter(c=>!c.extra);
+// Optional topics (CONFIG.optionalSections), e.g. ones not in the current exam: off unless switched on in Personalize.
+const OPT=CONFIG.optionalSections||{};
+const optOn=k=>state.prefs.opt&&k in state.prefs.opt?!!state.prefs.opt[k]:!!(OPT[k]&&OPT[k].on);
+const secOn=k=>!k||!OPT[k]||optOn(k);
+const bankItems=b=>b.items.filter(c=>(state.prefs.extras||!c.extra)&&secOn(c.section));
 function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
 function refreshBank(){const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
  sectionKeys=ALL_SECTIONS.filter(k=>BANK.some(c=>c.section===k));
@@ -298,6 +302,8 @@ function setGoal(n){setPref('target',n)}
 function setOrder(v){setPref('order',v)}
 function setTypeMode(v){setPref('typeMode',v)}
 function setMix(v){setPref('mix',v)}
+function setOpt(k){state.prefs.opt=Object.assign({},state.prefs.opt,{[k]:!optOn(k)});refreshBank();MX=null;
+ state.active=null;state.feedback=null;state.selected=null;state.pmatch=null;if(!validSection(state.section))state.section=sectionKeys[0];view=null;save();draw()}
 function setPage(p){toggleNav(false);if(p===page||!pageOn(p))return;page=p;state.page=p;view=null;save();draw();window.scrollTo(0,0)}
 
 /* ---------- dashboard ---------- */
@@ -376,7 +382,7 @@ function drawDash(){
 
 /* ---------- notes ---------- */
 // NOTES rows look like "Term — what it points to | Term — ..."; " = " and " – " also split a row.
-const NOTES_PARSED=(NOTES_DATA||[]).map(([ch,groups])=>({ch:String(ch),groups:groups.map(([title,txt])=>({title,rows:String(txt).split(/\s*\|\s*/).filter(Boolean).map(p=>{const m=p.match(/^(.+?)\s+[—–=]\s+(.+)$/);return m?[m[1],m[2]]:[p,'']})}))}));
+const NOTES_PARSED=(NOTES_DATA||[]).map(([ch,groups])=>({ch:String(ch),groups:groups.map(([title,txt,sec])=>({title,sec,rows:String(txt).split(/\s*\|\s*/).filter(Boolean).map(p=>{const m=p.match(/^(.+?)\s+[—–=]\s+(.+)$/);return m?[m[1],m[2]]:[p,'']})}))}));
 let notesCh='all',notesQ='';
 function openNotes(ch){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh))notesCh='all';notesQ='';
  if(page==='notes'){draw();window.scrollTo(0,0)}else setPage('notes')}
@@ -393,7 +399,7 @@ function hl(s){const t=esc(s),q=notesQ.trim();if(!q)return t;return t.replace(ne
 function drawNotesBody(){
  const q=notesQ.trim().toLowerCase(),body=$('nbody');body.classList.toggle('selftest',!!state.prefs.selftest);
  const out=NOTES_PARSED.filter(n=>notesCh==='all'||n.ch===notesCh).map(n=>{
-  const cards=n.groups.map(g=>{const titleHit=q&&g.title.toLowerCase().includes(q);
+  const cards=n.groups.filter(g=>secOn(g.sec)).map(g=>{const titleHit=q&&g.title.toLowerCase().includes(q);
    const rows=g.rows.filter(([a,b])=>!q||titleHit||(a+' '+b).toLowerCase().includes(q));if(!rows.length)return '';
    return '<article class="ncard"><h3>'+hl(g.title)+'</h3><dl class="nrows">'+rows.map(([a,b])=>'<div class="nrow" onclick="this.classList.toggle(\'show\');syncReveal()"><dt>'+hl(a)+'</dt><dd>'+hl(b)+'</dd></div>').join('')+'</dl></article>'}).join('');
   if(!cards)return '';
@@ -471,7 +477,7 @@ function skipMix(){endMix()}
 
 /* ---------- Don't mix up: one clue, two look-alikes, pick the right one ---------- */
 let MX=null;const mixRun={right:0,total:0,streak:0};
-function dmPool(){return MIXUP.filter(g=>matchCh==='all'||g.ch===matchCh)}
+function dmPool(){return MIXUP.filter(g=>secOn(g.sec)&&(matchCh==='all'||g.ch===matchCh))}
 function newMix(){const pool=dmPool();if(!pool.length){MX=null;return}
  const others=pool.filter(g=>!MX||g.i!==MX.g),src=others.length?others:pool,g=src[Math.floor(Math.random()*src.length)];
  const ti=Math.floor(Math.random()*g.members.length);let oi=Math.floor(Math.random()*(g.members.length-1));if(oi>=ti)oi++;
@@ -591,6 +597,7 @@ function drawPrefs(){
   row('Question order',rand?'Random: '+ITEMS+' come in a new order every pass and the answer letters are reshuffled each time, so you can\'t memorize positions.':'In order: '+ITEMS+' follow the lecture order and keep their answer letters. Easier to follow, but easier to memorize.',segHTML('setOrder',[['random','Random'],['fixed','In order']],state.prefs.order,'Question order'))+
   row('Answer mode',state.prefs.typeMode?'Type the answer: short recall '+ITEMS+' hide the choices and you type the term. Small typos are accepted, and you can count a typed answer as right if the checker missed it.':'Choices: pick the answer from the list. Switch to typing for identification-style practice.',segHTML('setTypeMode',[[false,'Choices'],[true,'Type the answer']],state.prefs.typeMode,'Answer mode'))+
   (MSETS.length?row('Mix matching into practice',state.prefs.mix?'After every '+state.prefs.mix+' '+ITEMS+', the next card is a matching set from the '+unitW+' you are practicing. It counts toward your matching scores, not '+ITEM+' mastery.':'Matching sets stay on their own page. Turn this on to get one now and then while you practice.',segHTML('setMix',[[0,'Off'],[10,'Every 10'],[5,'Every 5']],state.prefs.mix,'Mix matching into practice')):'')+
+  Object.keys(OPT).map(k=>row('Include '+esc(OPT[k].name||SECTION_NAMES[k]||k),esc(OPT[k].note||'An optional '+unitW+' section that is not part of the current exam.')+' ('+FULL_BANK.filter(c=>c.section===k).length+' '+ITEMS+')',sw(optOn(k),"setOpt('"+k+"')",'Include '+(OPT[k].name||k)))).join('')+
   (ex?row('Include detail '+ITEMS,ex+' '+ITEMS+' in this bank are marked as extra detail. Turn this off to drill only the core.',sw(state.prefs.extras,"setPref('extras',"+!state.prefs.extras+")",'Include detail '+ITEMS)):'')+
   '</section>';
  h+='<section class="panel"><h2>Study tools</h2>'+
@@ -619,6 +626,8 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'9',date:'Oct 16, 2026',title:'Optional topics',items:[
+  'A course can mark topics as <b>optional</b>, for example ones that are not in the current exam. They stay hidden until you switch them on in <b>Personalize</b>, together with their notes and drills.']},
  {v:'8',date:'Oct 16, 2026',title:'Reference charts',items:[
   'Courses with reference charts (like a consonant or vowel chart) now have a <b>Charts</b> button on Practice, Notes and the Mock exam, the way the real exam hands you the table.',
   'New question styles: <b>Odd one out</b>, <b>Phonetic spelling</b> and <b>Best answer</b>.']},
