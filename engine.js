@@ -1,6 +1,12 @@
 /* =====================================================================
    ENGINE: no need to edit below this line.
    ===================================================================== */
+// Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
+// Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
+let BOOTED=false;
+addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
+ Object.assign(s,{section:null,active:null,feedback:null,selected:null,pmatch:null,pass:null,page:'dashboard',exam:s.exam&&!s.exam.done?s.exam:null,__recovered:1});
+ localStorage.setItem(k,JSON.stringify(s));location.reload()}}catch(e){}});
 /* ---------- question sets added in this browser (Personalize → Question banks → Add a set) ---------- */
 // Saved as text under "<storageKey>_sets" as [{id, name, ch, text}]; each set becomes its own bank tab.
 const SETS_KEY=CONFIG.storageKey+'_sets',COURSE_SECS=Object.assign({},CONFIG.sections),COURSE_CH=Object.assign({},CONFIG.chapters);
@@ -86,7 +92,7 @@ const isX=s=>s==='ALL'||s==='MISSED'||s==='STAR'||s==='DUE'||s==='CLASS'; // mod
 const secCh=s=>isCh(s)?s.slice(3):chOf(s);
 const KEY=CONFIG.storageKey;
 // Cloud (optional): CONFIG.cloud = {url, key} turns on class stats and device sync (see "cloud" further down).
-const CLOUD=CONFIG.cloud||{},cloudOn=()=>!!(CLOUD.url&&CLOUD.key),SYNC_KEY='reviewer_sync';
+const CLOUD=CONFIG.cloud||{},cloudOn=()=>!!(CLOUD.url&&CLOUD.key),SYNC_KEY='reviewer_sync',CLASS_MIN=5,CLASS_TOP=20;
 let prefSigLast=null,lastPutSig='',syncBoot=true,CSTATS=null,classMemo={k:'',list:[]},crowdQ=[],crowdT=null,syncCode='',syncT=null,syncBusy=false,syncHold=false,syncEntry=false,syncInfo={at:0,err:''};
 try{CSTATS=JSON.parse(localStorage.getItem(KEY+'_class'))}catch(e){}
 try{syncCode=(JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||'';syncInfo.at=+localStorage.getItem(KEY+'_synced')||0}catch(e){}
@@ -826,7 +832,7 @@ function exportSet(id){const s=USER_SETS.find(x=>x.id===id);if(!s)return;
    CONFIG.cloud = {url:'https://<project>.supabase.co', key:'<publishable / anon key>'}. Without it none of this shows.
    The database exposes only the functions in supabase_setup.sql: record_answers, class_stats, sync_put, sync_get, sync_known.
    The course id in the database is the storageKey, so the file and website versions share class stats. */
-const CLASS_MIN=5,CLASS_TOP=20,BUILTIN=new Set(BANKS.filter(b=>!b.user).flatMap(b=>b.items.map(c=>c.id)));
+const BUILTIN=new Set(BANKS.filter(b=>!b.user).flatMap(b=>b.items.map(c=>c.id)));
 const CLASS_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.6a6.5 6.5 0 0 1 3.5 5.4"/></svg>';
 function rpc(fn,body,keep){const h={'Content-Type':'application/json',apikey:CLOUD.key};if(/^eyJ/.test(CLOUD.key))h.Authorization='Bearer '+CLOUD.key;
  return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body),keepalive:!!keep})
@@ -1165,3 +1171,4 @@ if(cloudOn()){loadClassStats();if(syncCode)syncNow();
 else syncBoot=false;
 // Show What's new once: on the first visit, and again only when a newer entry is added to CHANGELOG (not over a challenge).
 if(!newsSeen()&&!CHAL)setTimeout(openNews,350);
+BOOTED=true;if(state.__recovered){delete state.__recovered;save()}
