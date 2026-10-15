@@ -638,7 +638,7 @@ function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters
 function exPool(){const st=exSetup();return BANK.filter(c=>st.chs.includes(chOf(c.section)))}
 function exLeft(){const ex=state.exam;return ex.limit?ex.start+ex.limit-Date.now():Infinity}
 function clock(ms){const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
-function drawExam(){const ex=state.exam,C=CHAL||ex&&ex.chal;$('main').classList.toggle('wide',!CHAL&&!!ex&&!!ex.sheet&&!ex.done);document.title=(C?'Class challenge':'Mock exam')+' · '+CONFIG.title;$('excrumb').textContent=C?'Class challenge':'Mock exam';
+function drawExam(){const ex=state.exam,C=CHAL||ex&&ex.chal,run=!CHAL&&!!ex&&!ex.done;$('examView').classList.toggle('running',run);if(run)requestAnimationFrame(()=>{const t=$('examView').querySelector('.top');if(t)$('examView').style.setProperty('--exhead',t.offsetHeight+'px')});$('main').classList.toggle('wide',!CHAL&&!!ex&&!!ex.sheet&&!ex.done);document.title=(C?'Class challenge':'Mock exam')+' · '+CONFIG.title;$('excrumb').textContent=C?'Class challenge':'Mock exam';
  $('exChartBtn').hidden=!chartsOn();clearInterval(exTick);$('extimer').hidden=true;
  if(CHAL)drawChalIntro();else if(ex&&!ex.done)drawExamRun();else if(ex&&ex.done)drawExamResult();else drawExamSetup()}
 function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);$('extitle').textContent='Mock exam';

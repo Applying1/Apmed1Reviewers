@@ -684,6 +684,10 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 #ndocs{display:contents}
 .docbtn{text-decoration:none}
 .docbtn svg{margin-right:2px}
+/* During an exam the header (title, Charts, timer) stays pinned; the answer sheet pins right under it */
+#examView.running>.top{position:sticky;top:0;z-index:12;background:var(--bg);margin:-14px -12px 0;padding:14px 12px 12px;box-shadow:0 1px 0 var(--line)}
+#examView.running .sheet{top:calc(var(--exhead,84px) + 12px);max-height:calc(100vh - var(--exhead,84px) - 28px)}
+#examView.running .pq{scroll-margin-top:calc(var(--exhead,84px) + 12px)}
 </style></head><body>
 <div class="app" id="app">
  <aside class="side" id="side" aria-label="Navigation">
