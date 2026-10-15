@@ -640,6 +640,15 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 /* "All courses" sits above the course name as a small back link, apart from the page tabs */
 .homelink{display:inline-flex;align-items:center;gap:3px;margin:-4px 0 12px 4px;padding:3px 8px 3px 4px;border-radius:7px;font-size:12.5px;font-weight:500;color:var(--faint);text-decoration:none;transition:color .15s,background .15s}
 .homelink:hover,.homelink:focus-visible{color:var(--text);background:var(--raised)}
+/* Class stats panel (dashboard) */
+#classPanel{margin-top:14px}
+.csub{font-size:13px;font-weight:600;margin:18px 0 10px;color:var(--mute)}
+.cbar{padding:5px 8px;margin:0 -8px;width:calc(100% + 16px);border-radius:9px;cursor:pointer;font:inherit;color:inherit}
+.cbar:hover{background:var(--raised)}
+.cbar .fill{background:linear-gradient(90deg,var(--amber),var(--bad))!important}
+.ctop{margin:0 0 14px;padding:0;list-style:none;display:grid;gap:8px}
+.ctop li{display:flex;gap:12px;font-size:14px;line-height:1.45}
+.ctop b{flex:none;width:44px;color:var(--bad);font-variant-numeric:tabular-nums}
 </style></head><body>
 <div class="app" id="app">
  <aside class="side" id="side" aria-label="Navigation">
@@ -669,6 +678,7 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
     <section class="panel"><h2>Needs attention<em>most missed</em></h2><p class="desc" id="weakdesc">Concepts you've answered incorrectly and haven't mastered yet.</p><ul class="weak" id="weak"></ul><button class="btn sm weakgo" id="weakgo" onclick="selectSection('MISSED')" hidden>Practice missed only</button></section>
    </div>
    <section class="panel"><h2>Section map<em>click a section to practice it</em></h2><p class="desc">Darker cells mean more of that section is mastered.</p><div class="heat" id="heat"></div><div class="scale"><span>0%</span><i></i><span>100% mastered</span></div></section>
+   <section class="panel" id="classPanel" hidden></section>
   </div>
   <!-- Practice -->
   <div class="view" id="studyView" hidden>

@@ -457,7 +457,7 @@ function editName(){
 }
 
 function drawDash(){
- drawGreeting();const ex=examObj(),when=examWhen(ex);$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
+ drawGreeting();drawClassPanel();const ex=examObj(),when=examWhen(ex);$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
  document.title='Dashboard · '+CONFIG.title;
  const nMiss=BANK.filter(c=>isMissedC(c)&&!isM(c)).length,nStar=BANK.filter(isStar).length,nDue=state.prefs.srs?BANK.filter(isDue).length:0;
  $('weakgo').hidden=!(state.prefs.missed&&nMiss);$('weakgo').textContent='Practice missed only ('+nMiss+')';
@@ -841,9 +841,21 @@ function rpc(fn,body,keep){const h={'Content-Type':'application/json',apikey:CLO
 function classList(){if(!CSTATS||!CSTATS.rows)return [];const k=state.bank+'|'+state.prefs.scope+'|'+CSTATS.at+'|'+BANK.length;if(classMemo.k===k)return classMemo.list;
  const list=BANK.map(c=>({c,s:CSTATS.rows[c.id]})).filter(x=>x.s&&x.s[0]>=CLASS_MIN&&x.s[1]>0).sort((a,b)=>b.s[1]/b.s[0]-a.s[1]/a.s[0]||b.s[0]-a.s[0]).slice(0,CLASS_TOP).map(x=>x.c);
  classMemo={k,list};return list}
+// Dashboard panel: how the whole class is doing, from the same anonymous counts (current bank and exam scope).
+function drawClassPanel(){const el=$('classPanel');if(!el)return;const rows=cloudOn()&&state.prefs.classmiss&&CSTATS&&CSTATS.rows?BANK.filter(c=>BUILTIN.has(c.id)).map(c=>({c,s:CSTATS.rows[c.id]})).filter(x=>x.s):[];
+ el.hidden=!rows.length;if(!rows.length)return;
+ const pct=(m,a)=>Math.round(100*m/Math.max(1,a)),A=rows.reduce((t,x)=>t+x.s[0],0),Mi=rows.reduce((t,x)=>t+x.s[1],0),all=BANK.filter(c=>BUILTIN.has(c.id)).length,ex=examObj();
+ const by={};rows.forEach(({c,s})=>{const b=by[c.section]||(by[c.section]=[0,0]);b[0]+=s[0];b[1]+=s[1]});
+ const secs=Object.entries(by).filter(([,b])=>b[0]>=CLASS_MIN&&b[1]>0).sort((x,y)=>y[1][1]/y[1][0]-x[1][1]/x[1][0]||y[1][0]-x[1][0]).slice(0,6),top=classList();
+ el.innerHTML='<h2>Class stats<em>updated '+agoShort(CSTATS.at)+'</em></h2><p class="desc">Anonymous right/wrong counts from everyone using this reviewer'+(ex?' (for '+esc(ex.name)+')':'')+'. Refreshes every hour.</p>'+
+  '<div class="recent-sum"><span><b>'+A.toLocaleString()+'</b>answers</span><span><b>'+pct(Mi,A)+'%</b>missed</span><span><b>'+rows.length+'<small style="font-size:13px;color:var(--mute)">/'+all+'</small></b>'+ITEMS+' tried</span></div>'+
+  (secs.length?'<h3 class="csub">Hardest sections</h3><div class="bars">'+secs.map(([k,b])=>'<button class="bar-row cbar" onclick="selectSection(\''+k+'\')" title="Practice this section"><span class="n"><span>'+esc(k)+'</span>'+esc(SECTION_NAMES[k]||'')+'</span><span class="p">'+pct(b[1],b[0])+'% missed · '+b[0]+' answers</span><span class="track"><span class="fill" style="display:block;width:'+pct(b[1],b[0])+'%"></span></span></button>').join('')+'</div>':'')+
+  (top.length?'<h3 class="csub">Most missed '+ITEMS+'</h3><ol class="ctop">'+top.slice(0,5).map(c=>'<li><b>'+classRate(c.id)+'%</b><span>'+esc(c.q||c.term)+'</span></li>').join('')+'</ol>'+
+   '<button class="btn sm" onclick="selectSection(\'CLASS\')">Practice the class\'s most missed ('+top.length+')</button>'
+   :'<p class="desc" style="margin:14px 0 0">The most missed list fills in once '+ITEMS+' have '+CLASS_MIN+' or more answers.</p>')}
 function classOn(){return cloudOn()&&!!state.prefs.classmiss&&classList().length>0}
 function classRate(id){const r=cloudOn()&&CSTATS&&CSTATS.rows&&CSTATS.rows[id];return r&&r[0]>=CLASS_MIN?Math.round(100*r[1]/r[0]):null}
-function loadClassStats(){if(!cloudOn()||CSTATS&&Date.now()-CSTATS.at<6e5)return;
+function loadClassStats(){if(!cloudOn()||CSTATS&&Date.now()-CSTATS.at<36e5)return;
  rpc('class_stats',{p_course:KEY}).then(rows=>{const r={};(rows||[]).forEach(x=>{r[x.qid]=[x.attempts,x.missed]});CSTATS={at:Date.now(),rows:r};classMemo.k='';
   try{localStorage.setItem(KEY+'_class',JSON.stringify(CSTATS))}catch(e){}
   $('nav').innerHTML=navHTML();if(page==='dashboard')drawDash()}).catch(()=>{})}
@@ -929,7 +941,7 @@ function drawPrefs(){
   row('Missed '+ITEMS+' drill','A sidebar list and a dashboard button that drill only the '+ITEMS+' you got wrong or checked in your slides, until they are mastered.',sw(state.prefs.missed,"setPref('missed',"+!state.prefs.missed+")",'Missed '+ITEMS+' drill'))+
   row('Spaced review','Mastered '+ITEMS+' come back as Due for review after 1, 3, 7, 14 and 30 days, so they stick until the exam. Missing one sends it back to practice.',sw(state.prefs.srs,"setPref('srs',"+!state.prefs.srs+")",'Spaced review'))+
   row('Flag button','A flag next to the star copies the '+ITEM+', its ID and the answer key, so you can paste it in your group chat to point out a typo or a wrong answer.',sw(state.prefs.flag,"setPref('flag',"+!state.prefs.flag+")",'Flag button'))+
-  (cloudOn()?row('Class\'s most missed','A sidebar list of the '+CLASS_TOP+' '+ITEMS+' your class misses most, and how many classmates missed each '+ITEM+' after you answer it.',sw(state.prefs.classmiss,"setPref('classmiss',"+!state.prefs.classmiss+")",'Class most missed')):'')+
+  (cloudOn()?row('Class stats','A Class stats panel on the dashboard, a sidebar list of the '+CLASS_TOP+' '+ITEMS+' your class misses most, and how many classmates missed each '+ITEM+' after you answer it. Updates every hour.',sw(state.prefs.classmiss,"setPref('classmiss',"+!state.prefs.classmiss+")",'Class most missed')):'')+
   '</section>';
  h+='<section class="panel"><h2>Pages</h2>'+
   (NOTES_DATA?row('Notes','High-yield recognition notes to read before a mock exam, with a self-test mode.',sw(state.prefs.notes,"setPref('notes',"+!state.prefs.notes+")",'Show the Notes page')):'')+
