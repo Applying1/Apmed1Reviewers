@@ -7,13 +7,14 @@ const SECTION_NAMES=CONFIG.sections,CH_NAMES=CONFIG.chapters;
 const ALL_SECTIONS=Object.keys(SECTION_NAMES),ALL_CHAPTERS=Object.keys(CH_NAMES);
 const chOf=s=>String(s).split('-')[0];              // chapter id of a section id like "12-3"
 const isCh=s=>String(s).startsWith('CH:');          // "CH:3" = the entire chapter 3 as one quiz
-const isX=s=>s==='ALL'||s==='MISSED'||s==='STAR'; // modes that mix every chapter
+const isX=s=>s==='ALL'||s==='MISSED'||s==='STAR'||s==='DUE'; // modes that mix every chapter
 const secCh=s=>isCh(s)?s.slice(3):chOf(s);
 const KEY=CONFIG.storageKey;
 const ITEM=CONFIG.itemWord||'concept',ITEMS=ITEM+'s',Items=ITEMS.charAt(0).toUpperCase()+ITEMS.slice(1);
 const UNIT=CONFIG.unit||'Chapter',unitW=UNIT.toLowerCase(),unitsW=unitW+'s';
 const NOTES_DATA=typeof NOTES!=='undefined'&&NOTES.length?NOTES:null;
 const MSETS=(typeof MATCHING!=='undefined'?MATCHING:[]).map((m,i)=>({i,ch:String(m[0]),title:m[1],options:m[2],items:m[3]}));
+const MIXUP=(typeof CONFUSABLES!=='undefined'?CONFUSABLES:[]).map(([ch,members],i)=>({i,ch:String(ch),members:members.map(([name,cues])=>({name,cues}))})).filter(g=>g.members.length>1);
 const GOALS=CONFIG.recallGoals||[1,2];
 const LETTERS='ABCDE',THEME_KEY='reviewer_theme';
 const $=id=>document.getElementById(id);
@@ -28,10 +29,11 @@ const STAR_PATH='<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1
 const STAR_SVG='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">'+STAR_PATH+'</svg>';
 const STAR_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">'+STAR_PATH+'</svg>';
 const MISS_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>';
+const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,crossout:true,lucky:true,stars:true,missed:true};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -47,7 +49,7 @@ if(state.pmatch&&!MSETS[state.pmatch.i])state.pmatch=null;
 let BANK=[],sectionKeys=[],chapters=[],AUTHORED=true,NCHOICE=4;
 const bankObj=()=>BANKS.find(b=>b.id===state.bank)||BANKS[0];
 const bankItems=b=>state.prefs.extras?b.items:b.items.filter(c=>!c.extra);
-function validSection(s){return s==='ALL'||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
+function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
 function refreshBank(){const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
  sectionKeys=ALL_SECTIONS.filter(k=>BANK.some(c=>c.section===k));
  chapters=ALL_CHAPTERS.filter(ch=>sectionKeys.some(k=>chOf(k)===ch));
@@ -59,9 +61,14 @@ const T=()=>state.prefs.target;                      // correct recalls needed f
 const isM=c=>state.concepts[c.id].right>=T();
 const isMissedC=c=>{const k=state.concepts[c.id];return k.wrong>0||k.lookups>0}; // ever answered wrong or looked up
 const isStar=c=>!!state.concepts[c.id].star;
+// Spaced review: mastered items come back after 1, 3, 7, 14 and 30 days.
+const DAY=864e5,SRS_DAYS=[1,3,7,14,30];
+const isDue=c=>{const k=state.concepts[c.id];return state.prefs.srs&&!!k.srs&&k.srs.due<=Date.now()&&isM(c)};
+// Items mastered before spaced review existed get their first review a day from now.
+ALL_ITEMS.forEach(c=>{const k=state.concepts[c.id];if(k.right>=T()&&!k.srs)k.srs={lvl:0,due:Date.now()+DAY}});
 const TIMES={1:'once',2:'twice',3:'three times'};
-const VIEWS={dashboard:'dashView',study:'studyView',notes:'notesView',match:'matchView',prefs:'prefsView'};
-function pageOn(p){return p==='notes'?!!NOTES_DATA&&state.prefs.notes:p==='match'?MSETS.length>0&&state.prefs.matching:!!VIEWS[p]}
+const VIEWS={dashboard:'dashView',study:'studyView',notes:'notesView',match:'matchView',exam:'examView',prefs:'prefsView'};
+function pageOn(p){return p==='notes'?!!NOTES_DATA&&state.prefs.notes:p==='match'?(MSETS.length>0||MIXUP.length>0)&&state.prefs.matching:p==='exam'?!!state.prefs.exam:!!VIEWS[p]}
 let page=pageOn(state.page)?state.page:'dashboard';
 let view=null;               // index into this section's answer log when reviewing; null = current question
 const openCh=new Set(isX(state.section)?[]:[secCh(state.section)]);
@@ -75,12 +82,12 @@ function shuffle(a,seed){let b=a.slice(),x=seed||1;for(let i=b.length-1;i>0;i--)
 const rnd=()=>((Math.random()*4294967296)>>>0)||1;
 // Random order: a new seed every time, so answer letters can't be memorized. In order: stable per attempt.
 const seedFor=(c,tag)=>state.prefs.order==='random'?rnd():stableHash(c.id+tag+state.concepts[c.id].seen);
-function inSection(s){return s==='ALL'?BANK:s==='MISSED'?BANK.filter(isMissedC):s==='STAR'?BANK.filter(isStar):isCh(s)?BANK.filter(c=>chOf(c.section)===s.slice(3)):BANK.filter(c=>c.section===s)}
-function progress(s){const a=inSection(s);if(s==='STAR'){const d=state.starDone||[];return {done:a.filter(c=>d.includes(c.id)).length,total:a.length}}return {done:a.filter(isM).length,total:a.length}}
+function inSection(s){return s==='ALL'?BANK:s==='DUE'?BANK.filter(c=>isDue(c)||(state.dueDone||[]).includes(c.id)):s==='MISSED'?BANK.filter(isMissedC):s==='STAR'?BANK.filter(isStar):isCh(s)?BANK.filter(c=>chOf(c.section)===s.slice(3)):BANK.filter(c=>c.section===s)}
+function progress(s){const a=inSection(s);if(s==='STAR'||s==='DUE'){const d=(s==='STAR'?state.starDone:state.dueDone)||[];return {done:a.filter(c=>d.includes(c.id)).length,total:a.length}}return {done:a.filter(isM).length,total:a.length}}
 // What is still to be asked: unmastered items, or for starred review the ones not yet seen this round.
-function poolFor(s){const a=inSection(s);if(s==='STAR'){const d=state.starDone||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
+function poolFor(s){if(s==='DUE')return BANK.filter(isDue);const a=inSection(s);if(s==='STAR'){const d=state.starDone||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
 function completed(s){const p=progress(s);return p.done===p.total}
-const secTitle=s=>s==='MISSED'?'Missed '+ITEMS:s==='STAR'?'Starred '+ITEMS:s==='ALL'?'All '+unitsW+', shuffled':isCh(s)?CH_NAMES[s.slice(3)]:s+' '+SECTION_NAMES[s];
+const secTitle=s=>s==='DUE'?'Due for review':s==='MISSED'?'Missed '+ITEMS:s==='STAR'?'Starred '+ITEMS:s==='ALL'?'All '+unitsW+', shuffled':isCh(s)?CH_NAMES[s.slice(3)]:s+' '+SECTION_NAMES[s];
 const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
 
 function makeQuestion(c){let st=state.concepts[c.id],stage=st.seen%3;
@@ -114,7 +121,7 @@ function chooseNext(){const s=state.section;let pool=poolFor(s);if(!pool.length)
 function ensure(){
  const ac=state.active&&byId[state.active.cid];
  if(state.active&&(!ac||!inSection(state.section).includes(ac)||(!state.feedback&&!poolFor(state.section).includes(ac)))){state.active=null;state.feedback=null;state.selected=null}
- if(!state.active&&!state.feedback){state.active=chooseNext();state.selected=null}
+ if(!state.active&&!state.feedback){state.active=chooseNext();state.selected=null;if(state.active)state.active.typed=canType(state.active)}
  save()}
 
 /* ---------- answer log / back button ---------- */
@@ -156,7 +163,7 @@ function feedbackHTML(q,fb,live){
  if(q.why)out+='<p>'+esc(q.why)+'</p>';
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
  const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' stays in your queue.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
-  :'This '+ITEM+' will come back later, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.';
+  :'This '+ITEM+' will come back later, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
  out+='<p class="note">'+note+'</p></div>';
  return out;
 }
@@ -177,33 +184,34 @@ function cardHTML(){
  if(state.pmatch)return matchCardHTML(state.pmatch,'p');
  // Section finished
  if(!state.active){
-  const L=navList(s),last=!L.length||L.indexOf(s)===L.length-1,focus=s==='MISSED'||s==='STAR',none=!inSection(s).length;
-  const label=s==='ALL'?'Shuffle complete':s==='STAR'?(none?'Nothing starred':'Round complete'):s==='MISSED'?'All caught up':isCh(s)?esc(UNIT)+' complete':'Section complete';
-  const text=s==='STAR'?(none?'No starred '+ITEMS+' yet. Tap the star on any question, or press S, to collect it here.':'You went through every starred '+ITEM+'. Go again the night before the exam.')
+  const L=navList(s),last=!L.length||L.indexOf(s)===L.length-1,focus=s==='MISSED'||s==='STAR'||s==='DUE',none=!inSection(s).length;
+  const label=s==='ALL'?'Shuffle complete':s==='DUE'?(none?'Nothing due':'All reviewed'):s==='STAR'?(none?'Nothing starred':'Round complete'):s==='MISSED'?'All caught up':isCh(s)?esc(UNIT)+' complete':'Section complete';
+  const text=s==='DUE'?(none?'Nothing is due right now. Mastered '+ITEMS+' come back for review after 1, 3, 7, 14 and 30 days.':'You reviewed everything that was due. Each one is now scheduled further out.'):s==='STAR'?(none?'No starred '+ITEMS+' yet. Tap the star on any question, or press S, to collect it here.':'You went through every starred '+ITEM+'. Go again the night before the exam.')
    :s==='MISSED'?(none?'Nothing missed yet. '+Items+' you get wrong, or check in your slides, will collect here.':'Every '+ITEM+' you had missed is now mastered.')
    :'You answered every '+ITEM+' here correctly '+(TIMES[T()]||T()+' times')+'. Move on, or run through it again for extra practice.';
   return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">'+label+'</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+text+'</p><div class="row">'+
-   (secLog().length?backBtn():'')+(none?'':'<button class="btn" onclick="extraPractice()">'+(s==='STAR'?'Go again':'Practice again')+'</button>')+
+   (secLog().length?backBtn():'')+(none||s==='DUE'?'':'<button class="btn" onclick="extraPractice()">'+(s==='STAR'?'Go again':'Practice again')+'</button>')+
    (focus?'<button class="btn primary" id="go" onclick="setPage(\'dashboard\')">Back to dashboard <kbd>Enter</kbd></button>'
     :'<button class="btn primary" id="go" onclick="advance()">'+(last?'Finish':'Next '+(isCh(s)?unitW:'section'))+' <kbd>Enter</kbd></button>')+'</div></div>';
  }
  // Current question
  const q=state.active,st=state.concepts[q.cid],fb=state.feedback,mixed=isX(s)||isCh(s);
- return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+kindName(q.kind)+'</span><span class="mastery">'+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
-  '<p class="prompt">'+esc(q.stem)+'</p>'+choicesHTML(q,state.selected,fb,true)+
+ return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(q.typed?'Type the answer':kindName(q.kind))+'</span><span class="mastery">'+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
+  '<p class="prompt">'+esc(q.stem)+'</p>'+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
   (q.usedHint&&!fb?'<div class="hint"><b>Hint</b>'+esc(q.hint)+'</div>':'')+
   (fb?feedbackHTML(q,fb,true):'')+
   '<div class="actions">'+backBtn()+'<span class="aux">'+(fb?'':(q.usedHint||!q.hint?'':'<button class="link" onclick="hint()">Show hint</button>')+'<button class="link" onclick="looked()" title="Counts as a review, not a correct recall">I checked my slides</button>')+'</span>'+
   (fb?'<button class="btn primary" id="go" onclick="next()">Next question <kbd>Enter</kbd></button>'
-     :'<button class="btn primary" id="go" onclick="submit()" '+(state.selected?'':'disabled')+'>Check answer <kbd>Enter</kbd></button>')+'</div>';
+     :'<button class="btn primary" id="go" onclick="'+(q.typed?'submitTyped()':'submit()')+'" '+(q.typed||state.selected?'':'disabled')+'>Check answer <kbd>Enter</kbd></button>')+'</div>';
 }
 
 const SHUFFLE='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>';
 function focusNav(study){
+ const nDue=state.prefs.srs?BANK.filter(isDue).length:0,dOn=state.section==='DUE'&&study;
  const nMiss=state.prefs.missed?BANK.filter(c=>isMissedC(c)&&!isM(c)).length:0,mOn=state.section==='MISSED'&&study;
  const nStar=state.prefs.stars?BANK.filter(isStar).length:0,sOn=state.section==='STAR'&&study;
  const b=(id,on,ic,name,ct,tip)=>'<button class="sec special '+(on?'on':'')+'" '+(on?'aria-current="page" ':'')+'onclick="selectSection(\''+id+'\')" title="'+tip+'"><span class="no">'+ic+'</span><span class="nm">'+name+'</span><span class="ct">'+ct+'</span></button>';
- return (nMiss||mOn?b('MISSED',mOn,MISS_SM,'Missed '+ITEMS,nMiss,'Only the '+ITEMS+' you got wrong or checked in your slides, until mastered'):'')+
+ return (nDue||dOn?b('DUE',dOn,CLOCK_SM,'Due for review',nDue,'Mastered '+ITEMS+' that are due for a spaced review'):'')+(nMiss||mOn?b('MISSED',mOn,MISS_SM,'Missed '+ITEMS,nMiss,'Only the '+ITEMS+' you got wrong or checked in your slides, until mastered'):'')+
   (nStar||sOn?b('STAR',sOn,STAR_SM,'Starred',nStar,'Your starred '+ITEMS+', mastered or not'):'');
 }
 function navHTML(){
@@ -226,7 +234,7 @@ function drawStudy(){
  $('prevSec').disabled=!L.length||idx<=0;$('nextSec').disabled=!L.length||idx>=L.length-1;
  for(const [id,w] of [['prevSec','Previous '],['nextSec','Next ']]){$(id).title=w+what;$(id).setAttribute('aria-label',w+what)}
  $('notesBtn').hidden=!pageOn('notes');
- $('mlabel').innerHTML='<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'?'starred '+ITEMS+' reviewed this round':ITEMS+' mastered');
+ $('mlabel').innerHTML='<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'?'starred '+ITEMS+' reviewed this round':s==='DUE'?ITEMS+' reviewed':ITEMS+' mastered');
  $('goal').innerHTML=GOALS.length>1?'<span>Recall goal</span>'+goalSeg():'';
  $('fill').style.width=(100*p.done/Math.max(1,p.total))+'%';
  // Dots: in random order they are grouped by progress, so a dot's position never hints at a question.
@@ -239,6 +247,7 @@ function drawStudy(){
  const ck=s+'|'+view+'|'+(state.pmatch?'m'+state.pmatch.i:'')+(state.active?.cid||'done')+'|'+(state.concepts[state.active?.cid]?.seen??'');
  if(ck!==lastCardKey&&!reduceMotion){card.classList.remove('enter');void card.offsetWidth;card.classList.add('enter')}
  lastCardKey=ck;
+ if(state.active&&state.active.typed&&!state.feedback&&view==null&&!state.pmatch){const i=$('typed');if(i)i.focus({preventScroll:true})}
 
  const att=state.correct+state.wrong;
  $('stats').innerHTML='<span><b>'+state.correct+'</b>correct</span><span><b>'+state.wrong+'</b>wrong</span><span><b>'+Math.round(100*state.correct/Math.max(1,att))+'%</b>accuracy</span><span><b>'+sectionKeys.filter(completed).length+'/'+sectionKeys.length+'</b>sections done</span><span class="keys">A–'+LETTERS[NCHOICE-1]+' choose'+(state.prefs.crossout?' · Shift+letter cross out':'')+(state.prefs.stars?' · S star':'')+' · Enter continue · ← → browse</span>';
@@ -254,7 +263,8 @@ const PG={
  dashboard:['Dashboard','<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'],
  study:['Practice','<path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/>'],
  notes:['Notes','<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'],
- match:['Matching','<circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6h7M8.2 7.8l7.6 8.4"/>'],
+ match:['Drills','<circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6h7M8.2 7.8l7.6 8.4"/>'],
+ exam:['Mock exam','<path d="M9 3h6v4H9z"/><path d="M15 5h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3"/><path d="m9 14 2 2 4-4"/>'],
  prefs:['Personalize','<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>']};
 const HOME_LINK=CONFIG.home?'<a class="page" href="'+esc(CONFIG.home)+'"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg>All courses</a>':'';
 function drawPages(){$('pages').innerHTML=HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')}
@@ -267,7 +277,7 @@ function draw(){
  drawSetSwitch();
  drawTheme();
  drawNewsDot();
- ({dashboard:drawDash,study:drawStudy,notes:drawNotes,match:drawMatch,prefs:drawPrefs})[page]();
+ ({dashboard:drawDash,study:drawStudy,notes:drawNotes,match:drawMatch,exam:drawExam,prefs:drawPrefs})[page]();
 }
 /* ---------- question banks: Main, plus one tab per extra set (e.g. a friend's) ---------- */
 function drawSetSwitch(){const el=$('setsw');el.hidden=BANKS.length<2;
@@ -278,11 +288,13 @@ function drawSetSwitch(){const el=$('setsw');el.hidden=BANKS.length<2;
 function setBank(id){if(id===state.bank)return;state.bank=id;state.pmatch=null;refreshBank();state.active=null;state.feedback=null;state.selected=null;view=null;save();draw()}
 function setPref(k,v){if(state.prefs[k]===v)return;state.prefs[k]=v;
  if(k==='extras'){refreshBank();state.active=null;state.feedback=null;state.selected=null}
+ if(k==='typeMode'&&state.active&&!state.feedback)state.active.typed=canType(state.active);
  if(!validSection(state.section)){state.section=sectionKeys[0];state.active=null;state.feedback=null;state.selected=null;state.pmatch=null}
  if(k==='mix'&&!v)state.pmatch=null;
  view=null;save();draw()}
 function setGoal(n){setPref('target',n)}
 function setOrder(v){setPref('order',v)}
+function setTypeMode(v){setPref('typeMode',v)}
 function setMix(v){setPref('mix',v)}
 function setPage(p){toggleNav(false);if(p===page||!pageOn(p))return;page=p;state.page=p;view=null;save();draw();window.scrollTo(0,0)}
 
@@ -317,7 +329,7 @@ function editName(){
 function drawDash(){
  drawGreeting();
  document.title='Dashboard · '+CONFIG.title;
- const nMiss=BANK.filter(c=>isMissedC(c)&&!isM(c)).length,nStar=BANK.filter(isStar).length;
+ const nMiss=BANK.filter(c=>isMissedC(c)&&!isM(c)).length,nStar=BANK.filter(isStar).length,nDue=state.prefs.srs?BANK.filter(isDue).length:0;
  $('weakgo').hidden=!(state.prefs.missed&&nMiss);$('weakgo').textContent='Practice missed only ('+nMiss+')';
  $('weakdesc').textContent=Items+" you've answered incorrectly and haven't mastered yet.";
  const m=mastered(),pct=Math.round(100*m/Math.max(1,BANK.length)),att=state.correct+state.wrong;
@@ -326,7 +338,7 @@ function drawDash(){
  $('hero').innerHTML='<div><div class="big num">'+pct+'%<small>mastered</small></div>'+
   '<p class="sub">'+bn+'<b class="num">'+m+'</b> of <span class="num">'+BANK.length+'</span> '+ITEMS+' mastered across '+esc(CONFIG.scope)+' · <b class="num">'+secDone+'</b> of '+sectionKeys.length+' sections complete</p>'+
   '<div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'" aria-label="Overall mastery"><div class="fill" style="width:'+pct+'%"></div></div></div>'+
-  '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div><button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button><button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
+  '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div><button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button>'+(nDue?'<button class="shuffle-link due" onclick="selectSection(\'DUE\')">'+CLOCK_SM+'Review '+nDue+' due today</button>':'')+'<button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
   (pageOn('notes')?'<button class="shuffle-link" onclick="openNotes(\'all\')">'+NOTE_SM+'Read the high-yield notes</button>':'')+
   (state.prefs.stars&&nStar?'<button class="shuffle-link" onclick="selectSection(\'STAR\')">'+STAR_SM+'Review starred ('+nStar+')</button>':'')+'</div>';
 
@@ -407,14 +419,22 @@ function chooseSet(pool,lastI){const others=pool.filter(m=>m.i!==lastI),src=othe
 function pickMatch(){const pool=matchPool();if(!pool.length){M=null;return}newMatch(chooseSet(pool,M?.i).i)}
 const getM=ctx=>ctx==='p'?state.pmatch:M;
 function redrawMatch(ctx){if(ctx==='p')$('card').innerHTML=cardHTML();else drawMatchCard()}
-function setMatchCh(k){matchCh=k;M=null;drawMatch()}
+function setMatchCh(k){matchCh=k;M=null;MX=null;drawMatch()}
+let drillTab='match';
 function drawMatch(){
- document.title='Matching · '+CONFIG.title;
- const chs=[...new Set(MSETS.map(m=>m.ch))];
- $('mchips').innerHTML=[['all','All']].concat(chs.map(c=>[c,esc(UNIT)+' '+esc(c)+' · '+esc(CH_NAMES[c]||'')])).map(([k,t])=>'<button class="fchip '+(k===matchCh?'on':'')+'" aria-pressed="'+(k===matchCh)+'" onclick="setMatchCh(\''+k+'\')">'+t+'</button>').join('');
+ const tabs=[];if(MSETS.length)tabs.push(['match','Matching sets']);if(MIXUP.length)tabs.push(['mix','Don\'t mix up']);
+ if(!tabs.some(t=>t[0]===drillTab))drillTab=tabs[0][0];const mix=drillTab==='mix';
+ $('dtabs').hidden=tabs.length<2;
+ $('dtabs').innerHTML=tabs.map(([k,t])=>'<button role="tab" aria-selected="'+(k===drillTab)+'" class="'+(k===drillTab?'on':'')+'" onclick="setDrillTab(\''+k+'\')">'+t+'</button>').join('');
+ $('dtitle').textContent=mix?'Don\'t mix up':'Matching';document.title=(mix?'Don\'t mix up':'Matching')+' · '+CONFIG.title;
+ const chs=[...new Set((mix?MIXUP:MSETS).map(m=>m.ch))];if(matchCh!=='all'&&!chs.includes(matchCh))matchCh='all';
+ $('mchips').innerHTML=(chs.length>1?[['all','All']].concat(chs.map(c=>[c,esc(UNIT)+' '+esc(c)+' · '+esc(CH_NAMES[c]||'')])):[]).map(([k,t])=>'<button class="fchip '+(k===matchCh?'on':'')+'" aria-pressed="'+(k===matchCh)+'" onclick="setMatchCh(\''+k+'\')">'+t+'</button>').join('');
+ $('mcard').hidden=mix;$('msetsPanel').hidden=mix;$('xcard').hidden=!mix;
+ if(mix){if(!MX||(matchCh!=='all'&&MIXUP[MX.g].ch!==matchCh))newMix();drawMix();return}
  if(!M||(matchCh!=='all'&&MSETS[M.i].ch!==matchCh))pickMatch();
  drawMatchCard();drawMatchSets();
 }
+function setDrillTab(k){drillTab=k;drawMatch()}
 // ctx 'm' = Matching page, 'p' = a set mixed into practice (same card, different buttons at the bottom).
 function matchCardHTML(X,ctx){
  const m=MSETS[X.i],L=X.opt.map((o,k)=>({k,letter:LETTERS[k],label:m.options[o]})),n=X.items.length,answered=Object.keys(X.ans).length,best=state.match.best[m.title];
@@ -445,6 +465,97 @@ function maybeMix(){const every=state.prefs.mix;if(!every||(state.sinceMix||0)<e
  state.pmatch=makeMatch(chooseSet(pool,state.lastMix).i);state.lastMix=state.pmatch.i;state.sinceMix=0}
 function endMix(){state.pmatch=null;save();draw();scrollToCard()}
 function skipMix(){endMix()}
+
+/* ---------- Don't mix up: one clue, two look-alikes, pick the right one ---------- */
+let MX=null;const mixRun={right:0,total:0,streak:0};
+function dmPool(){return MIXUP.filter(g=>matchCh==='all'||g.ch===matchCh)}
+function newMix(){const pool=dmPool();if(!pool.length){MX=null;return}
+ const others=pool.filter(g=>!MX||g.i!==MX.g),src=others.length?others:pool,g=src[Math.floor(Math.random()*src.length)];
+ const ti=Math.floor(Math.random()*g.members.length);let oi=Math.floor(Math.random()*(g.members.length-1));if(oi>=ti)oi++;
+ const cues=g.members[ti].cues;MX={g:g.i,t:ti,opts:Math.random()<.5?[ti,oi]:[oi,ti],cue:cues[Math.floor(Math.random()*cues.length)],pick:null}}
+function drawMix(){const card=$('xcard');if(!MX){card.innerHTML='<p class="empty">No look-alikes here yet.</p>';return}
+ const g=MIXUP[MX.g],done=MX.pick!=null,ok=done&&MX.pick===MX.t;
+ card.innerHTML='<div class="qhead"><span class="kind">Don\'t mix up · '+esc(UNIT)+' '+esc(g.ch)+'</span><span class="num">'+(mixRun.total?mixRun.right+' of '+mixRun.total+' right'+(mixRun.streak>1?' · streak '+mixRun.streak:''):'Which one is it?')+'</span></div>'+
+  '<p class="prompt mixcue">'+esc(MX.cue)+'</p>'+
+  '<div class="mixopts">'+MX.opts.map((o,k)=>'<button class="mixopt'+(done?(o===MX.t?' right':o===MX.pick?' wrong':''):'')+'" '+(done?'disabled':'')+' onclick="mixPick('+o+')"><span class="key">'+(k+1)+'</span>'+esc(g.members[o].name)+'</button>').join('')+'</div>'+
+  (done?'<div class="fb '+(ok?'good':'bad')+'"><h3>'+FBICON[ok?'good':'bad']+(ok?'Correct':'It\'s '+esc(g.members[MX.t].name))+'</h3><p>'+MX.opts.map(o=>'<b>'+esc(g.members[o].name)+':</b> '+esc(g.members[o].cues.join('; '))).join('<br>')+'</p></div>':'')+
+  '<div class="actions"><span class="aux"><span class="khint">Keys: 1 or ← picks the left, 2 or → the right'+(done?', Enter goes on':'')+'</span></span>'+
+  (done?'<button class="btn primary" onclick="nextMix()">Next <kbd>Enter</kbd></button>':'')+'</div>'}
+// A right answer moves on by itself after a moment; a wrong one waits so you can read both clues.
+function mixPick(o){if(!MX||MX.pick!=null)return;MX.pick=o;const ok=o===MX.t;mixRun.total++;if(ok){mixRun.right++;mixRun.streak++}else mixRun.streak=0;
+ state.mixBest=Math.max(state.mixBest||0,mixRun.streak);save();drawMix();
+ if(ok){const cur=MX;setTimeout(()=>{if(MX===cur&&page==='match'&&drillTab==='mix')nextMix()},1200)}}
+function nextMix(){newMix();drawMix()}
+function mixKey(e){if(!MX)return false;const k=e.key;
+ if(MX.pick==null){if(k==='1'||k==='ArrowLeft'){mixPick(MX.opts[0]);return true}if(k==='2'||k==='ArrowRight'){mixPick(MX.opts[1]);return true}return false}
+ if((k==='Enter'||k===' ')&&e.target.tagName!=='BUTTON'){nextMix();return true}return false}
+
+/* ---------- mock exam: no hints or answers until the end ---------- */
+const EX_COUNTS=[20,30,50];let exTick=null;
+const swHTML=(on,fn,label)=>'<button class="tgl" role="switch" aria-checked="'+on+'" aria-label="'+esc(label)+'" onclick="'+fn+'"><span class="sw"></span></button>';
+function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters.slice(),timer:true});st.chs=st.chs.filter(c=>chapters.includes(c));if(!st.chs.length)st.chs=chapters.slice();return st}
+function exPool(){const st=exSetup();return BANK.filter(c=>st.chs.includes(chOf(c.section)))}
+function exLeft(){const ex=state.exam;return ex.limit?ex.start+ex.limit-Date.now():Infinity}
+function clock(ms){const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
+function drawExam(){document.title='Mock exam · '+CONFIG.title;clearInterval(exTick);$('extimer').hidden=true;const ex=state.exam;
+ if(ex&&!ex.done)drawExamRun();else if(ex&&ex.done)drawExamResult();else drawExamSetup()}
+function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);$('extitle').textContent='Mock exam';
+ const row=(t,d,ctl)=>'<div class="prow"><div class="pl"><b>'+t+'</b><span>'+d+'</span></div><div class="ctl">'+ctl+'</div></div>';
+ const counts=EX_COUNTS.filter(c=>c<pool.length).map(c=>[c,String(c)]).concat([[9999,'All '+pool.length]]);
+ const past=(state.exams||[]).slice(-5).reverse();
+ $('exbody').innerHTML='<p class="lede">A practice run with no hints and no answers until the end. Afterwards you get your score by '+unitW+' and can review every mistake. Wrong answers are added to your Missed '+ITEMS+'.</p>'+
+  '<section class="panel" style="margin-top:20px"><h2>Set up</h2>'+
+  row('Questions',pool.length+' '+ITEMS+' in the '+unitsW+' you picked, drawn at random.',segHTML('setExCount',counts,st.count>=pool.length?9999:st.count,'Number of questions'))+
+  row(UNIT+'s','Tap to include or leave out.','<div class="fchips">'+chapters.map(ch=>'<button class="fchip '+(st.chs.includes(ch)?'on':'')+'" aria-pressed="'+st.chs.includes(ch)+'" onclick="toggleExCh(\''+ch+'\')" title="'+esc(CH_NAMES[ch])+'">'+esc(UNIT)+' '+esc(ch)+'</button>').join('')+'</div>')+
+  row('Timer',st.timer?n+' minutes, one per question. The exam ends when time runs out.':'No time limit.',swHTML(st.timer,'toggleExTimer()','Timer'))+
+  '<div class="exstart"><button class="btn primary" onclick="startExam()" '+(n?'':'disabled')+'>Start exam · '+n+' '+ITEMS+'</button></div></section>'+
+  (past.length?'<section class="panel" style="margin-top:12px"><h2>Recent exams</h2><ul class="exlist">'+past.map(r=>'<li><b class="num">'+Math.round(100*r.right/r.total)+'%</b><span>'+r.right+' of '+r.total+' · '+esc(r.date)+' · '+esc(r.time)+'</span></li>').join('')+'</ul></section>':'')}
+function setExCount(v){exSetup().count=v;save();drawExam()}
+function toggleExCh(ch){const st=exSetup(),on=st.chs.includes(ch);if(on&&st.chs.length===1)return;st.chs=on?st.chs.filter(c=>c!==ch):chapters.filter(c=>c===ch||st.chs.includes(c));save();drawExam()}
+function toggleExTimer(){const st=exSetup();st.timer=!st.timer;save();drawExam()}
+function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;
+ state.exam={qs:shuffle(pool,rnd()).slice(0,n).map(c=>{const q=makeQuestion(c);return {cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))}}),
+  ans:{},i:0,start:Date.now(),limit:st.timer?n*60000:0,done:false};
+ save();drawExam();window.scrollTo(0,0)}
+function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered=Object.keys(ex.ans).length;
+ if(ex.limit&&exLeft()<=0){finishExam(true);return}
+ $('extitle').textContent='Question '+(ex.i+1)+' of '+n;
+ if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
+ $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
+  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+esc(q.stem)+'</p>'+
+  '<div class="choices">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+esc(x.label)+'</span></button>').join('')+'</div>'+
+  '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button></span>'+
+  '<button class="btn primary" onclick="'+(ex.i<n-1?'exGo(1)':'finishExam()')+'">'+(ex.i<n-1?'Next':'Finish')+' <kbd>Enter</kbd></button></div></section>'+
+  '<div class="qnav" aria-label="Jump to a question">'+ex.qs.map((_,j)=>'<button class="'+(ex.ans[j]?'a ':'')+(j===ex.i?'cur':'')+'" onclick="exJump('+j+')" aria-label="Question '+(j+1)+(ex.ans[j]?', answered':'')+'">'+(j+1)+'</button>').join('')+'</div>'}
+function exAnswer(l){const ex=state.exam;if(!ex||ex.done)return;ex.ans[ex.i]=l;save();drawExam()}
+function exGo(d){const ex=state.exam;if(!ex||ex.done)return;ex.i=Math.max(0,Math.min(ex.qs.length-1,ex.i+d));save();drawExam()}
+function exJump(j){const ex=state.exam;if(!ex||ex.done)return;ex.i=j;save();drawExam()}
+function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=ex.qs.length,open=n-Object.keys(ex.ans).length;
+ if(!timeUp&&open&&!confirm(open+' question'+(open>1?'s are':' is')+' still unanswered. Finish anyway?'))return;
+ clearInterval(exTick);ex.done=true;ex.end=Math.min(Date.now(),ex.limit?ex.start+ex.limit:Infinity);ex.timeUp=!!timeUp;let right=0;const byCh={};
+ ex.qs.forEach((q,j)=>{const c=byId[q.cid],k=state.concepts[q.cid],ok=q.choices.some(x=>x.correct&&x.letter===ex.ans[j]),ch=chOf(c.section);
+  byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;k.seen++;
+  if(ok){right++;byCh[ch][0]++;state.correct++}else{k.wrong++;state.wrong++;masteryDown(k)}
+  state.history.push({cid:q.cid,correct:ok,lookup:false,term:c.term,section:c.section,mode:'EXAM'})});
+ ex.right=right;ex.byCh=byCh;
+ state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start)}).slice(-20);
+ save();if(page==='exam'){drawExam();window.scrollTo(0,0)}}
+function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*ex.right/n);$('extitle').textContent='Results';
+ const wrong=ex.qs.map((q,j)=>({q,j,a:ex.ans[j]})).filter(x=>!x.q.choices.some(c=>c.correct&&c.letter===x.a));
+ $('exbody').innerHTML='<section class="card hero exres"><div><div class="big num">'+pct+'%<small>'+ex.right+' of '+n+' right</small></div><p class="sub">Time: '+clock(ex.end-ex.start)+(ex.timeUp?' (time ran out)':'')+' · '+(wrong.length?wrong.length+' to review':'no mistakes')+'</p></div></section>'+
+  '<section class="panel" style="margin-top:12px"><h2>By '+unitW+'</h2><div class="bars">'+Object.entries(ex.byCh).map(([ch,[r,t]])=>'<div class="bar-row"><span class="n"><span>'+esc(ch)+'</span>'+esc(CH_NAMES[ch]||'')+'</span><span class="p">'+r+' of '+t+'</span><span class="track"><span class="fill" style="display:block;width:'+(100*r/t)+'%"></span></span></div>').join('')+'</div></section>'+
+  '<div class="exacts">'+(wrong.length?'<button class="btn primary" onclick="toggleExReview()">'+(ex.review?'Hide my mistakes':'Review my mistakes ('+wrong.length+')')+'</button>':'')+
+  (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">New exam</button></div>'+
+  (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.choices.find(c=>c.letter===a);
+   return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+esc(byId[q.cid].section)+'</span></div><p class="exq">'+esc(q.stem)+'</p>'+
+    '<p class="exa bad"><b>Your answer:</b> '+(mine?esc(mine.letter+'. '+mine.label):'none')+'</p><p class="exa good"><b>Correct:</b> '+esc(ok.letter+'. '+ok.label)+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+'</article>'}).join('')+'</div>':'')}
+function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
+function newExam(){state.exam=null;save();drawExam();window.scrollTo(0,0)}
+function examKey(e){const ex=state.exam;if(!ex||ex.done)return false;const k=e.key;
+ if(/^[a-e]$/i.test(k)){const l=k.toUpperCase();if(ex.qs[ex.i].choices.some(c=>c.letter===l)){exAnswer(l);return true}return false}
+ if(k==='ArrowLeft'){exGo(-1);return true}
+ if(k==='ArrowRight'||(k==='Enter'&&e.target.tagName!=='BUTTON')){if(ex.i<ex.qs.length-1)exGo(1);else finishExam();return true}
+ return false}
 // After answering an item, move to the next unanswered one (or stay put when all are answered).
 function nextOpen(X,from){const n=X.items.length;for(let i=1;i<=n;i++){const j=(from+i)%n;if(X.ans[j]==null)return j}return from}
 function scrollCur(){const r=document.querySelector('.mrow.cur');if(r)r.scrollIntoView({block:'nearest',behavior:reduceMotion?'auto':'smooth'})}
@@ -475,6 +586,7 @@ function drawPrefs(){
  let h='<section class="panel"><h2>Practice</h2>'+
   (GOALS.length>1?row('Recall goal','How many times you must answer a '+ITEM+' correctly before it counts as mastered. You can also switch this on the Practice page.',goalSeg()):'')+
   row('Question order',rand?'Random: '+ITEMS+' come in a new order every pass and the answer letters are reshuffled each time, so you can\'t memorize positions.':'In order: '+ITEMS+' follow the lecture order and keep their answer letters. Easier to follow, but easier to memorize.',segHTML('setOrder',[['random','Random'],['fixed','In order']],state.prefs.order,'Question order'))+
+  row('Answer mode',state.prefs.typeMode?'Type the answer: short recall '+ITEMS+' hide the choices and you type the term. Small typos are accepted, and you can count a typed answer as right if the checker missed it.':'Choices: pick the answer from the list. Switch to typing for identification-style practice.',segHTML('setTypeMode',[[false,'Choices'],[true,'Type the answer']],state.prefs.typeMode,'Answer mode'))+
   (MSETS.length?row('Mix matching into practice',state.prefs.mix?'After every '+state.prefs.mix+' '+ITEMS+', the next card is a matching set from the '+unitW+' you are practicing. It counts toward your matching scores, not '+ITEM+' mastery.':'Matching sets stay on their own page. Turn this on to get one now and then while you practice.',segHTML('setMix',[[0,'Off'],[10,'Every 10'],[5,'Every 5']],state.prefs.mix,'Mix matching into practice')):'')+
   (ex?row('Include detail '+ITEMS,ex+' '+ITEMS+' in this bank are marked as extra detail. Turn this off to drill only the core.',sw(state.prefs.extras,"setPref('extras',"+!state.prefs.extras+")",'Include detail '+ITEMS)):'')+
   '</section>';
@@ -483,10 +595,12 @@ function drawPrefs(){
   row('Lucky guess button','After a correct answer, undo the mastery point if you were only guessing, so the '+ITEM+' stays in your queue.',sw(state.prefs.lucky,"setPref('lucky',"+!state.prefs.lucky+")",'Lucky guess button'))+
   row('Star '+ITEMS,'Flag tricky '+ITEMS+' with the star or the S key, then review them together, even after they are mastered.',sw(state.prefs.stars,"setPref('stars',"+!state.prefs.stars+")",'Star '+ITEMS))+
   row('Missed '+ITEMS+' drill','A sidebar list and a dashboard button that drill only the '+ITEMS+' you got wrong or checked in your slides, until they are mastered.',sw(state.prefs.missed,"setPref('missed',"+!state.prefs.missed+")",'Missed '+ITEMS+' drill'))+
+  row('Spaced review','Mastered '+ITEMS+' come back as Due for review after 1, 3, 7, 14 and 30 days, so they stick until the exam. Missing one sends it back to practice.',sw(state.prefs.srs,"setPref('srs',"+!state.prefs.srs+")",'Spaced review'))+
   '</section>';
- if(NOTES_DATA||MSETS.length)h+='<section class="panel"><h2>Pages</h2>'+
+ h+='<section class="panel"><h2>Pages</h2>'+
   (NOTES_DATA?row('Notes','High-yield recognition notes to read before a mock exam, with a self-test mode.',sw(state.prefs.notes,"setPref('notes',"+!state.prefs.notes+")",'Show the Notes page')):'')+
-  (MSETS.length?row('Matching',MSETS.length+' matching-type sets in the A–D format, graded per item.',sw(state.prefs.matching,"setPref('matching',"+!state.prefs.matching+")",'Show the Matching page')):'')+'</section>';
+  (MSETS.length||MIXUP.length?row('Drills',[MSETS.length?MSETS.length+' matching-type sets':'',MIXUP.length?MIXUP.length+' Don\'t mix up look-alike drills':''].filter(Boolean).join(' and ')+'.',sw(state.prefs.matching,"setPref('matching',"+!state.prefs.matching+")",'Show the Drills page')):'')+
+  row('Mock exam','A timed run with no hints or answers until the end, then your score by '+unitW+' and a review of your mistakes.',sw(state.prefs.exam,"setPref('exam',"+!state.prefs.exam+")",'Show the Mock exam page'))+'</section>';
  if(BANKS.length>1)h+='<section class="panel"><h2>Question bank</h2><p class="desc">Main is the full reviewer. Each extra bank is its own question set with its own progress.</p>'+
   BANKS.map(b=>row(esc(b.name)+'<span class="pill set">'+bankItems(b).length+' '+ITEMS+'</span>',esc(b.desc||''),b.id===state.bank?'<span class="pill">In use</span>':'<button class="btn sm" onclick="setBank(\''+b.id+'\')">Use</button>')).join('')+'</section>';
  h+='<section class="panel"><h2>Appearance and you</h2>'+
@@ -501,6 +615,12 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'7',date:'Oct 15, 2026',title:'Exam prep',items:[
+  '<b>Mock exam</b> page: choose how many '+ITEMS+' and which '+unitsW+', with an optional timer. No hints or answers until the end, then your score by '+unitW+' and <b>Review my mistakes</b>.',
+  '<b>Don\'t mix up</b> drill: one clue and two look-alikes side by side; pick which one it is.',
+  '<b>Due for review:</b> mastered '+ITEMS+' come back after 1, 3, 7, 14 and 30 days so they stick. Missing one sends it back to practice.',
+  '<b>Type the answer</b> (Personalize → Answer mode): short recall '+ITEMS+' hide the choices so you type the term. Small typos are accepted.',
+  'The Matching page is now <b>Drills</b>: Matching sets and Don\'t mix up in one place.']},
  {v:'6',date:'Oct 15, 2026',title:'Website and import',items:[
   '<b>Import progress</b> (Personalize → Your data): bring in answers you exported, for example from the file version to the website or between browsers.',
   'The reviewers can now run as a <b>website</b> with an All courses home screen. It can be added to your phone\'s home screen and works offline once opened.']},
@@ -555,17 +675,17 @@ function setThemeMode(m){if(m==='system'){delete document.documentElement.datase
 function toggleTheme(){setThemeMode(curTheme()==='dark'?'light':'dark')}
 
 /* ---------- actions ---------- */
-function answer(l){if(view!=null||state.pmatch||state.feedback||!state.active)return;state.selected=l;
+function answer(l){if(view!=null||state.pmatch||state.feedback||!state.active||state.active.typed)return;state.selected=l;
  if(state.active.struck?.includes(l)){state.active.struck=state.active.struck.filter(x=>x!==l);save();$('card').innerHTML=cardHTML();return}
  save();
  document.querySelectorAll('#card .choice').forEach(b=>{let on=b.dataset.l===l;b.classList.toggle('sel',on)});
  const g=$('go');if(g)g.disabled=false}
 // Cross out a choice you have ruled out (right-click, the × button, or Shift + letter).
-function strike(l){if(view!=null||state.pmatch||state.feedback||!state.active||!state.prefs.crossout)return;const s=state.active.struck||[];
+function strike(l){if(view!=null||state.pmatch||state.feedback||!state.active||state.active.typed||!state.prefs.crossout)return;const s=state.active.struck||[];
  state.active.struck=s.includes(l)?s.filter(x=>x!==l):s.concat(l);if(state.selected===l)state.selected=null;save();$('card').innerHTML=cardHTML()}
 // Correct, but only a guess: take the mastery point back so the question stays in the queue.
 function luckyGuess(){const fb=state.feedback;if(view!=null||!fb||!fb.correct||fb.lucky||!state.active)return;
- const k=state.concepts[state.active.cid];k.right=Math.max(0,k.right-1);k.lucky=(k.lucky||0)+1;fb.lucky=true;
+ const k=state.concepts[state.active.cid];if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}else k.right=Math.max(0,k.right-1);k.lucky=(k.lucky||0)+1;fb.lucky=true;
  const last=state.log[state.log.length-1];if(last&&last.fb)last.fb.lucky=true;save();draw()}
 function starBtn(cid){if(!state.prefs.stars)return '';const on=!!state.concepts[cid].star;
  return '<button class="starbtn'+(on?' on':'')+'" onclick="toggleStar()" aria-pressed="'+on+'" aria-label="'+(on?'Remove star':'Star this '+ITEM)+'" title="'+(on?'Starred · click to remove':'Star this '+ITEM+' to review it later')+' (S)">'+STAR_SVG+'</button>'}
@@ -573,12 +693,43 @@ function toggleStar(){if(view!=null||state.pmatch||!state.active||!state.prefs.s
 function hint(){if(view!=null||state.pmatch||state.feedback||!state.active||!state.active.hint)return;if(!state.active.usedHint){state.active.usedHint=true;state.hints++;state.concepts[state.active.cid].hints++}save();draw()}
 function looked(){if(view!=null||state.pmatch||state.feedback||!state.active)return;record(false,true)}
 function submit(){if(view!=null||state.pmatch||!state.selected||state.feedback)return;record(state.active.choices.find(x=>x.letter===state.selected).correct,false)}
+// Reaching the recall goal schedules the first review in a day; each on-time correct review moves it further out.
+function masteryUp(k){const before=k.right,now=Date.now();k.right++;
+ if(before<T()&&k.right>=T())k.srs={lvl:0,due:now+SRS_DAYS[0]*DAY};
+ else if(before>=T()&&k.srs&&k.srs.due<=now){k.srs.lvl=Math.min(k.srs.lvl+1,SRS_DAYS.length-1);k.srs.due=now+SRS_DAYS[k.srs.lvl]*DAY}}
+// Missing a mastered item sends it back to practice: one more correct answer masters it again.
+function masteryDown(k){if(k.right>=T()){k.right=T()-1;k.srs=null}}
+
+/* ---------- type the answer (identification) ---------- */
+// Short recall answers only; definitions and long answers keep their choices.
+function canType(q){if(!state.prefs.typeMode||!q)return false;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
+ if(c.q?q.kind!=='recall':q.kind==='definition')return false;return ans.length<=40&&ans.split(/\s+/).length<=5&&!/[,;]| to | and /.test(ans)&&!/^(as|in|by|for|to|of|on|at|with|from|through)\b/i.test(ans)&&(ans.match(/\d+/g)||[]).length<=1}
+function normAns(s){return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\(.*?\)/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\b(the|a|an)\b/g,' ').replace(/\s+/g,' ').trim()}
+function lev(a,b){let p=Array.from({length:b.length+1},(_,j)=>j);for(let i=1;i<=a.length;i++){const c=[i];for(let j=1;j<=b.length;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[b.length]}
+// Accepts small typos (none for very short answers) and either side of "A / B" or "A or B".
+function typedOK(input,answer){const t=normAns(input);if(!t)return false;
+ return [answer].concat(String(answer).split(/\s*\/\s*|\s+or\s+/)).some(v=>{const a=normAns(v);if(!a)return false;return lev(t,a)<=(a.length<=4?0:a.length<=8?1:2)})}
+function typedHTML(fb){
+ if(!fb)return '<div class="typein"><input id="typed" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer, then press Enter" aria-label="Your answer" onkeydown="if(event.key===\'Enter\'){event.preventDefault();submitTyped()}"></div>';
+ return '<div class="typein done '+(fb.correct?'ok':'bad')+'"><span class="yl">You typed</span><b>'+esc(fb.typed||'')+'</b>'+(fb.override?'<span class="ov">counted as right</span>':'')+'</div>'}
+function submitTyped(){const q=state.active;if(view!=null||state.pmatch||state.feedback||!q||!q.typed)return;const el=$('typed'),val=(el&&el.value||'').trim();if(!val){if(el)el.focus();return}
+ const target=q.choices.find(x=>x.correct),ok=typedOK(val,target.label);state.selected=ok?target.letter:null;record(ok,false);
+ state.feedback.typed=val;state.feedback.correctLabel=target.label;const last=state.log[state.log.length-1];if(last)last.fb=state.feedback;save();draw()}
+// A typed answer marked wrong that was really right (a spelling the checker did not accept).
+function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct||!fb.typed||!state.active)return;
+ const k=state.concepts[state.active.cid];k.wrong=Math.max(0,k.wrong-1);state.wrong=Math.max(0,state.wrong-1);if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}
+ fb.prev={right:k.right,srs:k.srs?{...k.srs}:null};masteryUp(k);state.correct++;fb.correct=true;fb.override=true;
+ const h=state.history[state.history.length-1];if(h&&h.cid===state.active.cid)h.correct=true;const kh=k.history[k.history.length-1];if(kh)kh.correct=true;
+ const last=state.log[state.log.length-1];if(last)last.fb=fb;save();draw()}
+
 function record(correct,lookup){
  const q=state.active,k=state.concepts[q.cid],choice=q.choices.find(x=>x.letter===state.selected),target=q.choices.find(x=>x.correct);
  k.seen++;if(state.section==='STAR'){state.starDone=state.starDone||[];if(!state.starDone.includes(q.cid))state.starDone.push(q.cid)}
- state.sinceMix=(state.sinceMix||0)+1;if(correct){k.right++;state.correct++}else if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}
+ if(state.section==='DUE'){state.dueDone=state.dueDone||[];if(!state.dueDone.includes(q.cid))state.dueDone.push(q.cid)}
+ const prev={right:k.right,srs:k.srs?{...k.srs}:null};
+ state.sinceMix=(state.sinceMix||0)+1;if(correct){masteryUp(k);state.correct++}else{if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}masteryDown(k)}
  const own=choice&&!choice.correct&&choice.owner?byId[choice.owner]:null;
- state.feedback={correct,lookup,correctLabel:target.letter+'. '+target.label,wrongExplain:own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':''};
+ state.feedback={correct,lookup,prev,correctLabel:target.letter+'. '+target.label,wrongExplain:own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':''};
  if(lookup)state.selected=null;
  k.history.push({correct,lookup,kind:q.kind});
  state.history.push({cid:q.cid,correct,lookup,term:byId[q.cid].term,section:byId[q.cid].section,mode:state.section});
@@ -589,7 +740,7 @@ function record(correct,lookup){
  requestAnimationFrame(()=>{const f=document.querySelector('#card .fb'),r=f?.getBoundingClientRect();if(r&&r.bottom>innerHeight)f.scrollIntoView({block:'nearest',behavior:reduceMotion?'auto':'smooth'})});
 }
 function next(){if(!state.feedback)return;state.feedback=null;state.active=null;state.selected=null;maybeMix();if(completed(state.section)&&!state.complete.includes(state.section))state.complete.push(state.section);save();draw();scrollToCard()}
-function goSection(sec){if(sec===state.section)return;state.section=sec;state.pmatch=null;state.active=null;state.feedback=null;state.selected=null;view=null;if(!isX(sec))openCh.add(secCh(sec));if(sec==='STAR'&&completed('STAR'))state.starDone=[];save();draw();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'})}
+function goSection(sec){if(sec===state.section)return;state.section=sec;state.pmatch=null;state.active=null;state.feedback=null;state.selected=null;view=null;if(!isX(sec))openCh.add(secCh(sec));if(sec==='STAR'&&completed('STAR'))state.starDone=[];if(sec==='DUE')state.dueDone=[];save();draw();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'})}
 function selectSection(sec){toggleNav(false);if(page!=='study'){page='study';state.page=page;if(sec===state.section){save();draw();window.scrollTo(0,0);return}}goSection(sec)}
 function stepSection(d){const L=navList(state.section),i=L.indexOf(state.section)+d;if(i>=0&&i<L.length)goSection(L[i])}
 function advance(){const L=navList(state.section),i=L.indexOf(state.section);if(!L.length||i===L.length-1){$('modalbody').textContent=completed('ALL')?'You have mastered all '+BANK.length+' '+ITEMS+' across '+CONFIG.scope+'. Keep practicing any section to stay sharp.':'You reached the end. '+(BANK.length-mastered())+' '+ITEMS+' are still waiting elsewhere, so check the dashboard for what is left.';$('dialog').hidden=false;return}goSection(L[i+1])}
@@ -613,7 +764,8 @@ document.addEventListener('keydown',e=>{
  if(!$('dialog').hidden){if(e.key==='Escape'||e.key==='Enter'){closeDialog();e.preventDefault()}return}
  if(e.key==='Escape'){toggleNav(false);return}
  const t=e.target;if(t.closest&&t.closest('input,textarea,select'))return;
- if(page==='match'){if(M&&matchKey(e,'m'))e.preventDefault();return}
+ if(page==='match'){if(drillTab==='mix'?mixKey(e):M&&matchKey(e,'m'))e.preventDefault();return}
+ if(page==='exam'){if(examKey(e))e.preventDefault();return}
  if(page==='notes'){notesKey(e);return}
  if(page!=='study')return;
  const k=e.key;

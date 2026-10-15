@@ -518,6 +518,47 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 @media (hover:none){.khint{display:none}}
 .nhead .reveal{margin-left:auto}
 .nhead .reveal+.link{margin-left:0}
+/* Exam prep: mock exam, Don't mix up, typing */
+.shuffle-link.due{color:var(--accent);font-weight:600}
+#dtabs{margin-right:4px}
+#dtabs button{padding:5px 12px;font-size:13px}
+.mixcue{text-align:center;margin:28px 0 24px}
+.mixopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mixopt{display:flex;align-items:center;justify-content:center;gap:10px;min-height:76px;padding:14px;border:1px solid var(--line2);border-radius:var(--r-md);background:var(--surface);font:600 17px/1.3 var(--serif);text-align:center;transition:background .15s,border-color .15s,transform .15s var(--ease)}
+.mixopt:hover:not(:disabled){background:var(--raised);border-color:var(--faint)}
+.mixopt:active:not(:disabled){transform:scale(.985)}
+.mixopt:disabled{cursor:default;color:var(--text)}
+.mixopt .key{flex:none;width:24px;height:24px;display:grid;place-items:center;border-radius:7px;background:var(--raised);color:var(--mute);font:600 12px/1 var(--sans)}
+.mixopt.right{border-color:var(--good-line);background:var(--good-bg)}
+.mixopt.wrong{border-color:var(--bad-line);background:var(--bad-bg)}
+#xcard .fb{margin-top:16px}
+.typed{width:100%;font:500 17px/1.4 var(--sans);padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--line2);background:var(--surface);color:var(--text);outline:0}
+.typed:focus{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
+.typein.done{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;padding:12px 16px;border-radius:var(--r-md);border:1px solid var(--line2)}
+.typein.done.ok{border-color:var(--good-line);background:var(--good-bg)}
+.typein.done.bad{border-color:var(--bad-line);background:var(--bad-bg)}
+.typein .yl{font-size:12.5px;color:var(--mute)}
+.typein .ov{margin-left:auto;font-size:12.5px;color:var(--good)}
+.top .extimer{margin-left:auto;flex:none;font:600 15px/1 var(--sans);font-variant-numeric:tabular-nums;padding:9px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line2)}
+.extimer.low{color:var(--bad);border-color:var(--bad-line);background:var(--bad-bg)}
+.exstart{display:flex;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--line)}
+.qnav{display:flex;flex-wrap:wrap;gap:5px;margin-top:16px}
+.qnav button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line2);background:var(--surface);font-size:12px;font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
+.qnav button.a{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+.qnav button.cur{box-shadow:0 0 0 2px var(--accent)}
+.exlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.exlist li{display:flex;gap:12px;align-items:baseline;font-size:13.5px;color:var(--mute)}
+.exlist b{color:var(--text);width:44px}
+.exres{grid-template-columns:1fr}
+.exres::after{display:none}
+.exacts{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.exreview{display:grid;gap:10px}
+.exq{font:500 16px/1.5 var(--serif);margin:8px 0 10px}
+.exa{margin:4px 0;font-size:14px}
+.exa.bad b{color:var(--bad)}
+.exa.good b{color:var(--good)}
+.exwhy{margin:8px 0 0;color:var(--mute);font-size:13.5px}
+@media (max-width:520px){.mixopts{grid-template-columns:1fr}.mixopt{min-height:60px}}
 @media (max-width:640px){
  .prow{flex-direction:column;align-items:flex-start;gap:10px}
  .mkeys{grid-template-columns:1fr}
@@ -591,11 +632,21 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
   <div class="view" id="matchView" hidden>
    <div class="top">
     <button class="icon menu" onclick="toggleNav(true)" aria-label="Open navigation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <div style="min-width:0"><div class="crumb">Matching type</div><h1>Matching</h1></div>
+    <div style="min-width:0"><div class="crumb">Drills</div><h1 id="dtitle">Matching</h1></div>
    </div>
-   <div class="toolbar"><div class="fchips" id="mchips"></div></div>
+   <div class="toolbar"><span class="seg" id="dtabs" role="tablist" aria-label="Drill type" hidden></span><div class="fchips" id="mchips"></div></div>
    <section class="card" id="mcard" aria-live="polite"></section>
-   <section class="panel" style="margin-top:14px"><h2>All sets<em id="msum"></em></h2><p class="desc">Your best score is saved for each set.</p><div class="msets" id="msets"></div></section>
+   <section class="card" id="xcard" aria-live="polite" hidden></section>
+   <section class="panel" id="msetsPanel" style="margin-top:14px"><h2>All sets<em id="msum"></em></h2><p class="desc">Your best score is saved for each set.</p><div class="msets" id="msets"></div></section>
+  </div>
+  <!-- Mock exam -->
+  <div class="view" id="examView" hidden>
+   <div class="top">
+    <button class="icon menu" onclick="toggleNav(true)" aria-label="Open navigation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <div style="min-width:0"><div class="crumb">Mock exam</div><h1 id="extitle">Mock exam</h1></div>
+    <span class="extimer" id="extimer" role="timer" aria-label="Time left" hidden></span>
+   </div>
+   <div id="exbody"></div>
   </div>
   <!-- Personalize -->
   <div class="view" id="prefsView" hidden>
@@ -619,7 +670,7 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
  try{const r=await fetch('courses/'+id+'.json');if(!r.ok)throw new Error(r.status);d=await r.json()}
  catch(e){document.getElementById('main').innerHTML='<div class="panel" style="margin-top:40px"><h2>This course could not be loaded</h2><p class="desc">Check your connection and reload, or go back to <a href="./">all courses</a>.</p></div>';return}
  window.CONFIG=Object.assign(d.config,{home:'./'});
- window.FULL_BANK=d.bank;window.VARIANTS=d.variants||[];window.NOTES=d.notes||[];window.MATCHING=d.matching||[];
+ window.FULL_BANK=d.bank;window.VARIANTS=d.variants||[];window.NOTES=d.notes||[];window.MATCHING=d.matching||[];window.CONFUSABLES=d.confusables||[];
  const s=document.createElement('script');s.src='engine.js';document.body.appendChild(s);
 })();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
