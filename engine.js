@@ -160,6 +160,10 @@ state.log=state.log||[];state.complete=state.complete||[];state.history=state.hi
 delete state.set;delete state.unlocked;
 if(!BANKS.some(b=>b.id===state.bank))state.bank='main';
 if(state.pmatch&&!MSETS[state.pmatch.i])state.pmatch=null;
+// Your name is shared by every course on this device; a course without one takes it.
+const NAME_KEY='reviewer_name';
+function setName(v){state.name=String(v||'').trim().slice(0,40);save();try{localStorage.setItem(NAME_KEY,state.name)}catch(e){}}
+try{const nm=localStorage.getItem(NAME_KEY);if(nm)state.name=nm;else if(state.name&&nm===null)localStorage.setItem(NAME_KEY,state.name)}catch(e){}
 if(state.active&&state.active.cid&&!byId[state.active.cid]){state.active=null;state.feedback=null;state.selected=null}
 
 /* ---------- active question bank: Main, or a variant someone added ---------- */
@@ -468,7 +472,8 @@ function nextSection(){if(!isX(state.section)&&!isCh(state.section)&&!completed(
 
 /* ---------- name (saved with progress in this browser only) ---------- */
 const PENCIL='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
-const hello=()=>{const hr=new Date().getHours();return hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'};
+// Late-night studying (midnight to 5) still counts as evening.
+const hello=()=>{const hr=new Date().getHours();return hr<5?'Good evening':hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'};
 function drawGreeting(){
  const n=(state.name||'').trim();
  $('greet').innerHTML=n?hello()+', <button class="namebtn" onclick="editName()" title="Change your name">'+esc(n)+PENCIL+'</button>'
@@ -478,7 +483,7 @@ function editName(){
  const h=$('greet');
  h.innerHTML=hello()+', <input class="nameinput" id="nameinput" maxlength="40" placeholder="Your name" aria-label="Your name" autocomplete="given-name">';
  const i=$('nameinput');i.value=state.name||'';i.focus();i.select();
- let done=false;const finish=keep=>{if(done)return;done=true;if(keep){state.name=i.value.trim().slice(0,40);save()}drawGreeting()};
+ let done=false;const finish=keep=>{if(done)return;done=true;if(keep){setName(i.value)}drawGreeting()};
  i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();finish(true)}else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(false)}});
  i.addEventListener('blur',()=>finish(true));
 }
@@ -1106,7 +1111,7 @@ function drawPrefs(){
   row('Add a question set','Paste questions or upload a .txt or .csv file, like a set a classmate exported or one your group wrote in Google Sheets.','<button class="btn sm" onclick="openSetEditor()">Add a set</button>')+'</section>';
  h+='<section class="panel"><h2>Appearance and you</h2>'+
   row('Theme','System follows your device setting.',segHTML('setThemeMode',[['system','System'],['light','Light'],['dark','Dark']],themeMode(),'Theme'))+
-  row('Your name','Used to greet you on the dashboard. Saved only in this browser.','<input class="txt" id="pname" maxlength="40" placeholder="Your name" aria-label="Your name" autocomplete="given-name" value="'+esc(state.name||'')+'" onchange="state.name=this.value.trim().slice(0,40);save()">')+'</section>';
+  row('Your name','Used to greet you on the dashboard. Saved only in this browser.','<input class="txt" id="pname" maxlength="40" placeholder="Your name" aria-label="Your name" autocomplete="given-name" value="'+esc(state.name||'')+'" onchange="setName(this.value)">')+'</section>';
  h+='<section class="panel"><h2>Your data</h2>'+syncRowHTML(row)+
   (cloudOn()?row('Share anonymous answer stats','Sends only which '+ITEMS+' were answered right or wrong, with no name and no device ID, so the class can see its most missed '+ITEMS+'.',sw(state.prefs.crowd,"setPref('crowd',"+!state.prefs.crowd+")",'Share anonymous answer stats')):'')+
   row('Export progress','Download a backup of your answers as a JSON file.','<button class="btn sm" onclick="exportProgress()">Export</button>')+
@@ -1362,7 +1367,7 @@ addEventListener('hashchange',()=>{if(takeLink()){toggleNav(false);draw();window
 draw();
 if(cloudOn()){loadClassStats();loadContrib(true);if(syncCode)syncNow();
  const back=()=>{if(syncCode&&Date.now()-syncInfo.at>4000)syncNow()};
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else{loadClassStats();loadContrib();loadMine();back()}});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else{loadClassStats();loadContrib();loadMine();if(page==='dashboard'&&!$('nameinput'))drawGreeting();back()}});
  addEventListener('focus',back)}
 else syncBoot=false;
 // Show What's new once: on the first visit, and again only when a newer entry is added to CHANGELOG (not over a challenge).
