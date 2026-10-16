@@ -63,5 +63,23 @@
    "name": "Midterm",
    "date": ""
   }
+ },
+ {
+  "id": "chem",
+  "title": "Chem Reviewer",
+  "scope": "Lecture: aqueous reactions to hydrocarbons",
+  "unit": "Topic",
+  "itemWord": "question",
+  "count": 530,
+  "storageKey": "study_reviewer_chem_midterm_2026_v1",
+  "image": "",
+  "extras": [
+   "Classmate's set"
+  ],
+  "assets": [],
+  "exam": {
+   "name": "Lecture midterm",
+   "date": ""
+  }
  }
 ]

@@ -107,6 +107,17 @@ const MSETS=(typeof MATCHING!=='undefined'?MATCHING:[]).map((m,i)=>({i,ch:String
 const MIXUP=(typeof CONFUSABLES!=='undefined'?CONFUSABLES:[]).map(([ch,members,sec],i)=>({i,ch:String(ch),sec,members:members.map(([name,cues])=>({name,cues}))})).filter(g=>g.members.length>1);
 // Reference charts (e.g. a consonant chart the real exam also provides): [{title, html}]
 const CHART_DATA=typeof CHARTS!=='undefined'?CHARTS:[];let chartTab=0;
+// Structure drawings: MOLECULES = {key: svg}. An item's fig (a key or [keys], with figsep between) shows under the question;
+// a choice written "@m:key" is drawn as that structure. SVGs use currentColor, so they follow light and dark themes.
+const MOLS=typeof MOLECULES!=='undefined'&&MOLECULES?MOLECULES:{};
+const isMol=t=>typeof t==='string'&&t.startsWith('@m:');
+const molq=q=>!!q&&q.choices.length>0&&q.choices.every(x=>isMol(x.label));
+function labelHTML(t){return isMol(t)?'<span class="molc" role="img" aria-label="Structure">'+(MOLS[t.slice(3)]||'')+'</span>':esc(t)}
+function labelText(t){return isMol(t)?'(structure)':t}
+function ansHTML(t){const m=String(t).match(/^([A-E])\. (@m:.+)$/);return m?m[1]+'. <span class="molc sm" role="img" aria-label="Structure">'+(MOLS[m[2].slice(3)]||'')+'</span>':isMol(t)?labelHTML(t).replace('class="molc"','class="molc sm"'):esc(t)}
+function figHTML(cid){const c=byId[cid],f=c&&c.fig;if(!f)return '';const ks=[].concat(f);
+ return '<figure class="qfig'+(ks.length>1?' two':'')+'" role="img" aria-label="Structure">'+ks.map((k,i)=>(i?'<span class="figsep">'+esc(c.figsep||'and')+'</span>':'')+'<span class="mol"'+molW(k)+'>'+(MOLS[k]||'')+'</span>').join('')+'</figure>'}
+function molW(k){const m=/data-w='(\d+)'|viewBox='0 0 ([\d.]+)/.exec(MOLS[k]||'');return m?' style="flex-basis:'+Math.round(+(m[1]||m[2]))+'px"':''}
 const GOALS=CONFIG.recallGoals||[1,2];
 const LETTERS='ABCDE',THEME_KEY='reviewer_theme';
 const $=id=>document.getElementById(id);
@@ -202,6 +213,7 @@ const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
 function makeQuestion(c,fx){const src=fx?fx.items:BANK,sd=tag=>fx?stableHash(fx.seed+'|'+c.id+'|'+tag):seedFor(c,tag),stage=fx?sd('kind')%3:state.concepts[c.id].seen%3;
  // Authored question: q (stem), a (answer), d (distractors).
  if(c.q){const ch=shuffle([{label:c.a,correct:true},...(c.d||[]).map(x=>({label:x,correct:false}))],sd('choices'));
+  if(ch.length===2&&ch.every(x=>x.label==='True'||x.label==='False'))ch.sort((x,y)=>x.label==='True'?-1:1);
   return {cid:c.id,kind:c.kind||'recall',stem:c.q,choices:ch.map((x,i)=>({...x,letter:LETTERS[i]})),why:c.why||'',hint:c.hint||'',usedHint:false}}
  let cand=src.filter(x=>x.section===c.section&&x.id!==c.id&&!x.q);
  if(cand.length<4)cand=src.filter(x=>x.id!==c.id&&!x.q&&chOf(x.section)===chOf(c.section));
@@ -247,7 +259,7 @@ try{$('favicon').href=$('logo').src}catch(e){}
 const CH_IMGS=CONFIG.images||{};
 const CH_IMG=ch=>CH_IMGS[ch]||'';
 const FBICON={good:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>',bad:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',look:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'};
-const KIND_NAMES={identification:'Identification',odd:'Odd one out',phonetic:'Phonetic spelling',best:'Best answer',definition:'Concept meaning',scenario:'Application',term:'Identification',recall:'Recall',situational:'Situational',era:'Which era?',civ:'Which civilization?',order:'Timeline'};
+const KIND_NAMES={statement:'True or false',solving:'Problem solving',structure:'Structures',naming:'IUPAC naming',reaction:'Reactions',concept:'Concept',identification:'Identification',odd:'Odd one out',phonetic:'Phonetic spelling',best:'Best answer',definition:'Concept meaning',scenario:'Application',term:'Identification',recall:'Recall',situational:'Situational',era:'Which era?',civ:'Which civilization?',order:'Timeline'};
 const kindName=k=>KIND_NAMES[k]||'Question';
 const pips=n=>'<span class="pips" aria-hidden="true">'+Array.from({length:T()},(_,i)=>'<i class="'+(n>i?'on':'')+'"></i>').join('')+'</span>';
 const lit=v=>typeof v==='string'?"'"+v+"'":String(v);
@@ -257,18 +269,18 @@ const goalSeg=()=>segHTML('setGoal',GOALS.map(n=>[n,n+'×']),T(),'Recall goal');
 // live = the question being answered now (cross-out only applies there)
 function choicesHTML(q,sel,fb,live){
  const canX=live&&!fb&&state.prefs.crossout,struckL=q.struck||[];
- return '<div class="choices'+(canX?' can-x':'')+'">'+q.choices.map(x=>{
+ return '<div class="choices'+(canX?' can-x':'')+(molq(q)?' ichoices':'')+'">'+q.choices.map(x=>{
   const struck=canX&&struckL.includes(x.letter);
   let cls=fb?(x.correct?'right':(sel===x.letter?'wrong':'')):(sel===x.letter?'sel':'')+(struck?' struck':'');
   let mark=fb&&x.correct?'✓':fb&&sel===x.letter?'✗':'';
-  const btn='<button class="choice '+cls+'" data-l="'+x.letter+'" '+(fb?'disabled':'')+' onclick="answer(\''+x.letter+'\')"'+(canX?' oncontextmenu="strike(\''+x.letter+'\');return false"':'')+'><span class="key">'+x.letter+'</span><span class="lab">'+esc(x.label)+'</span>'+(mark?'<span class="mark" aria-label="'+(x.correct?'correct':'your answer')+'">'+mark+'</span>':'')+'</button>';
+  const btn='<button class="choice '+cls+'" data-l="'+x.letter+'" '+(fb?'disabled':'')+' onclick="answer(\''+x.letter+'\')"'+(canX?' oncontextmenu="strike(\''+x.letter+'\');return false"':'')+'><span class="key">'+x.letter+'</span><span class="lab">'+labelHTML(x.label)+'</span>'+(mark?'<span class="mark" aria-label="'+(x.correct?'correct':'your answer')+'">'+mark+'</span>':'')+'</button>';
   return canX?'<div class="cw">'+btn+'<button class="x" onclick="strike(\''+x.letter+'\')" aria-pressed="'+struck+'" aria-label="'+(struck?'Restore':'Cross out')+' choice '+x.letter+'" title="'+(struck?'Restore':'Cross out')+' (Shift+'+x.letter+')">'+XSVG+'</button></div>':btn}).join('')+'</div>';
 }
 function feedbackHTML(q,fb,live){
  let cls=fb.correct?'good':fb.lookup?'look':'bad';
  let head=fb.correct?'Correct':fb.lookup?'Marked for review':'Not quite';
  let out='<div class="fb '+cls+'"><h3>'+FBICON[cls]+head+'</h3>';
- if(!fb.correct)out+='<p><b>Answer:</b> '+esc(fb.correctLabel)+'</p>';
+ if(!fb.correct)out+='<p><b>Answer:</b> '+ansHTML(fb.correctLabel)+'</p>';
  if(q.why)out+='<p>'+esc(q.why)+'</p>';
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
  const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' stays in your queue.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
@@ -286,7 +298,7 @@ function cardHTML(){
   const nextIsLive=view+1>=liveIdx();
   return '<div class="review-note"><span>Earlier answer · '+(view+1)+' of '+secLog().length+(isX(s)?' in this '+(s==='ALL'?'shuffle':'review'):isCh(s)?' in this '+unitW:' in this section')+'</span><button class="link" onclick="goLive()">Back to current question</button></div>'+
    '<div class="qhead"><span class="kind">'+kindName(e.q.kind)+'</span><span class="mastery">'+flagBtn("flagQ('log')")+'</span></div>'+
-   '<p class="prompt">'+esc(e.q.stem)+'</p>'+choicesHTML(e.q,e.sel,e.fb)+feedbackHTML(e.q,e.fb)+
+   '<p class="prompt">'+esc(e.q.stem)+'</p>'+figHTML(e.q.cid)+choicesHTML(e.q,e.sel,e.fb)+feedbackHTML(e.q,e.fb)+
    '<div class="actions">'+backBtn()+'<span class="aux"></span><button class="btn primary" id="go" onclick="goForward()">'+(nextIsLive?'Return to current':'Forward')+' <kbd>→</kbd></button></div>';
  }
  // A matching set mixed into practice (Personalize → Mix matching into practice)
@@ -313,7 +325,7 @@ function cardHTML(){
  // Current question
  const q=state.active,st=state.concepts[q.cid],fb=state.feedback,mixed=isX(s)||isCh(s);
  return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(q.typed?'Type the answer':kindName(q.kind))+'</span><span class="mastery">'+flagBtn("flagQ('live')")+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
-  '<p class="prompt">'+esc(q.stem)+'</p>'+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
+  '<p class="prompt">'+esc(q.stem)+'</p>'+figHTML(q.cid)+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
   (q.usedHint&&!fb?'<div class="hint"><b>Hint</b>'+esc(q.hint)+'</div>':'')+
   (fb?feedbackHTML(q,fb,true):'')+
   '<div class="actions">'+backBtn()+'<span class="aux">'+(fb?'':(q.usedHint||!q.hint?'':'<button class="link" onclick="hint()">Show hint</button>')+'<button class="link" onclick="looked()" title="Counts as a review, not a correct recall">I checked my slides</button>')+'</span>'+
@@ -669,16 +681,16 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
  if(ex.sheet){$('extitle').textContent=n+' '+ITEMS;$('exbody').innerHTML=sheetHTML(ex);return}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
-  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+esc(q.stem)+'</p>'+
+  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+esc(q.stem)+'</p>'+figHTML(q.cid)+
   (q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
-   :'<div class="choices">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+esc(x.label)+'</span></button>').join('')+'</div>')+
+   :'<div class="choices'+(molq(q)?' ichoices':'')+'">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+labelHTML(x.label)+'</span></button>').join('')+'</div>')+
   '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button> · <button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button></span>'+
   '<button class="btn primary" onclick="'+(ex.i<n-1?'exGo(1)':'finishExam()')+'">'+(ex.i<n-1?'Next':'Finish')+' <kbd>Enter</kbd></button></div></section>'+
   '<div class="qnav" aria-label="Jump to a question">'+ex.qs.map((_,j)=>'<button class="'+(ex.ans[j]?'a ':'')+(j===ex.i?'cur':'')+'" onclick="exJump('+j+')" aria-label="Question '+(j+1)+(ex.ans[j]?', answered':'')+'">'+(j+1)+'</button>').join('')+'</div>'}
 // Answer sheet format: read on the test paper, shade on the sheet. Shading updates only the sheet, so the paper keeps its place.
 function sheetHTML(ex){const n=ex.qs.length,done=Object.keys(ex.ans).length;
- const paper=ex.qs.map((q,j)=>'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+esc(q.stem)+'</p>'+
-  (q.ident?'<p class="pqid">Write your answer on the answer sheet.</p>':'<ol class="pch">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+esc(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
+ const paper=ex.qs.map((q,j)=>'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+esc(q.stem)+'</p>'+figHTML(q.cid)+
+  (q.ident?'<p class="pqid">Write your answer on the answer sheet.</p>':'<ol class="pch'+(molq(q)?' ich':'')+'">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+labelHTML(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
  const rows=ex.qs.map((q,j)=>'<div class="brow" id="br'+j+'"><button class="bn" onclick="sheetGo('+j+')" aria-label="Go to question '+(j+1)+'">'+(j+1)+'</button>'+
   (q.ident?'<input class="txt bt" value="'+esc(ex.ans[j]||'')+'" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer to question '+(j+1)+'" oninput="sheetType('+j+',this.value)">'
    :q.choices.map(x=>'<button class="bub'+(ex.ans[j]===x.letter?' on':'')+'" data-l="'+x.letter+'" onclick="sheetPick('+j+',\''+x.letter+'\')" aria-pressed="'+(ex.ans[j]===x.letter)+'" aria-label="Question '+(j+1)+', '+x.letter+'">'+x.letter+'</button>').join(''))+'</div>').join('');
@@ -720,8 +732,8 @@ function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*
   '<div class="exacts">'+(ex.chal?'<button class="btn primary" onclick="copyChalScore()">Copy my score</button><button class="btn" onclick="copyChalLink(state.exam.chal)">Copy challenge link</button>':'')+(wrong.length?'<button class="btn'+(ex.chal?'':' primary')+'" onclick="toggleExReview()">'+(ex.review?'Hide my mistakes':'Review my mistakes ('+wrong.length+')')+'</button>':'')+
   (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">'+(ex.chal?'Done':'New exam')+'</button></div>'+
   (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.ident?null:q.choices.find(c=>c.letter===a);
-   return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+esc(byId[q.cid].section)+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div><p class="exq">'+esc(q.stem)+'</p>'+
-    '<p class="exa bad"><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?esc(mine.letter+'. '+mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+esc(q.ident?ok.label:ok.letter+'. '+ok.label)+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+'</article>'}).join('')+'</div>':'')}
+   return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+esc(byId[q.cid].section)+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div><p class="exq">'+esc(q.stem)+'</p>'+figHTML(q.cid)+''+
+    '<p class="exa bad"><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?esc(ok.label):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+'</article>'}).join('')+'</div>':'')}
 function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
 function newExam(){state.exam=null;save();draw();window.scrollTo(0,0)}
 function examKey(e){const ex=state.exam;if(!ex||ex.done||ex.sheet)return false;const k=e.key;
@@ -814,7 +826,7 @@ const FLAG_SVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stro
 function flagBtn(call){return state.prefs.flag?'<button class="starbtn flagbtn" onclick="'+call+'" aria-label="Flag a problem with this '+ITEM+'" title="Something wrong? Copy this '+ITEM+' for your group chat (F)">'+FLAG_SVG+'</button>':''}
 function flagQ(where,j){const q=where==='ex'?state.exam&&state.exam.qs[j]:where==='log'?(secLog()[view]||{}).q:state.active;if(!q)return;
  const ok=(q.choices||[]).find(c=>c.correct),c=q.cid&&byId[q.cid];
- copyText('['+CONFIG.title+(c?' · '+c.section+' · '+q.cid:'')+'] '+q.stem+(ok?' (Answer key: '+ok.label+')':'')+' — My note: ','Copied. Paste it in your group chat and say what looks wrong.')}
+ copyText('['+CONFIG.title+(c?' · '+c.section+' · '+q.cid:'')+'] '+q.stem+(ok?' (Answer key: '+labelText(ok.label)+')':'')+' — My note: ','Copied. Paste it in your group chat and say what looks wrong.')}
 
 /* ---------- copy and toast ---------- */
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2800)}
@@ -990,6 +1002,7 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ ...(Object.keys(MOLS).length?[{v:'18',date:'Oct 17, 2026',title:'Chemical structures',items:['Questions can show <b>structures</b> (drawn sharp at any size, in light and dark mode), and some answer choices are structures, laid out two by two. They appear in practice, in the mock exam and on the answer sheet.']}]:[]),
  ...(CHART_DATA.length?[{v:'17',date:'Oct 17, 2026',title:'Floating charts',items:['<b>Charts → Float:</b> the chart becomes a window you can drag anywhere (by its top bar) and resize (from the corner), and you can keep answering underneath, even during a mock exam. It remembers where you left it. <b>Dock</b> puts it back.']}]:[]),
  ...(DOCS.length?[{v:'16',date:'Oct 17, 2026',title:'Full transes',items:['<b>Notes → Full transes</b> opens the complete transes (PDF) in a new tab, to read or download.']}]:[]),
  {v:'15',date:'Oct 17, 2026',title:'Answer sheet exams',items:[
@@ -1138,7 +1151,7 @@ function masteryDown(k){if(k.right>=T()){k.right=T()-1;k.srs=null}}
 // Short recall answers only; definitions and long answers keep their choices.
 // Identification items ("type":"id") are always typed, in practice and in the mock exam; "alt" lists other accepted answers.
 const isIdent=c=>!!c&&c.type==='id';
-function canType(q){if(!q)return false;if(isIdent(byId[q.cid]))return true;if(!state.prefs.typeMode)return false;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
+function canType(q){if(!q)return false;if(q.choices.some(x=>isMol(x.label)))return false;if(isIdent(byId[q.cid]))return true;if(!state.prefs.typeMode)return false;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
  if(c.q?q.kind!=='recall':q.kind==='definition')return false;return ans.length<=40&&ans.split(/\s+/).length<=5&&!/[,;]| to | and /.test(ans)&&!/^(as|in|by|for|to|of|on|at|with|from|through)\b/i.test(ans)&&(ans.match(/\d+/g)||[]).length<=1}
 function normAns(s){return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\(.*?\)/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\b(the|a|an)\b/g,' ').replace(/\s+/g,' ').trim()}
 function lev(a,b){let p=Array.from({length:b.length+1},(_,j)=>j);for(let i=1;i<=a.length;i++){const c=[i];for(let j=1;j<=b.length;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[b.length]}
