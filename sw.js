@@ -1,6 +1,6 @@
 // Offline support. Pages, code and course files are fetched fresh when online (so fixes show up right away)
 // and served from the cache when offline. Fonts are cached after first use.
-const CACHE = 'reviewers-v4';
+const CACHE = 'reviewers-v5';
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
@@ -29,13 +29,22 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin === location.origin) {
+    const nav = req.mode === 'navigate';
+    // Facebook/Messenger add tracking tags (?fbclid=…). Send the page to the clean address first.
+    if (nav && [...url.searchParams.keys()].some(k => /^(fbclid|mibextid|igshid|utm_\w+)$/.test(k))) {
+      for (const k of [...url.searchParams.keys()]) if (/^(fbclid|mibextid|igshid|utm_\w+)$/.test(k)) url.searchParams.delete(k);
+      e.respondWith(Response.redirect(url.href, 302));
+      return;
+    }
     e.respondWith((async () => {
       const c = await caches.open(CACHE);
-      const nav = req.mode === 'navigate';
       try {
         // Always ask GitHub whether a file changed (a cheap check when it did not) instead of trusting the
         // 10-minute browser cache, so a page and its code are never from different versions.
-        const res = await (nav ? fetch(url.href, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(req, { cache: 'no-cache' }));
+        let res = await (nav ? fetch(url.href, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(req, { cache: 'no-cache' }));
+        // Chrome refuses a page load answered with a response that was redirected along the way (ERR_FAILED),
+        // which happens when an extension or network rewrites the link. Re-wrap it as a plain response.
+        if (nav && res.redirected) res = new Response(await res.blob(), { status: res.status, statusText: res.statusText, headers: res.headers });
         if (res.ok && !url.search) c.put(req, res.clone());
         return res;
       } catch (err) {
