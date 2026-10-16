@@ -613,6 +613,30 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 .chalbox{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 .chalrow{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13.5px;font-weight:600}
 .chalbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* Class contributions: suggest a question, report a problem */
+#contribPanel{margin-top:14px}
+.cf{display:block;margin-top:12px;font-size:13.5px;font-weight:600}
+.cf>span{display:block;margin-bottom:5px}
+.cf em{font-style:normal;font-weight:400;color:var(--mute);margin-left:4px}
+.cf .txt,.cf select{display:block;width:100%;font:inherit;font-size:14px}
+.cf textarea.txt{resize:vertical;min-height:64px;line-height:1.45}
+.cf select{color:var(--text);background:var(--surface);border:1px solid var(--line2);border-radius:9px;padding:7px 10px;outline:0}
+.cfw{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.cfw .txt{width:100%}
+.modal p.cfmsg{margin:12px 0 0;font-size:13px;color:var(--bad)}
+.modal p.cfmsg:empty{display:none}
+.cfquote{padding:10px 12px;border-radius:10px;background:var(--raised);border:1px solid var(--line);font-size:13.5px;color:var(--text)}
+.cfquote small{display:block;color:var(--mute);margin-bottom:4px}
+.cmine{list-style:none;margin:0;padding:0;max-height:56vh;overflow-y:auto}
+.cmine li{padding:11px 0;border-top:1px solid var(--line);font-size:13.5px}
+.cmine li:first-child{border-top:0}
+.cmine .cq{display:block;color:var(--text);margin:5px 0 2px}
+.cmine .cm{color:var(--mute);font-size:12.5px}
+.cmine .cn{display:block;margin-top:6px;padding:7px 10px;border-radius:8px;background:var(--raised);color:var(--text);font-size:13px}
+.cmine .empty{color:var(--mute)}
+.cst{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--raised);color:var(--mute)}
+.cst.approved,.cst.resolved{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.cst.rejected{background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)}
 .chalurl{flex:1;min-width:200px;width:auto;font-size:13px;color:var(--mute)}
 .chalfoot{margin:8px 0 0;font-size:13px;color:var(--mute)}
 .chalnote{color:var(--mute);font-size:14px;margin:10px 0 0;max-width:62ch}

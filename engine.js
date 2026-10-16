@@ -81,6 +81,19 @@ function setText(items){let t='',top=null;
  items.forEach(it=>{if(it.topic!==top){const was=top;top=it.topic;if(top||was!==null)t+='\n# '+(top||'All questions')+'\n'}
   t+='\nQ: '+it.q+'\nA: '+it.a+'\n'+it.d.map(x=>'X: '+x+'\n').join('')+(it.why?'Why: '+it.why+'\n':'')+(it.hint?'Hint: '+it.hint+'\n':'')});
  return t.trim()+'\n'}
+/* ---------- class questions: suggestions a moderator approved (see "class contributions" further down) ----------
+   Cached under "<storageKey>_contrib" as {at, items, gone} and refreshed from the cloud. They join the Main bank in their
+   section as kind "class". Ones the moderator later took out stay in "gone" (retired: known, but never asked again). */
+const CONTRIB_KEY=CONFIG.storageKey+'_contrib';let CONTRIB={at:0,items:[],gone:[]};
+try{CONTRIB=Object.assign(CONTRIB,JSON.parse(localStorage.getItem(CONTRIB_KEY)))}catch(e){}
+// Wrong choices a class question gets: the course's usual number (3 for A–D).
+const CONTRIB_ND=(()=>{const n={};FULL_BANK.forEach(c=>{const k=(c.d||[]).length;if(k)n[k]=(n[k]||0)+1});const k=+Object.keys(n).sort((a,b)=>n[b]-n[a])[0]||3;return Math.min(4,Math.max(2,k))})();
+function contribItem(c,retired){if(!c||!/^cc_\d+$/.test(c.id)||!c.q||!c.a||!(c.section in COURSE_SECS))return null;
+ const d=(Array.isArray(c.d)?c.d:[]).map(x=>String(x).trim()).filter(Boolean).slice(0,CONTRIB_ND),a=String(c.a),by=String(c.by||'').trim();if(!d.length)return null;
+ return {id:c.id,section:c.section,kind:'class',term:a.length>60?a.slice(0,57)+'…':a,q:String(c.q),a,d,
+  why:((by?'Suggested by '+by+'.':'Suggested by a classmate.')+' '+String(c.why||'')).trim(),hint:String(c.hint||''),...(retired?{retired:true}:{})}}
+if(CONFIG.cloud&&CONFIG.cloud.url){const have=new Set(FULL_BANK.map(c=>c.id));
+ [[CONTRIB.items,false],[CONTRIB.gone,true]].forEach(([list,ret])=>(list||[]).forEach(c=>{const it=contribItem(c,ret);if(it&&!have.has(it.id)){have.add(it.id);FULL_BANK.push(it)}}))}
 const USER_BANKS=USER_SETS.map(userBank).filter(b=>b.items.length);
 const BANKS=[{id:'main',name:'Main',desc:'The full reviewer',items:FULL_BANK}].concat(typeof VARIANTS!=='undefined'?VARIANTS:[],USER_BANKS);
 const ALL_ITEMS=BANKS.flatMap(b=>b.items);
@@ -147,6 +160,7 @@ state.log=state.log||[];state.complete=state.complete||[];state.history=state.hi
 delete state.set;delete state.unlocked;
 if(!BANKS.some(b=>b.id===state.bank))state.bank='main';
 if(state.pmatch&&!MSETS[state.pmatch.i])state.pmatch=null;
+if(state.active&&state.active.cid&&!byId[state.active.cid]){state.active=null;state.feedback=null;state.selected=null}
 
 /* ---------- active question bank: Main, or a variant someone added ---------- */
 let BANK=[],sectionKeys=[],chapters=[],AUTHORED=true,NCHOICE=4;
@@ -165,7 +179,7 @@ const examAll=e=>!e.chapters&&!e.sections;
 // A set's own topic groups (not course chapters) are always in scope.
 const inScopeCh=ch=>{const e=examObj();ch=String(ch);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).some(x=>chOf(x)===ch)};
 const inScope=sec=>{const e=examObj(),ch=chOf(sec);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).includes(sec)};
-const bankItems=b=>b.items.filter(c=>(state.prefs.extras||!c.extra)&&secOn(c.section)&&inScope(c.section));
+const bankItems=b=>b.items.filter(c=>!c.retired&&(state.prefs.extras||!c.extra)&&secOn(c.section)&&inScope(c.section));
 function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(s==='CLASS'&&classOn())||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
 function refreshBank(){const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
  sectionKeys=ALL_SECTIONS.filter(k=>BANK.some(c=>c.section===k));
@@ -259,7 +273,7 @@ try{$('favicon').href=$('logo').src}catch(e){}
 const CH_IMGS=CONFIG.images||{};
 const CH_IMG=ch=>CH_IMGS[ch]||'';
 const FBICON={good:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>',bad:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',look:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'};
-const KIND_NAMES={joke:'★ Bonus question',statement:'True or false',solving:'Problem solving',structure:'Structures',naming:'IUPAC naming',reaction:'Reactions',concept:'Concept',identification:'Identification',odd:'Odd one out',phonetic:'Phonetic spelling',best:'Best answer',definition:'Concept meaning',scenario:'Application',term:'Identification',recall:'Recall',situational:'Situational',era:'Which era?',civ:'Which civilization?',order:'Timeline'};
+const KIND_NAMES={joke:'★ Bonus question',class:'Class question',statement:'True or false',solving:'Problem solving',structure:'Structures',naming:'IUPAC naming',reaction:'Reactions',concept:'Concept',identification:'Identification',odd:'Odd one out',phonetic:'Phonetic spelling',best:'Best answer',definition:'Concept meaning',scenario:'Application',term:'Identification',recall:'Recall',situational:'Situational',era:'Which era?',civ:'Which civilization?',order:'Timeline'};
 const kindName=k=>KIND_NAMES[k]||'Question';
 const pips=n=>'<span class="pips" aria-hidden="true">'+Array.from({length:T()},(_,i)=>'<i class="'+(n>i?'on':'')+'"></i>').join('')+'</span>';
 const lit=v=>typeof v==='string'?"'"+v+"'":String(v);
@@ -470,7 +484,7 @@ function editName(){
 }
 
 function drawDash(){
- drawGreeting();drawClassPanel();const ex=examObj(),when=examWhen(ex);$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
+ drawGreeting();drawClassPanel();drawContribPanel();loadMine();const ex=examObj(),when=examWhen(ex);$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
  document.title='Dashboard · '+CONFIG.title;
  const nMiss=BANK.filter(c=>isMissedC(c)&&!isM(c)).length,nStar=BANK.filter(isStar).length,nDue=state.prefs.srs?BANK.filter(isDue).length:0;
  $('weakgo').hidden=!(state.prefs.missed&&nMiss);$('weakgo').textContent='Practice missed only ('+nMiss+')';
@@ -826,7 +840,10 @@ const FLAG_SVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stro
 function flagBtn(call){return state.prefs.flag?'<button class="starbtn flagbtn" onclick="'+call+'" aria-label="Flag a problem with this '+ITEM+'" title="Something wrong? Copy this '+ITEM+' for your group chat (F)">'+FLAG_SVG+'</button>':''}
 function flagQ(where,j){const q=where==='ex'?state.exam&&state.exam.qs[j]:where==='log'?(secLog()[view]||{}).q:state.active;if(!q)return;
  const ok=(q.choices||[]).find(c=>c.correct),c=q.cid&&byId[q.cid];
- copyText('['+CONFIG.title+(c?' · '+c.section+' · '+q.cid:'')+'] '+q.stem+(ok?' (Answer key: '+labelText(ok.label)+')':'')+' — My note: ','Copied. Paste it in your group chat and say what looks wrong.')}
+ const text='['+CONFIG.title+(c?' · '+c.section+' · '+q.cid:'')+'] '+q.stem+(ok?' (Answer key: '+labelText(ok.label)+')':'');
+ // Questions of the course go to the moderator; your own sets (and no cloud) keep the copy for the group chat.
+ if(contribOn()&&c&&BUILTIN.has(c.id)){openContrib('report',{qid:c.id,section:c.section,q:q.stem,key:ok?labelText(ok.label):'',text});return}
+ copyText(text+' — My note: ','Copied. Paste it in your group chat and say what looks wrong.')}
 
 /* ---------- copy and toast ---------- */
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2800)}
@@ -874,7 +891,7 @@ const BUILTIN=new Set(BANKS.filter(b=>!b.user).flatMap(b=>b.items.map(c=>c.id)))
 const CLASS_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.6a6.5 6.5 0 0 1 3.5 5.4"/></svg>';
 function rpc(fn,body,keep){const h={'Content-Type':'application/json',apikey:CLOUD.key};if(/^eyJ/.test(CLOUD.key))h.Authorization='Bearer '+CLOUD.key;
  return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body),keepalive:!!keep})
-  .then(r=>{if(!r.ok)throw new Error('cloud '+r.status);return r.text()}).then(t=>t?JSON.parse(t):null)}
+  .then(r=>r.text().then(t=>{if(!r.ok){let m='';try{m=JSON.parse(t).message||''}catch(e){}throw new Error(m||'cloud '+r.status)}return t?JSON.parse(t):null}))}
 // Most missed by the class: questions answered at least CLASS_MIN times, by miss rate, within the current bank and exam scope.
 function classList(){if(!CSTATS||!CSTATS.rows)return [];const k=state.bank+'|'+state.prefs.scope+'|'+CSTATS.at+'|'+BANK.length;if(classMemo.k===k)return classMemo.list;
  const list=BANK.map(c=>({c,s:CSTATS.rows[c.id]})).filter(x=>x.s&&x.s[0]>=CLASS_MIN&&x.s[1]>0).sort((a,b)=>b.s[1]/b.s[0]-a.s[1]/a.s[0]||b.s[0]-a.s[0]).slice(0,CLASS_TOP).map(x=>x.c);
@@ -897,6 +914,104 @@ function loadClassStats(){if(!cloudOn()||CSTATS&&CSTATS.at>STATS_RESET&&Date.now
  rpc('class_stats',{p_course:KEY}).then(rows=>{const r={};(rows||[]).forEach(x=>{r[x.qid]=[x.attempts,x.missed]});CSTATS={at:Date.now(),rows:r};classMemo.k='';
   try{localStorage.setItem(KEY+'_class',JSON.stringify(CSTATS))}catch(e){}
   $('nav').innerHTML=navHTML();if(page==='dashboard')drawDash()}).catch(()=>{})}
+/* ---------- class contributions (cloud): suggest a question, report a problem ----------
+   Everything goes to a moderator's queue (moderate.html on the site, supabase_contrib.sql). Nothing a classmate sends shows
+   up until a moderator approves it; approved questions join Main as "Class question", credited if a name was given.
+   A random token per device (no account) lets the sender see what the moderator decided. */
+const CONTRIB_TOKEN='reviewer_contrib_token',CONTRIB_NAME='reviewer_contrib_name',MINE_KEY=KEY+'_mine';
+let MINE={at:0,rows:[],seen:0},cfMode='',cfCtx=null,cfDup='';
+try{MINE=Object.assign(MINE,JSON.parse(localStorage.getItem(MINE_KEY)))}catch(e){}
+function contribOn(){return cloudOn()&&CONFIG.contrib!==false}
+function lsGet(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function contribToken(make){let t=lsGet(CONTRIB_TOKEN);if(/^[A-Za-z0-9]{24}$/.test(t)||!make)return t;
+ const A='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789',r=new Uint8Array(24);crypto.getRandomValues(r);
+ t=Array.from(r,x=>A[x%A.length]).join('');lsSet(CONTRIB_TOKEN,t);return t}
+function saveMine(){lsSet(MINE_KEY,JSON.stringify(MINE))}
+function mineRows(){return (MINE.rows||[]).filter(r=>r.course===KEY)}
+const mineNew=()=>mineRows().filter(r=>r.reviewed_at&&Date.parse(r.reviewed_at)>(MINE.seen||0)).length;
+// Approved class questions: fetched at every start (and when coming back to the tab), cached for offline use, and
+// added to the bank right away. Ones the moderator took out are retired: still known (for old answers), never asked.
+function loadContrib(force){if(!contribOn()||!force&&Date.now()-(CONTRIB.at||0)<3e5)return;
+ rpc('contrib_approved',{p_course:KEY}).then(rows=>{const items=(rows||[]).map(r=>r.item).filter(c=>c&&c.id),now=new Set(items.map(c=>c.id));
+  const gone=(CONTRIB.gone||[]).concat(CONTRIB.items||[]).filter((c,i,a)=>c&&c.id&&!now.has(c.id)&&a.findIndex(x=>x&&x.id===c.id)===i).slice(-200);
+  const first=!CONTRIB.at;CONTRIB={at:Date.now(),items,gone};lsSet(CONTRIB_KEY,JSON.stringify(CONTRIB));
+  let added=0,changed=false;
+  items.forEach(c=>{const it=contribItem(c);if(!it)return;const old=byId[it.id];
+   if(!old){FULL_BANK.push(it);ALL_ITEMS.push(it);byId[it.id]=it;BUILTIN.add(it.id);if(!state.concepts[it.id])state.concepts[it.id]=blank();added++;changed=true}
+   else if(old.kind==='class'){if(old.retired)added++;delete old.retired;Object.assign(old,it);changed=true}});
+  FULL_BANK.forEach(c=>{if(c.kind==='class'&&!c.retired&&!now.has(c.id)){c.retired=true;changed=true}});
+  if(!changed)return;refreshBank();$('nav').innerHTML=navHTML();if(page==='dashboard')drawDash();
+  if(added&&!first)toast(added+' new class question'+(added>1?'s were':' was')+' added by the moderator.')}).catch(()=>{})}
+function loadMine(force){const t=contribToken(false);if(!contribOn()||!t||!force&&Date.now()-(MINE.at||0)<3e5)return Promise.resolve();
+ return rpc('contrib_mine',{p_token:t}).then(rows=>{MINE.rows=rows||[];MINE.at=Date.now();saveMine();if(page==='dashboard')drawContribPanel();
+  if(cfMode==='mine'&&!$('contribmodal').hidden)drawContrib()}).catch(()=>{})}
+function drawContribPanel(){let el=$('contribPanel');if(!contribOn()){if(el)el.hidden=true;return}
+ if(!el){const after=$('classPanel');if(!after)return;el=document.createElement('section');el.className='panel';el.id='contribPanel';after.after(el)}
+ const mine=mineRows(),nw=mineNew(),nc=FULL_BANK.filter(c=>c.kind==='class'&&!c.retired).length;el.hidden=false;
+ el.innerHTML='<h2>Help build this reviewer'+(nc?'<em>'+nc+' class question'+(nc>1?'s':'')+' so far</em>':'')+'</h2>'+
+  '<p class="desc">Know a question that could come out? Suggest it. A moderator checks every suggestion, and approved ones are added for everyone, with your name if you give it. Spotted a wrong answer key or a typo? Tap the flag on that question.</p>'+
+  '<div class="chalbar"><button class="btn sm primary" onclick="openContrib(\'question\')">Suggest a question</button>'+
+  (mine.length?'<button class="btn sm" onclick="openContrib(\'mine\')">Your suggestions ('+mine.length+')'+(nw?' · '+nw+' new':'')+'</button>':'')+'</div>'}
+function contribModal(){let m=$('contribmodal');if(m)return m;m=document.createElement('div');m.className='modal';m.id='contribmodal';m.hidden=true;
+ m.innerHTML='<div class="box setbox" role="dialog" aria-modal="true" aria-labelledby="cfh"></div>';
+ m.addEventListener('click',e=>{if(e.target===m)closeContrib()});document.body.appendChild(m);return m}
+function openContrib(mode,ctx){if(!contribOn())return;cfMode=mode;if(ctx)cfCtx=ctx;cfDup='';const m=contribModal();drawContrib();m.hidden=false;m.querySelector('.box').scrollTop=0;
+ if(mode==='mine'){loadMine(true);MINE.seen=Date.now();saveMine();if(page==='dashboard')drawContribPanel()}
+ const f=m.querySelector(mode==='report'?'#cfnote':'#cfq');if(f)f.focus({preventScroll:true})}
+function closeContrib(){const m=$('contribmodal');if(m)m.hidden=true;cfMode=''}
+const cfName=()=>esc(lsGet(CONTRIB_NAME)||state.name||'');
+function cfSecOptions(){const cur=state.section in COURSE_SECS?state.section:'',secs=ALL_SECTIONS.filter(k=>k in COURSE_SECS&&inScope(k)&&secOn(k));
+ return ALL_CHAPTERS.filter(ch=>ch in COURSE_CH&&secs.some(k=>chOf(k)===ch)).map(ch=>'<optgroup label="'+esc(ch+' · '+COURSE_CH[ch])+'">'+
+  secs.filter(k=>chOf(k)===ch).map(k=>'<option value="'+esc(k)+'"'+(k===cur?' selected':'')+'>'+esc(k+' '+COURSE_SECS[k])+'</option>').join('')+'</optgroup>').join('')}
+function drawContrib(){const b=$('contribmodal').querySelector('.box'),nm=mineRows().length;
+ const acts=(main,extra)=>'<p class="cfmsg" id="cfmsg" role="alert"></p><div class="setacts">'+(extra||'')+'<span></span><button class="btn" onclick="closeContrib()">Cancel</button>'+main+'</div>';
+ if(cfMode==='question'){
+  b.innerHTML='<h2 id="cfh">Suggest a question</h2><p>A moderator checks every suggestion before it goes in. Approved questions are added to Main as a <b>Class question</b>, credited to the name below.</p>'+
+   '<label class="cf"><span>Topic</span><select id="cfsec">'+cfSecOptions()+'</select></label>'+
+   '<label class="cf"><span>Question</span><textarea class="txt" id="cfq" rows="3" maxlength="700" placeholder="Write it the way the exam would ask it"></textarea></label>'+
+   '<label class="cf"><span>Right answer</span><input class="txt" id="cfa" maxlength="250" autocomplete="off"></label>'+
+   '<div class="cf"><span>Wrong choices<em>believable ones, like a real exam</em></span><div class="cfw">'+Array.from({length:CONTRIB_ND},(_,i)=>'<input class="txt cfd" maxlength="250" autocomplete="off" aria-label="Wrong choice '+(i+1)+'">').join('')+'</div></div>'+
+   '<label class="cf"><span>Why it is right<em>optional, shown after answering</em></span><textarea class="txt" id="cfwhy" rows="2" maxlength="1200"></textarea></label>'+
+   '<label class="cf"><span>Your name<em>optional, for the credit</em></span><input class="txt" id="cfname" maxlength="40" autocomplete="given-name" value="'+cfName()+'"></label>'+
+   acts('<button class="btn primary" id="cfsend" onclick="sendContrib()">Send to moderator</button>',nm?'<button class="link" onclick="openContrib(\'mine\')">Your suggestions ('+nm+')</button>':'');return}
+ if(cfMode==='report'){const c=cfCtx||{};
+  b.innerHTML='<h2 id="cfh">Report a problem</h2><p>This goes to the moderator, who checks it and fixes the '+ITEM+' for everyone.</p>'+
+   '<div class="cfquote"><small>'+esc(c.section+' · '+c.qid)+'</small>'+esc(c.q||'')+(c.key?'<br><small style="margin:6px 0 0">Answer key: '+esc(c.key)+'</small>':'')+'</div>'+
+   '<label class="cf"><span>What looks wrong?</span><textarea class="txt" id="cfnote" rows="3" maxlength="800" placeholder="For example: the answer should be B, because… / a typo in choice C / this was not discussed"></textarea></label>'+
+   '<label class="cf"><span>Your name<em>optional</em></span><input class="txt" id="cfname" maxlength="40" autocomplete="given-name" value="'+cfName()+'"></label>'+
+   acts('<button class="btn primary" id="cfsend" onclick="sendReport()">Send to moderator</button>','<button class="link" onclick="copyReport()">Copy for the group chat instead</button>');return}
+ const rows=mineRows(),ST={pending:'Waiting for review',approved:'Added',rejected:'Not added',resolved:'Fixed'};
+ b.innerHTML='<h2 id="cfh">Your suggestions</h2><p>What you sent from this device, and what the moderator decided.</p><ul class="cmine">'+
+  (rows.length?rows.map(r=>{const d=r.data||{},rep=r.kind==='report',st=rep&&r.status==='rejected'?'No change needed':ST[r.status]||r.status;
+   return '<li><span class="cst '+esc(r.status)+'">'+esc(st)+'</span> <span class="cm">'+(rep?'Report':'Question')+' · '+esc(d.section||'')+' · '+agoShort(Date.parse(r.created_at))+'</span>'+
+    '<span class="cq">'+esc(rep?d.note||'':d.q||'')+'</span>'+(rep&&d.q?'<span class="cm">On: '+esc(d.q.length>110?d.q.slice(0,107)+'…':d.q)+'</span>':'')+
+    (r.mod_note?'<span class="cn"><b>Moderator:</b> '+esc(r.mod_note)+'</span>':'')+'</li>'}).join(''):'<li class="empty">Nothing sent from this device yet.</li>')+'</ul>'+
+  '<div class="setacts"><span></span><button class="btn" onclick="closeContrib()">Close</button><button class="btn primary" onclick="openContrib(\'question\')">Suggest a question</button></div>'}
+function cfMsg(t){const e=$('cfmsg');if(e)e.textContent=t||''}
+const cfNorm=t=>String(t).toLowerCase().replace(/[^a-z0-9À-ɏͰ-Ͽ]+/g,' ').trim();
+// The closest existing question by shared words, so a classmate sees when theirs is already in the reviewer.
+function cfSimilar(q){const w=new Set(cfNorm(q).split(' ').filter(x=>x.length>2));if(w.size<3)return null;let best=null,bs=0;
+ FULL_BANK.forEach(c=>{if(!c.q||c.retired)return;const v=new Set(cfNorm(c.q).split(' ').filter(x=>x.length>2));let n=0;w.forEach(x=>{if(v.has(x))n++});
+  const sc=n/Math.max(1,new Set([...w,...v]).size);if(sc>bs){bs=sc;best=c}});return bs>=.7?best:null}
+function cfSend(kind,data,btn){const name=($('cfname').value||'').trim().slice(0,40);lsSet(CONTRIB_NAME,name);data.name=name;
+ btn.disabled=true;btn.textContent='Sending…';
+ rpc('contrib_submit',{p_course:KEY,p_kind:kind,p_data:data,p_token:contribToken(true)}).then(id=>{
+  MINE.rows=[{id,course:KEY,kind,data,status:'pending',mod_note:null,created_at:new Date().toISOString(),reviewed_at:null}].concat(MINE.rows||[]);saveMine();
+  closeContrib();toast(kind==='report'?'Sent. Thanks! The moderator will check it.':'Sent. Thanks! You can follow it under Your suggestions.');if(page==='dashboard')drawContribPanel()})
+ .catch(e=>{btn.disabled=false;btn.textContent='Send to moderator';
+  cfMsg(/slow down/.test(e.message)?'A lot was sent in the last few minutes. Wait a little, then try again.':/incomplete/.test(e.message)?'Something is missing. Check the fields above.':'Could not send. Check your connection and try again.')})}
+function sendContrib(){const v=id=>($(id).value||'').trim(),q=v('cfq'),a=v('cfa'),d=[...document.querySelectorAll('#contribmodal .cfd')].map(x=>x.value.trim()),low=x=>x.toLowerCase().replace(/\s+/g,' ');
+ if(q.length<8)return cfMsg('Write the question first.');
+ if(!a)return cfMsg('Add the right answer.');
+ if(d.some(x=>!x))return cfMsg('Add '+CONTRIB_ND+' wrong choices, so it works like the other questions.');
+ const all=[a].concat(d).map(low);if(new Set(all).size<all.length)return cfMsg('Every choice needs to be different.');
+ const sim=cfSimilar(q);if(sim&&cfDup!==q){cfDup=q;cfMsg('This looks a lot like a question already in the reviewer: “'+(sim.q.length>140?sim.q.slice(0,137)+'…':sim.q)+'” Send it anyway if it is different.');$('cfsend').textContent='Send anyway';return}
+ cfSend('question',{section:$('cfsec').value,q,a,d,why:v('cfwhy')},$('cfsend'))}
+function sendReport(){const n=($('cfnote').value||'').trim();if(n.length<3)return cfMsg('Say what looks wrong, so the moderator knows what to check.');
+ const c=cfCtx||{};cfSend('report',{qid:c.qid,section:c.section,q:c.q,key:c.key,note:n},$('cfsend'))}
+function copyReport(){const c=cfCtx||{},n=(($('cfnote')||{}).value||'').trim();closeContrib();
+ copyText(c.text+' — My note: '+n,'Copied. Paste it in your group chat'+(n?'.':' and say what looks wrong.'))}
 // Anonymous answers go out in small batches: {q: question id, m: 1 if missed}. Only built-in banks count.
 function crowdAdd(cid,missed){if(!cloudOn()||!state.prefs.crowd||!BUILTIN.has(cid))return;crowdQ.push({q:cid,m:missed?1:0});clearTimeout(crowdT);
  if(crowdQ.length>=10)crowdFlush();else crowdT=setTimeout(crowdFlush,20000)}
@@ -978,7 +1093,7 @@ function drawPrefs(){
   row('Star '+ITEMS,'Flag tricky '+ITEMS+' with the star or the S key, then review them together, even after they are mastered.',sw(state.prefs.stars,"setPref('stars',"+!state.prefs.stars+")",'Star '+ITEMS))+
   row('Missed '+ITEMS+' drill','A sidebar list and a dashboard button that drill only the '+ITEMS+' you got wrong or checked in your slides, until they are mastered.',sw(state.prefs.missed,"setPref('missed',"+!state.prefs.missed+")",'Missed '+ITEMS+' drill'))+
   row('Spaced review','Mastered '+ITEMS+' come back as Due for review after 1, 3, 7, 14 and 30 days, so they stick until the exam. Missing one sends it back to practice.',sw(state.prefs.srs,"setPref('srs',"+!state.prefs.srs+")",'Spaced review'))+
-  row('Flag button','A flag next to the star copies the '+ITEM+', its ID and the answer key, so you can paste it in your group chat to point out a typo or a wrong answer.',sw(state.prefs.flag,"setPref('flag',"+!state.prefs.flag+")",'Flag button'))+
+  row('Flag button',contribOn()?'A flag next to the star reports a typo or a wrong answer key to the moderator (or copies it for your group chat).':'A flag next to the star copies the '+ITEM+', its ID and the answer key, so you can paste it in your group chat to point out a typo or a wrong answer.',sw(state.prefs.flag,"setPref('flag',"+!state.prefs.flag+")",'Flag button'))+
   (cloudOn()?row('Class stats','A Class stats panel on the dashboard, a sidebar list of the '+CLASS_TOP+' '+ITEMS+' your class misses most, and how many classmates missed each '+ITEM+' after you answer it. Updates every 30 minutes.',sw(state.prefs.classmiss,"setPref('classmiss',"+!state.prefs.classmiss+")",'Class most missed')):'')+
   '</section>';
  h+='<section class="panel"><h2>Pages</h2>'+
@@ -1002,6 +1117,10 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ ...(contribOn()?[{v:'19',date:'Oct 17, 2026',title:'Suggest questions',items:[
+  '<b>Suggest a question</b> (on the dashboard): write a question that could come out, with its answer and wrong choices. A moderator checks every one; approved questions are added for everyone as a <b>Class question</b>, with your name if you give it.',
+  '<b>The flag</b> on a question now reports a typo or a wrong answer key straight to the moderator. You can still copy it for the group chat instead.',
+  '<b>Your suggestions</b> shows what the moderator decided, and any note they left you.']}]:[]),
  ...(Object.keys(MOLS).length?[{v:'18',date:'Oct 17, 2026',title:'Chemical structures',items:['Questions can show <b>structures</b> (drawn sharp at any size, in light and dark mode), and some answer choices are structures, laid out two by two. They appear in practice, in the mock exam and on the answer sheet.']}]:[]),
  ...(CHART_DATA.length?[{v:'17',date:'Oct 17, 2026',title:'Floating charts',items:['<b>Charts → Float:</b> the chart becomes a window you can drag anywhere (by its top bar) and resize (from the corner), and you can keep answering underneath, even during a mock exam. It remembers where you left it. <b>Dock</b> puts it back.']}]:[]),
  ...(DOCS.length?[{v:'16',date:'Oct 17, 2026',title:'Full transes',items:['<b>Notes → Full transes</b> opens the complete transes (PDF) in a new tab, to read or download.']}]:[]),
@@ -1215,6 +1334,7 @@ function exportProgress(){let b=new Blob([JSON.stringify({exported:new Date().to
 document.addEventListener('keydown',e=>{
  if(e.ctrlKey||e.metaKey||e.altKey)return;
  if(!$('setmodal').hidden)return;
+ {const cm=$('contribmodal');if(cm&&!cm.hidden){if(e.key==='Escape'){closeContrib();e.preventDefault()}return}}
  if(!$('charts').hidden&&!(CW&&CW.on)){if(e.key==='Escape'){closeCharts();e.preventDefault()}return}
  if(!$('charts').hidden&&e.key==='Escape'){closeCharts();e.preventDefault();return}
  if(!$('news').hidden){if(e.key==='Escape'){closeNews();e.preventDefault()}return}
@@ -1240,9 +1360,9 @@ document.addEventListener('keydown',e=>{
 takeLink();
 addEventListener('hashchange',()=>{if(takeLink()){toggleNav(false);draw();window.scrollTo(0,0)}});
 draw();
-if(cloudOn()){loadClassStats();if(syncCode)syncNow();
+if(cloudOn()){loadClassStats();loadContrib(true);if(syncCode)syncNow();
  const back=()=>{if(syncCode&&Date.now()-syncInfo.at>4000)syncNow()};
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else{loadClassStats();back()}});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else{loadClassStats();loadContrib();loadMine();back()}});
  addEventListener('focus',back)}
 else syncBoot=false;
 // Show What's new once: on the first visit, and again only when a newer entry is added to CHANGELOG (not over a challenge).

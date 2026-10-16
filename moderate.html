@@ -1,0 +1,205 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moderator Queue</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+:root{
+ --sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+ --serif:"Source Serif 4","Iowan Old Style",Charter,Georgia,serif;
+ color-scheme:light;
+ --bg:#f6f4ef;--surface:#fff;--raised:#f3f0e9;--line:#e8e3d9;--line2:#d8d1c4;
+ --text:#1d1b18;--mute:#5f5a51;--faint:#8e877b;
+ --accent:#4f46e5;--accent-ink:#fff;--accent-soft:#eeeefd;--good:#1d8657;--bad:#c2410c;--warn:#a16207;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;
+ --text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--good:#4fd3a1;--bad:#fb923c;--warn:#facc15}}
+:root[data-theme="dark"]{
+ color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;
+ --text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--good:#4fd3a1;--bad:#fb923c;--warn:#facc15}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:860px;margin:0 auto;padding:32px 16px 64px}
+h1{font:600 28px/1.2 var(--serif);letter-spacing:-.4px;margin:0}
+.sub{color:var(--mute);margin:6px 0 0}
+.top{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.top .acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:7px 13px;font-weight:600;font-size:13.5px;border:1px solid var(--line2);background:var(--surface);white-space:nowrap}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
+.btn.good{color:var(--good)}
+.btn.bad{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}
+.link{background:none;border:0;padding:0;color:var(--accent);font-weight:600;font-size:13.5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:14px}
+.login{max-width:420px;margin:60px auto 0}
+.login p{color:var(--mute);margin:8px 0 16px;font-size:14px}
+.inp,textarea.inp,select.inp{width:100%;background:var(--surface);border:1px solid var(--line2);border-radius:9px;padding:8px 10px;font-size:14px;outline:0}
+.inp:focus{border-color:var(--accent)}
+textarea.inp{resize:vertical;line-height:1.45}
+.chk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--mute);margin-top:10px}
+.msg{color:var(--bad);font-size:13.5px;margin:10px 0 0}
+.msg:empty{display:none}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:20px}
+.seg{display:inline-flex;background:var(--raised);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;border-radius:8px;padding:6px 11px;font-size:13.5px;font-weight:600;color:var(--mute)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 2px #0000001a}
+.seg b{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:11.5px}
+.bar select{width:auto;max-width:100%}
+.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--mute)}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--raised);color:var(--mute)}
+.tag.q{background:var(--accent-soft);color:var(--accent)}
+.tag.r{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+.tag.approved,.tag.resolved{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.tag.rejected{background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)}
+.f{display:block;margin-top:12px;font-size:13px;font-weight:600}
+.f>span{display:block;margin-bottom:4px}
+.f em{font-style:normal;font-weight:400;color:var(--mute);margin-left:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+.warn{margin-top:12px;padding:9px 12px;border-radius:10px;background:color-mix(in srgb,var(--warn) 12%,transparent);color:var(--text);font-size:13px}
+.quote{margin-top:12px;padding:11px 13px;border-radius:10px;background:var(--raised);border:1px solid var(--line);font-size:14px}
+.quote small{display:block;color:var(--mute);font-size:12px;margin-bottom:4px}
+.quote ul{margin:6px 0 0;padding-left:20px}
+.quote li.ok{color:var(--good);font-weight:600}
+.note{margin-top:12px;font-size:14.5px}
+.acts2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.acts2 .sp{flex:1}
+.empty{color:var(--mute);text-align:center;padding:40px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;z-index:9;max-width:calc(100% - 32px)}
+.toast[hidden]{display:none}
+.help{margin-top:14px;font-size:13.5px;color:var(--mute)}
+.help summary{cursor:pointer;font-weight:600;color:var(--text)}
+.help li{margin:4px 0}
+</style></head><body>
+<main id="app"><p class="empty">Loading…</p></main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+/* Moderator queue for class contributions (see supabase_contrib.sql). Only someone with a moderator passphrase sees anything:
+   the database checks the passphrase on every call. The passphrase stays in this browser (this tab, or this device if remembered). */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PASS_KEY='reviewer_mod_pass';
+let CLOUD=null,COURSES=[],BYKEY={},DATA={},ME=null,PASS='',ROWS=[],tab='pending',courseF='',busy=false;
+function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2600)}
+function rpc(fn,body){const h={'Content-Type':'application/json',apikey:CLOUD.key};if(/^eyJ/.test(CLOUD.key))h.Authorization='Bearer '+CLOUD.key;
+ return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body)})
+  .then(r=>r.text().then(t=>{if(!r.ok){let m='';try{m=JSON.parse(t).message||''}catch(e){}throw new Error(m||'error '+r.status)}return t?JSON.parse(t):null}))}
+function ago(t){const s=(Date.now()-Date.parse(t))/1000;return s<90?'just now':s<5400?Math.round(s/60)+' min ago':s<129600?Math.round(s/3600)+' h ago':Math.round(s/86400)+' days ago'}
+function copy(text,msg){(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(text):Promise.reject()).then(()=>toast(msg),()=>prompt('Copy this:',text))}
+
+async function course(key){const c=BYKEY[key];if(!c)return null;if(DATA[key])return DATA[key];
+ const d=await fetch('courses/'+c.id+'.json').then(r=>r.json());
+ const all=[d.bank||[]].concat((d.variants||[]).map(v=>v.items||[])).flat(),n={};
+ (d.bank||[]).forEach(x=>{const k=(x.d||[]).length;if(k)n[k]=(n[k]||0)+1});
+ DATA[key]={title:c.title,cfg:d.config,byId:Object.fromEntries(all.map(x=>[x.id,x])),bank:d.bank||[],nd:Math.min(4,Math.max(2,+Object.keys(n).sort((a,b)=>n[b]-n[a])[0]||3))};
+ return DATA[key]}
+
+async function boot(){
+ try{COURSES=await fetch('courses.json').then(r=>r.json());BYKEY=Object.fromEntries(COURSES.map(c=>[c.storageKey,c]));
+  const first=await fetch('courses/'+COURSES[0].id+'.json').then(r=>r.json());CLOUD=first.config.cloud}catch(e){}
+ if(!CLOUD||!CLOUD.url){$('app').innerHTML='<p class="empty">The class cloud is not set up for these reviewers.</p>';return}
+ try{PASS=sessionStorage.getItem(PASS_KEY)||localStorage.getItem(PASS_KEY)||''}catch(e){}
+ if(PASS&&await signIn(PASS,true))return;
+ drawLogin()}
+function drawLogin(err){document.title='Moderator Queue';
+ $('app').innerHTML='<div class="card login"><h1>Moderator</h1><p>Review the questions and problem reports classmates send from the reviewers. Sign in with your moderator passphrase.</p>'+
+  '<input class="inp" id="pass" type="password" autocomplete="current-password" placeholder="Passphrase" aria-label="Passphrase">'+
+  '<label class="chk"><input type="checkbox" id="remember"> Stay signed in on this device</label>'+
+  '<p class="msg" id="lmsg">'+esc(err||'')+'</p><div class="acts2"><span class="sp"></span><a class="btn" href="./">Back to reviewers</a><button class="btn primary" id="go">Sign in</button></div></div>';
+ const go=async()=>{const p=$('pass').value;if(!p)return;$('go').disabled=true;if(!await signIn(p,false,$('remember').checked))$('go').disabled=false};
+ $('go').onclick=go;$('pass').onkeydown=e=>{if(e.key==='Enter')go()};$('pass').focus()}
+async function signIn(p,quiet,remember){let r=null;
+ try{r=await rpc('contrib_mod_login',{p_pass:p})}
+ catch(e){if(quiet)return false;$('lmsg').textContent=/locked/.test(e.message)?'Too many wrong passphrases. Wait 15 minutes, then try again.':'Could not reach the database. Check your connection.';return false}
+ if(!r){if(quiet){try{sessionStorage.removeItem(PASS_KEY);localStorage.removeItem(PASS_KEY)}catch(e){}return false}$('lmsg').textContent='That passphrase is not right.';return false}
+ ME=r;PASS=p;try{sessionStorage.setItem(PASS_KEY,p);if(remember)localStorage.setItem(PASS_KEY,p)}catch(e){}
+ await load();return true}
+function signOut(){try{sessionStorage.removeItem(PASS_KEY);localStorage.removeItem(PASS_KEY)}catch(e){}PASS='';ME=null;drawLogin()}
+async function load(){try{ROWS=await rpc('contrib_mod_list',{p_pass:PASS,p_status:'all'})||[]}catch(e){toast('Could not load the queue.');ROWS=ROWS||[]}
+ await Promise.all([...new Set(ROWS.map(r=>r.course))].map(k=>course(k).catch(()=>null)));draw()}
+
+const isOpen=r=>r.status==='pending';
+const inTab=r=>tab==='pending'?isOpen(r):tab==='approved'?r.status==='approved':tab==='done'?r.status==='rejected'||r.status==='resolved':true;
+function draw(){const mine=ROWS.filter(r=>!courseF||r.course===courseF),n=t=>{const k=tab;tab=t;const c=mine.filter(inTab).length;tab=k;return c};
+ const keys=[...new Set(ROWS.map(r=>r.course))],list=mine.filter(inTab);document.title=(n('pending')?'('+n('pending')+') ':'')+'Moderator Queue';
+ $('app').innerHTML='<div class="top"><div><h1>Moderator queue</h1><p class="sub">Signed in as <b>'+esc(ME.name)+'</b>'+(ME.courses?' · '+ME.courses.map(k=>esc((BYKEY[k]||{}).title||k)).join(', '):' · all courses')+'</p></div>'+
+  '<div class="acts"><button class="btn" onclick="load()">Refresh</button><button class="btn" onclick="signOut()">Sign out</button></div></div>'+
+  '<div class="bar"><span class="seg" role="group" aria-label="Show">'+[['pending','Waiting'],['approved','Added'],['done','Closed'],['all','All']].map(([k,l])=>'<button aria-pressed="'+(tab===k)+'" onclick="tab=\''+k+'\';draw()">'+l+(k==='pending'&&n(k)?'<b>'+n(k)+'</b>':'')+'</button>').join('')+'</span>'+
+  (keys.length>1?'<select class="inp" aria-label="Course" onchange="courseF=this.value;draw()"><option value="">All courses</option>'+keys.map(k=>'<option value="'+esc(k)+'"'+(k===courseF?' selected':'')+'>'+esc((BYKEY[k]||{}).title||k)+'</option>').join('')+'</select>':'')+
+  (tab==='pending'&&list.some(r=>r.kind==='report')?'<button class="link" style="margin-left:auto" onclick="copyReports()">Copy open reports</button>':'')+'</div>'+
+  (list.length?list.map(card).join(''):'<p class="empty">'+(tab==='pending'?'Nothing waiting. Nice.':'Nothing here yet.')+'</p>')+
+  '<details class="help card"><summary>How moderating works</summary><ul>'+
+  '<li><b>Questions:</b> fix anything you like before approving (wording, topic, choices, explanation). <b>Approve</b> adds it to Main for everyone as a Class question; students get it the next time they open the reviewer.</li>'+
+  '<li><b>Not added</b> with a short note tells the student why (for example: not in the exam, already in the reviewer, answer is wrong).</li>'+
+  '<li><b>Added</b> questions can still be edited (Save changes) or taken out again.</li>'+
+  '<li><b>Reports</b> point at a question that may be wrong. Class questions can be fixed right here; for the built-in questions, use <b>Copy open reports</b> and paste them to Claude, then mark them Fixed.</li>'+
+  '<li>“Sent from this device: N” counts everything one device has sent, to spot spam.</li></ul></details>'}
+
+function card(r){const c=DATA[r.course],d=r.data||{},it=r.item||{},q=r.kind==='question',ed=q&&r.status!=='rejected';
+ const head='<div class="meta"><span class="tag '+(q?'q':'r')+'">'+(q?'Question':'Report')+'</span>'+(r.status!=='pending'?'<span class="tag '+esc(r.status)+'">'+esc({approved:'Added',rejected:q?'Not added':'No change',resolved:'Fixed'}[r.status]||r.status)+'</span>':'')+
+  '<span>'+esc(c?c.title:r.course)+'</span><span>·</span><span>'+esc(d.name?'from '+d.name:'no name')+'</span><span>·</span><span>'+ago(r.created_at)+'</span>'+(r.same_sender>3?'<span>· Sent from this device: '+r.same_sender+'</span>':'')+
+  (r.reviewed_by?'<span>· '+esc(r.reviewed_by)+' '+ago(r.reviewed_at)+'</span>':'')+'</div>';
+ if(q){const v=Object.assign({section:d.section,q:d.q,a:d.a,d:d.d||[],why:d.why,hint:'',by:d.name},r.status==='approved'?it:{}),nd=c?c.nd:3,secs=c?c.cfg.sections:{};
+  const ds=Array.from({length:Math.max(nd,(v.d||[]).length)},(_,i)=>(v.d||[])[i]||''),sim=c&&similar(c,v.q,'cc_'+r.id);
+  return '<article class="card" id="r'+r.id+'">'+head+
+   '<label class="f"><span>Topic</span><select class="inp" data-k="section"'+(ed?'':' disabled')+'>'+Object.keys(secs).map(k=>'<option value="'+esc(k)+'"'+(k===v.section?' selected':'')+'>'+esc(k+' '+secs[k])+'</option>').join('')+(v.section in secs?'':'<option selected value="'+esc(v.section)+'">'+esc(v.section)+' (unknown)</option>')+'</select></label>'+
+   '<label class="f"><span>Question</span><textarea class="inp" rows="3" data-k="q"'+(ed?'':' readonly')+'>'+esc(v.q)+'</textarea></label>'+
+   (sim?'<div class="warn">Close to an existing question ('+esc(sim.id)+'): “'+esc(sim.q)+'”</div>':'')+
+   '<label class="f"><span>Right answer</span><input class="inp" data-k="a" value="'+esc(v.a)+'"'+(ed?'':' readonly')+'></label>'+
+   '<div class="f"><span>Wrong choices</span><div class="grid2">'+ds.map(x=>'<input class="inp" data-k="d" value="'+esc(x)+'"'+(ed?'':' readonly')+' aria-label="Wrong choice">').join('')+'</div></div>'+
+   '<label class="f"><span>Explanation<em>shown after answering</em></span><textarea class="inp" rows="2" data-k="why"'+(ed?'':' readonly')+'>'+esc(v.why)+'</textarea></label>'+
+   '<div class="grid2"><label class="f"><span>Hint<em>optional</em></span><input class="inp" data-k="hint" value="'+esc(v.hint)+'"'+(ed?'':' readonly')+'></label>'+
+   '<label class="f"><span>Credit as<em>blank = “a classmate”</em></span><input class="inp" data-k="by" maxlength="40" value="'+esc(v.by)+'"'+(ed?'':' readonly')+'></label></div>'+
+   noteField(r)+'<div class="acts2">'+
+   (r.status==='pending'?'<button class="btn bad" onclick="decide('+r.id+',\'rejected\')">Not added</button><span class="sp"></span><button class="btn primary" onclick="decide('+r.id+',\'approved\')">Approve</button>':
+    r.status==='approved'?'<button class="btn bad" onclick="decide('+r.id+',\'rejected\')">Take it out</button><span class="sp"></span><button class="btn primary" onclick="decide('+r.id+',\'approved\')">Save changes</button>':
+    '<span class="sp"></span><button class="btn" onclick="decide('+r.id+',\'pending\')">Back to waiting</button>')+'</div></article>'}
+ const cur=c&&c.byId[d.qid],choices=cur?[cur.a].concat(cur.d||[]):[];
+ return '<article class="card" id="r'+r.id+'">'+head+
+  '<p class="note">“'+esc(d.note)+'”</p>'+
+  '<div class="quote"><small>'+esc(d.section+' · '+d.qid)+(cur?'':' · not found in the current version')+'</small>'+esc(cur?cur.q||cur.term:d.q)+
+   (cur&&choices.length>1?'<ul>'+choices.map((x,i)=>'<li'+(i?'':' class="ok"')+'>'+esc(String(x).startsWith('@m:')?'(structure '+x.slice(3)+')':x)+(i?'':' ✓')+'</li>').join('')+'</ul>':d.key?'<br><small style="margin:6px 0 0">Answer key: '+esc(d.key)+'</small>':'')+
+   (cur&&cur.why?'<small style="margin:8px 0 0">Explanation: '+esc(cur.why)+'</small>':'')+'</div>'+
+  noteField(r)+'<div class="acts2">'+
+  (/^cc_\d+$/.test(d.qid)?'<button class="link" onclick="openClass(\''+esc(d.qid)+'\')">Edit that class question</button>':'<button class="link" onclick="copyReports('+r.id+')">Copy for Claude</button>')+'<span class="sp"></span>'+
+  (r.status==='pending'?'<button class="btn" onclick="decide('+r.id+',\'rejected\')">No change needed</button><button class="btn primary" onclick="decide('+r.id+',\'resolved\')">Fixed</button>':
+   '<button class="btn" onclick="decide('+r.id+',\'pending\')">Reopen</button>')+'</div></article>'}
+function noteField(r){return '<label class="f"><span>Note to the student<em>optional, they see it under Your suggestions</em></span><input class="inp" data-k="note" maxlength="500" value="'+esc(r.mod_note||'')+'" placeholder="'+(r.kind==='question'?'For example: thanks, reworded a little':'For example: fixed, thanks!')+'"></label>'}
+
+const norm=t=>String(t||'').toLowerCase().replace(/[^a-z0-9À-ɏͰ-Ͽ]+/g,' ').trim();
+function similar(c,q,self){const w=new Set(norm(q).split(' ').filter(x=>x.length>2));if(w.size<3)return null;let best=null,bs=0;
+ const pool=c.bank.concat(ROWS.filter(r=>r.course!==undefined&&r.status==='approved'&&r.item&&DATA[r.course]===c).map(r=>r.item));
+ pool.forEach(x=>{if(!x.q||x.id===self)return;const v=new Set(norm(x.q).split(' ').filter(y=>y.length>2));let n=0;w.forEach(y=>{if(v.has(y))n++});const s=n/Math.max(1,new Set([...w,...v]).size);if(s>bs){bs=s;best=x}});
+ return bs>=.6?best:null}
+function openClass(qid){const id=+qid.slice(3);tab='all';courseF='';draw();const el=$('r'+id);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.style.outline='2px solid var(--accent)'}}
+
+async function decide(id,status){if(busy)return;const r=ROWS.find(x=>x.id===id),el=$('r'+id);if(!r||!el)return;
+ const val=k=>{const e=el.querySelector('[data-k="'+k+'"]');return e?e.value.trim():''};let item=null;
+ if(status==='approved'){const d=[...el.querySelectorAll('[data-k="d"]')].map(e=>e.value.trim()).filter(Boolean);
+  item={section:val('section'),q:val('q'),a:val('a'),d,why:val('why'),hint:val('hint'),by:val('by')};
+  const low=[item.a].concat(d).map(x=>x.toLowerCase().replace(/\s+/g,' '));
+  if(!item.q||!item.a||!d.length){toast('A question needs the question, the right answer and wrong choices.');return}
+  if(new Set(low).size<low.length){toast('Two choices are the same.');return}}
+ busy=true;el.querySelectorAll('button').forEach(b=>b.disabled=true);
+ try{const ok=await rpc('contrib_mod_decide',{p_pass:PASS,p_id:id,p_status:status,p_item:item,p_note:val('note')});
+  if(ok===false){busy=false;signOut();return}
+  Object.assign(r,{status,mod_note:val('note')||null,reviewed_by:status==='pending'?null:ME.name,reviewed_at:status==='pending'?null:new Date().toISOString()},item?{item:Object.assign(item,{id:'cc_'+id})}:{});
+  toast({approved:'Added. Students get it the next time they open the reviewer.',rejected:r.kind==='question'?'Marked as not added.':'Closed: no change needed.',resolved:'Marked as fixed.',pending:'Moved back to waiting.'}[status])}
+ catch(e){toast('Could not save: '+e.message)}
+ busy=false;draw()}
+
+function copyReports(one){const list=ROWS.filter(r=>r.kind==='report'&&(one?r.id===one:r.status==='pending'&&(!courseF||r.course===courseF)));if(!list.length)return;
+ copy('Problem reports from the reviewers (please check and fix in the question bank):\n\n'+list.map(r=>{const d=r.data||{},c=DATA[r.course];
+  return '- '+(c?c.title:r.course)+' · '+d.section+' · '+d.qid+'\n  Question: '+d.q+(d.key?'\n  Answer key: '+d.key:'')+'\n  Report: '+d.note+(d.name?' ('+d.name+')':'')}).join('\n\n'),
+  list.length>1?list.length+' reports copied.':'Report copied.')}
+boot();
+</script></body></html>
