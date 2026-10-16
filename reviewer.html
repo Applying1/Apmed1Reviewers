@@ -688,6 +688,27 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 #examView.running>.top{position:sticky;top:0;z-index:12;background:var(--bg);margin:-14px -12px 0;padding:14px 12px 12px;box-shadow:0 1px 0 var(--line)}
 #examView.running .sheet{top:calc(var(--exhead,84px) + 12px);max-height:calc(100vh - var(--exhead,84px) - 28px)}
 #examView.running .pq{scroll-margin-top:calc(var(--exhead,84px) + 12px)}
+/* Charts can float: a movable, resizable window you can keep open while answering */
+.chhead .chfloat{margin-left:auto}
+.chhead .chfloat+.close{margin-left:0}
+.chgrip{display:none}
+#charts.floating{background:none;pointer-events:none;padding:0;display:block}
+#charts.floating .chartbox{pointer-events:auto;position:fixed;margin:0;max-width:none;max-height:none;display:flex;flex-direction:column;overflow:hidden;padding:0;box-shadow:0 16px 48px #0008,0 0 0 1px var(--line2)}
+#charts.floating .chhead{flex:none;margin:0;padding:8px 10px 8px 14px;gap:8px;background:var(--raised);border-bottom:1px solid var(--line);cursor:move;touch-action:none;user-select:none;-webkit-user-select:none}
+#charts.floating .chhead h2{font-size:14px}
+#charts.floating .chhead .chfloat{order:1;padding:4px 10px}
+#charts.floating .chhead .close{order:2;width:30px;height:30px}
+#charts.floating #chtabs{order:3;flex:1 0 100%;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
+#charts.floating #chtabs button{white-space:nowrap;padding:3px 9px;font-size:12px}
+#charts.floating #chbody{flex:1;min-height:0;overflow:auto;padding:10px 12px 16px;container-type:inline-size}
+#charts.floating .chartwrap{overflow:visible}
+#charts.floating .pchart{min-width:0;font-size:clamp(8px,2.3cqi,13.5px)}
+#charts.floating .pchart th{font-size:clamp(8px,2.1cqi,12.5px)}
+#charts.floating .pchart td.s{font-size:clamp(10px,3.4cqi,19px);min-width:0}
+#charts.floating .pchart th,#charts.floating .pchart td{padding:clamp(1px,.9cqi,6px) clamp(2px,1.1cqi,8px)}
+#charts.floating .chnote{font-size:clamp(10px,2.2cqi,12.5px)}
+#charts.floating .chgrip{display:block;position:absolute;right:0;bottom:0;width:24px;height:24px;cursor:nwse-resize;touch-action:none;border-radius:0 0 14px 0;
+ background:linear-gradient(135deg,transparent 52%,var(--faint) 52%,var(--faint) 59%,transparent 59%,transparent 70%,var(--faint) 70%,var(--faint) 77%,transparent 77%)}
 </style></head><body>
 <div class="app" id="app">
  <aside class="side" id="side" aria-label="Navigation">
@@ -784,7 +805,7 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
  </main>
 </div>
 <div class="tooltip" id="tip" role="tooltip"></div>
-<div class="modal" id="charts" hidden onclick="if(event.target===this)closeCharts()"><div class="box chartbox" role="dialog" aria-modal="true" aria-labelledby="chh"><div class="chhead"><h2 id="chh">Charts</h2><span class="seg" id="chtabs" role="tablist" aria-label="Chart"></span><button class="icon close" onclick="closeCharts()" aria-label="Close charts"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div id="chbody"></div></div></div>
+<div class="modal" id="charts" hidden onclick="if(event.target===this)closeCharts()"><div class="box chartbox" role="dialog" aria-modal="true" aria-labelledby="chh"><div class="chhead"><h2 id="chh">Charts</h2><span class="seg" id="chtabs" role="tablist" aria-label="Chart"></span><button class="btn sm chfloat" id="chpin" onclick="toggleChartFloat()" aria-pressed="false" title="Float: move and resize the chart, and keep answering underneath">Float</button><button class="icon close" onclick="closeCharts()" aria-label="Close charts"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div id="chbody"></div><span class="chgrip" id="chgrip" title="Drag to resize"></span></div></div>
 <div class="modal" id="news" hidden onclick="if(event.target===this)closeNews()"><div class="box news" role="dialog" aria-modal="true" aria-labelledby="newsh"><h2 id="newsh">What's new</h2><p>How the reviewer has changed, newest first.</p><div id="newsbody"></div><button class="btn primary" onclick="closeNews()">Close</button></div></div>
 <div class="modal" id="dialog" hidden><div class="box"><h2>All done</h2><p id="modalbody"></p><button class="btn primary" onclick="closeDialog()">Close</button></div></div>
 <div class="modal" id="setmodal" hidden><div class="box setbox" role="dialog" aria-modal="true" aria-labelledby="seth">

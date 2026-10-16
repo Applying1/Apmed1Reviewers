@@ -990,6 +990,7 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ ...(CHART_DATA.length?[{v:'17',date:'Oct 17, 2026',title:'Floating charts',items:['<b>Charts → Float:</b> the chart becomes a window you can drag anywhere (by its top bar) and resize (from the corner), and you can keep answering underneath, even during a mock exam. It remembers where you left it. <b>Dock</b> puts it back.']}]:[]),
  ...(DOCS.length?[{v:'16',date:'Oct 17, 2026',title:'Full transes',items:['<b>Notes → Full transes</b> opens the complete transes (PDF) in a new tab, to read or download.']}]:[]),
  {v:'15',date:'Oct 17, 2026',title:'Answer sheet exams',items:[
   '<b>Mock exam → Format → Answer sheet:</b> like the real exam. The whole test paper is on one page and you shade A–D on a separate answer sheet (beside the paper on a computer, a slide-up drawer on a phone). Tap a question to find its row; tap a shaded bubble again to erase it.']},
@@ -1066,7 +1067,27 @@ function chartsOn(){return CHART_DATA.length>0&&state.prefs.charts}
 function drawCharts(){$('chtabs').hidden=CHART_DATA.length<2;
  $('chtabs').innerHTML=CHART_DATA.map((c,i)=>'<button role="tab" aria-selected="'+(i===chartTab)+'" class="'+(i===chartTab?'on':'')+'" onclick="chartTab='+i+';drawCharts()">'+esc(c.title)+'</button>').join('');
  $('chbody').innerHTML=CHART_DATA[chartTab].html;$('chh').textContent=CHART_DATA.length<2?CHART_DATA[0].title:'Charts'}
-function openCharts(){if(!CHART_DATA.length)return;drawCharts();$('charts').hidden=false;$('charts').querySelector('.close').focus({preventScroll:true})}
+function openCharts(){if(!CHART_DATA.length)return;drawCharts();cwApply();$('charts').hidden=false;if(!(CW&&CW.on))$('charts').querySelector('.close').focus({preventScroll:true})}
+/* Floating charts: drag the title bar to move, the corner to resize; the page underneath stays usable.
+   Position, size and floating on/off are remembered on this device (shared by all courses). */
+const CWKEY='reviewer_chartwin';let CW=null;try{CW=JSON.parse(localStorage.getItem(CWKEY))}catch(e){}
+function cwSave(){try{localStorage.setItem(CWKEY,JSON.stringify(CW))}catch(e){}}
+function cwDefault(){const m=innerWidth<640,w=m?innerWidth-16:Math.min(560,innerWidth-32),h=Math.min(m?280:380,innerHeight-130);const L=($('main')||document.body).getBoundingClientRect().left;return {x:m?8:Math.max(16,Math.min(L+24,innerWidth-w-20)),y:m?84:innerHeight-h-20,w,h}}
+// Keep the title bar reachable: at least 120px of the window stays on screen sideways, and the bar never leaves the top/bottom.
+function cwClamp(){CW.w=Math.max(240,Math.min(CW.w,innerWidth-8));CW.h=Math.max(150,Math.min(CW.h,innerHeight-8));CW.x=Math.max(120-CW.w,Math.min(CW.x,innerWidth-120));CW.y=Math.max(0,Math.min(CW.y,innerHeight-48))}
+function cwApply(){const b=$('charts').querySelector('.chartbox'),on=!!(CW&&CW.on),p=$('chpin');$('charts').classList.toggle('floating',on);
+ p.textContent=on?'Dock':'Float';p.setAttribute('aria-pressed',on);p.title=on?'Back to a normal pop-up':'Float: move and resize the chart, and keep answering underneath';
+ if(!on){b.style.left=b.style.top=b.style.width=b.style.height='';return}cwClamp();b.style.left=CW.x+'px';b.style.top=CW.y+'px';b.style.width=CW.w+'px';b.style.height=CW.h+'px'}
+function toggleChartFloat(){if(CW&&CW.on)CW.on=false;else{const first=!(CW&&CW.hinted);CW=Object.assign(cwDefault(),CW&&CW.w?{x:CW.x,y:CW.y,w:CW.w,h:CW.h}:{},{on:true,hinted:1});
+  if(first)toast('Drag the top bar to move the chart and the corner to resize it. You can keep answering underneath.')}
+ cwSave();cwApply();if(!CW.on)$('charts').querySelector('.close').focus({preventScroll:true})}
+(function(){let mode=null,sx=0,sy=0,o=null;const head=document.querySelector('#charts .chhead'),grip=$('chgrip');
+ const down=(e,m)=>{if(!(CW&&CW.on)||(m==='move'&&e.target.closest('button,input,a')))return;mode=m;sx=e.clientX;sy=e.clientY;o=Object.assign({},CW);try{e.currentTarget.setPointerCapture(e.pointerId)}catch(x){}e.preventDefault()};
+ const move=e=>{if(!mode)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(mode==='move'){CW.x=o.x+dx;CW.y=o.y+dy}else{CW.w=o.w+dx;CW.h=o.h+dy}cwApply()};
+ const up=()=>{if(mode){mode=null;cwSave()}};
+ head.addEventListener('pointerdown',e=>down(e,'move'));grip.addEventListener('pointerdown',e=>down(e,'size'));
+ for(const el of [head,grip]){el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)}
+ addEventListener('resize',()=>{if(CW&&CW.on&&!$('charts').hidden)cwApply()})})();
 function closeCharts(){$('charts').hidden=true}
 
 /* ---------- tooltip ---------- */
@@ -1181,7 +1202,8 @@ function exportProgress(){let b=new Blob([JSON.stringify({exported:new Date().to
 document.addEventListener('keydown',e=>{
  if(e.ctrlKey||e.metaKey||e.altKey)return;
  if(!$('setmodal').hidden)return;
- if(!$('charts').hidden){if(e.key==='Escape'){closeCharts();e.preventDefault()}return}
+ if(!$('charts').hidden&&!(CW&&CW.on)){if(e.key==='Escape'){closeCharts();e.preventDefault()}return}
+ if(!$('charts').hidden&&e.key==='Escape'){closeCharts();e.preventDefault();return}
  if(!$('news').hidden){if(e.key==='Escape'){closeNews();e.preventDefault()}return}
  if(!$('dialog').hidden){if(e.key==='Escape'||e.key==='Enter'){closeDialog();e.preventDefault()}return}
  if(e.key==='Escape'){toggleNav(false);return}
