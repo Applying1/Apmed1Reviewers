@@ -70,13 +70,25 @@
   "scope": "Lecture and lab midterms",
   "unit": "Topic",
   "itemWord": "question",
-  "count": 953,
+  "count": 935,
   "storageKey": "study_reviewer_chem_midterm_2026_v1",
-  "image": "",
+  "image": "courses/chem/topic-1.jpg",
   "extras": [
    "Transes quizzes"
   ],
-  "assets": [],
+  "assets": [
+   "courses/chem/topic-1.jpg",
+   "courses/chem/topic-2.jpg",
+   "courses/chem/topic-3.jpg",
+   "courses/chem/topic-4.jpg",
+   "courses/chem/topic-5.jpg",
+   "courses/chem/topic-6.jpg",
+   "courses/chem/topic-7.jpg",
+   "courses/chem/topic-8.jpg",
+   "courses/chem/topic-9.jpg",
+   "courses/chem/topic-10.jpg",
+   "courses/chem/topic-11.jpg"
+  ],
   "exam": {
    "name": "Lecture midterm",
    "date": ""
