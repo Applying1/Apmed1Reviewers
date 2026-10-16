@@ -61,6 +61,12 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .note{margin-top:28px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--mute);font-size:13.5px}
 .note b{color:var(--text)}
 .empty{color:var(--faint)}
+/* A quiet thank-you to the class at the bottom of the page */
+.class{margin:56px auto 0;max-width:460px;text-align:center}
+.class .pics{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.class img{width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;border-radius:14px;border:1px solid var(--line);display:block}
+.class img:first-child{transform:rotate(-1.5deg)}.class img:last-child{transform:rotate(1.5deg)}
+.class p{margin:14px 0 0;color:var(--faint);font-size:13.5px}
 @media (max-width:520px){main{padding:24px 16px 48px}.top .acts{margin-left:0;width:100%}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
@@ -73,6 +79,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
  <p class="lede">Your progress saves in this browser, so use the same browser each time. Courses work offline once you've opened this page.</p>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
+ <div class="class"><div class="pics"><img src="img/class-1.jpg" alt="Classmates" loading="lazy" width="900" height="1200"><img src="img/class-2.jpg" alt="Classmates in the gym" loading="lazy" width="900" height="1200"></div><p>Good luck studying!</p></div>
 </main>
 <script>
 // Links shared on Facebook/Messenger get ?fbclid=... added; drop it so the address stays clean when copied again.
