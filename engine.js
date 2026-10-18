@@ -322,7 +322,7 @@ function cardHTML(){
   const nextIsLive=view+1>=liveIdx();
   return '<div class="review-note"><span>Earlier answer · '+(view+1)+' of '+secLog().length+(isX(s)?' in this '+(s==='ALL'?'shuffle':'review'):isCh(s)?' in this '+unitW:' in this section')+'</span><button class="link" onclick="goLive()">Back to current question</button></div>'+
    '<div class="qhead"><span class="kind">'+kindName(e.q.kind)+'</span><span class="mastery">'+flagBtn("flagQ('log')")+'</span></div>'+
-   '<p class="prompt">'+esc(e.q.stem)+'</p>'+figHTML(e.q.cid)+choicesHTML(e.q,e.sel,e.fb)+feedbackHTML(e.q,e.fb)+
+   '<p class="prompt">'+stemHTML(e.q.stem)+'</p>'+figHTML(e.q.cid)+choicesHTML(e.q,e.sel,e.fb)+feedbackHTML(e.q,e.fb)+
    '<div class="actions">'+backBtn()+'<span class="aux"></span><button class="btn primary" id="go" onclick="goForward()">'+(nextIsLive?'Return to current':'Forward')+' <kbd>→</kbd></button></div>';
  }
  // A matching set mixed into practice (Personalize → Mix matching into practice)
@@ -349,7 +349,7 @@ function cardHTML(){
  // Current question
  const q=state.active,st=state.concepts[q.cid],fb=state.feedback,mixed=isX(s)||isCh(s);
  return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(q.typed?'Type the answer':kindName(q.kind))+'</span><span class="mastery">'+flagBtn("flagQ('live')")+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
-  '<p class="prompt">'+esc(q.stem)+'</p>'+figHTML(q.cid)+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
+  '<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
   (q.usedHint&&!fb?'<div class="hint"><b>Hint</b>'+esc(q.hint)+'</div>':'')+
   (fb?feedbackHTML(q,fb,true):'')+
   '<div class="actions">'+backBtn()+'<span class="aux">'+(fb?'':(q.usedHint||!q.hint?'':'<button class="link" onclick="hint()">Show hint</button>')+'<button class="link" onclick="looked()" title="Counts as a review, not a correct recall">I checked my slides</button>')+'</span>'+
@@ -375,6 +375,8 @@ function chChips(keys,cur,fn){if(keys.length<2)return '';const isN=k=>/^\d/.test
  return b('all','All')+keys.filter(k=>!isN(k)).map(k=>b(k,esc(String(CH_NAMES[k]||k).split(':')[0]),esc(CH_NAMES[k]||''))).join('')+
   (compact?'<span class="chiplbl">'+esc(UNIT)+'</span>'+nums.map(k=>b(k,esc(k),esc(UNIT+' '+k+' · '+(CH_NAMES[k]||'')),' num')).join('')
    :nums.map(k=>b(k,esc(UNIT)+' '+esc(k)+' · '+esc(CH_NAMES[k]||''))).join(''))}
+// A run of underscores in a question is a blank to fill in: draw it as one solid line.
+function stemHTML(s){return esc(s).replace(/_{2,}/g,'<span class="blank" role="img" aria-label="blank"></span>')}
 function navHTML(){
  const study=page==='study',ap=progress('ALL'),aOn=state.section==='ALL'&&study;
  return '<button class="sec mixed '+(aOn?'on':'')+'" '+(aOn?'aria-current="page" ':'')+'onclick="selectSection(\'ALL\')"><span class="no">'+SHUFFLE+'</span><span class="nm">All '+unitsW+', shuffled</span><span class="ct">'+ap.done+'/'+ap.total+'</span></button>'+focusNav(study)+chapters.map(ch=>{const secs=sectionKeys.filter(k=>chOf(k)===ch),cp=chProgress(ch),wOn=state.section==='CH:'+ch&&study;
@@ -668,7 +670,7 @@ function newMix(){const pool=dmPool();if(!pool.length){MX=null;return}
 function drawMix(){const card=$('xcard');if(!MX){card.innerHTML='<p class="empty">No look-alikes here yet.</p>';return}
  const g=MIXUP[MX.g],done=MX.pick!=null,ok=done&&MX.pick===MX.t;
  card.innerHTML='<div class="qhead"><span class="kind">Don\'t mix up · '+esc(UNIT)+' '+esc(g.ch)+'</span><span class="num">'+(mixRun.total?mixRun.right+' of '+mixRun.total+' right'+(mixRun.streak>1?' · streak '+mixRun.streak:''):'Which one is it?')+'</span></div>'+
-  '<p class="prompt mixcue">'+esc(MX.cue)+'</p>'+
+  '<p class="prompt mixcue">'+stemHTML(MX.cue)+'</p>'+
   '<div class="mixopts">'+MX.opts.map((o,k)=>'<button class="mixopt'+(done?(o===MX.t?' right':o===MX.pick?' wrong':''):'')+'" '+(done?'disabled':'')+' onclick="mixPick('+o+')"><span class="key">'+(k+1)+'</span>'+esc(g.members[o].name)+'</button>').join('')+'</div>'+
   (done?'<div class="fb '+(ok?'good':'bad')+'"><h3>'+FBICON[ok?'good':'bad']+(ok?'Correct':'It\'s '+esc(g.members[MX.t].name))+'</h3><p>'+MX.opts.map(o=>'<b>'+esc(g.members[o].name)+':</b> '+esc(g.members[o].cues.join('; '))).join('<br>')+'</p></div>':'')+
   '<div class="actions"><span class="aux"><span class="khint">Keys: 1 or ← picks the left, 2 or → the right'+(done?', Enter goes on':'')+'</span></span>'+
@@ -724,7 +726,7 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
  if(ex.sheet){$('extitle').textContent=n+' '+ITEMS;$('exbody').innerHTML=sheetHTML(ex);return}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
-  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+esc(q.stem)+'</p>'+figHTML(q.cid)+
+  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
   (q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
    :'<div class="choices'+(molq(q)?' ichoices':'')+'">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+labelHTML(x.label)+'</span></button>').join('')+'</div>')+
   '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button> · <button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button></span>'+
@@ -732,7 +734,7 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
   '<div class="qnav" aria-label="Jump to a question">'+ex.qs.map((_,j)=>'<button class="'+(ex.ans[j]?'a ':'')+(j===ex.i?'cur':'')+'" onclick="exJump('+j+')" aria-label="Question '+(j+1)+(ex.ans[j]?', answered':'')+'">'+(j+1)+'</button>').join('')+'</div>'}
 // Answer sheet format: read on the test paper, shade on the sheet. Shading updates only the sheet, so the paper keeps its place.
 function sheetHTML(ex){const n=ex.qs.length,done=Object.keys(ex.ans).length;
- const paper=ex.qs.map((q,j)=>'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+esc(q.stem)+'</p>'+figHTML(q.cid)+
+ const paper=ex.qs.map((q,j)=>'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
   (q.ident?'<p class="pqid">Write your answer on the answer sheet.</p>':'<ol class="pch'+(molq(q)?' ich':'')+'">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+labelHTML(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
  const rows=ex.qs.map((q,j)=>'<div class="brow" id="br'+j+'"><button class="bn" onclick="sheetGo('+j+')" aria-label="Go to question '+(j+1)+'">'+(j+1)+'</button>'+
   (q.ident?'<input class="txt bt" value="'+esc(ex.ans[j]||'')+'" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer to question '+(j+1)+'" oninput="sheetType('+j+',this.value)">'
