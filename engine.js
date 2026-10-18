@@ -1135,6 +1135,7 @@ function drawPrefs(){
   row('Add a question set','Paste questions or upload a .txt or .csv file, like a set a classmate exported or one your group wrote in Google Sheets.','<button class="btn sm" onclick="openSetEditor()">Add a set</button>')+'</section>';
  h+='<section class="panel"><h2>Appearance and you</h2>'+
   row('Theme','System follows your device setting.',segHTML('setThemeMode',[['system','System'],['light','Light'],['dark','Dark']],themeMode(),'Theme'))+
+  row('Colors','Classic indigo, or the APMed \'33 palette: cream, teal and mustard. Applies to every course and the home page on this device.',segHTML('setPalette',[['classic','Classic'],['apmed','APMed \'33']],document.documentElement.dataset.palette||'classic','Colors'))+
   row('Your name','Used to greet you on the dashboard. Saved only in this browser.','<input class="txt" id="pname" maxlength="40" placeholder="Your name" aria-label="Your name" autocomplete="given-name" value="'+esc(state.name||'')+'" onchange="setName(this.value)">')+'</section>';
  h+='<section class="panel"><h2>Your data</h2>'+syncRowHTML(row)+
   (cloudOn()?row('Share anonymous answer stats','Sends only which '+ITEMS+' were answered right or wrong, with no name and no device ID, so the class can see its most missed '+ITEMS+'.',sw(state.prefs.crowd,"setPref('crowd',"+!state.prefs.crowd+")",'Share anonymous answer stats')):'')+
@@ -1151,6 +1152,8 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'22',date:'Oct 18, 2026',title:'APMed \'33 colors',items:[
+  'A new <b>APMed \'33</b> color palette (cream, teal and mustard, from the batch\'s logo). Turn it on in <b>Personalize → Appearance → Colors</b>. It works in light and dark mode and applies to every course.']},
  {v:'21',date:'Oct 18, 2026',title:'Less clutter',items:[
   '<b>Personalize</b> has tabs (Practice, Study tools, Pages, and so on), so you can open just the settings you need. <b>All</b> still shows everything.',
   'With many '+unitsW+', the '+unitW+' filters on <b>Notes</b> and <b>Drills</b> are short numbers. Hover or long-press one to see its name.']},
@@ -1283,6 +1286,7 @@ function closeCharts(){$('charts').hidden=true}
 
 /* ---------- theme ---------- */
 function curTheme(){return document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}
+function setPalette(p){if(p==='classic'){delete document.documentElement.dataset.palette;try{localStorage.removeItem('reviewer_palette')}catch(e){}}else{document.documentElement.dataset.palette=p;try{localStorage.setItem('reviewer_palette',p)}catch(e){}}if(page==='prefs')drawPrefs()}
 function themeMode(){return document.documentElement.dataset.theme||'system'}
 function drawTheme(){const d=curTheme()==='dark';$('themeBtn').innerHTML=(d?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Light mode':'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>Dark mode')}
 function setThemeMode(m){if(m==='system'){delete document.documentElement.dataset.theme;try{localStorage.removeItem(THEME_KEY);localStorage.removeItem('psych_theme')}catch(e){}}else{document.documentElement.dataset.theme=m;try{localStorage.setItem(THEME_KEY,m)}catch(e){}}draw()}

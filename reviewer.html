@@ -2,7 +2,7 @@
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" id="favicon"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
-<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
 <style>
 /* ---------- Design tokens ---------- */
 :root{
@@ -51,6 +51,11 @@
  --shadow:0 1px 2px #0006;
  --scrim:#050a14bb;
 }
+/* APMed '33 palette (Personalize → Appearance): cream, teal and mustard */
+:root[data-palette="apmed"]{--bg:#f5eedb;--side:#faf5e6;--surface:#fffdf6;--raised:#f0e6cc;--hover:#e9ddbd;--line:#e6d9b6;--line2:#d6c59a;--text:#1b2a2a;--mute:#566360;--faint:#86907f;--accent:#1d7a80;--accent-ink:#ffffff;--accent-soft:#dcefed;--accent-line:#9fcfcc;--accent-2:#e3a21a;--hint-bg:#eef6f4;--hint-ink:#1f3e3d;--hint-b:#1d7a80;--seq-lo:#ece4cc;--seq-hi:#1d7a80}
+@media (prefers-color-scheme:dark){:root[data-palette="apmed"]:not([data-theme="light"]){color-scheme:dark;--bg:#0e1a1a;--side:#112020;--surface:#162828;--raised:#1c3232;--hover:#233c3b;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--accent-soft:#33301a;--accent-line:#77652a;--accent-2:#55c4c8;--hint-bg:#1b2d2a;--hint-ink:#e6efe2;--hint-b:#f2c14e;--seq-lo:#1d3332;--seq-hi:#f2c14e}}
+:root[data-palette="apmed"][data-theme="dark"]{color-scheme:dark;--bg:#0e1a1a;--side:#112020;--surface:#162828;--raised:#1c3232;--hover:#233c3b;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--accent-soft:#33301a;--accent-line:#77652a;--accent-2:#55c4c8;--hint-bg:#1b2d2a;--hint-ink:#e6efe2;--hint-b:#f2c14e;--seq-lo:#1d3332;--seq-hi:#f2c14e}
+
 
 *{box-sizing:border-box}
 html,body{margin:0}
