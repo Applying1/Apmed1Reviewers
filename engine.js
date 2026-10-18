@@ -307,7 +307,7 @@ function feedbackHTML(q,fb,live){
  if(q.why)out+='<p>'+esc(q.why)+'</p>';
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
- if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'</a></p>';
+ if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'</a></p>';
  const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' stays in your queue.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
   :'This '+ITEM+' will come back later, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
  const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
@@ -440,9 +440,22 @@ const courseId=()=>(new URLSearchParams(location.search).get('course')||'').toLo
 function discussOn(){return !!(CONFIG.discussion&&CONFIG.home&&courseId()&&/^https?:$/.test(location.protocol))}
 const discKey=cid=>courseId()+':'+String(cid).toLowerCase();
 function discussQ(cid){return 'discuss.html?c='+encodeURIComponent(courseId())+'&q='+encodeURIComponent(String(cid).toLowerCase())}
-function loadDiscussCounts(){if(!discussOn()||!cloudOn())return;rpc('discussion_counts',{p_course:courseId()}).then(rows=>{const c={};for(const r of rows||[])c[r.thread]=r.n;DCOUNT=c}).catch(()=>{})}
+function loadDiscussCounts(redraw){if(!discussOn()||!cloudOn())return;rpc('discussion_counts',{p_course:courseId()}).then(rows=>{const c={};for(const r of rows||[])c[r.thread]=r.n;DCOUNT=c;if(redraw===true&&page==='study'&&state.feedback)draw()}).catch(()=>{})}
+// The discussion panel: discuss.html (embed mode) in a frame. Wide screens: right side, the page makes room. Phones: bottom sheet.
+function openDiscuss(cid){if(!discussOn())return true;let d=$('dpanel');
+ if(!d){d=document.createElement('aside');d.id='dpanel';d.className='dpanel';d.setAttribute('aria-label','Discussion');
+  d.innerHTML='<div class="dph"><b id="dpt">Discussion</b><a class="dpx" id="dpnew" target="_blank" rel="noopener" title="Open in a new tab" aria-label="Open in a new tab"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a><button class="dpx" onclick="closeDiscuss()" aria-label="Close discussion"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><iframe id="dpf" title="Discussion"></iframe>';
+  const sc=document.createElement('div');sc.id='dpscrim';sc.className='dpscrim';sc.onclick=closeDiscuss;document.body.append(d,sc)}
+ const url=(cid?discussQ(cid):'discuss.html?c='+encodeURIComponent(courseId()));
+ $('dpt').textContent=cid?'Discuss this question':CONFIG.title+' discussion';$('dpnew').href=url;
+ if($('dpf').dataset.u!==url){$('dpf').dataset.u=url;$('dpf').src=url+'&embed=1'}
+ void d.offsetWidth;d.classList.add('open');document.body.classList.add('dopen');return false}
+function closeDiscuss(){const d=$('dpanel');if(d)d.classList.remove('open');document.body.classList.remove('dopen');loadDiscussCounts(true)}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('dopen'))closeDiscuss()});
+// back from signing in inside the panel: reopen it (#discuss=<question id>, or #discuss= for the course thread)
+addEventListener('load',()=>{const m=location.hash.match(/^#discuss=([\w.-]*)$/);if(m){history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>openDiscuss(m[1]||undefined),400)}});
 function discussLink(){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.discussion||!CONFIG.home||!id||!/^https?:$/.test(location.protocol))return '';
- return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion</a>'}
+ return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'" onclick="return openDiscuss()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion</a>'}
 function draw(){
  if(!pageOn(page))page='dashboard';
  for(const [p,v] of Object.entries(VIEWS))$(v).hidden=p!==page;
