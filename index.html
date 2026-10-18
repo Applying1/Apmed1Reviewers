@@ -97,6 +97,17 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .modal p.msg.ok{color:var(--good)}
 .modal p.msg:empty{display:none}
 .note.inst{text-align:center}
+/* Next class, from the timetable */
+.upnext{display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow)}
+.upnext[hidden]{display:none}
+.upnext:hover{border-color:var(--line2)}
+.upnext .bar{flex:none;align-self:stretch;width:4px;border-radius:9px;background:oklch(.6 .13 var(--h))}
+.upnext .w{flex:1;min-width:0}
+.upnext .l{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--mute)}
+.upnext .l.live{color:#e11d48}
+.upnext b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upnext .s{display:block;color:var(--mute);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upnext .go{flex:none;color:var(--accent);font-size:13.5px;font-weight:600}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:600;font-size:14px}
 /* One-time offer to try the APMed '33 colors */
 .try{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--accent-line)}
@@ -110,9 +121,10 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 <main>
  <div class="top">
   <div class="brand"><img src="icons/icon-192.png" alt="" width="40" height="40"><div><b>APMed '33 Reviewers</b><span>Practice, notes and matching</span></div></div>
-  <div class="acts"><button class="btn" id="syncbtn" onclick="openSync()" hidden>Sync</button><button class="btn" id="theme" onclick="toggleTheme()">Theme</button></div>
+  <div class="acts"><a class="btn" href="schedule.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>Timetable</a><button class="btn" id="syncbtn" onclick="openSync()" hidden>Sync</button><button class="btn" id="theme" onclick="toggleTheme()">Theme</button></div>
  </div>
  <h1 id="hi">Pick a course</h1>
+ <a class="upnext" id="upnext" href="schedule.html" hidden></a>
  <div class="try" id="try" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <p class="note inst" id="install" hidden>Use this like an app, even offline. <button class="linkbtn" id="installbtn">Install app</button></p>
@@ -123,6 +135,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
  <div class="mhead"><h2 id="synch">Sync your progress</h2><button class="mx" onclick="closeSync()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
  <div id="syncbody"></div>
 </div></div>
+<script src="schedule-core.js"></script>
 <script>
 // Links shared on Facebook/Messenger get ?fbclid=... added; drop it so the address stays clean when copied again.
 if(/[?&](fbclid|utm_[a-z]+|gclid)=/.test(location.search))history.replaceState(null,'',location.pathname);
@@ -159,12 +172,17 @@ function tryBox(step){const b=document.getElementById('try');try{if(step==='ask'
   :sw+'<p><b>Like it?</b> You can change it any time in a course\'s Personalize → Appearance → Colors.</p><span class="row"><button class="btn primary" onclick="tryBox(\'done\')">Keep it</button><button class="btn" onclick="setPal(null);tryBox(\'done\')">Switch back</button></span>';
  b.hidden=false}
 tryBox('ask');
+// Next class (or the one going on now), from schedule.json
+(async function(){try{await Sched.load();const c=Sched.upNext();if(!c)return;const e=document.getElementById('upnext');
+ e.style.setProperty('--h',+c.subj.hue||260);
+ e.innerHTML='<span class="bar"></span><span class="w"><span class="l'+(c.now?' live':'')+'">'+(c.now?'Now · until '+Sched.time(c.end):'Next class · '+Sched.when(c.date)+', '+Sched.time(c.start))+'</span><b>'+esc(c.subj.name)+(c.kind?' · '+esc(c.kind):'')+'</b><span class="s">'+esc(c.topic||c.teacher||'')+'</span></span><span class="go">Timetable →</span>';
+ e.hidden=false}catch(err){}})();
 // Install: Android/desktop Chrome offer a prompt; iPhone needs Share → Add to Home Screen.
-// The button stays hidden once the app is installed (or the install prompt was answered), and inside the installed app.
+// The browser only offers the prompt while the app isn't installed, so after an uninstall the link comes back by itself.
 // Anything but a normal browser tab (standalone, minimal-ui, window controls overlay) is the installed app.
 const standalone=!matchMedia('(display-mode: browser)').matches||navigator.standalone;
-let deferred=null,installed=standalone;try{installed=installed||!!localStorage.getItem('reviewer_installed')}catch(e){}
-const markInstalled=()=>{installed=true;try{localStorage.setItem('reviewer_installed','1')}catch(e){}document.getElementById('install').hidden=true};
+let deferred=null,installed=standalone;try{localStorage.removeItem('reviewer_installed')}catch(e){}
+const markInstalled=()=>{installed=true;document.getElementById('install').hidden=true};
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;if(!installed)document.getElementById('install').hidden=false});
 addEventListener('appinstalled',markInstalled);
 if(navigator.getInstalledRelatedApps)navigator.getInstalledRelatedApps().then(a=>{if(a.length)markInstalled()}).catch(()=>{});

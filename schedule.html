@@ -1,0 +1,248 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timetable · APMed '33</title>
+<meta name="description" content="Our weekly class timetable, with each week's topics.">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script><script>(function(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const f=()=>{if(document.body)m.content=getComputedStyle(document.body).backgroundColor},g=()=>{f();setTimeout(f,350)};addEventListener('DOMContentLoaded',f);new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',g)})()</script>
+<style>
+:root{
+ --sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+ --serif:"Source Serif 4","Iowan Old Style",Charter,Georgia,serif;
+ color-scheme:light;
+ --bg:#f6f4ef;--surface:#fff;--raised:#f3f0e9;--line:#e8e3d9;--line2:#d8d1c4;
+ --text:#1d1b18;--mute:#5f5a51;--faint:#8e877b;
+ --accent:#4f46e5;--accent-ink:#fff;--accent-soft:#eeeefd;--accent-line:#c4c3f6;--accent-2:#7c3aed;--bad:#c2410c;
+ --shadow:0 1px 2px #1018280a,0 1px 3px #1018280f;
+ /* subject colors: oklch(lightness chroma hue), hue set per class */
+ --cl:.55;--cc:.13;--tint:12%;--now:#e11d48;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;
+ --text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--accent-line:#4a4c8f;--accent-2:#c4a5ff;--bad:#fb923c;--shadow:0 1px 2px #0006;
+ --cl:.80;--cc:.11;--tint:15%;--now:#fb7185}}
+:root[data-theme="dark"]{
+ color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;
+ --text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--accent-line:#4a4c8f;--accent-2:#c4a5ff;--bad:#fb923c;--shadow:0 1px 2px #0006;
+ --cl:.80;--cc:.11;--tint:15%;--now:#fb7185}
+:root[data-palette="apmed"]{--bg:#f5eedb;--surface:#fffdf6;--raised:#f0e6cc;--line:#e6d9b6;--line2:#d6c59a;--text:#1b2a2a;--mute:#566360;--faint:#86907f;--accent:#1d7a80;--accent-ink:#ffffff;--accent-soft:#dcefed;--accent-line:#9fcfcc;--accent-2:#e3a21a}
+@media (prefers-color-scheme:dark){:root[data-palette="apmed"]:not([data-theme="light"]){color-scheme:dark;--bg:#0e1a1a;--surface:#162828;--raised:#1c3232;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--accent-soft:#33301a;--accent-line:#77652a;--accent-2:#55c4c8}}
+:root[data-palette="apmed"][data-theme="dark"]{color-scheme:dark;--bg:#0e1a1a;--surface:#162828;--raised:#1c3232;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--accent-soft:#33301a;--accent-line:#77652a;--accent-2:#55c4c8}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:1100px;margin:0 auto;padding:32px 24px 64px}
+.top{display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600}
+.brand img{width:32px;height:32px;border-radius:10px}
+.brand:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s}
+.btn:hover{background:var(--raised)}
+.btn:disabled{opacity:.4;cursor:default;background:var(--surface)}
+.btn.icon{width:38px;padding:8px 0}
+h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:28px 0 2px}
+.term{color:var(--mute);margin:0 0 20px;font-size:14px}
+.sw{--c:oklch(var(--cl) var(--cc) var(--h))}
+/* Now / next */
+.now{display:flex;gap:14px;align-items:stretch;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:20px;text-decoration:none}
+.now[hidden]{display:none}
+.now .bar{flex:none;width:5px;border-radius:9px;background:var(--c)}
+.now .lbl{font-size:12.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--c)}
+.now .lbl.live{color:var(--now)}
+.now .lbl.live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--now);margin-right:6px;vertical-align:1px;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.now b{display:block;font:600 19px/1.3 var(--serif);margin-top:2px}
+.now .sub{color:var(--mute);font-size:14px}
+.now .go{margin-left:auto;align-self:center;color:var(--faint);font-size:13.5px;font-weight:600;white-space:nowrap}
+a.now:hover{border-color:var(--line2)}
+a.now:hover .go{color:var(--accent)}
+/* Week switcher */
+.wbar{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.wbar .wl{min-width:0;text-align:center;flex:1}
+.wbar .wl b{display:block;font-size:16px}
+.wbar .wl span{color:var(--mute);font-size:13.5px}
+.wbar .today{visibility:hidden}
+.wbar .today.on{visibility:visible}
+.notes{margin:0 0 14px;padding:10px 14px 10px 30px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent-line);font-size:14px}
+.notes:empty{display:none}
+.notes li+li{margin-top:4px}
+/* Week grid (wide screens) */
+.wk{display:grid;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.dh{padding:10px 8px 8px;text-align:center;border-bottom:1px solid var(--line);border-left:1px solid var(--line);font-size:12.5px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.dh b{display:block;font:600 20px/1.2 var(--sans);color:var(--text);letter-spacing:0;text-transform:none}
+.dh.today{background:var(--accent-soft);color:var(--accent)}
+.dh.today b{color:var(--accent)}
+.dh .ex{display:block;margin:6px auto 0;width:max-content;max-width:100%;padding:2px 8px;border-radius:99px;font-size:11px;text-transform:none;letter-spacing:0;background:color-mix(in oklab,var(--c) 18%,var(--surface));color:var(--c);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.corner{border-bottom:1px solid var(--line)}
+.gut{position:relative}
+.gut span{position:absolute;right:8px;transform:translateY(-50%);font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap}
+.col{position:relative;border-left:1px solid var(--line);background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% var(--hh)}
+.col.today{background-color:color-mix(in oklab,var(--accent-soft) 45%,transparent)}
+.col .free{position:absolute;inset:0;display:grid;place-items:center;padding:12px;text-align:center;color:var(--faint);font-size:13px;font-weight:600;background:repeating-linear-gradient(135deg,transparent 0 10px,color-mix(in oklab,var(--line) 55%,transparent) 10px 11px)}
+.blk{position:absolute;left:4px;right:4px;display:flex;flex-direction:column;gap:1px;padding:7px 9px;border-radius:10px;border:0;border-left:4px solid var(--c);background:color-mix(in oklab,var(--c) var(--tint),var(--surface));text-align:left;overflow:hidden;transition:transform .12s,box-shadow .12s}
+.blk:hover{box-shadow:0 4px 14px color-mix(in oklab,var(--c) 25%,transparent);z-index:2}
+.blk b{font-size:13px;line-height:1.25}
+.blk .t{font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+.blk em{font-style:normal;font-size:12px;line-height:1.3;margin-top:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.blk.off{opacity:.55}.blk.off b{text-decoration:line-through}
+.tagx{display:inline-block;padding:0 6px;border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;background:var(--c);color:var(--surface);vertical-align:1px}
+.nowline{position:absolute;left:0;right:0;height:2px;background:var(--now);z-index:3}
+.nowline::before{content:"";position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--now)}
+/* Day list (phones) */
+.mob{display:none}
+.chips{display:flex;gap:6px;margin-bottom:14px}
+.chip{flex:1;min-width:0;padding:7px 0 6px;border-radius:12px;border:1px solid var(--line);background:var(--surface);text-align:center;font-size:11.5px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.3px;position:relative}
+.chip b{display:block;font-size:17px;color:var(--text);letter-spacing:0}
+.chip.today{color:var(--accent)}
+.chip.today b{color:var(--accent)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip.on b{color:var(--accent-ink)}
+.chip i{position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--c)}
+.dayh{font:600 18px/1.3 var(--serif);margin:0 0 10px}
+.dayh span{font:500 14px var(--sans);color:var(--mute)}
+.item{display:flex;gap:12px;margin-bottom:10px}
+.item .tm{flex:none;width:62px;padding-top:12px;text-align:right;font-size:12.5px;color:var(--mute);font-variant-numeric:tabular-nums;line-height:1.35}
+.item .tm b{display:block;color:var(--text);font-size:13.5px}
+.card{flex:1;min-width:0;padding:11px 14px;border-radius:14px;background:color-mix(in oklab,var(--c) var(--tint),var(--surface));border-left:4px solid var(--c)}
+.card b{display:block;font-size:15px}
+.card .k{color:var(--mute);font-size:13px}
+.card .tp{margin-top:6px;font-size:14px}
+.card .tp.none{color:var(--faint);font-style:italic}
+.card a{display:inline-block;margin-top:8px;font-size:13.5px;font-weight:600;color:var(--c);text-decoration:none}
+.card.off{opacity:.6}.card.off b{text-decoration:line-through}
+.empty{padding:28px 16px;text-align:center;color:var(--faint);border:1px dashed var(--line2);border-radius:14px}
+.foot{margin-top:18px;color:var(--faint);font-size:13px}
+/* Class details */
+.modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:#0f172a66}
+.modal[hidden]{display:none}
+.modal .box{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line2);border-radius:18px;padding:18px 20px 20px;border-top:6px solid var(--c)}
+.mhead{display:flex;align-items:flex-start;gap:10px}
+.mhead h2{flex:1;margin:0;font:600 21px/1.3 var(--serif)}
+.mx{flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--mute)}
+.mx:hover{background:var(--raised);color:var(--text)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:14px 0 0;font-size:14px}
+dt{color:var(--faint);font-weight:600}
+dd{margin:0}
+dd.none{color:var(--faint);font-style:italic}
+.modal .btn{margin-top:16px;width:100%}
+@media (max-width:760px){.wk{display:none}.mob{display:block}}
+@media (max-width:520px){main{padding:20px 16px 48px}.now .go{display:none}.wbar .today{padding:8px 10px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body>
+<main>
+ <div class="top">
+  <a class="brand" href="./"><img src="icons/icon-192.png" alt="" width="32" height="32">← Courses</a>
+ </div>
+ <h1>Timetable</h1>
+ <p class="term" id="term">&nbsp;</p>
+ <a class="now sw" id="now" hidden></a>
+ <div class="wbar">
+  <button class="btn icon" id="prev" aria-label="Previous week" onclick="go(week-1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <div class="wl" aria-live="polite"><b id="wname">Week</b><span id="wdates"></span></div>
+  <button class="btn icon" id="next" aria-label="Next week" onclick="go(week+1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+  <button class="btn today" id="tw" onclick="go(Sched.defaultWeek())">This week</button>
+ </div>
+ <ul class="notes" id="notes"></ul>
+ <div class="wk" id="wk"></div>
+ <div class="mob"><div class="chips" id="chips" role="tablist"></div><div id="day"></div></div>
+ <p class="foot">This is the standard timetable. Topics, make-up classes and cancellations are added week by week as they're announced.</p>
+</main>
+<div class="modal" id="dlg" hidden onclick="if(event.target===this)closeDlg()"><div class="box sw" id="dbox" role="dialog" aria-modal="true" aria-labelledby="dtitle"></div></div>
+<script src="schedule-core.js"></script>
+<script>
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const HH=58; // pixels per hour in the week grid
+let week=0,day=-1,EXAMS=[],LIST=[];
+const hue=c=>' style="--h:'+(+c.subj.hue||260)+'"';
+const kindOf=c=>[c.kind,c.where].filter(Boolean).join(' · ');
+const reviewer=c=>c.subj.course?'reviewer.html?course='+encodeURIComponent(c.subj.course):'';
+
+function go(n){week=n;day=-1;history.replaceState(null,'','#w'+n);draw()}
+function draw(){
+ const d=Sched.data,start=Sched.weekStart(week),end=new Date(start);end.setDate(end.getDate()+5);
+ const now=new Date(),cur=Sched.weekNo(now);
+ document.getElementById('wname').textContent='Week '+week;
+ document.getElementById('wdates').textContent=Sched.date(start)+' – '+(start.getMonth()===end.getMonth()?end.getDate():Sched.date(end));
+ document.getElementById('tw').classList.toggle('on',week!==Sched.defaultWeek());
+ document.getElementById('prev').disabled=week<=1;
+ document.getElementById('notes').innerHTML=Sched.notes(week).map(n=>'<li>'+esc(n)+'</li>').join('');
+ LIST=Sched.classes(week);
+ const sun=LIST.some(c=>c.di===6),ndays=sun?7:6;
+ // tests (from the course pages' exam dates) that fall in this week
+ const ex=di=>EXAMS.filter(e=>{const t=new Date(e.date+'T00:00');return Math.round((t-start)/864e5)===di});
+ const isToday=di=>week===cur&&((now.getDay()+6)%7)===di;
+ // ---- week grid
+ const lo=Math.min(7,...LIST.map(c=>Math.floor(Sched.mins(c.start)/60))),hi=Math.max(17,...LIST.map(c=>Math.ceil(Sched.mins(c.end)/60)));
+ const H=(hi-lo)*HH,top=m=>(m/60-lo)*HH;
+ let g='<div class="corner"></div>';
+ for(let i=0;i<ndays;i++){const dt=new Date(start);dt.setDate(dt.getDate()+i);
+  g+='<div class="dh'+(isToday(i)?' today':'')+'">'+DAYS[i]+'<b>'+dt.getDate()+'</b>'+ex(i).map(e=>'<span class="ex sw"'+hue(e)+' title="'+esc(e.title+': '+e.name)+'">'+esc(e.name)+'</span>').join('')+'</div>'}
+ g+='<div class="gut" style="height:'+H+'px">';for(let h=lo+1;h<hi;h++)g+='<span style="top:'+(h-lo)*HH+'px">'+(h%12||12)+' '+(h<12?'AM':'PM')+'</span>';g+='</div>';
+ for(let i=0;i<ndays;i++){
+  const cs=LIST.filter(c=>c.di===i),free=d.freeDays&&d.freeDays[DAYS[i]];
+  g+='<div class="col'+(isToday(i)?' today':'')+'" style="height:'+H+'px;--hh:'+HH+'px">';
+  if(!cs.length&&free)g+='<div class="free">'+esc(free)+'</div>';
+  for(const c of cs){const a=Sched.mins(c.start),b=Sched.mins(c.end);
+   g+='<button class="blk sw'+(c.cancelled?' off':'')+'"'+hue(c).slice(0,-1)+';top:'+(top(a)+2)+'px;height:'+((b-a)/60*HH-4)+'px" onclick="openDlg(\''+c.id+'\')">'+
+    '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b><span class="t">'+Sched.span(c)+(c.kind&&!c.extra?' · '+esc(c.kind):'')+(c.cancelled?' · Cancelled':'')+'</span>'+
+    (c.topic?'<em>'+esc(c.topic)+'</em>':'')+'</button>'}
+  if(isToday(i)){const m=now.getHours()*60+now.getMinutes();if(m>lo*60&&m<hi*60)g+='<div class="nowline" style="top:'+top(m)+'px"></div>'}
+  g+='</div>'}
+ const wk=document.getElementById('wk');wk.style.gridTemplateColumns='58px repeat('+ndays+',minmax(0,1fr))';wk.innerHTML=g;
+ // ---- phone: day chips + that day's classes
+ if(day<0)day=week===cur?Math.min((now.getDay()+6)%7,ndays-1):0;
+ if(day===6&&!sun)day=0;
+ let ch='';for(let i=0;i<ndays;i++){const dt=new Date(start);dt.setDate(dt.getDate()+i);const e=ex(i)[0];
+  ch+='<button class="chip'+(i===day?' on':'')+(isToday(i)?' today':'')+'" role="tab" aria-selected="'+(i===day)+'" onclick="day='+i+';draw()">'+DAYS[i]+'<b>'+dt.getDate()+'</b>'+(e?'<i class="sw"'+hue(e)+'></i>':'')+'</button>'}
+ document.getElementById('chips').innerHTML=ch;
+ const dt=new Date(start);dt.setDate(dt.getDate()+day);
+ const cs=LIST.filter(c=>c.di===day),free=d.freeDays&&d.freeDays[DAYS[day]];
+ let h='<h2 class="dayh">'+DAY_NAMES[day]+' <span>'+Sched.date(dt)+'</span></h2>';
+ for(const e of ex(day))h+='<div class="item sw"'+hue(e)+'><div class="tm"><b>Test</b></div><div class="card"><b>'+esc(e.title)+'</b><div class="k">'+esc(e.name)+'</div></div></div>';
+ h+=cs.length?cs.map(c=>'<div class="item sw"'+hue(c)+'><div class="tm"><b>'+Sched.time(c.start).replace(' ','&nbsp;')+'</b>'+Sched.time(c.end).replace(' ','&nbsp;')+'</div><div class="card'+(c.cancelled?' off':'')+'">'+
+   '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b><div class="k">'+esc([c.cancelled?'Cancelled':'',kindOf(c),c.teacher].filter(Boolean).join(' · '))+'</div>'+
+   (c.topic?'<div class="tp">'+esc(c.topic)+'</div>':'<div class="tp none">Topic not posted yet</div>')+
+   (reviewer(c)?'<a href="'+reviewer(c)+'">Open reviewer →</a>':'')+'</div></div>').join('')
+  :'<div class="empty">'+esc(free||'No classes')+'</div>';
+ document.getElementById('day').innerHTML=h;
+}
+function openDlg(id){const c=LIST.find(x=>x.id===id);if(!c)return;
+ const b=document.getElementById('dbox');b.setAttribute('style','--h:'+(+c.subj.hue||260));
+ b.innerHTML='<div class="mhead"><h2 id="dtitle">'+esc(c.subj.name)+'</h2><button class="mx" onclick="closeDlg()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>'+
+  '<dl><dt>When</dt><dd>'+DAY_NAMES[c.di]+', '+Sched.date(c.date)+' · '+Sched.span(c)+(c.cancelled?' <b>(cancelled)</b>':'')+'</dd>'+
+  (kindOf(c)?'<dt>Class</dt><dd>'+esc(kindOf(c))+'</dd>':'')+
+  (c.teacher?'<dt>Teacher</dt><dd>'+esc(c.teacher)+'</dd>':'')+
+  '<dt>Topic</dt>'+(c.topic?'<dd>'+esc(c.topic)+'</dd>':'<dd class="none">Not posted yet</dd>')+'</dl>'+
+  (reviewer(c)?'<a class="btn" href="'+reviewer(c)+'">Open the '+esc(c.subj.name)+' reviewer</a>':'');
+ document.getElementById('dlg').hidden=false;b.querySelector('.mx').focus()}
+function closeDlg(){document.getElementById('dlg').hidden=true}
+addEventListener('keydown',e=>{if(e.key==='Escape')closeDlg()});
+
+function drawNow(){
+ const c=Sched.upNext(),el=document.getElementById('now');if(!c){el.hidden=true;return}
+ el.setAttribute('style','--h:'+(+c.subj.hue||260));
+ if(reviewer(c))el.setAttribute('href',reviewer(c));else el.removeAttribute('href');
+ el.innerHTML='<span class="bar"></span><span><span class="lbl'+(c.now?' live':'')+'">'+(c.now?'Now · until '+Sched.time(c.end):'Next · '+Sched.when(c.date)+', '+Sched.time(c.start))+'</span>'+
+  '<b>'+esc(c.subj.name)+(c.kind?' <span class="sub">'+esc(c.kind)+'</span>':'')+'</b><span class="sub">'+esc(c.topic||c.teacher||'')+'</span></span>'+
+  (reviewer(c)?'<span class="go">Open reviewer →</span>':'');
+ el.hidden=false}
+
+(async function(){
+ try{await Sched.load()}catch(e){document.getElementById('wk').outerHTML='<div class="empty">The timetable could not be loaded. Check your connection and reload.</div>';return}
+ document.getElementById('term').textContent=Sched.data.term||'';
+ const m=location.hash.match(/^#w(\d+)$/);week=m?+m[1]:Sched.defaultWeek();
+ draw();drawNow();
+ // tests from the course list (e.g. Psych Evals), shown on their day
+ try{const list=await (await fetch('courses.json')).json(),subs=Sched.data.subjects;
+  EXAMS=list.filter(c=>c.exam&&c.exam.date).map(c=>{const k=Object.keys(subs).find(k=>subs[k].course===c.id);return{date:c.exam.date,name:c.exam.name,title:c.title,subj:subs[k]||{hue:260}}});
+  draw()}catch(e){}
+ addEventListener('hashchange',()=>{const m=location.hash.match(/^#w(\d+)$/);if(m&&+m[1]!==week){week=+m[1];day=-1;draw()}});
+ setInterval(()=>{drawNow();if(week===Sched.weekNo(new Date()))draw()},60000);
+})();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+</body></html>

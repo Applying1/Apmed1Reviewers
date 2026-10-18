@@ -1,8 +1,9 @@
 // Offline support. Pages, code and course files are fetched fresh when online (so fixes show up right away)
 // and served from the cache when offline. Pictures show the saved copy first and refresh in the background.
 // Fonts are cached after first use; transes PDFs only once opened.
-const CACHE = 'reviewers-v5';
+const CACHE = 'reviewers-v6';
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
+  'schedule.html', 'schedule-core.js', 'schedule.json',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
 // Saves every course (and its pictures) not saved yet, so courses added after someone's first visit also work offline.

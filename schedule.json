@@ -1,0 +1,51 @@
+{
+ "_how": "classes = the standard weekly timetable. weeks.<n> changes one week only: topics (by class id), cancel (class ids), extra (make-up or added classes), notes. Week 1 starts on week1 (a Monday).",
+ "term": "1st Semester · AY 2026–2027",
+ "week1": "2026-07-27",
+ "freeDays": {"Mon": "Self-directed learning (SDL)", "Sun": ""},
+ "subjects": {
+  "botany": {"name": "General Botany", "hue": 145},
+  "psych": {"name": "Intro to Psychology", "hue": 295, "course": "psych"},
+  "iml": {"name": "Intro to Medicine Life", "hue": 350, "course": "iml"},
+  "purcom": {"name": "Purposive Communication", "hue": 70, "course": "purcom"},
+  "mmw": {"name": "Math in the Modern World", "hue": 255},
+  "nstp": {"name": "NSTP 1", "hue": 30},
+  "pe": {"name": "PE 1", "hue": 185},
+  "chem": {"name": "General Chemistry", "hue": 220, "course": "chem"}
+ },
+ "classes": [
+  {"id": "botany-lab-1", "day": "Tue", "start": "07:00", "end": "10:00", "subject": "botany", "kind": "Lab", "teacher": "Drs. Isaac Orig and MC Padilla"},
+  {"id": "botany-lab-2", "day": "Tue", "start": "10:00", "end": "13:00", "subject": "botany", "kind": "Lab", "teacher": "Drs. Isaac Orig and MC Padilla"},
+  {"id": "psych", "day": "Wed", "start": "09:00", "end": "12:00", "subject": "psych", "teacher": "Dr. Sheila Quiachon"},
+  {"id": "botany-lec", "day": "Wed", "start": "13:00", "end": "16:00", "subject": "botany", "kind": "Lecture", "teacher": "Dr. Claire Frances Miyake"},
+  {"id": "purcom", "day": "Wed", "start": "16:00", "end": "19:00", "subject": "purcom", "teacher": "Prof. Arjay Arcena"},
+  {"id": "iml", "day": "Thu", "start": "09:00", "end": "12:00", "subject": "iml", "where": "VMG of DMSFI", "teacher": "Drs. Bretana, Quiachon and De Guzman"},
+  {"id": "mmw", "day": "Fri", "start": "07:00", "end": "10:00", "subject": "mmw", "teacher": "Prof. Verona Vigor"},
+  {"id": "nstp", "day": "Fri", "start": "10:00", "end": "13:00", "subject": "nstp", "teacher": "Prof. Anna Liza Mones"},
+  {"id": "pe", "day": "Fri", "start": "14:00", "end": "16:00", "subject": "pe", "teacher": "Prof. Cherry Agustin"},
+  {"id": "chem-lab-1", "day": "Sat", "start": "07:30", "end": "10:30", "subject": "chem", "kind": "Lab", "teacher": "Profs. Ranay and Orbita"},
+  {"id": "chem-lab-2", "day": "Sat", "start": "10:30", "end": "13:30", "subject": "chem", "kind": "Lab", "teacher": "Profs. Ranay and Orbita"},
+  {"id": "chem-lec", "day": "Sat", "start": "13:30", "end": "16:30", "subject": "chem", "kind": "Lecture", "teacher": "Prof. L. Ranay"}
+ ],
+ "weeks": {
+  "13": {
+   "topics": {
+    "botany-lab-1": "Drugs for Diabetes 1 and 2",
+    "botany-lab-2": "Drugs for Diabetes 1 and 2",
+    "psych": "Chapter 11: Personality",
+    "botany-lec": "Plant Flower, Fruits and Seeds",
+    "purcom": "Communicating for work purposes",
+    "iml": "The Birth of Modern Medicine",
+    "mmw": "Linear Programming",
+    "nstp": "Chapter 7: Dimension of Development: First Aid Education",
+    "pe": "Background of TABATA; TABATA Workout 1",
+    "chem-lab-1": "Unit 15: Carboxylic Acids and Derivatives",
+    "chem-lab-2": "Unit 16: Introduction to Biochemistry",
+    "chem-lec": "Activity 9: Gel electrophoresis"
+   },
+   "cancel": [],
+   "extra": [],
+   "notes": []
+  }
+ }
+}
