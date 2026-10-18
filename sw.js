@@ -1,5 +1,6 @@
 // Offline support. Pages, code and course files are fetched fresh when online (so fixes show up right away)
-// and served from the cache when offline. Fonts are cached after first use.
+// and served from the cache when offline. Pictures show the saved copy first and refresh in the background.
+// Fonts are cached after first use; transes PDFs only once opened.
 const CACHE = 'reviewers-v5';
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png'];
@@ -39,6 +40,16 @@ self.addEventListener('fetch', e => {
     if (nav && [...url.searchParams.keys()].some(k => /^(fbclid|mibextid|igshid|utm_\w+)$/.test(k))) {
       for (const k of [...url.searchParams.keys()]) if (/^(fbclid|mibextid|igshid|utm_\w+)$/.test(k)) url.searchParams.delete(k);
       e.respondWith(Response.redirect(url.href, 302));
+      return;
+    }
+    // Pictures rarely change: show the saved copy at once and refresh it in the background.
+    if (/\.(jpe?g|png|webp|svg)$/i.test(url.pathname) && !url.search) {
+      e.respondWith((async () => {
+        const c = await caches.open(CACHE), hit = await c.match(req);
+        const net = fetch(req, { cache: 'no-cache' }).then(res => { if (res.ok) c.put(req, res.clone()); return res; });
+        if (hit) { e.waitUntil(net.catch(() => {})); return hit; }
+        return net;
+      })());
       return;
     }
     e.respondWith((async () => {
