@@ -485,6 +485,13 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 .newsbtn.dot::after{content:"";position:absolute;top:-2px;right:-9px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
 .box.news{max-width:560px;width:100%;max-height:min(84vh,760px);overflow-y:auto}
 .news .rel{padding:14px 0;border-top:1px solid var(--line)}
+.box.news{padding-top:0}
+.newshead{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:10px;margin:0 -26px;padding:20px 26px 10px;background:var(--surface)}
+.newshead h2{margin:0;flex:1}
+.newsx{flex:none;width:36px;height:36px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--mute);cursor:pointer}
+.newsx:hover{background:var(--raised);color:var(--text)}
+.news .older{display:block;margin:4px 0 14px}
+.side-foot{position:sticky;bottom:-14px;z-index:1;background:var(--side);padding-bottom:14px}
 .news .rel h3{display:flex;align-items:baseline;gap:10px;margin:0 0 6px;font-size:15px}
 .news .rel h3 span{font-size:12.5px;font-weight:500;color:var(--faint)}
 .news .rel ul{margin:0;padding-left:18px;color:var(--mute);font-size:14px;line-height:1.55}

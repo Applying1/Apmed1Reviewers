@@ -306,6 +306,7 @@ function feedbackHTML(q,fb,live){
  if(!fb.correct)out+='<p><b>Answer:</b> '+ansHTML(fb.correctLabel)+'</p>';
  if(q.why)out+='<p>'+esc(q.why)+'</p>';
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
+ {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' stays in your queue.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
   :'This '+ITEM+' will come back later, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
  const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
@@ -366,10 +367,12 @@ function focusNav(study){
  return (nDue||dOn?b('DUE',dOn,CLOCK_SM,'Due for review',nDue,'Mastered '+ITEMS+' that are due for a spaced review'):'')+(nMiss||mOn?b('MISSED',mOn,MISS_SM,'Missed '+ITEMS,nMiss,'Only the '+ITEMS+' you got wrong or checked in your slides, until mastered'):'')+
   (nStar||sOn?b('STAR',sOn,STAR_SM,'Starred',nStar,'Your starred '+ITEMS+', mastered or not'):'')+(nClass||cOn?b('CLASS',cOn,CLASS_SM,'Class\'s most missed',nClass,'The '+ITEMS+' your class misses most right now'):'');
 }
+// One chapter open at a time keeps the topic list short.
+function chToggle(d,ch){if(!d.open){openCh.delete(ch);return}openCh.clear();openCh.add(ch);document.querySelectorAll('#nav details.ch[open]').forEach(x=>{if(x!==d)x.open=false})}
 function navHTML(){
  const study=page==='study',ap=progress('ALL'),aOn=state.section==='ALL'&&study;
  return '<button class="sec mixed '+(aOn?'on':'')+'" '+(aOn?'aria-current="page" ':'')+'onclick="selectSection(\'ALL\')"><span class="no">'+SHUFFLE+'</span><span class="nm">All '+unitsW+', shuffled</span><span class="ct">'+ap.done+'/'+ap.total+'</span></button>'+focusNav(study)+chapters.map(ch=>{const secs=sectionKeys.filter(k=>chOf(k)===ch),cp=chProgress(ch),wOn=state.section==='CH:'+ch&&study;
-  return '<details class="ch" '+(openCh.has(ch)?'open':'')+' ontoggle="this.open?openCh.add(\''+ch+'\'):openCh.delete(\''+ch+'\')"><summary>'+CHEV+'<span class="nm">'+ch+' · '+esc(CH_NAMES[ch])+'</span><span class="ct">'+secs.filter(completed).length+'/'+secs.length+'</span><span class="mini"><i style="width:'+(100*cp.done/cp.total)+'%"></i></span></summary><div class="secs">'+
+  return '<details class="ch" '+(openCh.has(ch)?'open':'')+' ontoggle="chToggle(this,\''+ch+'\')"><summary>'+CHEV+'<span class="nm">'+ch+' · '+esc(CH_NAMES[ch])+'</span><span class="ct">'+secs.filter(completed).length+'/'+secs.length+'</span><span class="mini"><i style="width:'+(100*cp.done/cp.total)+'%"></i></span></summary><div class="secs">'+
   '<button class="sec whole '+(wOn?'on ':'')+(cp.done===cp.total?'done':'')+'" '+(wOn?'aria-current="page" ':'')+'onclick="selectSection(\'CH:'+ch+'\')" title="Every '+ITEM+' in this '+unitW+', mixed into one quiz"><span class="no">'+LAYERS_SM+'</span><span class="nm">Entire '+unitW+'</span><span class="ct">'+(cp.done===cp.total?'✓':cp.done+'/'+cp.total)+'</span></button>'+
   secs.map(sec=>{let p=progress(sec),done=p.done===p.total,on=sec===state.section&&study;return '<button class="sec '+(on?'on ':'')+(done?'done':'')+'" '+(on?'aria-current="page" ':'')+'onclick="selectSection(\''+sec+'\')"><span class="no">'+sec+'</span><span class="nm">'+esc(SECTION_NAMES[sec])+'</span><span class="ct">'+(done?'✓':p.done+'/'+p.total)+'</span></button>'}).join('')+'</div></details>'}).join('');
 }
@@ -514,7 +517,7 @@ function drawDash(){
   tile(ICON.target,'Accuracy',Math.round(100*state.correct/Math.max(1,att))+'<small>%</small>',state.correct+' right · '+state.wrong+' wrong')+
   tile(ICON.check,'Answered',att+state.lookups,'questions so far')+
   tile(ICON.layers,'Sections done',secDone+'<small>/'+sectionKeys.length+'</small>',(sectionKeys.length-secDone)+' to go')+
-  (MSETS.length&&pageOn('match')?tile(PG.match[1]?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG.match[1]+'</svg>':'','Matching',state.match.total?Math.round(100*state.match.right/state.match.total)+'<small>%</small>':'–',state.match.sets+' set'+(state.match.sets===1?'':'s')+' checked')
+  (MSETS.length&&pageOn('match')?tile(PG.match[1]?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG.match[1]+'</svg>':'','Drills',state.match.total?Math.round(100*state.match.right/state.match.total)+'<small>%</small>':'–',state.match.sets+' set'+(state.match.sets===1?'':'s')+' checked')
    :tile(ICON.bulb,'Hints used',state.hints,state.lookups+' slide checks'));
 
  $('chcards').innerHTML=chapters.map(ch=>{const p=chProgress(ch),w=Math.round(100*p.done/p.total),secs=sectionKeys.filter(k=>chOf(k)===ch);
@@ -1130,6 +1133,10 @@ function drawPrefs(){
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'20',date:'Oct 18, 2026',title:'Tidier sidebar and What\'s new',items:[
+  'In the sidebar, opening a '+unitW+' closes the others, and the theme switch and What\'s new <b>stay in view</b> at the bottom.',
+  'After a wrong answer, <b>Review the '+unitW+' notes</b> takes you to the notes for that '+unitW+'.',
+  '<b>What\'s new</b> now shows only what changed since your last look, with an <b>X</b> to close it. Older changes are one tap away.']},
  ...(contribOn()?[{v:'19',date:'Oct 17, 2026',title:'Suggest questions',items:[
   '<b>Suggest a question</b> (on the dashboard): write a question that could come out, with its answer and wrong choices. A moderator checks every one; approved questions are added for everyone as a <b>Class question</b>, with your name if you give it.',
   '<b>The flag</b> on a question now reports a typo or a wrong answer key straight to the moderator. You can still copy it for the group chat instead.',
@@ -1203,7 +1210,14 @@ const CHANGELOG=[
 const NEWS_KEY='reviewer_news_seen';
 function newsSeen(){let g=0;try{g=+localStorage.getItem(NEWS_KEY)||0}catch(e){}return Math.max(g,+state.seenNews||0)>=+CHANGELOG[0].v}
 function drawNewsDot(){$('newsBtn').classList.toggle('dot',!newsSeen())}
-function openNews(){toggleNav(false);$('newsbody').innerHTML=CHANGELOG.map(r=>'<section class="rel"><h3>'+esc(r.title)+'<span>'+esc(r.date)+'</span></h3><ul>'+r.items.map(i=>'<li>'+i+'</li>').join('')+'</ul></section>').join('');
+const newsRel=r=>'<section class="rel"><h3>'+esc(r.title)+'<span>'+esc(r.date)+'</span></h3><ul>'+r.items.map(i=>'<li>'+i+'</li>').join('')+'</ul></section>';
+function newsLast(){let g=0;try{g=+localStorage.getItem(NEWS_KEY)||0}catch(e){}return Math.max(g,+state.seenNews||0)}
+// Shows what changed since your last look (at most 3; only the newest on a first visit); older entries fold away.
+function openNews(){toggleNav(false);const last=newsLast(),box=$('news').querySelector('.box');
+ if(!box.querySelector('.newshead')){const h=document.createElement('div');h.className='newshead';box.insertBefore(h,box.firstChild);h.appendChild($('newsh'));
+  h.insertAdjacentHTML('beforeend','<button class="newsx" onclick="closeNews()" aria-label="Close">'+XSVG+'</button>');const intro=box.querySelector('p');if(intro)intro.remove()}
+ let n=last?CHANGELOG.filter(r=>+r.v>last).length:1;n=Math.min(3,Math.max(1,n));
+ $('newsbody').innerHTML=CHANGELOG.slice(0,n).map(newsRel).join('')+(CHANGELOG.length>n?'<button class="link older" onclick="this.outerHTML=CHANGELOG.slice('+n+').map(newsRel).join(\'\')">Earlier changes ('+(CHANGELOG.length-n)+')</button>':'');
  $('news').hidden=false;state.seenNews=CHANGELOG[0].v;try{localStorage.setItem(NEWS_KEY,String(Math.max(+CHANGELOG[0].v,+localStorage.getItem(NEWS_KEY)||0)))}catch(e){}save();drawNewsDot();const bx=$('news').querySelector('.box');bx.scrollTop=0;bx.querySelector('.btn').focus({preventScroll:true})}
 function closeNews(){$('news').hidden=true}
 
