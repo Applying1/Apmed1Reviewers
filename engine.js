@@ -306,7 +306,7 @@ function feedbackHTML(q,fb,live){
  if(!fb.correct)out+='<p><b>Answer:</b> '+ansHTML(fb.correctLabel)+'</p>';
  if(q.why)out+='<p>'+esc(q.why)+'</p>';
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
- {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
+ {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' stays in your queue.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
   :'This '+ITEM+' will come back later, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
  const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
@@ -549,8 +549,13 @@ let notesCh='all',notesQ='';
 // A notes section with a non-numeric id (like "W" for a Who's who page) spans every chapter: it is always shown and has no chapter number.
 const noteScope=ch=>!/^\d/.test(ch)||inScopeCh(ch);
 const noteTag=ch=>(/^\d/.test(ch)?esc(UNIT)+' '+esc(ch)+' · ':'')+esc(CH_NAMES[ch]||'');
-function openNotes(ch){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh&&noteScope(n.ch)))notesCh='all';notesQ='';
- if(page==='notes'){draw();window.scrollTo(0,0)}else setPage('notes')}
+function openNotes(ch,cid){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh&&noteScope(n.ch)))notesCh='all';notesQ='';
+ if(page==='notes'){draw();window.scrollTo(0,0)}else setPage('notes');if(cid)setTimeout(()=>focusNote(cid),80)}
+// Scrolls to the note card that best matches a question: its term and answer in the card, its section name in the title.
+function focusNote(cid){const c=byId[cid];if(!c)return;const low=t=>String(t||'').toLowerCase(),term=low(c.term),ans=low(c.a),sec=low(SECTION_NAMES[c.section]).split(/\W+/).filter(w=>w.length>3),tw=term.split(/\W+/).filter(w=>w.length>3);
+ let best=null,bs=0;document.querySelectorAll('#nbody .ncard').forEach(el=>{const t=low(el.innerText),h=low((el.querySelector('h3')||{}).textContent);
+  const sc=(term.length>2&&t.includes(term)?5:0)+(ans.length>2&&ans.length<60&&t.includes(ans)?4:0)+sec.filter(w=>h.includes(w)).length+3*tw.filter(w=>h.includes(w)).length;if(sc>bs){bs=sc;best=el}});
+ if(!best)return;best.scrollIntoView({block:'center',behavior:reduceMotion?'auto':'smooth'});best.classList.add('flash');setTimeout(()=>best.classList.remove('flash'),1800)}
 /* Full documents (e.g. the transes PDF): CONFIG.docs = [{title, file}], file relative to the website.
    The file version opens the website's copy (through CONFIG.shareUrl). */
 const DOCS=(CONFIG.docs||[]).filter(d=>d&&d.file);

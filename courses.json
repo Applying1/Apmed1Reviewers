@@ -20,6 +20,10 @@
   "exam": {
    "name": "Midterm",
    "date": ""
+  },
+  "cloud": {
+   "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
+   "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
   }
  },
  {
@@ -42,6 +46,10 @@
   "exam": {
    "name": "Evals",
    "date": "2026-11-04"
+  },
+  "cloud": {
+   "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
+   "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
   }
  },
  {
@@ -62,6 +70,10 @@
   "exam": {
    "name": "Midterm",
    "date": ""
+  },
+  "cloud": {
+   "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
+   "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
   }
  },
  {
@@ -92,6 +104,10 @@
   "exam": {
    "name": "Lecture midterm",
    "date": ""
+  },
+  "cloud": {
+   "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
+   "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
   }
  }
 ]

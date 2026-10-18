@@ -14,15 +14,15 @@
  color-scheme:light;
  --bg:#f6f4ef;--surface:#fff;--raised:#f3f0e9;--line:#e8e3d9;--line2:#d8d1c4;
  --text:#1d1b18;--mute:#5f5a51;--faint:#8e877b;
- --accent:#4f46e5;--accent-ink:#fff;--accent-soft:#eeeefd;--accent-line:#c4c3f6;--accent-2:#7c3aed;--good:#1d8657;
+ --accent:#4f46e5;--accent-ink:#fff;--accent-soft:#eeeefd;--accent-line:#c4c3f6;--accent-2:#7c3aed;--good:#1d8657;--bad:#c2410c;
  --shadow:0 1px 2px #1018280a,0 1px 3px #1018280f;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
  color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;
- --text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--accent-line:#4a4c8f;--accent-2:#c4a5ff;--good:#4fd3a1;--shadow:0 1px 2px #0006}}
+ --text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--accent-line:#4a4c8f;--accent-2:#c4a5ff;--good:#4fd3a1;--bad:#fb923c;--shadow:0 1px 2px #0006}}
 :root[data-theme="dark"]{
  color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;
- --text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--accent-line:#4a4c8f;--accent-2:#c4a5ff;--good:#4fd3a1;--shadow:0 1px 2px #0006}
+ --text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--accent-line:#4a4c8f;--accent-2:#c4a5ff;--good:#4fd3a1;--bad:#fb923c;--shadow:0 1px 2px #0006}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
@@ -67,13 +67,33 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .class img{width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;border-radius:14px;border:1px solid var(--line);display:block}
 .class img:first-child{transform:rotate(-1.5deg)}.class img:last-child{transform:rotate(1.5deg)}
 .class p{margin:14px 0 0;color:var(--faint);font-size:13.5px}
+/* Sync dialog: one code links every course on this device with another device */
+.modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:#0f172a66}
+.modal[hidden]{display:none}
+.modal .box{width:100%;max-width:440px;max-height:90vh;overflow-y:auto;background:var(--surface);border:1px solid var(--line2);border-radius:18px;padding:20px 22px 22px}
+.mhead{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.mhead h2{flex:1;margin:0;font:600 20px/1.3 var(--serif)}
+.mx{flex:none;width:36px;height:36px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--mute)}
+.mx:hover{background:var(--raised);color:var(--text)}
+.modal p{color:var(--mute);font-size:14px;margin:8px 0}
+.modal p b{color:var(--text)}
+.codebox{margin:10px 0;padding:12px;border-radius:12px;background:var(--raised);border:1px solid var(--line);font:600 22px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:2px;text-align:center;color:var(--text)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.row .btn{flex:1;justify-content:center}
+.lbl{display:block;margin-top:14px;font-size:13.5px;font-weight:600}
+.code{flex:2;min-width:0;font:600 16px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:1px;text-transform:uppercase;padding:9px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--text);outline:0}
+.code:focus{border-color:var(--accent)}
+.modal p.msg{color:var(--bad);margin-top:10px}
+.modal p.msg.ok{color:var(--good)}
+.modal p.msg:empty{display:none}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:600;font-size:14px}
 @media (max-width:520px){main{padding:24px 16px 48px}.top .acts{margin-left:0;width:100%}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
 <main>
  <div class="top">
   <div class="brand"><img src="icons/icon-192.png" alt="" width="40" height="40"><div><b>Study Reviewers</b><span>Practice, notes and matching</span></div></div>
-  <div class="acts"><button class="btn primary" id="install" hidden>Install app</button><button class="btn" id="theme" onclick="toggleTheme()">Theme</button></div>
+  <div class="acts"><button class="btn primary" id="install" hidden>Install app</button><button class="btn" id="syncbtn" onclick="openSync()" hidden>Sync</button><button class="btn" id="theme" onclick="toggleTheme()">Theme</button></div>
  </div>
  <h1 id="hi">Pick a course</h1>
  <p class="lede">Your progress saves in this browser, so use the same browser each time. Courses work offline once you've opened this page.</p>
@@ -81,6 +101,10 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
  <div class="class"><div class="pics"><img src="img/class-1.jpg" alt="Classmates" loading="lazy" width="900" height="1200"><img src="img/class-2.jpg" alt="Classmates in the gym" loading="lazy" width="900" height="1200"></div><p>Good luck studying!</p></div>
 </main>
+<div class="modal" id="sync" hidden onclick="if(event.target===this)closeSync()"><div class="box" role="dialog" aria-modal="true" aria-labelledby="synch">
+ <div class="mhead"><h2 id="synch">Sync your progress</h2><button class="mx" onclick="closeSync()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+ <div id="syncbody"></div>
+</div></div>
 <script>
 // Links shared on Facebook/Messenger get ?fbclid=... added; drop it so the address stays clean when copied again.
 if(/[?&](fbclid|utm_[a-z]+|gclid)=/.test(location.search))history.replaceState(null,'',location.pathname);
@@ -95,6 +119,7 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
  let list;
  try{list=await (await fetch('courses.json')).json()}
  catch(e){document.getElementById('list').innerHTML='<p class="empty">Courses could not be loaded. Check your connection and reload.</p>';return}
+ CLOUD=(list.find(c=>c.cloud&&c.cloud.url)||{}).cloud||null;document.getElementById('syncbtn').hidden=!CLOUD;
  document.getElementById('list').innerHTML=list.map(c=>{const s=summary(c.storageKey),pct=s&&s.t?Math.round(100*s.m/s.t):0;
   return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+
    '<span class="art">'+(c.image?'<img src="'+esc(c.image)+'" alt="" loading="lazy">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>'+
@@ -112,6 +137,35 @@ function curTheme(){return document.documentElement.dataset.theme||(matchMedia('
 function drawTheme(){document.getElementById('theme').textContent=curTheme()==='dark'?'Light mode':'Dark mode'}
 function toggleTheme(){const t=curTheme()==='dark'?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('reviewer_theme',t)}catch(e){}drawTheme()}
 drawTheme();
+// Sync (optional cloud): the same code the courses use ("reviewer_sync"), so linking here covers every course.
+// Progress itself moves when each course is opened; this only stores the code.
+const SYNC_KEY='reviewer_sync';let CLOUD=null;
+const $=id=>document.getElementById(id);
+function getCode(){try{return (JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||''}catch(e){return ''}}
+function setCode(c){try{c?localStorage.setItem(SYNC_KEY,JSON.stringify({code:c})):localStorage.removeItem(SYNC_KEY)}catch(e){}}
+const spaced=c=>c.replace(/(.{4})(?=.)/g,'$1 ');
+function rpc(fn,body){const h={'Content-Type':'application/json',apikey:CLOUD.key};if(/^eyJ/.test(CLOUD.key))h.Authorization='Bearer '+CLOUD.key;
+ return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body)}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})}
+function openSync(){drawSync();$('sync').hidden=false;const i=$('codein');if(i)i.focus()}
+function closeSync(){$('sync').hidden=true}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('sync').hidden)closeSync()});
+function drawSync(msg,ok){const c=getCode(),b=$('syncbody');
+ b.innerHTML=c?'<p>This device syncs every course with this code:</p><div class="codebox">'+spaced(c)+'</div>'+
+  '<p>On your other phone or laptop, open this page, tap <b>Sync</b> and type the code. Progress from both devices is combined, not overwritten.</p>'+
+  '<p class="msg'+(ok?' ok':'')+'">'+(msg||'')+'</p><div class="row"><button class="btn primary" onclick="copyCode()">Copy code</button><button class="btn" onclick="stopSync()">Stop syncing here</button></div>'
+ :'<p>Use the same progress on your phone and laptop, for every course at once.</p>'+
+  '<label class="lbl" for="codein">Have a code from your other device?</label><div class="row"><input class="code" id="codein" maxlength="16" placeholder="ABCD EFGH JKLM" autocomplete="off" autocapitalize="characters" spellcheck="false" onkeydown="if(event.key===\'Enter\')linkSync()"><button class="btn primary" id="linkbtn" onclick="linkSync()">Link</button></div>'+
+  '<p class="msg'+(ok?' ok':'')+'" id="syncmsg">'+(msg||'')+'</p><p>No code yet? <button class="linkbtn" onclick="startSync()">Make a new code</button></p>'}
+function linkSync(){const v=($('codein').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+ if(v.length!==12){drawSync('A sync code has 12 letters and numbers.');$('codein').value=v;return}
+ $('linkbtn').disabled=true;$('linkbtn').textContent='Checking…';
+ rpc('sync_known',{p_code:v}).then(ok=>{if(!ok){drawSync('Nothing is saved under that code yet. Check it, or open a course on the other device first.');$('codein').value=v;return}
+  setCode(v);drawSync('Linked. Open your courses and their progress from both devices is combined.',true)})
+ .catch(()=>{drawSync('Could not check the code. Check your connection and try again.');$('codein').value=v})}
+function startSync(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=new Uint8Array(12);crypto.getRandomValues(r);setCode(Array.from(r,x=>A[x%32]).join(''));
+ drawSync('Your progress uploads each time you open a course on this device.',true)}
+function copyCode(){const c=getCode();(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(c):Promise.reject()).then(()=>drawSync('Copied.',true),()=>prompt('Copy this code:',c))}
+function stopSync(){if(!confirm('Stop syncing this device? Your progress stays here, and the other device keeps its own.'))return;setCode('');drawSync()}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body></html>
