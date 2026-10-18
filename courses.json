@@ -28,20 +28,20 @@
   "scope": "Rathus PSYCH 6",
   "unit": "Chapter",
   "itemWord": "concept",
-  "count": 438,
+  "count": 629,
   "storageKey": "psych_midterm_tutor_2026_v1",
-  "image": "courses/psych/chapter-5.jpg",
+  "image": "courses/psych/chapter-6.jpg",
   "extras": [],
   "assets": [
-   "courses/psych/chapter-5.jpg",
    "courses/psych/chapter-6.jpg",
    "courses/psych/chapter-7.jpg",
    "courses/psych/chapter-8.jpg",
-   "courses/psych/chapter-9.jpg"
+   "courses/psych/chapter-9.jpg",
+   "courses/psych/chapter-10.jpg"
   ],
   "exam": {
-   "name": "Midterm",
-   "date": ""
+   "name": "Evals",
+   "date": "2026-11-04"
   }
  },
  {

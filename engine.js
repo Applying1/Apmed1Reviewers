@@ -158,6 +158,11 @@ state.prefs=Object.assign({},DEFAULT_PREFS,state.prefs);if(!GOALS.includes(state
 state.match=Object.assign({sets:0,right:0,total:0,best:{}},state.match);
 state.log=state.log||[];state.complete=state.complete||[];state.history=state.history||[];
 delete state.set;delete state.unlocked;
+// A renumbered course (CONFIG.sectionRename = {id, map: {old: new}, chapters: {old: new}}) moves saved section keys once.
+(function(){const R=CONFIG.sectionRename;if(!R||!R.map||state.renamed===R.id)return;const C=R.chapters||{};
+ const m=s=>typeof s!=='string'?s:s.startsWith('CH:')?'CH:'+(C[s.slice(3)]||s.slice(3)):R.map[s]||s;
+ state.section=m(state.section);state.complete=(state.complete||[]).map(m);(state.log||[]).forEach(e=>{if(e&&e.sec)e.sec=m(e.sec)});
+ if(state.pass&&state.pass.sec)state.pass.sec=m(state.pass.sec);state.renamed=R.id})();
 if(!BANKS.some(b=>b.id===state.bank))state.bank='main';
 if(state.pmatch&&!MSETS[state.pmatch.i])state.pmatch=null;
 // Your name is shared by every course on this device; a course without one takes it.
