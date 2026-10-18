@@ -27,14 +27,41 @@ button,a{font:inherit;color:inherit}
 .pg{position:relative;background:#fff;box-shadow:0 1px 3px #0003;border-radius:4px;overflow:hidden}
 .pg canvas{display:block;width:100%;height:100%}
 .msg{margin:60px auto;max-width:420px;text-align:center;color:var(--mute);padding:0 20px}
-@media (max-width:520px){.bar{padding:8px 10px;gap:6px}.btn .lbl{display:none}}
+.btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn[hidden]{display:none}
+/* Contents: a sidebar on wide screens, a slide-over panel on phones */
+#toc{position:fixed;z-index:4;left:0;top:var(--barh,55px);bottom:0;width:310px;overflow-y:auto;background:var(--surface);border-right:1px solid var(--line);padding:10px 8px 40px;transform:translateX(-102%);transition:transform .22s cubic-bezier(.2,.7,.2,1)}
+#toc.open{transform:none}
+#scrim{position:fixed;inset:0;top:var(--barh,55px);z-index:3;background:#0006;opacity:0;pointer-events:none;transition:opacity .2s}
+#toc.open+#scrim{opacity:1;pointer-events:auto}
+.th{padding:6px 10px 10px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--faint)}
+.ch{border-radius:10px}
+.ch>.row{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:none;text-align:left;cursor:pointer}
+.ch>.row:hover{background:var(--raised)}
+.ch.cur>.row{background:color-mix(in oklab,var(--accent) 16%,var(--surface))}
+.num{flex:none;min-width:30px;height:26px;padding:0 6px;display:grid;place-items:center;border-radius:8px;background:var(--raised);font-size:13px;font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums}
+.ch.cur .num{background:var(--accent);color:var(--accent-ink)}
+.ct{flex:1;min-width:0;font-size:14px;font-weight:600;line-height:1.3}
+.pgn{flex:none;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+.tw{flex:none;width:28px;height:28px;display:grid;place-items:center;border-radius:8px;border:0;background:none;color:var(--faint);cursor:pointer}
+.tw:hover{background:var(--raised);color:var(--text)}
+.tw svg{transition:transform .15s}.ch.exp .tw svg{transform:rotate(90deg)}
+.secs{display:none;margin:2px 0 6px 50px;border-left:2px solid var(--line)}
+.ch.exp .secs{display:block}
+.secs button{display:flex;gap:8px;width:100%;padding:6px 10px;border:0;background:none;text-align:left;font-size:13px;color:var(--mute);cursor:pointer;border-radius:0 8px 8px 0}
+.secs button:hover{background:var(--raised);color:var(--text)}
+.secs button span:first-child{flex:1}
+@media (min-width:1000px){#toc.open{box-shadow:none}#toc.open+#scrim{display:none}body.side #pages{margin-left:310px}}
+@media (max-width:520px){.bar{padding:8px 10px;gap:6px}.btn .lbl{display:none}#toc{width:min(88vw,340px)}}
 </style></head><body>
 <div class="bar">
  <button class="btn icon" onclick="goBack()" aria-label="Back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
  <h1 id="ttl">Transes<span id="sub">Loading…</span></h1>
+ <button class="btn" id="tocbtn" onclick="toggleToc()" aria-expanded="false" aria-controls="toc" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><span class="lbl">Contents</span></button>
  <div class="zoom"><button class="btn icon" onclick="zoom(-1)" aria-label="Zoom out">−</button><button class="btn icon" onclick="zoom(1)" aria-label="Zoom in">+</button></div>
  <a class="btn" id="dl" download><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="lbl">Download</span></a>
 </div>
+<nav id="toc" aria-label="Contents"></nav><div id="scrim" onclick="toggleToc(false)"></div>
 <div id="pages"><p class="msg">Loading the transes…</p></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
@@ -61,18 +88,87 @@ async function draw(p){
   await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
   p.el.replaceChildren(c);p.done=key}catch(e){}
  p.busy=false;if(p.visible&&p.done!==Math.round(fitWidth()*scale*Math.min(window.devicePixelRatio||1,2.5)))draw(p)}
-function zoom(d){scale=Math.max(.6,Math.min(2.5,scale*(d>0?1.25:0.8)));const y=scrollY/document.body.scrollHeight;layout();scrollTo(0,y*document.body.scrollHeight)}
-addEventListener('resize',()=>{clearTimeout(window.__rt);window.__rt=setTimeout(layout,150)});
+// Keep the same spot when the page width changes (zoom, sidebar, rotate)
+function keepSpot(fn){const i=curPage(),el=pages[i]&&pages[i].el,off=el?(scrollY+barH()-el.offsetTop)/el.offsetHeight:0;fn();if(el)scrollTo(0,el.offsetTop+off*el.offsetHeight-barH())}
+function zoom(d){keepSpot(()=>{scale=Math.max(.6,Math.min(2.5,scale*(d>0?1.25:0.8)));layout()})}
+addEventListener('resize',()=>{clearTimeout(window.__rt);window.__rt=setTimeout(()=>keepSpot(layout),150)});
+const barH=()=>document.querySelector('.bar').offsetHeight;
+function curPage(){if(!pages.length)return 0;const y=scrollY+barH()+40;let lo=0,hi=pages.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(pages[m].el.offsetTop<=y)lo=m;else hi=m-1}return lo}
+
+// ---- Contents: the PDF's own bookmarks, or "Lesson / Chapter" title lines found in the text
+let toc=[],ptH=792;
+const wide=()=>matchMedia('(min-width:1000px)').matches;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toggleToc(force){const t=document.getElementById('toc'),open=force??!t.classList.contains('open');
+ keepSpot(()=>{t.classList.toggle('open',open);document.body.classList.toggle('side',open&&wide());layout()});
+ const b=document.getElementById('tocbtn');b.classList.toggle('on',open);b.setAttribute('aria-expanded',open);
+ try{localStorage.setItem('transes_toc',open&&wide()?'1':'')}catch(e){}
+ if(open){const c=document.querySelector('.ch.cur');if(c)c.scrollIntoView({block:'center'})}}
+function tidy(t){t=String(t||'').replace(/[^\p{L}\p{N}?)]+$/u,'').replace(/^[^\p{L}\p{N}]+/u,'').replace(/\s+/g,' ').trim();
+ if(t.length>3&&t===t.toUpperCase())t=t.toLowerCase().replace(/(^|[\s(—-])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())
+  .replace(/(?!^)\b(And|Of|The|In|To|For|On|A|An|As|At|By|Or|Vs)\b/g,w=>w.toLowerCase());
+ return t}
+const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
+function split(t){t=tidy(t);const m=t.match(/^(?:(?:chapter|lesson|unit|topic)\s*)?(\d{1,2})\s*[:.–—-]\s*(.+)$/i);
+ return m?{num:m[1],name:cap(tidy(m[2]))}:{num:'',name:t.replace(/^(chapter|lesson|unit)\s+/i,'')}}
+async function destOf(d){try{if(typeof d==='string')d=await pdf.getDestination(d);if(!d)return null;const r=d[0];
+ const page=(typeof r==='object'?await pdf.getPageIndex(r):r)+1;return{page,y:d[1]&&d[1].name==='XYZ'?d[3]:null}}catch(e){return null}}
+async function pageChapterNum(n){try{const tc=await (await pdf.getPage(n)).getTextContent(),s=tc.items.slice(0,30).map(x=>x.str).join(' ');
+ const m=s.match(/CHAPTER\s*(\d{1,2})/i);return m?m[1]:''}catch(e){return ''}}
+async function buildToc(){
+ const o=await pdf.getOutline().catch(()=>null);
+ if(o&&o.length){
+  for(const it of o){const d=await destOf(it.dest);if(!d)continue;const s=split(it.title);
+   if(!s.num&&!/summary/i.test(s.name))s.num=await pageChapterNum(d.page)||await pageChapterNum(d.page+1);
+   const kids=[];for(const k of it.items||[]){const kd=await destOf(k.dest);if(kd)kids.push(Object.assign({name:tidy(k.title)},kd))}
+   toc.push(Object.assign({},s,d,{kids}))}
+ }else{
+  // no bookmarks: a new "Lesson n: ..." / "Chapter n: ..." line near the top of a page starts a chapter
+  let last='';
+  for(let n=1;n<=pdf.numPages;n++){let tc;try{tc=await (await pdf.getPage(n)).getTextContent()}catch(e){continue}
+   const txt=tc.items.slice(0,25).map(x=>x.str.trim()).filter(Boolean).join(' | ');
+   const m=txt.match(/\b(?:LESSON|CHAPTER|UNIT|TOPIC)\s*(\d{1,2})\s*[:.–-]\s*([^|]{3,70})/i);
+   if(m&&m[1]!==last){last=m[1];toc.push({num:m[1],name:tidy(m[2]),page:n,y:null,kids:[]})}}
+ }
+ if(toc.length<2){toc=[];return}
+ document.getElementById('toc').innerHTML='<div class="th">Contents</div>'+toc.map((c,i)=>'<div class="ch" data-i="'+i+'">'+
+  '<div class="row" role="button" tabindex="0" onclick="go('+i+')" onkeydown="if(event.key===\'Enter\')go('+i+')">'+
+  '<span class="num">'+(c.num||'•')+'</span><span class="ct">'+esc(c.name)+'</span><span class="pgn">p. '+c.page+'</span>'+
+  (c.kids.length?'<button class="tw" onclick="event.stopPropagation();this.closest(\'.ch\').classList.toggle(\'exp\')" aria-label="Show sections"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>':'')+
+  '</div>'+(c.kids.length?'<div class="secs">'+c.kids.map((k,j)=>'<button onclick="go('+i+','+j+')"><span>'+esc(k.name)+'</span><span class="pgn">'+k.page+'</span></button>').join('')+'</div>':'')+'</div>').join('');
+ document.getElementById('tocbtn').hidden=false;
+ let wantOpen=false;try{wantOpen=!!localStorage.getItem('transes_toc')}catch(e){}
+ if(wantOpen&&wide())toggleToc(true);
+ lastCh=-2;track();
+}
+function jump(page,y){const el=pages[page-1]&&pages[page-1].el;if(!el)return;
+ const off=y==null?0:Math.max(0,Math.min(.95,1-y/ptH))*el.offsetHeight;scrollTo(0,Math.max(0,el.offsetTop+off-barH()-10))}
+function go(i,j){const c=toc[i],k=j==null?c:c.kids[j];jump(k.page,k.y);if(!wide())toggleToc(false);setTimeout(track,60)}
+// the chapter you're in: shown under the title and highlighted in Contents; the page is remembered
+let lastCh=-1;
+function track(){if(!pages.length)return;const pg=curPage()+1;let ci=-1;for(let i=0;i<toc.length;i++)if(toc[i].page<=pg)ci=i;
+ const c=toc[ci];sub.textContent=(c?(c.num?'Ch '+c.num+' · ':'')+c.name+' · ':'')+'p. '+pg+' of '+pages.length;
+ if(ci!==lastCh){lastCh=ci;document.querySelectorAll('.ch').forEach(e=>{const on=+e.dataset.i===ci;e.classList.toggle('cur',on);if(on)e.classList.add('exp')})}
+ try{localStorage.setItem('transes_at_'+file,String(pg))}catch(e){}}
+addEventListener('scroll',()=>{if(!window.__tk)window.__tk=requestAnimationFrame(()=>{window.__tk=0;track()})},{passive:true});
+addEventListener('keydown',e=>{if(e.key==='Escape')toggleToc(false)});
+
 (async function(){
  if(!ok||!window.pdfjsLib){box.innerHTML='<p class="msg">'+(ok?'The PDF reader could not load. Check your connection and try again.':'This file could not be found.')+'</p>';sub.textContent='';return}
  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
  try{const buf=await (await fetch(file)).arrayBuffer();pdf=await pdfjsLib.getDocument({data:buf}).promise}
  catch(e){box.innerHTML='<p class="msg">The transes could not be opened. Check your connection and try again.</p>';sub.textContent='';return}
  sub.textContent=pdf.numPages+' pages';box.innerHTML='';
- const first=await pdf.getPage(1),v=first.getViewport({scale:1}),ratio=v.height/v.width;
+ document.documentElement.style.setProperty('--barh',barH()+'px');
+ const first=await pdf.getPage(1),v=first.getViewport({scale:1}),ratio=v.height/v.width;ptH=v.height;
  obs=new IntersectionObserver(es=>{for(const e of es){const p=pages[+e.target.dataset.i];p.visible=e.isIntersecting;if(p.visible)draw(p)}},{rootMargin:'800px 0px'});
  for(let i=0;i<pdf.numPages;i++){const el=document.createElement('div');el.className='pg';el.dataset.i=i;box.appendChild(el);pages.push({n:i+1,el,ratio,done:0});obs.observe(el)}
  layout();
+ // pick up where you left off
+ let at=0;try{at=+localStorage.getItem('transes_at_'+file)||0}catch(e){}
+ if(at>1&&at<=pages.length)jump(at,null);
+ track();
+ buildToc();
 })();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
