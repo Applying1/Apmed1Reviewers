@@ -538,7 +538,10 @@ function drawDash(){
 // NOTES rows look like "Term — what it points to | Term — ..."; " = " and " – " also split a row.
 const NOTES_PARSED=(NOTES_DATA||[]).map(([ch,groups])=>({ch:String(ch),groups:groups.map(([title,txt,sec])=>({title,sec,rows:String(txt).split(/\s*\|\s*/).filter(Boolean).map(p=>{const m=p.match(/^(.+?)\s+[—–=]\s+(.+)$/);return m?[m[1],m[2]]:[p,'']})}))}));
 let notesCh='all',notesQ='';
-function openNotes(ch){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh&&inScopeCh(n.ch)))notesCh='all';notesQ='';
+// A notes section with a non-numeric id (like "W" for a Who's who page) spans every chapter: it is always shown and has no chapter number.
+const noteScope=ch=>!/^\d/.test(ch)||inScopeCh(ch);
+const noteTag=ch=>(/^\d/.test(ch)?esc(UNIT)+' '+esc(ch)+' · ':'')+esc(CH_NAMES[ch]||'');
+function openNotes(ch){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh&&noteScope(n.ch)))notesCh='all';notesQ='';
  if(page==='notes'){draw();window.scrollTo(0,0)}else setPage('notes')}
 /* Full documents (e.g. the transes PDF): CONFIG.docs = [{title, file}], file relative to the website.
    The file version opens the website's copy (through CONFIG.shareUrl). */
@@ -548,7 +551,7 @@ function drawNotes(){
  $('nChartBtn').hidden=!chartsOn();
  $('ndocs').innerHTML=DOCS.map(d=>{const u=docURL(d);return u?'<a class="btn sm docbtn" href="'+esc(u)+'" target="_blank" rel="noopener" title="Opens in a new tab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>'+esc(d.title||'Full transes')+'</a>':''}).join('');
  document.title='Notes · '+CONFIG.title;
- const chips=[['all','All']].concat(NOTES_PARSED.filter(n=>inScopeCh(n.ch)).map(n=>[n.ch,esc(UNIT)+' '+esc(n.ch)+' · '+esc(CH_NAMES[n.ch]||'')]));
+ const chips=[['all','All']].concat(NOTES_PARSED.filter(n=>noteScope(n.ch)).map(n=>[n.ch,noteTag(n.ch)]));
  $('nchips').innerHTML=chips.map(([k,t])=>'<button class="fchip '+(k===notesCh?'on':'')+'" aria-pressed="'+(k===notesCh)+'" onclick="notesCh=\''+k+'\';drawNotes()">'+t+'</button>').join('');
  $('selftest').setAttribute('aria-checked',String(!!state.prefs.selftest));$('ntip').hidden=!state.prefs.selftest;
  if($('nq').value!==notesQ)$('nq').value=notesQ;
@@ -557,12 +560,12 @@ function drawNotes(){
 function hl(s){const t=esc(s),q=notesQ.trim();if(!q)return t;return t.replace(new RegExp('('+esc(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'),'<mark>$1</mark>')}
 function drawNotesBody(){
  const q=notesQ.trim().toLowerCase(),body=$('nbody');body.classList.toggle('selftest',!!state.prefs.selftest);
- const out=NOTES_PARSED.filter(n=>inScopeCh(n.ch)&&(notesCh==='all'||n.ch===notesCh)).map(n=>{
+ const out=NOTES_PARSED.filter(n=>noteScope(n.ch)&&(notesCh==='all'||n.ch===notesCh)).map(n=>{
   const cards=n.groups.filter(g=>secOn(g.sec)).map(g=>{const titleHit=q&&g.title.toLowerCase().includes(q);
    const rows=g.rows.filter(([a,b])=>!q||titleHit||(a+' '+b).toLowerCase().includes(q));if(!rows.length)return '';
    return '<article class="ncard"><h3>'+hl(g.title)+'</h3><dl class="nrows">'+rows.map(([a,b])=>'<div class="nrow" onclick="this.classList.toggle(\'show\');syncReveal()"><dt>'+hl(a)+'</dt><dd>'+hl(b)+'</dd></div>').join('')+'</dl></article>'}).join('');
   if(!cards)return '';
-  return '<section class="nsec"><div class="nhead"><h2><span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>'+esc(CH_NAMES[n.ch]||'')+'</h2>'+(state.prefs.selftest?'<button class="link reveal" onclick="revealSec(this)">Reveal all</button>':'')+(chapters.includes(n.ch)?'<button class="link" onclick="selectSection(\'CH:'+n.ch+'\')">Quiz the entire '+unitW+' →</button>':'')+'</div><div class="ngrid">'+cards+'</div></section>'}).join('');
+  return '<section class="nsec"><div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+esc(CH_NAMES[n.ch]||'')+'</h2>'+(state.prefs.selftest?'<button class="link reveal" onclick="revealSec(this)">Reveal all</button>':'')+(chapters.includes(n.ch)?'<button class="link" onclick="selectSection(\'CH:'+n.ch+'\')">Quiz the entire '+unitW+' →</button>':'')+'</div><div class="ngrid">'+cards+'</div></section>'}).join('');
  body.innerHTML=out||'<p class="empty">No notes match “'+esc(notesQ)+'”.</p>';
 }
 function toggleSelfTest(){state.prefs.selftest=!state.prefs.selftest;save();drawNotes()}

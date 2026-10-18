@@ -4,14 +4,19 @@ const CACHE = 'reviewers-v5';
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
+// Saves every course (and its pictures) not saved yet, so courses added after someone's first visit also work offline.
+async function cacheCourses(c, list) {
+  for (const u of list.flatMap(x => ['courses/' + x.id + '.json', ...(x.assets || [])]))
+    if (!(await c.match(u))) { try { await c.add(new Request(u, { cache: 'no-cache' })); } catch (err) { /* try again next visit */ } }
+}
+
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
     await c.addAll(SHELL);
     // Every course, so all of them work offline after the first visit.
     try {
-      const list = await (await fetch('courses.json')).json();
-      await c.addAll(list.flatMap(x => ['courses/' + x.id + '.json', ...(x.assets || [])]));
+      await cacheCourses(c, await (await fetch('courses.json')).json());
     } catch (err) { /* offline during install: courses get cached as they are opened */ }
   })());
   self.skipWaiting();
@@ -46,6 +51,8 @@ self.addEventListener('fetch', e => {
         // which happens when an extension or network rewrites the link. Re-wrap it as a plain response.
         if (nav && res.redirected) res = new Response(await res.blob(), { status: res.status, statusText: res.statusText, headers: res.headers });
         if (res.ok && !url.search) c.put(req, res.clone());
+        // On every online page visit, quietly save any course that is not stored yet.
+        if (nav && res.ok) e.waitUntil(fetch('courses.json', { cache: 'no-cache' }).then(r => r.json()).then(list => cacheCourses(c, list)).catch(() => {}));
         return res;
       } catch (err) {
         // Offline or blocked: serve the saved copy. Links shared on Facebook/Messenger carry ?fbclid=...,
