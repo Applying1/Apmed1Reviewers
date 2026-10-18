@@ -106,7 +106,7 @@ const secCh=s=>isCh(s)?s.slice(3):chOf(s);
 const KEY=CONFIG.storageKey;
 // Cloud (optional): CONFIG.cloud = {url, key} turns on class stats and device sync (see "cloud" further down).
 const CLOUD=CONFIG.cloud||{},cloudOn=()=>!!(CLOUD.url&&CLOUD.key),SYNC_KEY='reviewer_sync',CLASS_MIN=5,CLASS_TOP=20;
-const STATS_RESET=1792107600988; // class stats saved before this moment are refetched at once (bump to force a refresh)
+const STATS_RESET=1792341500876; // class stats saved before this moment are refetched at once (bump to force a refresh)
 let prefSigLast=null,lastPutSig='',syncBoot=true,CSTATS=null,classMemo={k:'',list:[]},crowdQ=[],crowdT=null,syncCode='',syncT=null,syncBusy=false,syncHold=false,syncEntry=false,syncInfo={at:0,err:''};
 try{CSTATS=JSON.parse(localStorage.getItem(KEY+'_class'))}catch(e){}
 try{syncCode=(JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||'';syncInfo.at=+localStorage.getItem(KEY+'_synced')||0}catch(e){}
