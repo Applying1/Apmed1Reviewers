@@ -1,0 +1,123 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discussion · APMed '33</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script><script>(function(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const f=()=>{if(document.body)m.content=getComputedStyle(document.body).backgroundColor},g=()=>{f();setTimeout(f,350)};addEventListener('DOMContentLoaded',f);new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',g)})()</script>
+<style>
+:root{--sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--serif:"Source Serif 4",Georgia,serif;color-scheme:light;
+ --bg:#f6f4ef;--surface:#fff;--raised:#f3f0e9;--line:#e8e3d9;--line2:#d8d1c4;--text:#1d1b18;--mute:#5f5a51;--faint:#8e877b;--accent:#4f46e5;--accent-ink:#fff;--accent-soft:#eeeefd;--bad:#c2410c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;--text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--bad:#fb923c}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;--text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--bad:#fb923c}
+:root[data-palette="apmed"]{--bg:#f5eedb;--surface:#fffdf6;--raised:#f0e6cc;--line:#e6d9b6;--line2:#d6c59a;--text:#1b2a2a;--mute:#566360;--faint:#86907f;--accent:#1d7a80;--accent-ink:#fff;--accent-soft:#dcefed}
+@media (prefers-color-scheme:dark){:root[data-palette="apmed"]:not([data-theme="light"]){--bg:#0e1a1a;--surface:#162828;--raised:#1c3232;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--accent-soft:#33301a}}
+:root[data-palette="apmed"][data-theme="dark"]{--bg:#0e1a1a;--surface:#162828;--raised:#1c3232;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--accent-soft:#33301a}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+button,textarea{font:inherit;color:inherit}
+main{max-width:720px;margin:0 auto;padding:22px 16px 190px}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--mute);font-size:14px;font-weight:600;text-decoration:none}
+.back:hover{color:var(--text)}
+h1{font:600 30px/1.2 var(--serif);margin:18px 0 4px;letter-spacing:-.3px}
+.lede{color:var(--mute);margin:0 0 18px;font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.5;cursor:default}
+.more{display:block;margin:0 auto 14px}
+.more[hidden]{display:none}
+.post{display:flex;gap:11px;padding:12px 0;border-top:1px solid var(--line)}
+.post:first-child{border-top:0}
+.av{flex:none;width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--accent-soft);display:grid;place-items:center;font-weight:700;color:var(--accent)}
+.pb{flex:1;min-width:0}
+.ph{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ph b{font-size:14.5px}
+.mod{font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.ph time{color:var(--faint);font-size:12.5px}
+.del{margin-left:auto;border:0;background:none;color:var(--faint);font-size:12.5px;cursor:pointer;padding:2px 4px}
+.del:hover{color:var(--bad)}
+.tx{margin-top:2px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px}
+.tx a{color:var(--accent)}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:4px 16px}
+.empty{padding:34px 10px;text-align:center;color:var(--faint)}
+.dock{position:fixed;left:0;right:0;bottom:0;background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.dock .in{max-width:720px;margin:0 auto}
+.compose{display:flex;gap:10px;align-items:flex-end}
+textarea{flex:1;min-height:44px;max-height:160px;resize:none;padding:10px 12px;border-radius:12px;border:1px solid var(--line2);background:var(--surface);outline:0;line-height:1.4}
+textarea:focus{border-color:var(--accent)}
+.hint{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:12.5px;color:var(--faint)}
+.err{color:var(--bad)}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;border-radius:12px;border:1px solid var(--line2);background:#fff;color:#1f1f1f;font-weight:600;cursor:pointer}
+.gbtn:hover{background:#f4f4f4}
+</style></head><body>
+<main>
+ <a class="back" id="back" href="./">← Back to the course</a>
+ <h1 id="ttl">Discussion</h1>
+ <p class="lede" id="lede">Ask questions, share tips, help each other out. Posts show your Google name and photo, so keep it kind.</p>
+ <button class="btn more" id="more" hidden onclick="loadMore()">Show earlier posts</button>
+ <div class="list" id="list"><p class="empty">Loading…</p></div>
+</main>
+<div class="dock"><div class="in" id="dock"></div></div>
+<script src="auth.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const thread=(new URLSearchParams(location.search).get('c')||'').toLowerCase();
+let posts=[],oldest=null,poll=null,busy=false;
+const G='<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>';
+function ago(t){const s=(Date.now()-new Date(t))/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' h ago';
+ const d=new Date(t);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+(s>31536000?', '+d.getFullYear():'')}
+function linkify(s){return esc(s).replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]/g,u=>'<a href="'+u+'" target="_blank" rel="noopener nofollow">'+u+'</a>')}
+function postHTML(p){return '<div class="post" id="p'+p.id+'">'+(p.avatar?'<img class="av" src="'+esc(p.avatar)+'" alt="" referrerpolicy="no-referrer" loading="lazy">':'<div class="av">'+esc((p.author||'?').charAt(0).toUpperCase())+'</div>')+
+ '<div class="pb"><div class="ph"><b>'+esc(p.author)+'</b>'+(p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time>'+
+ (p.can_delete?'<button class="del" onclick="del('+p.id+')">Delete</button>':'')+'</div><div class="tx">'+linkify(p.body)+'</div></div></div>'}
+function drawList(stick){const L=$('list'),atEnd=innerHeight+scrollY>=document.body.scrollHeight-80;
+ L.innerHTML=posts.length?posts.map(postHTML).join(''):'<p class="empty">No posts yet. Start the conversation!</p>';
+ if(stick||atEnd)scrollTo(0,document.body.scrollHeight)}
+async function load(first){if(busy)return;busy=true;
+ try{const rows=await Auth.rpc('discussion_list',{p_thread:thread,p_before:null},true);
+  const fresh=rows.slice().reverse();
+  // keep earlier pages already loaded
+  const ids=new Set(fresh.map(p=>p.id)),older=posts.filter(p=>!ids.has(p.id)&&p.id<(fresh[0]?fresh[0].id:Infinity));
+  const changed=JSON.stringify(older.concat(fresh).map(p=>[p.id,p.can_delete]))!==JSON.stringify(posts.map(p=>[p.id,p.can_delete]));
+  posts=older.concat(fresh);if(first){oldest=fresh.length?fresh[0].id:null;$('more').hidden=rows.length<100}
+  if(first||changed)drawList(first);
+  else document.querySelectorAll('.post time').forEach(t=>t.textContent=ago(t.getAttribute('datetime')));
+ }catch(e){if(first)$('list').innerHTML='<p class="empty">The discussion could not be loaded. Check your connection and reload.</p>'}
+ busy=false}
+async function loadMore(){if(oldest==null)return;$('more').disabled=true;
+ try{const rows=await Auth.rpc('discussion_list',{p_thread:thread,p_before:oldest},true),h=document.body.scrollHeight;
+  posts=rows.slice().reverse().concat(posts);oldest=rows.length?rows[rows.length-1].id:oldest;$('more').hidden=rows.length<100;
+  drawList(false);scrollTo(0,scrollY+document.body.scrollHeight-h)}catch(e){}
+ $('more').disabled=false}
+async function send(){const t=$('msg'),b=t.value.trim(),btn=$('sendbtn');if(!b)return;
+ btn.disabled=true;$('note').textContent='';$('note').className='';
+ try{await Auth.rpc('discussion_post',{p_thread:thread,p_body:b},true);t.value='';grow();await load();drawList(true)}
+ catch(e){$('note').textContent=/JWT|sign in|401/i.test(e.message)?'Your sign-in expired. Sign in again to post.':e.message;$('note').className='err';
+  if(!(await Auth.token())){drawDock()}}
+ btn.disabled=false;t.focus()}
+async function del(id){if(!confirm('Delete this post?'))return;
+ try{await Auth.rpc('discussion_delete',{p_id:id},true);posts=posts.filter(p=>p.id!==id);drawList(false)}catch(e){alert('Could not delete it. Try again.')}}
+function grow(){const t=$('msg');if(!t)return;t.style.height='auto';t.style.height=Math.min(160,t.scrollHeight)+'px';$('count').textContent=t.value.length>1800?(2000-t.value.length)+' left':''}
+function drawDock(msg){const a=Auth.acc(),d=$('dock');
+ if(!Auth.ses()||!a){d.innerHTML='<button class="gbtn" onclick="this.disabled=true;Auth.signIn()">'+G+'Sign in with Google to post</button>'+(msg?'<div class="hint"><span class="err">'+esc(msg)+'</span></div>':'');return}
+ d.innerHTML='<div class="compose"><textarea id="msg" rows="1" maxlength="2000" placeholder="Write a message…" oninput="grow()" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
+  '<button class="btn primary" id="sendbtn" onclick="send()">Post</button></div><div class="hint"><span id="note">Posting as '+esc(a.name||a.email)+'</span><span id="count"></span></div>'}
+(async function(){
+ if(!/^[a-z0-9_-]{1,40}$/.test(thread)){$('list').innerHTML='<p class="empty">This discussion could not be found.</p>';return}
+ $('back').href='reviewer.html?course='+encodeURIComponent(thread);
+ let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
+ const c=list.find(x=>x.id===thread),cl=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;
+ if(c){$('ttl').textContent=c.title+' discussion';document.title=c.title+' discussion · APMed \'33'}
+ if(!cl){$('list').innerHTML='<p class="empty">The discussion could not be loaded. Check your connection and reload.</p>';return}
+ Auth.cloud=cl;
+ let msg='';try{await Auth.finish()}catch(e){msg=e.message}
+ drawDock(msg);
+ await load(true);
+ poll=setInterval(()=>{if(document.visibilityState==='visible')load()},20000);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load()});
+})();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+</body></html>

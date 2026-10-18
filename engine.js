@@ -431,7 +431,9 @@ const PG={
  prefs:['Personalize','<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>']};
 // (A page saved before this version has no #homelink: fall back to a link in the page list.)
 let HOME_LINK='';if(CONFIG.home){const h=$('homelink');if(h){h.href=CONFIG.home;h.hidden=false}else HOME_LINK='<a class="page" href="'+esc(CONFIG.home)+'">All courses</a>'}
-function drawPages(){$('pages').innerHTML=HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')}
+function drawPages(){$('pages').innerHTML=HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+discussLink()}
+function discussLink(){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.discussion||!CONFIG.home||!id||!/^https?:$/.test(location.protocol))return '';
+ return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion</a>'}
 function draw(){
  if(!pageOn(page))page='dashboard';
  for(const [p,v] of Object.entries(VIEWS))$(v).hidden=p!==page;
@@ -1423,7 +1425,9 @@ takeLink();
 addEventListener('hashchange',()=>{if(takeLink()){toggleNav(false);draw();window.scrollTo(0,0)}});
 draw();
 if(cloudOn()){loadClassStats();loadContrib(true);if(syncCode)syncNow();
- const back=()=>{if(syncCode&&Date.now()-syncInfo.at>4000)syncNow()};
+ const back=()=>{try{const c=(JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||'';if(c!==syncCode){syncCode=c;syncInfo={at:0,err:''};lastPutSig='';if(c){syncNow();return}}}catch(e){}
+  if(syncCode&&Date.now()-syncInfo.at>4000)syncNow()};
+ addEventListener('storage',e=>{if(e.key===SYNC_KEY)back()});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else{loadClassStats();loadContrib();loadMine();if(page==='dashboard'&&!$('nameinput'))drawGreeting();back()}});
  addEventListener('focus',back)}
 else syncBoot=false;

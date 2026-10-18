@@ -237,6 +237,7 @@ async function finishSignIn(){const h=new URLSearchParams(location.hash.slice(1)
  if(h.get('error')){openSync();drawSync('Sign-in was cancelled or failed. '+(h.get('error_description')||'').replace(/\+/g,' '));return true}
  const tok=h.get('access_token'),base=CLOUD.url.replace(/\/+$/,''),hd={'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+tok};
  openSync();$('syncbody').innerHTML='<p>Signing you in…</p>';
+ try{localStorage.setItem('reviewer_session',JSON.stringify({access:tok,refresh:h.get('refresh_token'),exp:Date.now()+(+h.get('expires_in')||3600)*1000-60000}))}catch(e){}
  try{
   const code=await fetch(base+'/rest/v1/rpc/account_code',{method:'POST',headers:hd,body:JSON.stringify({p_code:getCode()||null})}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()});
   const u=await fetch(base+'/auth/v1/user',{headers:hd}).then(r=>r.ok?r.json():{});
@@ -248,7 +249,7 @@ async function finishSignIn(){const h=new URLSearchParams(location.hash.slice(1)
  }catch(e){drawSync('Could not finish signing in. Check your connection and try again.')}
  return true}
 function signOut(){if(!confirm('Sign out on this device? Your progress stays here, but it stops syncing until you sign in again.'))return;
- try{localStorage.removeItem(ACC_KEY)}catch(e){}setCode('');drawSyncBtn();drawSync('Signed out.',true)}
+ try{localStorage.removeItem(ACC_KEY);localStorage.removeItem('reviewer_session')}catch(e){}setCode('');drawSyncBtn();drawSync('Signed out.',true)}
 function drawSync(msg,ok){const c=getCode(),a=getAcc(),b=$('syncbody');$('synch').textContent=a&&c?'Your account':'Sign in to sync';const note='<p class="msg'+(ok?' ok':'')+'" id="syncmsg">'+(msg||'')+'</p>';
  if(a&&c){b.innerHTML='<div class="who">'+avatar(a)+'<div><b>'+esc(a.name||'Signed in')+'</b><span>'+esc(a.email||'')+'</span></div></div>'+
   '<p>Your progress in every course syncs to this account. Sign in with the same Google account on your other devices.</p>'+note+
