@@ -307,6 +307,7 @@ function feedbackHTML(q,fb,live){
  if(q.why)out+='<p>'+esc(q.why)+'</p>';
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
+ if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'">'+CHAT_SM+'Discuss this '+ITEM+(DCOUNT[discKey(q.cid)]?' ('+DCOUNT[discKey(q.cid)]+')':'')+' →</a></p>';
  const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' stays in your queue.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
   :'This '+ITEM+' will come back later, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
  const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
@@ -432,6 +433,14 @@ const PG={
 // (A page saved before this version has no #homelink: fall back to a link in the page list.)
 let HOME_LINK='';if(CONFIG.home){const h=$('homelink');if(h){h.href=CONFIG.home;h.hidden=false}else HOME_LINK='<a class="page" href="'+esc(CONFIG.home)+'">All courses</a>'}
 function drawPages(){$('pages').innerHTML=HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+discussLink()}
+// ---- per-question discussion (threads named "<course>:<question id>")
+const CHAT_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg>';
+let DCOUNT={};
+const courseId=()=>(new URLSearchParams(location.search).get('course')||'').toLowerCase();
+function discussOn(){return !!(CONFIG.discussion&&CONFIG.home&&courseId()&&/^https?:$/.test(location.protocol))}
+const discKey=cid=>courseId()+':'+String(cid).toLowerCase();
+function discussQ(cid){return 'discuss.html?c='+encodeURIComponent(courseId())+'&q='+encodeURIComponent(String(cid).toLowerCase())}
+function loadDiscussCounts(){if(!discussOn()||!cloudOn())return;rpc('discussion_counts',{p_course:courseId()}).then(rows=>{const c={};for(const r of rows||[])c[r.thread]=r.n;DCOUNT=c}).catch(()=>{})}
 function discussLink(){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.discussion||!CONFIG.home||!id||!/^https?:$/.test(location.protocol))return '';
  return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion</a>'}
 function draw(){
@@ -1424,11 +1433,11 @@ document.addEventListener('keydown',e=>{
 takeLink();
 addEventListener('hashchange',()=>{if(takeLink()){toggleNav(false);draw();window.scrollTo(0,0)}});
 draw();
-if(cloudOn()){loadClassStats();loadContrib(true);if(syncCode)syncNow();
+if(cloudOn()){loadClassStats();loadContrib(true);loadDiscussCounts();if(syncCode)syncNow();
  const back=()=>{try{const c=(JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||'';if(c!==syncCode){syncCode=c;syncInfo={at:0,err:''};lastPutSig='';if(c){syncNow();return}}}catch(e){}
   if(syncCode&&Date.now()-syncInfo.at>4000)syncNow()};
  addEventListener('storage',e=>{if(e.key===SYNC_KEY)back()});
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else{loadClassStats();loadContrib();loadMine();if(page==='dashboard'&&!$('nameinput'))drawGreeting();back()}});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else{loadClassStats();loadContrib();loadMine();loadDiscussCounts();if(page==='dashboard'&&!$('nameinput'))drawGreeting();back()}});
  addEventListener('focus',back)}
 else syncBoot=false;
 // Show What's new once: on the first visit, and again only when a newer entry is added to CHANGELOG (not over a challenge).

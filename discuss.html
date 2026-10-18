@@ -39,6 +39,12 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 4px;letter-spacing:-.3px}
 .del:hover{color:var(--bad)}
 .tx{margin-top:2px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px}
 .tx a{color:var(--accent)}
+.qcard{margin:0 0 16px;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent)}
+.qcard .k{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--accent)}
+.qcard .q{font:600 18px/1.4 var(--serif);margin:6px 0 8px}
+.qcard details summary{cursor:pointer;color:var(--mute);font-size:14px;font-weight:600}
+.qcard details p{margin:8px 0 0;font-size:14.5px}
+.qcard .all{display:inline-block;margin-top:10px;font-size:13.5px;font-weight:600;color:var(--accent);text-decoration:none}
 .list{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:4px 16px}
 .empty{padding:34px 10px;text-align:center;color:var(--faint)}
 .dock{position:fixed;left:0;right:0;bottom:0;background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
@@ -55,6 +61,7 @@ textarea:focus{border-color:var(--accent)}
  <a class="back" id="back" href="./">← Back to the course</a>
  <h1 id="ttl">Discussion</h1>
  <p class="lede" id="lede">Ask questions, share tips, help each other out. Posts show your Google name and photo, so keep it kind.</p>
+ <div id="qbox"></div>
  <button class="btn more" id="more" hidden onclick="loadMore()">Show earlier posts</button>
  <div class="list" id="list"><p class="empty">Loading…</p></div>
 </main>
@@ -63,7 +70,8 @@ textarea:focus{border-color:var(--accent)}
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const thread=(new URLSearchParams(location.search).get('c')||'').toLowerCase();
+const Q=new URLSearchParams(location.search),course=(Q.get('c')||'').toLowerCase(),qid=(Q.get('q')||'').toLowerCase();
+const thread=course+(qid?':'+qid:'');
 let posts=[],oldest=null,poll=null,busy=false;
 const G='<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>';
 function ago(t){const s=(Date.now()-new Date(t))/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' h ago';
@@ -73,7 +81,7 @@ function postHTML(p){return '<div class="post" id="p'+p.id+'">'+(p.avatar?'<img 
  '<div class="pb"><div class="ph"><b>'+esc(p.author)+'</b>'+(p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time>'+
  (p.can_delete?'<button class="del" onclick="del('+p.id+')">Delete</button>':'')+'</div><div class="tx">'+linkify(p.body)+'</div></div></div>'}
 function drawList(stick){const L=$('list'),atEnd=innerHeight+scrollY>=document.body.scrollHeight-80;
- L.innerHTML=posts.length?posts.map(postHTML).join(''):'<p class="empty">No posts yet. Start the conversation!</p>';
+ L.innerHTML=posts.length?posts.map(postHTML).join(''):'<p class="empty">'+(qid?'No posts about this question yet. Ask or explain it here!':'No posts yet. Start the conversation!')+'</p>';
  if(stick||atEnd)scrollTo(0,document.body.scrollHeight)}
 async function load(first){if(busy)return;busy=true;
  try{const rows=await Auth.rpc('discussion_list',{p_thread:thread,p_before:null},true);
@@ -105,11 +113,18 @@ function drawDock(msg){const a=Auth.acc(),d=$('dock');
  d.innerHTML='<div class="compose"><textarea id="msg" rows="1" maxlength="2000" placeholder="Write a message…" oninput="grow()" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
   '<button class="btn primary" id="sendbtn" onclick="send()">Post</button></div><div class="hint"><span id="note">Posting as '+esc(a.name||a.email)+'</span><span id="count"></span></div>'}
 (async function(){
- if(!/^[a-z0-9_-]{1,40}$/.test(thread)){$('list').innerHTML='<p class="empty">This discussion could not be found.</p>';return}
- $('back').href='reviewer.html?course='+encodeURIComponent(thread);
+ if(!/^[a-z0-9_-]{1,40}$/.test(course)||(qid&&!/^[a-z0-9_.-]{1,60}$/.test(qid))){$('list').innerHTML='<p class="empty">This discussion could not be found.</p>';return}
+ $('back').href='reviewer.html?course='+encodeURIComponent(course);
+ if(qid){$('back').textContent='← Back to practice';$('back').onclick=e=>{if(history.length>1&&document.referrer.includes('reviewer.html')){e.preventDefault();history.back()}}}
  let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
- const c=list.find(x=>x.id===thread),cl=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;
- if(c){$('ttl').textContent=c.title+' discussion';document.title=c.title+' discussion · APMed \'33'}
+ const c=list.find(x=>x.id===course),cl=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;
+ if(c){$('ttl').textContent=qid?'Question discussion':c.title+' discussion';document.title=(qid?'Question':c.title)+' discussion · APMed \'33'}
+ if(qid){$('lede').textContent='Talk about this one: why the answer is right, how to remember it, what confused you.';
+  try{const d=await (await fetch('courses/'+course+'.json')).json(),it=(d.bank||[]).find(x=>String(x.id).toLowerCase()===qid);
+   if(it){const q=it.q||it.term,ans=it.q?it.a:it.definition;
+    $('qbox').innerHTML='<div class="qcard"><div class="k">'+esc(it.section||'')+(c?' · '+esc(c.title):'')+'</div><div class="q">'+esc(q)+'</div>'+
+    '<details><summary>'+(it.q?'Show the answer':'Show the meaning')+'</summary><p><b>'+esc(ans||'')+'</b></p>'+(it.why?'<p>'+esc(it.why)+'</p>':'')+'</details>'+
+    '<a class="all" href="discuss.html?c='+encodeURIComponent(course)+'">All '+esc(c?c.title:'course')+' discussion →</a></div>'}}catch(e){}}
  if(!cl){$('list').innerHTML='<p class="empty">The discussion could not be loaded. Check your connection and reload.</p>';return}
  Auth.cloud=cl;
  let msg='';try{await Auth.finish()}catch(e){msg=e.message}
