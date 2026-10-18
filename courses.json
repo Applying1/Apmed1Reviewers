@@ -1,7 +1,7 @@
 [
  {
   "id": "iml",
-  "title": "IML Reviewer",
+  "title": "Intro to Medicine Life",
   "scope": "History of Medicine",
   "unit": "Topic",
   "itemWord": "question",
@@ -54,7 +54,7 @@
  },
  {
   "id": "purcom",
-  "title": "PurCom Reviewer",
+  "title": "Purposive Communication",
   "scope": "Registers, Inclusive Language, Phonetics",
   "unit": "Topic",
   "itemWord": "question",
@@ -78,7 +78,7 @@
  },
  {
   "id": "chem",
-  "title": "Chem Reviewer",
+  "title": "General Chemistry",
   "scope": "Lecture and lab midterms",
   "unit": "Topic",
   "itemWord": "question",

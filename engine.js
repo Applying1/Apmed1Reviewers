@@ -580,7 +580,9 @@ function hl(s){const t=esc(s),q=notesQ.trim();if(!q)return t;return t.replace(ne
 function drawNotesBody(){
  const q=notesQ.trim().toLowerCase(),body=$('nbody');body.classList.toggle('selftest',!!state.prefs.selftest);
  const out=NOTES_PARSED.filter(n=>noteScope(n.ch)&&(notesCh==='all'||n.ch===notesCh)).map(n=>{
-  const cards=n.groups.filter(g=>secOn(g.sec)).map(g=>{const titleHit=q&&g.title.toLowerCase().includes(q);
+  const gch=g=>{const m=String(g.title).match(/^(\d+)(?:[–-](\d+))?\s*·/);if(!m)return true;for(let c=+m[1];c<=+(m[2]||m[1]);c++)if(inScopeCh(String(c)))return true;return false};
+  const grs=/^\d/.test(n.ch)?n.groups:n.groups.filter(gch).concat(n.groups.filter(g=>!gch(g)));
+  const cards=grs.filter(g=>secOn(g.sec)).map(g=>{const titleHit=q&&g.title.toLowerCase().includes(q);
    const rows=g.rows.filter(([a,b])=>!q||titleHit||(a+' '+b).toLowerCase().includes(q));if(!rows.length)return '';
    return '<article class="ncard"><h3>'+hl(g.title)+'</h3><dl class="nrows">'+rows.map(([a,b])=>'<div class="nrow" onclick="this.classList.toggle(\'show\');syncReveal()"><dt>'+hl(a)+'</dt><dd>'+hl(b)+'</dd></div>').join('')+'</dl></article>'}).join('');
   if(!cards)return '';
