@@ -5,6 +5,7 @@
  "freeDays": {"Mon": "Self-directed learning (SDL)", "Sun": ""},
  "subjects": {
   "botany": {"name": "General Botany", "hue": 145},
+  "pharma": {"name": "Pharmacology", "hue": 110},
   "psych": {"name": "Intro to Psychology", "hue": 295, "course": "psych"},
   "iml": {"name": "Intro to Medicine Life", "hue": 350, "course": "iml"},
   "purcom": {"name": "Purposive Communication", "hue": 70, "course": "purcom"},
@@ -14,8 +15,8 @@
   "chem": {"name": "General Chemistry", "hue": 220, "course": "chem"}
  },
  "classes": [
-  {"id": "botany-lab-1", "day": "Tue", "start": "07:00", "end": "10:00", "subject": "botany", "kind": "Lab", "teacher": "Drs. Isaac Orig and MC Padilla"},
-  {"id": "botany-lab-2", "day": "Tue", "start": "10:00", "end": "13:00", "subject": "botany", "kind": "Lab", "teacher": "Drs. Isaac Orig and MC Padilla"},
+  {"id": "pharma-1", "day": "Tue", "start": "07:00", "end": "10:00", "subject": "pharma", "official": "General Botany Lab", "teacher": "Drs. Isaac Orig and MC Padilla"},
+  {"id": "pharma-2", "day": "Tue", "start": "10:00", "end": "13:00", "subject": "pharma", "official": "General Botany Lab", "teacher": "Drs. Isaac Orig and MC Padilla"},
   {"id": "psych", "day": "Wed", "start": "09:00", "end": "12:00", "subject": "psych", "teacher": "Dr. Sheila Quiachon"},
   {"id": "botany-lec", "day": "Wed", "start": "13:00", "end": "16:00", "subject": "botany", "kind": "Lecture", "teacher": "Dr. Claire Frances Miyake"},
   {"id": "purcom", "day": "Wed", "start": "16:00", "end": "19:00", "subject": "purcom", "teacher": "Prof. Arjay Arcena"},
@@ -30,8 +31,8 @@
  "weeks": {
   "13": {
    "topics": {
-    "botany-lab-1": "Drugs for Diabetes 1 and 2",
-    "botany-lab-2": "Drugs for Diabetes 1 and 2",
+    "pharma-1": "Drugs for Diabetes 1 and 2",
+    "pharma-2": "Drugs for Diabetes 1 and 2",
     "psych": "Chapter 11: Personality",
     "botany-lec": "Plant Flower, Fruits and Seeds",
     "purcom": "Communicating for work purposes",

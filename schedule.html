@@ -204,7 +204,7 @@ function draw(){
  let h='<h2 class="dayh">'+DAY_NAMES[day]+' <span>'+Sched.date(dt)+'</span></h2>';
  for(const e of ex(day))h+='<div class="item sw"'+hue(e)+'><div class="tm"><b>Test</b></div><div class="card"><b>'+esc(e.title)+'</b><div class="k">'+esc(e.name)+'</div></div></div>';
  h+=cs.length?cs.map(c=>'<div class="item sw"'+hue(c)+'><div class="tm"><b>'+Sched.time(c.start).replace(' ','&nbsp;')+'</b>'+Sched.time(c.end).replace(' ','&nbsp;')+'</div><div class="card'+(c.cancelled?' off':'')+'">'+
-   '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b><div class="k">'+esc([c.cancelled?'Cancelled':'',kindOf(c),c.teacher].filter(Boolean).join(' · '))+'</div>'+
+   '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b><div class="k">'+esc([c.cancelled?'Cancelled':'',kindOf(c),c.teacher,c.official?'listed as '+c.official:''].filter(Boolean).join(' · '))+'</div>'+
    (c.topic?'<div class="tp">'+esc(c.topic)+'</div>':'<div class="tp none">Topic not posted yet</div>')+
    (reviewer(c)?'<a href="'+reviewer(c)+'">Open reviewer →</a>':'')+'</div></div>').join('')
   :'<div class="empty">'+esc(free||'No classes')+'</div>';
@@ -215,6 +215,7 @@ function openDlg(id){const c=LIST.find(x=>x.id===id);if(!c)return;
  b.innerHTML='<div class="mhead"><h2 id="dtitle">'+esc(c.subj.name)+'</h2><button class="mx" onclick="closeDlg()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>'+
   '<dl><dt>When</dt><dd>'+DAY_NAMES[c.di]+', '+Sched.date(c.date)+' · '+Sched.span(c)+(c.cancelled?' <b>(cancelled)</b>':'')+'</dd>'+
   (kindOf(c)?'<dt>Class</dt><dd>'+esc(kindOf(c))+'</dd>':'')+
+  (c.official?'<dt>On the sheet</dt><dd>'+esc(c.official)+'</dd>':'')+
   (c.teacher?'<dt>Teacher</dt><dd>'+esc(c.teacher)+'</dd>':'')+
   '<dt>Topic</dt>'+(c.topic?'<dd>'+esc(c.topic)+'</dd>':'<dd class="none">Not posted yet</dd>')+'</dl>'+
   (reviewer(c)?'<a class="btn" href="'+reviewer(c)+'">Open the '+esc(c.subj.name)+' reviewer</a>':'');
