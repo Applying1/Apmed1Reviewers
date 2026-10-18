@@ -88,6 +88,7 @@ a.now:hover .go{color:var(--accent)}
 .blk b{font-size:13px;line-height:1.25}
 .blk .t{font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums}
 .blk em{font-style:normal;font-size:12px;line-height:1.3;margin-top:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.newt{color:var(--now);font-weight:700}
 .blk.off{opacity:.55}.blk.off b{text-decoration:line-through}
 .tagx{display:inline-block;padding:0 6px;border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;background:var(--c);color:var(--surface);vertical-align:1px}
 .nowline{position:absolute;left:0;right:0;height:2px;background:var(--now);z-index:3}
@@ -188,7 +189,7 @@ function draw(){
   if(!cs.length&&free)g+='<div class="free">'+esc(free)+'</div>';
   for(const c of cs){const a=Sched.mins(c.start),b=Sched.mins(c.end);
    g+='<button class="blk sw'+(c.cancelled?' off':'')+'"'+hue(c).slice(0,-1)+';top:'+(top(a)+2)+'px;height:'+((b-a)/60*HH-4)+'px" onclick="openDlg(\''+c.id+'\')">'+
-    '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b><span class="t">'+Sched.span(c)+(c.kind&&!c.extra?' · '+esc(c.kind):'')+(c.cancelled?' · Cancelled':'')+'</span>'+
+    '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b><span class="t">'+Sched.span(c)+(c.kind&&!c.extra?' · '+esc(c.kind):'')+(c.cancelled?' · Cancelled':'')+(c.changed?' · <b class="newt">New time</b>':'')+'</span>'+
     (c.topic?'<em>'+esc(c.topic)+'</em>':'')+'</button>'}
   if(isToday(i)){const m=now.getHours()*60+now.getMinutes();if(m>lo*60&&m<hi*60)g+='<div class="nowline" style="top:'+top(m)+'px"></div>'}
   g+='</div>'}
@@ -204,7 +205,7 @@ function draw(){
  let h='<h2 class="dayh">'+DAY_NAMES[day]+' <span>'+Sched.date(dt)+'</span></h2>';
  for(const e of ex(day))h+='<div class="item sw"'+hue(e)+'><div class="tm"><b>Test</b></div><div class="card"><b>'+esc(e.title)+'</b><div class="k">'+esc(e.name)+'</div></div></div>';
  h+=cs.length?cs.map(c=>'<div class="item sw"'+hue(c)+'><div class="tm"><b>'+Sched.time(c.start).replace(' ','&nbsp;')+'</b>'+Sched.time(c.end).replace(' ','&nbsp;')+'</div><div class="card'+(c.cancelled?' off':'')+'">'+
-   '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b><div class="k">'+esc([c.cancelled?'Cancelled':'',kindOf(c),c.teacher,c.official?'on the sheet: '+c.official:''].filter(Boolean).join(' · '))+'</div>'+
+   '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b>'+(c.changed?'<div class="k"><b class="newt">New time this week</b></div>':'')+'<div class="k">'+esc([c.cancelled?'Cancelled':'',kindOf(c),c.teacher,c.official?'on the sheet: '+c.official:''].filter(Boolean).join(' · '))+'</div>'+
    (c.topic?'<div class="tp">'+esc(c.topic)+'</div>':'<div class="tp none">Topic not posted yet</div>')+
    (reviewer(c)?'<a href="'+reviewer(c)+'">Open reviewer →</a>':'')+'</div></div>').join('')
   :'<div class="empty">'+esc(free||'No classes')+'</div>';
