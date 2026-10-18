@@ -41,7 +41,9 @@
    "courses/psych/chapter-7.jpg",
    "courses/psych/chapter-8.jpg",
    "courses/psych/chapter-9.jpg",
-   "courses/psych/chapter-10.jpg"
+   "courses/psych/chapter-10.jpg",
+   "courses/psych/chapter-11.jpg",
+   "courses/psych/chapter-12.jpg"
   ],
   "exam": {
    "name": "Evals",
@@ -109,5 +111,32 @@
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
    "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
   }
+ },
+ {
+  "id": "pharmacology",
+  "title": "Pharmacology",
+  "soon": true,
+  "image": "courses/soon/pharmacology.jpg",
+  "assets": [
+   "courses/soon/pharmacology.jpg"
+  ]
+ },
+ {
+  "id": "botany",
+  "title": "General Botany",
+  "soon": true,
+  "image": "courses/soon/botany.jpg",
+  "assets": [
+   "courses/soon/botany.jpg"
+  ]
+ },
+ {
+  "id": "nstp1",
+  "title": "NSTP 1",
+  "soon": true,
+  "image": "courses/soon/nstp1.jpg",
+  "assets": [
+   "courses/soon/nstp1.jpg"
+  ]
  }
 ]

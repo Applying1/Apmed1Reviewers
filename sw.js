@@ -7,7 +7,7 @@ const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json',
 
 // Saves every course (and its pictures) not saved yet, so courses added after someone's first visit also work offline.
 async function cacheCourses(c, list) {
-  for (const u of list.flatMap(x => ['courses/' + x.id + '.json', ...(x.assets || [])]))
+  for (const u of list.flatMap(x => [...(x.soon ? [] : ['courses/' + x.id + '.json']), ...(x.assets || [])]))
     if (!(await c.match(u))) { try { await c.add(new Request(u, { cache: 'no-cache' })); } catch (err) { /* try again next visit */ } }
 }
 

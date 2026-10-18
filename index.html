@@ -54,6 +54,12 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .tag{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--raised);color:var(--mute)}
 .tag.exam{background:var(--accent-soft);color:var(--accent)}
+/* Courses without a reviewer yet: shown, but not clickable */
+.course.soon{cursor:default}
+.course.soon:hover{transform:none;border-color:var(--line);box-shadow:var(--shadow)}
+.course.soon .art img{filter:saturate(.55);opacity:.7}
+.course.soon .t{color:var(--mute)}
+.tag.soon{background:var(--raised);color:var(--faint)}
 .prog{margin-top:auto;padding-top:12px}
 .track{height:6px;border-radius:9px;background:var(--raised);overflow:hidden}
 .fill{height:100%;border-radius:9px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
@@ -120,7 +126,10 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
  try{list=await (await fetch('courses.json')).json()}
  catch(e){document.getElementById('list').innerHTML='<p class="empty">Courses could not be loaded. Check your connection and reload.</p>';return}
  CLOUD=(list.find(c=>c.cloud&&c.cloud.url)||{}).cloud||null;document.getElementById('syncbtn').hidden=!CLOUD;
- document.getElementById('list').innerHTML=list.map(c=>{const s=summary(c.storageKey),pct=s&&s.t?Math.round(100*s.m/s.t):0;
+ const art=c=>'<span class="art">'+(c.image?'<img src="'+esc(c.image)+'" alt="" loading="lazy">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>';
+ document.getElementById('list').innerHTML=list.map(c=>{
+  if(c.soon)return '<div class="course soon" aria-disabled="true">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag soon">Not available yet</span></span></span></div>';
+  const s=summary(c.storageKey),pct=s&&s.t?Math.round(100*s.m/s.t):0;
   return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+
    '<span class="art">'+(c.image?'<img src="'+esc(c.image)+'" alt="" loading="lazy">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>'+
    '<span class="body"><span class="t">'+esc(c.title)+'</span>'+
