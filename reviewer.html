@@ -416,6 +416,10 @@ h1{font-size:clamp(24px,2.8vw,31px)}
 .fchip{border:1px solid var(--line2);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:500;color:var(--mute);transition:background .15s,color .15s,border-color .15s}
 .fchip:hover{color:var(--text)}
 .fchip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+.fchip.num{min-width:34px;padding-left:9px;padding-right:9px;text-align:center;font-variant-numeric:tabular-nums}
+.chiplbl{align-self:center;margin:0 2px 0 6px;font-size:12px;font-weight:600;color:var(--faint)}
+.ptabs{margin-top:18px}
+@media (max-width:620px){.ptabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:-16px;padding-right:16px}.ptabs .fchip{flex:none}}
 .search{flex:1;min-width:180px;max-width:260px;margin-left:auto;display:flex;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--surface);border-radius:10px;padding:6px 10px;color:var(--faint)}
 .search input{border:0;outline:0;background:none;font:inherit;font-size:14px;color:var(--text);width:100%;min-width:0}
 .search:focus-within{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}

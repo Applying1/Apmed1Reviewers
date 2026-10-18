@@ -369,6 +369,12 @@ function focusNav(study){
 }
 // One chapter open at a time keeps the topic list short.
 function chToggle(d,ch){if(!d.open){openCh.delete(ch);return}openCh.clear();openCh.add(ch);document.querySelectorAll('#nav details.ch[open]').forEach(x=>{if(x!==d)x.open=false})}
+// Chapter filter chips. With many chapters they become short numbers (full name in the tooltip and the headings).
+function chChips(keys,cur,fn){if(keys.length<2)return '';const isN=k=>/^\d/.test(k),nums=keys.filter(isN),compact=nums.length>5;
+ const b=(k,t,tip,cls)=>'<button class="fchip'+(cls||'')+(k===cur?' on':'')+'" aria-pressed="'+(k===cur)+'"'+(tip?' title="'+tip+'" aria-label="'+tip+'"':'')+' onclick="'+fn+'(\''+k+'\')">'+t+'</button>';
+ return b('all','All')+keys.filter(k=>!isN(k)).map(k=>b(k,esc(String(CH_NAMES[k]||k).split(':')[0]),esc(CH_NAMES[k]||''))).join('')+
+  (compact?'<span class="chiplbl">'+esc(UNIT)+'</span>'+nums.map(k=>b(k,esc(k),esc(UNIT+' '+k+' · '+(CH_NAMES[k]||'')),' num')).join('')
+   :nums.map(k=>b(k,esc(UNIT)+' '+esc(k)+' · '+esc(CH_NAMES[k]||''))).join(''))}
 function navHTML(){
  const study=page==='study',ap=progress('ALL'),aOn=state.section==='ALL'&&study;
  return '<button class="sec mixed '+(aOn?'on':'')+'" '+(aOn?'aria-current="page" ':'')+'onclick="selectSection(\'ALL\')"><span class="no">'+SHUFFLE+'</span><span class="nm">All '+unitsW+', shuffled</span><span class="ct">'+ap.done+'/'+ap.total+'</span></button>'+focusNav(study)+chapters.map(ch=>{const secs=sectionKeys.filter(k=>chOf(k)===ch),cp=chProgress(ch),wOn=state.section==='CH:'+ch&&study;
@@ -549,6 +555,7 @@ let notesCh='all',notesQ='';
 // A notes section with a non-numeric id (like "W" for a Who's who page) spans every chapter: it is always shown and has no chapter number.
 const noteScope=ch=>!/^\d/.test(ch)||inScopeCh(ch);
 const noteTag=ch=>(/^\d/.test(ch)?esc(UNIT)+' '+esc(ch)+' · ':'')+esc(CH_NAMES[ch]||'');
+function setNotesCh(k){notesCh=k;drawNotes()}
 function openNotes(ch,cid){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh&&noteScope(n.ch)))notesCh='all';notesQ='';
  if(page==='notes'){draw();window.scrollTo(0,0)}else setPage('notes');if(cid)setTimeout(()=>focusNote(cid),80)}
 // Scrolls to the note card that best matches a question: its term and answer in the card, its section name in the title.
@@ -564,8 +571,7 @@ function drawNotes(){
  $('nChartBtn').hidden=!chartsOn();
  $('ndocs').innerHTML=DOCS.map(d=>{const u=docURL(d);return u?'<a class="btn sm docbtn" href="'+esc(u)+'" target="_blank" rel="noopener" title="Opens in a new tab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>'+esc(d.title||'Full transes')+'</a>':''}).join('');
  document.title='Notes · '+CONFIG.title;
- const chips=[['all','All']].concat(NOTES_PARSED.filter(n=>noteScope(n.ch)).map(n=>[n.ch,noteTag(n.ch)]));
- $('nchips').innerHTML=chips.map(([k,t])=>'<button class="fchip '+(k===notesCh?'on':'')+'" aria-pressed="'+(k===notesCh)+'" onclick="notesCh=\''+k+'\';drawNotes()">'+t+'</button>').join('');
+ $('nchips').innerHTML=chChips(NOTES_PARSED.filter(n=>noteScope(n.ch)).map(n=>n.ch),notesCh,'setNotesCh');
  $('selftest').setAttribute('aria-checked',String(!!state.prefs.selftest));$('ntip').hidden=!state.prefs.selftest;
  if($('nq').value!==notesQ)$('nq').value=notesQ;
  drawNotesBody();
@@ -612,7 +618,7 @@ function drawMatch(){
  $('dtabs').innerHTML=tabs.map(([k,t])=>'<button role="tab" aria-selected="'+(k===drillTab)+'" class="'+(k===drillTab?'on':'')+'" onclick="setDrillTab(\''+k+'\')">'+t+'</button>').join('');
  $('dtitle').textContent=mix?'Don\'t mix up':'Matching';document.title=(mix?'Don\'t mix up':'Matching')+' · '+CONFIG.title;
  const chs=[...new Set((mix?MIXUP:MSETS).filter(m=>inScopeCh(m.ch)).map(m=>m.ch))];if(matchCh!=='all'&&!chs.includes(matchCh))matchCh='all';
- $('mchips').innerHTML=(chs.length>1?[['all','All']].concat(chs.map(c=>[c,esc(UNIT)+' '+esc(c)+' · '+esc(CH_NAMES[c]||'')])):[]).map(([k,t])=>'<button class="fchip '+(k===matchCh?'on':'')+'" aria-pressed="'+(k===matchCh)+'" onclick="setMatchCh(\''+k+'\')">'+t+'</button>').join('');
+ $('mchips').innerHTML=chChips(chs,matchCh,'setMatchCh');
  $('mcard').hidden=mix;$('msetsPanel').hidden=mix;$('xcard').hidden=!mix;
  if(mix){if(!MX||(matchCh!=='all'&&MIXUP[MX.g].ch!==matchCh))newMix();drawMix();return}
  if(!M||(matchCh!=='all'&&MSETS[M.i].ch!==matchCh))pickMatch();
@@ -1133,11 +1139,19 @@ function drawPrefs(){
   row('Export progress','Download a backup of your answers as a JSON file.','<button class="btn sm" onclick="exportProgress()">Export</button>')+
   row('Import progress','Load a file you exported, for example to move your answers from the file version to the website or to another browser. It replaces the progress saved here.','<button class="btn sm" onclick="importProgress()">Import</button>')+
   row('Reset progress','Erase every saved answer in this browser. This can\'t be undone.','<button class="btn sm danger" onclick="resetAll()">Reset</button>')+'</section>';
- $('prefs').innerHTML=h;
-}
+ // Tabs: All, or one section at a time (remembered on this device).
+ const parts=h.split('<section class="panel">').filter(Boolean).map(x=>'<section class="panel">'+x),names=parts.map(x=>(x.match(/<h2>(.*?)<\/h2>/)||[])[1]||'');
+ let tab='all';try{tab=localStorage.getItem('reviewer_prefs_tab')||'all'}catch(e){}if(!names.includes(tab))tab='all';
+ $('prefs').innerHTML=parts.filter((_,i)=>tab==='all'||names[i]===tab).join('');
+ let t=$('ptabs');if(!t){t=document.createElement('div');t.id='ptabs';t.className='fchips ptabs';t.setAttribute('role','tablist');$('prefs').before(t)}
+ t.innerHTML=['all'].concat(names).map(n=>'<button class="fchip'+(n===tab?' on':'')+'" role="tab" aria-selected="'+(n===tab)+'" onclick="setPrefTab(\''+esc(n).replace(/'/g,'&#39;')+'\')">'+(n==='all'?'All':esc(n.replace(/ and you$/,'')))+'</button>').join('')}
+function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e){}drawPrefs();window.scrollTo(0,0)}
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'21',date:'Oct 18, 2026',title:'Less clutter',items:[
+  '<b>Personalize</b> has tabs (Practice, Study tools, Pages, and so on), so you can open just the settings you need. <b>All</b> still shows everything.',
+  'With many '+unitsW+', the '+unitW+' filters on <b>Notes</b> and <b>Drills</b> are short numbers. Hover or long-press one to see its name.']},
  {v:'20',date:'Oct 18, 2026',title:'Tidier sidebar and What\'s new',items:[
   'In the sidebar, opening a '+unitW+' closes the others, and the theme switch and What\'s new <b>stay in view</b> at the bottom.',
   'After a wrong answer, <b>Review the '+unitW+' notes</b> takes you to the notes for that '+unitW+'.',
