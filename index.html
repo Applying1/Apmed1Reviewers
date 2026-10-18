@@ -97,6 +97,12 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .modal p.msg.ok{color:var(--good)}
 .modal p.msg:empty{display:none}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:600;font-size:14px}
+/* One-time offer to try the APMed '33 colors */
+.try{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--accent-line)}
+.try[hidden]{display:none}
+.try .sw{flex:none;display:flex;gap:3px}.try .sw i{width:14px;height:14px;border-radius:50%;border:1px solid #0002}
+.try p{flex:1;min-width:180px;margin:0;font-size:14px;color:var(--mute)}.try p b{color:var(--text)}
+.try .row{margin:0;flex-wrap:nowrap}.try .row .btn{flex:none}
 @media (max-width:520px){main{padding:24px 16px 48px}.top .acts{margin-left:0;width:100%}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
@@ -107,6 +113,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
  </div>
  <h1 id="hi">Pick a course</h1>
  <p class="lede">Your progress saves in this browser, so use the same browser each time. Courses work offline once you've opened this page.</p>
+ <div class="try" id="try" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
  <div class="class"><div class="pics"><img src="img/class-1.jpg" alt="Classmates" loading="lazy" width="900" height="1200"><img src="img/class-2.jpg" alt="Classmates in the gym" loading="lazy" width="900" height="1200"></div><p>Good luck studying!</p></div>
@@ -140,6 +147,17 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
    (c.exam?'<span class="tags">'+examTag(c.exam)+'</span>':'')+
    '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?(s.scope&&!(c.exam&&c.exam.name===s.scope)?esc(s.scope)+': ':'')+pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('');
 })();
+// Offer the APMed '33 colors once (until the person picks Try it or No thanks). Same setting as Personalize → Appearance → Colors.
+function setPal(p){const d=document.documentElement;try{if(p){d.dataset.palette=p;localStorage.setItem('reviewer_palette',p)}else{delete d.dataset.palette;localStorage.removeItem('reviewer_palette')}}catch(e){}}
+function tryBox(step){const b=document.getElementById('try');try{if(step==='ask'&&(localStorage.getItem('reviewer_palette')||localStorage.getItem('reviewer_palette_asked')))return}catch(e){return}
+ if(step!=='ask')try{localStorage.setItem('reviewer_palette_asked','1')}catch(e){}
+ if(step==='done'||step==='no'){b.hidden=true;return}
+ const sw='<span class="sw" aria-hidden="true"><i style="background:#f5eedb"></i><i style="background:#1d7a80"></i><i style="background:#e3a21a"></i></span>';
+ b.innerHTML=step==='ask'
+  ?sw+'<p><b>New: APMed \'33 colors.</b> Cream, teal and mustard, from the batch logo. Want to try them?</p><span class="row"><button class="btn primary" onclick="setPal(\'apmed\');tryBox(\'tried\')">Try it</button><button class="btn" onclick="tryBox(\'no\')">No thanks</button></span>'
+  :sw+'<p><b>Like it?</b> You can change it any time in a course\'s Personalize → Appearance → Colors.</p><span class="row"><button class="btn primary" onclick="tryBox(\'done\')">Keep it</button><button class="btn" onclick="setPal(null);tryBox(\'done\')">Switch back</button></span>';
+ b.hidden=false}
+tryBox('ask');
 // Install: Android/desktop Chrome offer a prompt; iPhone needs Share → Add to Home Screen.
 let deferred=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;document.getElementById('install').hidden=false});
