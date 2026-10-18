@@ -204,7 +204,7 @@ function draw(){
  let h='<h2 class="dayh">'+DAY_NAMES[day]+' <span>'+Sched.date(dt)+'</span></h2>';
  for(const e of ex(day))h+='<div class="item sw"'+hue(e)+'><div class="tm"><b>Test</b></div><div class="card"><b>'+esc(e.title)+'</b><div class="k">'+esc(e.name)+'</div></div></div>';
  h+=cs.length?cs.map(c=>'<div class="item sw"'+hue(c)+'><div class="tm"><b>'+Sched.time(c.start).replace(' ','&nbsp;')+'</b>'+Sched.time(c.end).replace(' ','&nbsp;')+'</div><div class="card'+(c.cancelled?' off':'')+'">'+
-   '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b><div class="k">'+esc([c.cancelled?'Cancelled':'',kindOf(c),c.teacher,c.official?'listed as '+c.official:''].filter(Boolean).join(' · '))+'</div>'+
+   '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b><div class="k">'+esc([c.cancelled?'Cancelled':'',kindOf(c),c.teacher,c.official?'on the sheet: '+c.official:''].filter(Boolean).join(' · '))+'</div>'+
    (c.topic?'<div class="tp">'+esc(c.topic)+'</div>':'<div class="tp none">Topic not posted yet</div>')+
    (reviewer(c)?'<a href="'+reviewer(c)+'">Open reviewer →</a>':'')+'</div></div>').join('')
   :'<div class="empty">'+esc(free||'No classes')+'</div>';
