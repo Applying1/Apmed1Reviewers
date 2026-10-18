@@ -1,9 +1,9 @@
 // Offline support. Pages, code and course files are fetched fresh when online (so fixes show up right away)
 // and served from the cache when offline. Pictures show the saved copy first and refresh in the background.
 // Fonts are cached after first use; transes PDFs only once opened.
-const CACHE = 'reviewers-v6';
+const CACHE = 'reviewers-v7';
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
-  'schedule.html', 'schedule-core.js', 'schedule.json',
+  'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
 // Saves every course (and its pictures) not saved yet, so courses added after someone's first visit also work offline.
@@ -69,11 +69,13 @@ self.addEventListener('fetch', e => {
       } catch (err) {
         // Offline or blocked: serve the saved copy. Links shared on Facebook/Messenger carry ?fbclid=...,
         // so match without the query; a page we never saved falls back to the home screen.
-        const page = url.pathname.endsWith('reviewer.html') ? 'reviewer.html' : nav ? 'index.html' : null;
+        // Only pages fall back to a saved page; a file (like a PDF) never gets the home page in its place.
+        const isPage = /(\/|\.html)$/.test(url.pathname);
+        const page = url.pathname.endsWith('reviewer.html') ? 'reviewer.html' : nav && isPage ? 'index.html' : null;
         return (await c.match(req, { ignoreSearch: true })) || (page && await c.match(page)) || Response.error();
       }
     })());
-  } else if (/^fonts\.(googleapis|gstatic)\.com$/.test(url.hostname)) {
+  } else if (/^fonts\.(googleapis|gstatic)\.com$/.test(url.hostname) || (url.hostname === 'cdnjs.cloudflare.com' && url.pathname.startsWith('/ajax/libs/pdf.js/'))) {
     e.respondWith((async () => {
       const c = await caches.open(CACHE);
       const hit = await c.match(req);

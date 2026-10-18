@@ -1,0 +1,79 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transes · APMed '33</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script><script>(function(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const f=()=>{if(document.body)m.content=getComputedStyle(document.body).backgroundColor},g=()=>{f();setTimeout(f,350)};addEventListener('DOMContentLoaded',f);new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',g)})()</script>
+<style>
+:root{--sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:light;
+ --bg:#f6f4ef;--surface:#fff;--raised:#f3f0e9;--line:#e8e3d9;--line2:#d8d1c4;--text:#1d1b18;--mute:#5f5a51;--faint:#8e877b;--accent:#4f46e5;--accent-ink:#fff;--paper:#e9e5dc}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;--text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--paper:#0b0d12}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;--text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--paper:#0b0d12}
+:root[data-palette="apmed"]{--bg:#f5eedb;--surface:#fffdf6;--raised:#f0e6cc;--line:#e6d9b6;--line2:#d6c59a;--text:#1b2a2a;--mute:#566360;--faint:#86907f;--accent:#1d7a80;--accent-ink:#fff;--paper:#e9dfc4}
+@media (prefers-color-scheme:dark){:root[data-palette="apmed"]:not([data-theme="light"]){--bg:#0e1a1a;--surface:#162828;--raised:#1c3232;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--paper:#0a1414}}
+:root[data-palette="apmed"][data-theme="dark"]{--bg:#0e1a1a;--surface:#162828;--raised:#1c3232;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--paper:#0a1414}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--paper);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+button,a{font:inherit;color:inherit}
+.bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar h1{flex:1;min-width:0;margin:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar h1 span{display:block;font-size:12.5px;font-weight:500;color:var(--mute)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--raised)}
+.btn.icon{padding:7px 9px}
+.zoom{display:flex;gap:4px}
+#pages{display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px 10px 40px}
+.pg{position:relative;background:#fff;box-shadow:0 1px 3px #0003;border-radius:4px;overflow:hidden}
+.pg canvas{display:block;width:100%;height:100%}
+.msg{margin:60px auto;max-width:420px;text-align:center;color:var(--mute);padding:0 20px}
+@media (max-width:520px){.bar{padding:8px 10px;gap:6px}.btn .lbl{display:none}}
+</style></head><body>
+<div class="bar">
+ <button class="btn icon" onclick="goBack()" aria-label="Back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+ <h1 id="ttl">Transes<span id="sub">Loading…</span></h1>
+ <div class="zoom"><button class="btn icon" onclick="zoom(-1)" aria-label="Zoom out">−</button><button class="btn icon" onclick="zoom(1)" aria-label="Zoom in">+</button></div>
+ <a class="btn" id="dl" download><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="lbl">Download</span></a>
+</div>
+<div id="pages"><p class="msg">Loading the transes…</p></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// Reads the PDF inside the page (no download, works in the installed app and offline once opened).
+const q=new URLSearchParams(location.search),file=q.get('f')||'',title=q.get('t')||'Transes',course=q.get('c')||'';
+const ok=/^courses\/[a-z0-9_-]+\/[a-z0-9_.-]+\.pdf$/i.test(file);
+document.title=title+' · APMed \'33';
+document.getElementById('ttl').firstChild.textContent=title;
+const dl=document.getElementById('dl');if(ok)dl.href=file;else dl.hidden=true;
+function goBack(){if(history.length>1)history.back();else location.href=course?'reviewer.html?course='+encodeURIComponent(course):'./'}
+let pdf=null,scale=1,pages=[],obs=null;
+const sub=document.getElementById('sub'),box=document.getElementById('pages');
+function fitWidth(){return Math.min(900,box.clientWidth-20)}
+function layout(){
+ const w=fitWidth()*scale;
+ for(const p of pages){p.el.style.width=w+'px';p.el.style.height=(w*p.ratio)+'px';p.done=0}
+ for(const p of pages)if(p.visible)draw(p);
+}
+async function draw(p){
+ const w=fitWidth()*scale,dpr=Math.min(window.devicePixelRatio||1,2.5),key=Math.round(w*dpr);
+ if(p.done===key||p.busy)return;p.busy=true;
+ try{const page=await pdf.getPage(p.n),vp0=page.getViewport({scale:1}),vp=page.getViewport({scale:key/vp0.width});
+  const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+  await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+  p.el.replaceChildren(c);p.done=key}catch(e){}
+ p.busy=false;if(p.visible&&p.done!==Math.round(fitWidth()*scale*Math.min(window.devicePixelRatio||1,2.5)))draw(p)}
+function zoom(d){scale=Math.max(.6,Math.min(2.5,scale*(d>0?1.25:0.8)));const y=scrollY/document.body.scrollHeight;layout();scrollTo(0,y*document.body.scrollHeight)}
+addEventListener('resize',()=>{clearTimeout(window.__rt);window.__rt=setTimeout(layout,150)});
+(async function(){
+ if(!ok||!window.pdfjsLib){box.innerHTML='<p class="msg">'+(ok?'The PDF reader could not load. Check your connection and try again.':'This file could not be found.')+'</p>';sub.textContent='';return}
+ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+ try{const buf=await (await fetch(file)).arrayBuffer();pdf=await pdfjsLib.getDocument({data:buf}).promise}
+ catch(e){box.innerHTML='<p class="msg">The transes could not be opened. Check your connection and try again.</p>';sub.textContent='';return}
+ sub.textContent=pdf.numPages+' pages';box.innerHTML='';
+ const first=await pdf.getPage(1),v=first.getViewport({scale:1}),ratio=v.height/v.width;
+ obs=new IntersectionObserver(es=>{for(const e of es){const p=pages[+e.target.dataset.i];p.visible=e.isIntersecting;if(p.visible)draw(p)}},{rootMargin:'800px 0px'});
+ for(let i=0;i<pdf.numPages;i++){const el=document.createElement('div');el.className='pg';el.dataset.i=i;box.appendChild(el);pages.push({n:i+1,el,ratio,done:0});obs.observe(el)}
+ layout();
+})();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+</body></html>
