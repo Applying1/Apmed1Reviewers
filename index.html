@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Study Reviewers</title>
+<title>APMed '33 Reviewers</title>
 <meta name="description" content="Practice questions, notes and matching sets for our courses.">
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -44,7 +44,7 @@ main{max-width:1000px;margin:0 auto;padding:40px 24px 64px}
 .btn:hover{background:var(--raised)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
-h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:36px 0 6px}
+h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:36px 0 22px}
 .lede{color:var(--mute);margin:0 0 26px;max-width:62ch}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .course{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);text-decoration:none;transition:transform .18s var(--ease),box-shadow .18s,border-color .18s}
@@ -108,11 +108,10 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 </style></head><body>
 <main>
  <div class="top">
-  <div class="brand"><img src="icons/icon-192.png" alt="" width="40" height="40"><div><b>Study Reviewers</b><span>Practice, notes and matching</span></div></div>
-  <div class="acts"><button class="btn primary" id="install" hidden>Install app</button><button class="btn" id="syncbtn" onclick="openSync()" hidden>Sync</button><button class="btn" id="theme" onclick="toggleTheme()">Theme</button></div>
+  <div class="brand"><img src="icons/icon-192.png" alt="" width="40" height="40"><div><b>APMed '33 Reviewers</b><span>Practice, notes and matching</span></div></div>
+  <div class="acts"><button class="btn" id="install" hidden>Install app</button><button class="btn" id="syncbtn" onclick="openSync()" hidden>Sync</button><button class="btn" id="theme" onclick="toggleTheme()">Theme</button></div>
  </div>
  <h1 id="hi">Pick a course</h1>
- <p class="lede">Your progress saves in this browser, so use the same browser each time. Courses work offline once you've opened this page.</p>
  <div class="try" id="try" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
@@ -159,10 +158,14 @@ function tryBox(step){const b=document.getElementById('try');try{if(step==='ask'
  b.hidden=false}
 tryBox('ask');
 // Install: Android/desktop Chrome offer a prompt; iPhone needs Share → Add to Home Screen.
-let deferred=null;
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;document.getElementById('install').hidden=false});
-document.getElementById('install').onclick=async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;document.getElementById('install').hidden=true};
+// The button stays hidden once the app is installed (or the install prompt was answered), and inside the installed app.
 const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+let deferred=null,installed=standalone;try{installed=installed||!!localStorage.getItem('reviewer_installed')}catch(e){}
+const markInstalled=()=>{installed=true;try{localStorage.setItem('reviewer_installed','1')}catch(e){}document.getElementById('install').hidden=true};
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;if(!installed)document.getElementById('install').hidden=false});
+addEventListener('appinstalled',markInstalled);
+if(navigator.getInstalledRelatedApps)navigator.getInstalledRelatedApps().then(a=>{if(a.length)markInstalled()}).catch(()=>{});
+document.getElementById('install').onclick=async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;markInstalled()};
 if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!standalone)document.getElementById('ios').hidden=false;
 function curTheme(){return document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}
 function drawTheme(){document.getElementById('theme').textContent=curTheme()==='dark'?'Light mode':'Dark mode'}

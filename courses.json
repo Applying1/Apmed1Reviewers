@@ -138,5 +138,23 @@
   "assets": [
    "courses/soon/nstp1.jpg"
   ]
+ },
+ {
+  "id": "pe1",
+  "title": "PE 1",
+  "soon": true,
+  "image": "courses/soon/pe1.jpg",
+  "assets": [
+   "courses/soon/pe1.jpg"
+  ]
+ },
+ {
+  "id": "mmw",
+  "title": "Math in the Modern World",
+  "soon": true,
+  "image": "courses/soon/mmw.jpg",
+  "assets": [
+   "courses/soon/mmw.jpg"
+  ]
  }
 ]
