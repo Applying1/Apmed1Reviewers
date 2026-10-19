@@ -447,7 +447,7 @@ h1{font-size:clamp(24px,2.8vw,31px)}
 .nrows{margin:0}
 .nrow{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.45}
 .nrow:first-child{border-top:0}
-.nrow dt{font-weight:600}
+.nrow dt{font-weight:600;overflow-wrap:break-word;hyphens:auto}
 .nrow dd{margin:0;color:var(--mute);transition:background .15s,color .15s}
 .selftest .nrow{cursor:pointer}
 .selftest .nrow:not(.show) dd{color:transparent;background:var(--raised);border-radius:6px;user-select:none}
