@@ -4,7 +4,7 @@
  "week1": "2026-07-27",
  "freeDays": {"Mon": "Self-directed learning (SDL)", "Sun": ""},
  "subjects": {
-  "botany": {"name": "General Botany", "hue": 145},
+  "botany": {"name": "General Botany", "hue": 145, "course": "botany"},
   "pharma": {"name": "Pharmacology", "hue": 110},
   "psych": {"name": "Intro to Psychology", "hue": 295, "course": "psych"},
   "iml": {"name": "Intro to Medicine Life", "hue": 350, "course": "iml"},

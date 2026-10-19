@@ -157,11 +157,24 @@
  {
   "id": "botany",
   "title": "General Botany",
-  "soon": true,
-  "image": "courses/soon/botany.jpg",
+  "scope": "Plant Tissues, Root, Stem, Leaf",
+  "unit": "Lesson",
+  "itemWord": "question",
+  "count": 522,
+  "storageKey": "study_reviewer_botany_2026_v1",
+  "image": "courses/botany/topic-1.jpg",
+  "extras": [],
   "assets": [
-   "courses/soon/botany.jpg"
-  ]
+   "courses/botany/topic-1.jpg"
+  ],
+  "exam": {
+   "name": "Midterm",
+   "date": ""
+  },
+  "cloud": {
+   "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
+   "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
+  }
  },
  {
   "id": "pe1",
