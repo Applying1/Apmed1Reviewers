@@ -101,7 +101,7 @@ const SECTION_NAMES=CONFIG.sections,CH_NAMES=CONFIG.chapters;
 const ALL_SECTIONS=Object.keys(SECTION_NAMES),ALL_CHAPTERS=Object.keys(CH_NAMES);
 const chOf=s=>String(s).split('-')[0];              // chapter id of a section id like "12-3"
 const isCh=s=>String(s).startsWith('CH:');          // "CH:3" = the entire chapter 3 as one quiz
-const isX=s=>s==='ALL'||s==='MISSED'||s==='STAR'||s==='DUE'||s==='CLASS'; // modes that mix every chapter
+const isX=s=>s==='ALL'||s==='MISSED'||s==='STAR'||s==='DUE'||s==='CLASS'||s==='CRAM'; // modes that mix every chapter
 const secCh=s=>isCh(s)?s.slice(3):chOf(s);
 const KEY=CONFIG.storageKey;
 // Cloud (optional): CONFIG.cloud = {url, key} turns on class stats and device sync (see "cloud" further down).
@@ -189,7 +189,7 @@ const examAll=e=>!e.chapters&&!e.sections;
 const inScopeCh=ch=>{const e=examObj();ch=String(ch);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).some(x=>chOf(x)===ch)};
 const inScope=sec=>{const e=examObj(),ch=chOf(sec);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).includes(sec)};
 const bankItems=b=>b.items.filter(c=>!c.retired&&(state.prefs.extras||!c.extra)&&secOn(c.section)&&inScope(c.section));
-function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(s==='CLASS'&&classOn())||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
+function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(s==='CLASS'&&classOn())||(s==='CRAM'&&cramOn())||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
 function refreshBank(){const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
  sectionKeys=ALL_SECTIONS.filter(k=>BANK.some(c=>c.section===k));
  chapters=ALL_CHAPTERS.filter(ch=>sectionKeys.some(k=>chOf(k)===ch));
@@ -222,14 +222,14 @@ function shuffle(a,seed){let b=a.slice(),x=seed||1;for(let i=b.length-1;i>0;i--)
 const rnd=()=>((Math.random()*4294967296)>>>0)||1;
 // Random order: a new seed every time, so answer letters can't be memorized. In order: stable per attempt.
 const seedFor=(c,tag)=>state.prefs.order==='random'?rnd():stableHash(c.id+tag+state.concepts[c.id].seen);
-function inSection(s){return s==='ALL'?BANK:s==='DUE'?BANK.filter(c=>isDue(c)||(state.dueDone||[]).includes(c.id)):s==='MISSED'?BANK.filter(isMissedC):s==='STAR'?BANK.filter(isStar):s==='CLASS'?classList():isCh(s)?BANK.filter(c=>chOf(c.section)===s.slice(3)):BANK.filter(c=>c.section===s)}
-function progress(s){const a=inSection(s);if(s==='STAR'||s==='DUE'||s==='CLASS'){const d=(s==='STAR'?state.starDone:s==='CLASS'?state.classDone:state.dueDone)||[];return {done:a.filter(c=>d.includes(c.id)).length,total:a.length}}return {done:a.filter(isM).length,total:a.length}}
+function inSection(s){return s==='ALL'?BANK:s==='DUE'?BANK.filter(c=>isDue(c)||(state.dueDone||[]).includes(c.id)):s==='MISSED'?BANK.filter(isMissedC):s==='STAR'?BANK.filter(isStar):s==='CLASS'?classList():s==='CRAM'?cramList():isCh(s)?BANK.filter(c=>chOf(c.section)===s.slice(3)):BANK.filter(c=>c.section===s)}
+function progress(s){const a=inSection(s);if(s==='STAR'||s==='DUE'||s==='CLASS'||s==='CRAM'){const d=(s==='STAR'?state.starDone:s==='CLASS'?state.classDone:s==='CRAM'?state.cramDone:state.dueDone)||[];return {done:a.filter(c=>d.includes(c.id)).length,total:a.length}}return {done:a.filter(isM).length,total:a.length}}
 // What is still to be asked: unmastered items, or for starred review the ones not yet seen this round.
 // Review pass: every item of the section once, mastered or not. Mastery only drops for the ones you miss.
 const onPass=s=>!!state.pass&&state.pass.sec===s;
-function poolFor(s){if(onPass(s)){const d=state.pass.done;return inSection(s).filter(c=>!d.includes(c.id))}if(s==='DUE')return BANK.filter(isDue);const a=inSection(s);if(s==='STAR'||s==='CLASS'){const d=(s==='STAR'?state.starDone:state.classDone)||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
+function poolFor(s){if(onPass(s)){const d=state.pass.done;return inSection(s).filter(c=>!d.includes(c.id))}if(s==='DUE')return BANK.filter(isDue);const a=inSection(s);if(s==='STAR'||s==='CLASS'||s==='CRAM'){const d=(s==='STAR'?state.starDone:s==='CRAM'?state.cramDone:state.classDone)||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
 function completed(s){const p=progress(s);return p.done===p.total}
-const secTitle=s=>s==='DUE'?'Due for review':s==='MISSED'?'Missed '+ITEMS:s==='STAR'?'Starred '+ITEMS:s==='CLASS'?'Class\'s most missed':s==='ALL'?'All '+unitsW+', shuffled':isCh(s)?CH_NAMES[s.slice(3)]:s+' '+SECTION_NAMES[s];
+const secTitle=s=>s==='DUE'?'Due for review':s==='MISSED'?'Missed '+ITEMS:s==='STAR'?'Starred '+ITEMS:s==='CLASS'?'Class\'s most missed':s==='CRAM'?'Cram mode':s==='ALL'?'All '+unitsW+', shuffled':isCh(s)?CH_NAMES[s.slice(3)]:s+' '+SECTION_NAMES[s];
 const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
 
 // fx (class challenges): a fixed seed and item list, so every device builds exactly the same question.
@@ -336,14 +336,15 @@ function cardHTML(){
    (secLog().length?backBtn():'')+'<button class="btn" onclick="extraPractice()">Review again</button><button class="btn primary" id="go" onclick="endPass()">'+(slip?'Practice the '+slip+' you missed':'Done')+' <kbd>Enter</kbd></button></div></div>'}
  // Section finished
  if(!state.active){
-  const L=navList(s),last=!L.length||L.indexOf(s)===L.length-1,focus=s==='MISSED'||s==='STAR'||s==='DUE'||s==='CLASS',none=!inSection(s).length;
-  const label=s==='ALL'?'Shuffle complete':s==='DUE'?(none?'Nothing due':'All reviewed'):s==='STAR'?(none?'Nothing starred':'Round complete'):s==='MISSED'?'All caught up':s==='CLASS'?(none?'Nothing yet':'Round complete'):isCh(s)?esc(UNIT)+' complete':'Section complete';
+  const L=navList(s),last=!L.length||L.indexOf(s)===L.length-1,focus=s==='MISSED'||s==='STAR'||s==='DUE'||s==='CLASS'||s==='CRAM',none=!inSection(s).length;
+  const label=s==='ALL'?'Shuffle complete':s==='DUE'?(none?'Nothing due':'All reviewed'):s==='STAR'?(none?'Nothing starred':'Round complete'):s==='MISSED'?'All caught up':s==='CLASS'?(none?'Nothing yet':'Round complete'):s==='CRAM'?'Cram round done':isCh(s)?esc(UNIT)+' complete':'Section complete';
   const text=s==='DUE'?(none?'Nothing is due right now. Mastered '+ITEMS+' come back for review after 1, 3, 7, 14 and 30 days.':'You reviewed everything that was due. Each one is now scheduled further out.'):s==='STAR'?(none?'No starred '+ITEMS+' yet. Tap the star on any question, or press S, to collect it here.':'You went through every starred '+ITEM+'. Go again the night before the exam.')
+   :s==='CRAM'?'You went through the '+inSection(s).length+' highest-yield '+ITEMS+'. Go again, or practice the ones you missed under Missed '+ITEMS+'.'
    :s==='CLASS'?(none?'This list fills in once enough classmates have answered these '+ITEMS+'.':'You went through the '+ITEMS+' your class misses most. Go again before the exam.')
    :s==='MISSED'?(none?'Nothing missed yet. '+Items+' you get wrong, or check in your slides, will collect here.':'Every '+ITEM+' you had missed is now mastered.')
    :'You answered every '+ITEM+' here correctly '+(TIMES[T()]||T()+' times')+'. Move on, or do a review pass: every '+ITEM+' once, and you keep your mastery unless you miss one.';
   return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">'+label+'</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+text+'</p><div class="row">'+
-   (secLog().length?backBtn():'')+(none||s==='DUE'?'':'<button class="btn" onclick="extraPractice()"'+(s==='STAR'||s==='CLASS'?'':' title="Every '+ITEM+' once. You keep your mastery unless you miss one."')+'>'+(s==='STAR'||s==='CLASS'?'Go again':'Review pass')+'</button>')+
+   (secLog().length?backBtn():'')+(none||s==='DUE'?'':'<button class="btn" onclick="extraPractice()"'+(s==='STAR'||s==='CLASS'||s==='CRAM'?'':' title="Every '+ITEM+' once. You keep your mastery unless you miss one."')+'>'+(s==='STAR'||s==='CLASS'||s==='CRAM'?'Go again':'Review pass')+'</button>')+
    (focus?'<button class="btn primary" id="go" onclick="setPage(\'dashboard\')">Back to dashboard <kbd>Enter</kbd></button>'
     :'<button class="btn primary" id="go" onclick="advance()">'+(last?'Finish':'Next '+(isCh(s)?unitW:'section'))+' <kbd>Enter</kbd></button>')+'</div></div>';
  }
@@ -365,7 +366,8 @@ function focusNav(study){
  const nStar=state.prefs.stars?BANK.filter(isStar).length:0,sOn=state.section==='STAR'&&study;
  const nClass=classOn()?classList().length:0,cOn=state.section==='CLASS'&&study;
  const b=(id,on,ic,name,ct,tip)=>'<button class="sec special '+(on?'on':'')+'" '+(on?'aria-current="page" ':'')+'onclick="selectSection(\''+id+'\')" title="'+tip+'"><span class="no">'+ic+'</span><span class="nm">'+name+'</span><span class="ct">'+ct+'</span></button>';
- return (nDue||dOn?b('DUE',dOn,CLOCK_SM,'Due for review',nDue,'Mastered '+ITEMS+' that are due for a spaced review'):'')+(nMiss||mOn?b('MISSED',mOn,MISS_SM,'Missed '+ITEMS,nMiss,'Only the '+ITEMS+' you got wrong or checked in your slides, until mastered'):'')+
+ const crOn=state.section==='CRAM'&&study;
+ return (cramOn()?b('CRAM',crOn,FLAME_SM,'Cram mode',cramList().length,'Short on time: the highest-yield '+ITEMS+' in one deck'):'')+(nDue||dOn?b('DUE',dOn,CLOCK_SM,'Due for review',nDue,'Mastered '+ITEMS+' that are due for a spaced review'):'')+(nMiss||mOn?b('MISSED',mOn,MISS_SM,'Missed '+ITEMS,nMiss,'Only the '+ITEMS+' you got wrong or checked in your slides, until mastered'):'')+
   (nStar||sOn?b('STAR',sOn,STAR_SM,'Starred',nStar,'Your starred '+ITEMS+', mastered or not'):'')+(nClass||cOn?b('CLASS',cOn,CLASS_SM,'Class\'s most missed',nClass,'The '+ITEMS+' your class misses most right now'):'');
 }
 // One chapter open at a time keeps the topic list short.
@@ -398,7 +400,7 @@ function drawStudy(){
  $('prevSec').disabled=!L.length||idx<=0;$('nextSec').disabled=!L.length||idx>=L.length-1;
  for(const [id,w] of [['prevSec','Previous '],['nextSec','Next ']]){$(id).title=w+what;$(id).setAttribute('aria-label',w+what)}
  $('notesBtn').hidden=!pageOn('notes');$('chartBtn').hidden=!chartsOn();
- $('mlabel').innerHTML=pp?'Review pass · <b>'+pp.done+'</b> of '+pp.total+' '+ITEMS+' gone through':'<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'||s==='CLASS'?(s==='STAR'?'starred ':'')+ITEMS+' reviewed this round':s==='DUE'?ITEMS+' reviewed':ITEMS+' mastered');
+ $('mlabel').innerHTML=pp?'Review pass · <b>'+pp.done+'</b> of '+pp.total+' '+ITEMS+' gone through':'<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'||s==='CLASS'||s==='CRAM'?(s==='STAR'?'starred ':'')+ITEMS+' reviewed this round':s==='DUE'?ITEMS+' reviewed':ITEMS+' mastered');
  $('goal').innerHTML=GOALS.length>1?'<span>Recall goal</span>'+goalSeg():'';
  $('fill').style.width=(100*(pp||p).done/Math.max(1,(pp||p).total))+'%';
  // Dots: in random order they are grouped by progress, so a dot's position never hints at a question.
@@ -540,7 +542,7 @@ function drawDash(){
  $('hero').innerHTML='<div><div class="big num">'+pct+'%<small>mastered</small></div>'+
   '<p class="sub">'+(when?'<span class="when">'+esc(ex.name)+' '+when+'</span> · ':'')+bn+'<b class="num">'+m+'</b> of <span class="num">'+BANK.length+'</span> '+ITEMS+' mastered '+(ex?'for '+esc(ex.name):'across '+esc(scopeLabel()))+' · <b class="num">'+secDone+'</b> of '+sectionKeys.length+' sections complete</p>'+
   '<div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'" aria-label="Overall mastery"><div class="fill" style="width:'+pct+'%"></div></div></div>'+
-  '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div>'+(secDone===sectionKeys.length?'<button class="btn primary" onclick="reviewAll()" title="Every '+ITEM+' once, shuffled. You keep your mastery unless you miss one.">Review pass · '+(ex?'all of '+esc(ex.name):'all '+unitsW)+'</button>':'<button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button>')+(nDue?'<button class="shuffle-link due" onclick="selectSection(\'DUE\')">'+CLOCK_SM+'Review '+nDue+' due today</button>':'')+'<button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
+  '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div>'+(secDone===sectionKeys.length?'<button class="btn primary" onclick="reviewAll()" title="Every '+ITEM+' once, shuffled. You keep your mastery unless you miss one.">Review pass · '+(ex?'all of '+esc(ex.name):'all '+unitsW)+'</button>':'<button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button>')+(nDue?'<button class="shuffle-link due" onclick="selectSection(\'DUE\')">'+CLOCK_SM+'Review '+nDue+' due today</button>':'')+(cramOn()?'<button class="shuffle-link cram" onclick="selectSection(\'CRAM\')">'+FLAME_SM+'Short on time? Cram mode · '+cramList().length+' highest-yield '+ITEMS+'</button>':'')+'<button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
   (pageOn('notes')?'<button class="shuffle-link" onclick="openNotes(\'all\')">'+NOTE_SM+'Read the high-yield notes</button>':'')+
   (state.prefs.stars&&nStar?'<button class="shuffle-link" onclick="selectSection(\'STAR\')">'+STAR_SM+'Review starred ('+nStar+')</button>':'')+(classOn()?'<button class="shuffle-link" onclick="selectSection(\'CLASS\')">'+CLASS_SM+'Class\'s most missed ('+classList().length+')</button>':'')+'</div>';
 
@@ -798,7 +800,7 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
  save();if(page==='exam'){drawExam();window.scrollTo(0,0)}}
 function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*ex.right/n);$('extitle').textContent='Results';
  const wrong=ex.qs.map((q,j)=>({q,j,a:ex.ans[j]})).filter(x=>!exOK(x.q,x.a));
- $('exbody').innerHTML='<section class="card hero exres"><div>'+(ex.chal?'<div class="eyebrow">'+esc(ex.chal.label)+(ex.retake?' · retake':'')+'</div>':'')+'<div class="big num">'+pct+'%<small>'+ex.right+' of '+n+' right</small></div><p class="sub">Time: '+clock(ex.end-ex.start)+(ex.timeUp?' (time ran out)':'')+' · '+(wrong.length?wrong.length+' to review':'no mistakes')+'</p>'+(ex.chal?'<div class="sqrow" role="img" aria-label="Green: right, red: wrong, white: skipped">'+squares(ex)+'</div>':'')+'</div></section>'+
+ $('exbody').innerHTML='<section class="card hero exres"><div>'+(ex.chal?'<div class="eyebrow">'+esc(ex.chal.label)+(ex.retake?' · retake':'')+'</div>':'')+'<div class="big num">'+pct+'%<small>'+ex.right+' of '+n+' right</small></div>'+(ex.chal&&ex.chal.by&&ex.chal.sc?'<p class="chalbeat">'+(ex.right>ex.chal.sc?'🎉 You beat <b>'+esc(ex.chal.by)+'</b>\'s '+ex.chal.sc+' of '+n+'!':ex.right===ex.chal.sc?'🤝 Tied with <b>'+esc(ex.chal.by)+'</b> at '+ex.chal.sc+' of '+n+(ex.chal.tm&&ex.end-ex.start<ex.chal.tm?', and you were faster!':'.'):'<b>'+esc(ex.chal.by)+'</b>\'s '+ex.chal.sc+' of '+n+' stays on top. Review your mistakes and try again!')+'</p>':'')+'<p class="sub">Time: '+clock(ex.end-ex.start)+(ex.timeUp?' (time ran out)':'')+' · '+(wrong.length?wrong.length+' to review':'no mistakes')+'</p>'+(ex.chal?'<div class="sqrow" role="img" aria-label="Green: right, red: wrong, white: skipped">'+squares(ex)+'</div>':'')+'</div></section>'+
   '<section class="panel" style="margin-top:12px"><h2>By '+unitW+'</h2><div class="bars">'+Object.entries(ex.byCh).map(([ch,[r,t]])=>'<div class="bar-row"><span class="n"><span>'+esc(ch)+'</span>'+esc(CH_NAMES[ch]||'')+'</span><span class="p">'+r+' of '+t+'</span><span class="track"><span class="fill" style="display:block;width:'+(100*r/t)+'%"></span></span></div>').join('')+'</div></section>'+
   '<div class="exacts">'+(ex.chal?'<button class="btn primary" onclick="copyChalScore()">Copy my score</button><button class="btn" onclick="copyChalLink(state.exam.chal)">Copy challenge link</button>':'')+(wrong.length?'<button class="btn'+(ex.chal?'':' primary')+'" onclick="toggleExReview()">'+(ex.review?'Hide my mistakes':'Review my mistakes ('+wrong.length+')')+'</button>':'')+
   (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">'+(ex.chal?'Done':'New exam')+'</button></div>'+
@@ -838,7 +840,7 @@ function drawMatchSets(){
 const CH_COUNTS=[10,15,20];let chalOpen=false,chalSeed='',chalN=15;
 const LINK_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>';
 function readChallenge(){const h=location.hash.replace(/^#/,'');if(!/^challenge=/.test(h))return null;const p=new URLSearchParams(h),list=k=>(p.get(k)||'').split(',').filter(Boolean);
- const c={seed:(p.get('challenge')||'').slice(0,24),chs:list('ch'),n:Math.max(1,Math.min(100,+p.get('n')||15)),t:p.get('t')==='1'||+p.get('m')>0,m:Math.max(0,Math.min(300,Math.round(+p.get('m'))||0)),bank:p.get('bank')||'main',o:list('o'),x:p.get('x')!=='0',v:p.get('v')||''};
+ const c={by:(p.get('by')||'').slice(0,40),sc:Math.max(0,Math.min(100,+p.get('sc')||0)),tm:Math.max(0,+p.get('tm')||0),seed:(p.get('challenge')||'').slice(0,24),chs:list('ch'),n:Math.max(1,Math.min(100,+p.get('n')||15)),t:p.get('t')==='1'||+p.get('m')>0,m:Math.max(0,Math.min(300,Math.round(+p.get('m'))||0)),bank:p.get('bank')||'main',o:list('o'),x:p.get('x')!=='0',v:p.get('v')||''};
  return c.seed?c:null}
 // Opening a challenge link: show its intro, or simply resume it if it is the one in progress.
 function takeLink(){const c=readChallenge();if(!c)return false;const ex=state.exam;
@@ -878,6 +880,7 @@ function drawChalIntro(){const c=CHAL,b=BANKS.find(x=>x.id===c.bank),pool=b?chal
  $('exbody').innerHTML=box('<div class="big num">'+n+'<small>'+ITEMS+'</small></div><p class="sub">'+esc(cap(chsText(c.chs)))+' · '+(c.m?c.m+'-minute timer':c.t?n+'-minute timer':'no timer')+(c.bank!=='main'?' · '+esc(b.name)+' bank':'')+'</p>'+
   '<p class="chalnote">Everyone who opens this link gets the same questions in the same order. Answers are shown at the end; then copy your score into the group chat to compare.</p>'+
   (c.v&&c.v!==poolSig(pool)?'<p class="chalwarn">This reviewer was updated after the link was made, so some of your questions may differ from your classmates\'.</p>':'')+
+  (c.by&&c.sc?'<p class="chalbeat">🏆 <b>'+esc(c.by)+'</b> got <b>'+c.sc+' of '+n+'</b>'+(c.tm?' in '+clock(c.tm):'')+'. Can you beat it?</p>':'')+
   (prev?'<p class="chalnote">You already took this one: <b>'+prev.right+' of '+prev.total+'</b>. Another try is shared as a retake.</p>':'')+
   (busy?'<p class="chalwarn">Starting replaces the '+(ex.chal?'challenge':'mock exam')+' you have in progress.</p>':'')+
   '<div class="exacts"><button class="btn primary" onclick="startChallenge(CHAL)">Start challenge</button><button class="btn" onclick="dismissChallenge()">Not now</button></div>')}
@@ -888,7 +891,7 @@ function startChallenge(c){const pool=chalPool(c)||[],n=Math.min(c.n,pool.length
  CHAL=null;chalOpen=false;clearHash();page='exam';state.page='exam';save();draw();window.scrollTo(0,0)}
 const squares=ex=>ex.qs.map((q,j)=>ex.ans[j]==null||ex.ans[j]===''?'⬜':exOK(q,ex.ans[j])?'🟩':'🟥').join('');
 function copyChalScore(){const ex=state.exam,C=ex&&ex.chal;if(!C)return;const n=ex.qs.length,link=chalLink(C);
- copyText((state.name?state.name.trim()+' · ':'')+CONFIG.title+' · '+C.label+'\n'+ex.right+'/'+n+' ('+Math.round(100*ex.right/n)+'%) in '+clock(ex.end-ex.start)+(ex.retake?' · retake':'')+'\n'+squares(ex)+(link?'\nTake it: '+link:''),'Score copied. Paste it in your group chat.')}
+ copyText((state.name?state.name.trim()+' · ':'')+CONFIG.title+' · '+C.label+'\n'+ex.right+'/'+n+' ('+Math.round(100*ex.right/n)+'%) in '+clock(ex.end-ex.start)+(ex.retake?' · retake':'')+'\n'+squares(ex)+(link?'\nBeat my score: '+link+'&by='+encodeURIComponent((state.name||'A classmate').trim())+'&sc='+ex.right+'&tm='+(ex.end-ex.start):''),'Score copied. Paste it in your group chat.')}
 function copyChalLink(c){const link=chalLink(c);if(!link)return;
  copyText(CONFIG.title+' · '+chalLabel(c)+': '+c.n+' '+ITEMS+' from '+chsText(c.chs)+(c.t?', timed':'')+'. Same questions for everyone.\n'+link,'Link copied. Paste it in your group chat.')}
 
@@ -950,6 +953,19 @@ function rpc(fn,body,keep){const h={'Content-Type':'application/json',apikey:CLO
  return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body),keepalive:!!keep})
   .then(r=>r.text().then(t=>{if(!r.ok){let m='';try{m=JSON.parse(t).message||''}catch(e){}throw new Error(m||'cloud '+r.status)}return t?JSON.parse(t):null}))}
 // Most missed by the class: questions answered at least CLASS_MIN times, by miss rate, within the current bank and exam scope.
+// Cram mode: the highest-yield ~45 in the current scope. Fixed for the day so a round doesn't shift while you answer.
+const CRAM_N=45,FLAME_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3 4 5 4 9a4 4 0 0 1-8 0c0-1.5.6-2.8 1.5-3.8C10 10 11 10.5 11 12c1-2 1-5 1-9z"/><path d="M12 21a7 7 0 0 0 7-7c0-3-1.5-5.5-3-7"/><path d="M5 14a7 7 0 0 0 7 7"/></svg>';
+let cramMemo={k:'',list:[]};
+function cramOn(){return BANK.length>=CRAM_N+15}
+function cramList(){const day=new Date().toDateString(),k=state.bank+'|'+state.prefs.scope+'|'+BANK.length+'|'+day+'|'+(CSTATS&&CSTATS.at||0);if(cramMemo.k===k)return cramMemo.list;
+ const out=[],seen=new Set(),add=c=>{if(c&&!seen.has(c.id)&&out.length<CRAM_N){seen.add(c.id);out.push(c)}};
+ classList().slice(0,20).forEach(add);
+ BANK.filter(c=>isMissedC(c)&&!isM(c)).sort((a,b)=>((state.concepts[b.id]||{}).wrong||0)-((state.concepts[a.id]||{}).wrong||0)).slice(0,10).forEach(add);
+ // then each section's most-missed (by the class), else an unmastered one, round by round until the deck is full
+ const rank=c=>{const r=classRate(c.id);return (r==null?-1:r)*1000+(isM(c)?0:500)+(stableHash(c.id+day)%400)};
+ const bySec=sectionKeys.map(sec=>BANK.filter(c=>c.section===sec).sort((a,b)=>rank(b)-rank(a))).filter(l=>l.length);
+ for(let i=0;out.length<CRAM_N&&bySec.some(l=>l.length>i);i++)bySec.forEach(l=>add(l[i]));
+ const list=shuffle(out,stableHash('cram|'+day));cramMemo={k,list};return list}
 function classList(){if(!CSTATS||!CSTATS.rows)return [];const k=state.bank+'|'+state.prefs.scope+'|'+CSTATS.at+'|'+BANK.length;if(classMemo.k===k)return classMemo.list;
  const list=BANK.map(c=>({c,s:CSTATS.rows[c.id]})).filter(x=>x.s&&x.s[0]>=CLASS_MIN&&x.s[1]>0).sort((a,b)=>b.s[1]/b.s[0]-a.s[1]/a.s[0]||b.s[0]-a.s[0]).slice(0,CLASS_TOP).map(x=>x.c);
  classMemo={k,list};return list}
@@ -1186,6 +1202,9 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'23',date:'Oct 19, 2026',title:'Cram mode and Beat my score',items:[
+  '<b>Short on time?</b> Tap <b>Cram mode</b> on the dashboard (or in the menu): about 45 of the highest-yield '+ITEMS+': what the class misses most, what you missed, and one key '+ITEM+' from every section.',
+  'Challenge links now carry your score. When a classmate opens yours, they see what you got and find out at the end if they beat it. Make one in <b>Mock exam → Challenge</b>, then <b>Copy my score</b>.']},
  {v:'22',date:'Oct 18, 2026',title:'APMed \'33 colors',items:[
   'A new <b>APMed \'33</b> color palette (cream, teal and mustard, from the batch\'s logo). Turn it on in <b>Personalize → Appearance → Colors</b>. It works in light and dark mode and applies to every course.']},
  {v:'21',date:'Oct 18, 2026',title:'Less clutter',items:[
@@ -1379,6 +1398,7 @@ function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct|
 function record(correct,lookup){
  const q=state.active,k=state.concepts[q.cid],choice=q.choices.find(x=>x.letter===state.selected),target=q.choices.find(x=>x.correct);
  k.seen++;crowdAdd(q.cid,!correct);if(state.section==='CLASS'){state.classDone=state.classDone||[];if(!state.classDone.includes(q.cid))state.classDone.push(q.cid)}
+ if(state.section==='CRAM'){state.cramDone=state.cramDone||[];if(!state.cramDone.includes(q.cid))state.cramDone.push(q.cid)}
  if(onPass(state.section)){const P=state.pass;if(!P.done.includes(q.cid))P.done.push(q.cid);if(!correct&&!P.miss.includes(q.cid))P.miss.push(q.cid)}
  if(state.section==='STAR'){state.starDone=state.starDone||[];if(!state.starDone.includes(q.cid))state.starDone.push(q.cid)}
  if(state.section==='DUE'){state.dueDone=state.dueDone||[];if(!state.dueDone.includes(q.cid))state.dueDone.push(q.cid)}
@@ -1396,12 +1416,12 @@ function record(correct,lookup){
  requestAnimationFrame(()=>{const f=document.querySelector('#card .fb'),r=f?.getBoundingClientRect();if(r&&r.bottom>innerHeight)f.scrollIntoView({block:'nearest',behavior:reduceMotion?'auto':'smooth'})});
 }
 function next(){if(!state.feedback)return;state.feedback=null;state.active=null;state.selected=null;maybeMix();if(completed(state.section)&&!state.complete.includes(state.section))state.complete.push(state.section);save();draw();scrollToCard()}
-function goSection(sec){if(sec===state.section)return;state.section=sec;state.pmatch=null;state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;if(!isX(sec))openCh.add(secCh(sec));if(sec==='STAR'&&completed('STAR'))state.starDone=[];if(sec==='CLASS'&&completed('CLASS'))state.classDone=[];if(sec==='DUE')state.dueDone=[];save();draw();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'})}
+function goSection(sec){if(sec===state.section)return;state.section=sec;state.pmatch=null;state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;if(!isX(sec))openCh.add(secCh(sec));if(sec==='STAR'&&completed('STAR'))state.starDone=[];if(sec==='CLASS'&&completed('CLASS'))state.classDone=[];if(sec==='CRAM'&&completed('CRAM'))state.cramDone=[];if(sec==='DUE')state.dueDone=[];save();draw();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'})}
 function selectSection(sec){toggleNav(false);if(page!=='study'){page='study';state.page=page;if(sec===state.section){save();draw();window.scrollTo(0,0);return}}goSection(sec)}
 function stepSection(d){const L=navList(state.section),i=L.indexOf(state.section)+d;if(i>=0&&i<L.length)goSection(L[i])}
 function advance(){const L=navList(state.section),i=L.indexOf(state.section);if(!L.length||i===L.length-1){$('modalbody').textContent=completed('ALL')?'You have mastered all '+BANK.length+' '+ITEMS+(examObj()?' for '+examObj().name:' across '+scopeLabel())+'. Keep practicing any section to stay sharp.':'You reached the end. '+(BANK.length-mastered())+' '+ITEMS+' are still waiting elsewhere, so check the dashboard for what is left.';$('dialog').hidden=false;return}goSection(L[i+1])}
 // Starred review restarts its round; everything else starts a review pass (mastery is kept unless you miss).
-function extraPractice(){if(state.section==='STAR')state.starDone=[];else if(state.section==='CLASS')state.classDone=[];else state.pass={sec:state.section,done:[],miss:[]};state.complete=state.complete.filter(x=>x!==state.section);state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
+function extraPractice(){if(state.section==='STAR')state.starDone=[];else if(state.section==='CLASS')state.classDone=[];else if(state.section==='CRAM')state.cramDone=[];else state.pass={sec:state.section,done:[],miss:[]};state.complete=state.complete.filter(x=>x!==state.section);state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
 function endPass(){state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
 function reviewAll(){selectSection('ALL');extraPractice()}
 function scrollToCard(){const r=$('card').getBoundingClientRect();if(r.top<0)$('card').scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
