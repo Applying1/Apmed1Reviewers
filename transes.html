@@ -29,9 +29,21 @@ button,a{font:inherit;color:inherit}
 .msg{margin:60px auto;max-width:420px;text-align:center;color:var(--mute);padding:0 20px}
 .btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn[hidden]{display:none}
+/* Chapter tabs: read one chapter at a time (the other pages are hidden, so you can't scroll past it) */
+#tabs{position:sticky;top:var(--barh,55px);z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--line);scrollbar-width:none}
+#tabs::-webkit-scrollbar{display:none}#tabs[hidden]{display:none}
+#tabs button{flex:none;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 12px;border-radius:99px;border:1px solid var(--line2);background:var(--surface);font-size:13.5px;font-weight:600;color:var(--mute);cursor:pointer}
+#tabs button:hover{background:var(--raised);color:var(--text)}
+#tabs button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#tabs button b{font-variant-numeric:tabular-nums}
+.pg[hidden]{display:none}
+#chend{display:flex;flex-direction:column;align-items:center;gap:10px;margin:6px auto 0;padding:18px 20px;max-width:520px;text-align:center;color:var(--mute);font-size:14px}
+#chend[hidden]{display:none}#chend b{color:var(--text)}
+@media (min-width:1000px){body.side #tabs{padding-left:326px}}
+@media (max-width:520px){#tabs{padding:7px 10px}}
 /* Contents: a sidebar on wide screens, a slide-over panel on phones */
 /* Search */
-#sbar{position:sticky;top:var(--barh,55px);z-index:5;display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+#sbar{position:sticky;top:calc(var(--barh,55px) + var(--tabh,0px));z-index:5;display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
 #sbar[hidden]{display:none}
 #sq{flex:1;min-width:0;padding:8px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:inherit;font-size:15px;outline:0}
 #sq:focus{border-color:var(--accent)}
@@ -71,6 +83,7 @@ button,a{font:inherit;color:inherit}
  <div class="zoom"><button class="btn icon" onclick="zoom(-1)" aria-label="Zoom out">−</button><button class="btn icon" onclick="zoom(1)" aria-label="Zoom in">+</button></div>
  <a class="btn" id="dl" download><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="lbl">Download</span></a>
 </div>
+<div id="tabs" hidden role="tablist" aria-label="Chapters"></div>
 <div id="sbar" hidden role="search"><input id="sq" type="search" placeholder="Search the transes…" autocomplete="off" aria-label="Search the transes"
  oninput="clearTimeout(window.__sq);window.__sq=setTimeout(runSearch,250)" onkeydown="if(event.key==='Enter'){event.preventDefault();stepHit(event.shiftKey?-1:1)}else if(event.key==='Escape')closeSearch()">
  <span id="scount" aria-live="polite"></span>
@@ -80,6 +93,7 @@ button,a{font:inherit;color:inherit}
 </div>
 <nav id="toc" aria-label="Contents"></nav><div id="scrim" onclick="toggleToc(false)"></div>
 <div id="pages"><p class="msg">Loading the transes…</p></div>
+<div id="chend" hidden></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 // Reads the PDF inside the page (no download, works in the installed app and offline once opened).
@@ -109,8 +123,8 @@ async function draw(p){
 function keepSpot(fn){const i=curPage(),el=pages[i]&&pages[i].el,off=el?(scrollY+barH()-el.offsetTop)/el.offsetHeight:0;fn();if(el)scrollTo(0,el.offsetTop+off*el.offsetHeight-barH())}
 function zoom(d){keepSpot(()=>{scale=Math.max(.6,Math.min(2.5,scale*(d>0?1.25:0.8)));layout()})}
 addEventListener('resize',()=>{clearTimeout(window.__rt);window.__rt=setTimeout(()=>keepSpot(layout),150)});
-const barH=()=>document.querySelector('.bar').offsetHeight;
-function curPage(){if(!pages.length)return 0;const y=scrollY+barH()+40;let lo=0,hi=pages.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(pages[m].el.offsetTop<=y)lo=m;else hi=m-1}return lo}
+const barH=()=>document.querySelector('.bar').offsetHeight+(document.getElementById('tabs').hidden?0:document.getElementById('tabs').offsetHeight);
+function curPage(){if(!pages.length)return 0;if(scrollY>0&&innerHeight+scrollY>=document.documentElement.scrollHeight-4)return tab>=0?tabRange(tab)[1]-1:pages.length-1;if(tab>=0){const r=tabRange(tab),y=scrollY+barH()+40;let best=r[0]-1;for(let k=r[0]-1;k<r[1];k++)if(pages[k].el.offsetTop<=y)best=k;return best}const y=scrollY+barH()+40;let lo=0,hi=pages.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(pages[m].el.offsetTop<=y)lo=m;else hi=m-1}return lo}
 
 // ---- Contents: the PDF's own bookmarks, or "Lesson / Chapter" title lines found in the text
 let toc=[],ptH=792;
@@ -148,23 +162,46 @@ async function buildToc(){
    if(m&&m[1]!==last){last=m[1];toc.push({num:m[1],name:tidy(m[2]),page:n,y:null,kids:[]})}}
  }
  if(toc.length<2){toc=[];return}
+ toc.sort((a,b)=>a.page-b.page);
  document.getElementById('toc').innerHTML='<div class="th">Contents</div>'+toc.map((c,i)=>'<div class="ch" data-i="'+i+'">'+
   '<div class="row" role="button" tabindex="0" onclick="go('+i+')" onkeydown="if(event.key===\'Enter\')go('+i+')">'+
   '<span class="num">'+(c.num||'•')+'</span><span class="ct">'+esc(c.name)+'</span><span class="pgn">p. '+c.page+'</span>'+
   (c.kids.length?'<button class="tw" onclick="event.stopPropagation();this.closest(\'.ch\').classList.toggle(\'exp\')" aria-label="Show sections"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>':'')+
   '</div>'+(c.kids.length?'<div class="secs">'+c.kids.map((k,j)=>'<button onclick="go('+i+','+j+')"><span>'+esc(k.name)+'</span><span class="pgn">'+k.page+'</span></button>').join('')+'</div>':'')+'</div>').join('');
  document.getElementById('tocbtn').hidden=false;
+ drawTabs();let want=-1;try{const v=localStorage.getItem('transes_tab_'+file);if(v!=null)want=+v}catch(e){}
+ if(want>=0&&want<toc.length){const pg=curPage()+1,r=tabRange(want);setTab(want,pg>=r[0]&&pg<=r[1]?pg:null)}
  let wantOpen=false;try{wantOpen=!!localStorage.getItem('transes_toc')}catch(e){}
  if(wantOpen&&wide())toggleToc(true);
  lastCh=-2;track();
 }
-function jump(page,y){const el=pages[page-1]&&pages[page-1].el;if(!el)return;
+function jump(page,y){const el=pages[page-1]&&pages[page-1].el;if(!el)return;if(el.hidden){setTab(chapterOf(page),page,y);return}
  const off=y==null?0:Math.max(0,Math.min(.95,1-y/ptH))*el.offsetHeight;scrollTo(0,Math.max(0,el.offsetTop+off-barH()-10))}
-function go(i,j){const c=toc[i],k=j==null?c:c.kids[j];jump(k.page,k.y);if(!wide())toggleToc(false);setTimeout(track,60)}
+function go(i,j){const c=toc[i],k=j==null?c:c.kids[j];if(tab>=0&&tab!==i){setTab(i,k.page,k.y);if(!wide())toggleToc(false);return}jump(k.page,k.y);if(!wide())toggleToc(false);setTimeout(track,60)}
+// ---- Chapter tabs
+let tab=-1;
+const chapterOf=pg=>{let ci=0;for(let i=0;i<toc.length;i++)if(toc[i].page<=pg)ci=i;return ci};
+function tabRange(i){return [toc[i].page,i+1<toc.length?toc[i+1].page-1:pages.length]}
+const tabLabel=c=>{const m=String(c.name).match(/summary of (?:chapter|lesson)\s*(\d+)/i);return m?'Ch <b>'+m[1]+'</b> summary':(c.num?'<b>'+esc(c.num)+'</b> · ':'')+esc(c.name)};
+function drawTabs(){const t=document.getElementById('tabs');if(toc.length<2){t.hidden=true;return}
+ t.innerHTML='<button role="tab" data-t="-1" onclick="setTab(-1)">All</button>'+toc.map((c,i)=>'<button role="tab" data-t="'+i+'" onclick="setTab('+i+')" title="'+esc((c.num?'Chapter '+c.num+': ':'')+c.name)+'">'+tabLabel(c)+'</button>').join('');
+ t.hidden=false;document.documentElement.style.setProperty('--tabh',t.offsetHeight+'px');markTab()}
+function markTab(){document.querySelectorAll('#tabs button').forEach(b=>{const on=+b.dataset.t===tab;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);if(on)b.scrollIntoView({block:'nearest',inline:'center'})})}
+// Show one chapter (or all with -1); optionally land on a page inside it.
+function setTab(i,page,y){const pg=curPage()+1;tab=i;const r=i>=0?tabRange(i):[1,pages.length];
+ pages.forEach((p,k)=>{p.el.hidden=k+1<r[0]||k+1>r[1]});
+ const end=document.getElementById('chend');
+ if(i>=0){const nx=toc[i+1];end.innerHTML='<span>End of <b>'+(toc[i].num?'Chapter '+esc(toc[i].num):esc(toc[i].name))+'</b></span>'+(nx?'<button class="btn" onclick="setTab('+(i+1)+');scrollTo(0,0)">Next: '+(nx.num?'Ch '+esc(nx.num)+' · ':'')+esc(nx.name)+' →</button>':'');end.hidden=false}else end.hidden=true;
+ try{localStorage.setItem('transes_tab_'+file,String(i))}catch(e){}
+ markTab();layout();
+ const to=page!=null?page:i>=0?r[0]:pg;const el=pages[to-1]&&pages[to-1].el;
+ if(el){const off=y==null?0:Math.max(0,Math.min(.95,1-y/ptH))*el.offsetHeight;scrollTo(0,page==null&&i>=0?0:Math.max(0,el.offsetTop+off-barH()-10))}
+ lastCh=-2;setTimeout(track,60)}
 // the chapter you're in: shown under the title and highlighted in Contents; the page is remembered
 let lastCh=-1;
 function track(){if(!pages.length)return;const pg=curPage()+1;let ci=-1;for(let i=0;i<toc.length;i++)if(toc[i].page<=pg)ci=i;
- const c=toc[ci];sub.textContent=(c?(c.num?'Ch '+c.num+' · ':'')+c.name+' · ':'')+'p. '+pg+' of '+pages.length;
+ const c=toc[ci];let where='p. '+pg+' of '+pages.length;if(tab>=0){const r=tabRange(tab);where='p. '+(pg-r[0]+1)+' of '+(r[1]-r[0]+1)+' in this chapter'}
+ sub.textContent=(c?(c.num?'Ch '+c.num+' · ':'')+c.name+' · ':'')+where;
  if(ci!==lastCh){lastCh=ci;document.querySelectorAll('.ch').forEach(e=>{const on=+e.dataset.i===ci;e.classList.toggle('cur',on);if(on)e.classList.add('exp')})}
  try{localStorage.setItem('transes_at_'+file,String(pg))}catch(e){}}
 addEventListener('scroll',()=>{if(!window.__tk)window.__tk=requestAnimationFrame(()=>{window.__tk=0;track()})},{passive:true});
@@ -186,7 +223,7 @@ async function runSearch(){const q=document.getElementById('sq').value.trim().to
  if(!hits.length){cnt.textContent='No matches';return}
  // start from the first match at or after the page you're on
  const here=curPage()+1;hitAt=Math.max(0,hits.findIndex(h=>h.n>=here));stepHit(0)}
-function stepHit(d){if(!hits.length)return;hitAt=(hitAt+d+hits.length)%hits.length;const h=hits[hitAt],p=pages[h.n-1];
+function stepHit(d){if(!hits.length)return;hitAt=(hitAt+d+hits.length)%hits.length;const h=hits[hitAt],p=pages[h.n-1];if(p.el.hidden)setTab(chapterOf(h.n),h.n);
  pages.forEach(paintHits);
  const box=hitBoxes(h)[0],el=p.el,y=el.offsetTop+(box?box.top/100*el.offsetHeight:0);
  scrollTo({top:Math.max(0,y-barH()-document.getElementById('sbar').offsetHeight-70),behavior:'smooth'});
