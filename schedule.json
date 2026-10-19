@@ -10,7 +10,7 @@
   "iml": {"name": "Intro to Medicine Life", "hue": 350, "course": "iml"},
   "purcom": {"name": "Purposive Communication", "hue": 70, "course": "purcom"},
   "mmw": {"name": "Math in the Modern World", "hue": 255},
-  "nstp": {"name": "NSTP 1", "hue": 30},
+  "nstp": {"name": "NSTP 1", "hue": 30, "course": "nstp"},
   "pe": {"name": "PE 1", "hue": 185},
   "chem": {"name": "General Chemistry", "hue": 220, "course": "chem"}
  },
