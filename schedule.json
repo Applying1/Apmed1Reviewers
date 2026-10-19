@@ -22,7 +22,7 @@
   {"id": "iml", "day": "Thu", "start": "09:00", "end": "12:00", "subject": "iml", "where": "VMG of DMSFI", "teacher": "Drs. Bretana, Quiachon and De Guzman"},
   {"id": "mmw", "day": "Fri", "start": "07:00", "end": "10:00", "subject": "mmw", "teacher": "Prof. Verona Vigor"},
   {"id": "nstp", "day": "Fri", "start": "10:00", "end": "13:00", "subject": "nstp", "teacher": "Prof. Anna Liza Mones"},
-  {"id": "pe", "day": "Fri", "start": "14:00", "end": "16:00", "subject": "pe", "teacher": "Prof. Cherry Agustin"},
+  {"id": "pe", "day": "Fri", "start": "13:00", "end": "15:00", "subject": "pe", "teacher": "Prof. Cherry Agustin"},
   {"id": "chem-lab-1", "day": "Sat", "start": "07:30", "end": "10:30", "subject": "chem", "kind": "Lab", "teacher": "Profs. Ranay and Orbita"},
   {"id": "chem-lab-2", "day": "Sat", "start": "10:30", "end": "13:30", "subject": "chem", "kind": "Lab", "teacher": "Profs. Ranay and Orbita"},
   {"id": "chem-lec", "day": "Sat", "start": "13:30", "end": "16:30", "subject": "chem", "kind": "Lecture", "teacher": "Prof. L. Ranay"}
@@ -37,7 +37,7 @@
     "iml": "The Birth of Modern Medicine",
     "mmw": "Linear Programming",
     "nstp": "Chapter 7: Dimension of Development: First Aid Education",
-    "pe": "Background of TABATA; TABATA Workout 1",
+    "pe": "MIDTERM PERFORMANCE - Group 5 starts",
     "chem-lab-1": "Unit 15: Carboxylic Acids and Derivatives",
     "chem-lab-2": "Unit 16: Introduction to Biochemistry",
     "chem-lec": "Activity 9: Gel electrophoresis"
