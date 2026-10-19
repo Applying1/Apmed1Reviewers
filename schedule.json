@@ -42,13 +42,12 @@
     "chem-lab-2": "Unit 16: Introduction to Biochemistry",
     "chem-lec": "Activity 9: Gel electrophoresis"
    },
-   "times": {"pharma": {"start": "10:00"}},
-   "cancel": ["iml"],
+   "cancel": ["pharma", "iml"],
    "extra": [
     {"day": "Tue", "start": "13:00", "end": "16:00", "subject": "iml", "kind": "Moved", "topic": "The Birth of Modern Medicine", "where": "Moved from Thursday", "teacher": "Drs. Bretana, Quiachon and De Guzman"},
     {"day": "Tue", "start": "16:00", "end": "19:00", "subject": "nstp", "kind": "Make-up", "teacher": "Prof. Anna Liza Mones"}
    ],
-   "notes": ["Tuesday: Pharmacology starts at 10:00 AM.", "Tuesday 1:00–4:00 PM: Intro to Medicine Life (moved from Thursday, so no IML on Thursday).", "Tuesday 4:00–7:00 PM: NSTP make-up class (Friday's NSTP still happens)."]
+   "notes": ["Tuesday: Pharmacology is cancelled. The make-up date will be announced.", "Tuesday 1:00–4:00 PM: Intro to Medicine Life (moved from Thursday, so no IML on Thursday).", "Tuesday 4:00–7:00 PM: NSTP make-up class (Friday's NSTP still happens)."]
   }
  }
 }
