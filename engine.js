@@ -149,7 +149,7 @@ const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -235,9 +235,11 @@ const secTitle=s=>s==='DUE'?'Due for review':s==='MISSED'?'Missed '+ITEMS:s==='S
 const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
 
 // fx (class challenges): a fixed seed and item list, so every device builds exactly the same question.
+// Look-alike wrong choices (item.dh): always in the Mock exam and challenges; in practice only if turned on.
+let HARD=false;const hardSet=c=>c.dh&&c.dh.length>=3&&(HARD||state.prefs.hardPractice)?c.dh:c.d;
 function makeQuestion(c,fx){const src=fx?fx.items:BANK,sd=tag=>fx?stableHash(fx.seed+'|'+c.id+'|'+tag):seedFor(c,tag),stage=fx?sd('kind')%3:state.concepts[c.id].seen%3;
  // Authored question: q (stem), a (answer), d (distractors).
- if(c.q){const ch=shuffle([{label:c.a,correct:true},...(c.d||[]).map(x=>({label:x,correct:false}))],sd('choices'));
+ if(c.q){const ch=shuffle([{label:c.a,correct:true},...(hardSet(c)||[]).map(x=>({label:x,correct:false}))],sd('choices'));
   if(ch.length===2&&ch.every(x=>x.label==='True'||x.label==='False'))ch.sort((x,y)=>x.label==='True'?-1:1);
   return {cid:c.id,kind:c.kind||'recall',stem:c.q,choices:ch.map((x,i)=>({...x,letter:LETTERS[i]})),why:c.why||'',hint:c.hint||'',usedHint:false}}
  let cand=src.filter(x=>x.section===c.section&&x.id!==c.id&&!x.q);
@@ -770,7 +772,8 @@ function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.l
  const want=Math.min(st.vsa||0,picked.length),vs=[];if(want){const ok=picked.filter(vsaOK),byU={};ok.forEach(c=>(byU[chOf(c.section)]=byU[chOf(c.section)]||[]).push(c));
   const us=Object.keys(byU);let k=0;while(vs.length<want&&us.some(u=>byU[u].length)){const u=us[k++%us.length];if(byU[u].length)vs.push(byU[u].splice(Math.floor(Math.random()*byU[u].length),1)[0])}
   if(vs.length<want){const more=shuffle(pool.filter(c=>vsaOK(c)&&!picked.includes(c)),rnd()).slice(0,want-vs.length);vs.push(...more);picked=picked.filter(c=>!vs.includes(c)).slice(0,n-vs.length)}else picked=picked.filter(c=>!vs.includes(c))}
- state.exam={qs:picked.map(c=>exQ(makeQuestion(c))).concat(vs.map(c=>exQ(makeQuestion(c),true))),
+ HARD=true;const qsBuilt=picked.map(c=>exQ(makeQuestion(c))).concat(vs.map(c=>exQ(makeQuestion(c),true)));HARD=false;
+ state.exam={qs:qsBuilt,
   ans:{},i:0,start:Date.now(),limit:exMinutes(st,n)*60000,done:false,sheet:st.format==='sheet'||undefined,paperless:st.format==='paperless'||undefined};
  save();drawExam();window.scrollTo(0,0)}
 function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered=Object.keys(ex.ans).length;if(q.ident)setTimeout(()=>{const i=$('extyped');if(i)i.focus({preventScroll:true})},0);
@@ -911,7 +914,8 @@ function drawChalIntro(){const c=CHAL,b=BANKS.find(x=>x.id===c.bank),pool=b?chal
   '<div class="exacts"><button class="btn primary" onclick="startChallenge(CHAL)">Start challenge</button><button class="btn" onclick="dismissChallenge()">Not now</button></div>')}
 function dismissChallenge(){CHAL=null;clearHash();draw();window.scrollTo(0,0)}
 function startChallenge(c){const pool=chalPool(c)||[],n=Math.min(c.n,pool.length);if(!n)return;const fx={seed:c.seed,items:pool};
- state.exam={qs:shuffle(pool,stableHash('order|'+c.seed)).slice(0,n).map(it=>exQ(makeQuestion(it,fx))),
+ HARD=true;const chQs=shuffle(pool,stableHash('order|'+c.seed)).slice(0,n).map(it=>exQ(makeQuestion(it,fx)));HARD=false;
+ state.exam={qs:chQs,
   ans:{},i:0,start:Date.now(),limit:(c.m?c.m:c.t?n:0)*60000,done:false,sheet:exSetup().format==='sheet'||undefined,chal:Object.assign({},c,{key:chalKey(c),label:chalLabel(c)})};
  CHAL=null;chalOpen=false;clearHash();page='exam';state.page='exam';save();draw();window.scrollTo(0,0)}
 const squares=ex=>ex.qs.map((q,j)=>ex.ans[j]==null||ex.ans[j]===''?'⬜':exOK(q,ex.ans[j])?'🟩':'🟥').join('');
@@ -1203,6 +1207,7 @@ function drawPrefs(){
  h+='<section class="panel"><h2>Pages</h2>'+
   (NOTES_DATA?row('Notes','High-yield recognition notes to read before a mock exam, with a self-test mode.',sw(state.prefs.notes,"setPref('notes',"+!state.prefs.notes+")",'Show the Notes page')):'')+
   (MSETS.length||MIXUP.length?row('Drills',[MSETS.length?MSETS.length+' matching-type sets':'',MIXUP.length?MIXUP.length+' Don\'t mix up look-alike drills':''].filter(Boolean).join(' and ')+'.',sw(state.prefs.matching,"setPref('matching',"+!state.prefs.matching+")",'Show the Drills page')):'')+
+  (BANK.some(c=>c.dh)?row('Harder choices in practice','The Mock exam always uses look-alike choices, like the real test (e.g. every option about boy/girl and mother/father). Turn this on to get them in practice too.',sw(!!state.prefs.hardPractice,"setPref('hardPractice',"+!state.prefs.hardPractice+")",'Harder choices in practice')):'')+
   (CHART_DATA.length?row('Charts','A Charts button on Practice, Notes and the Mock exam that opens the reference '+(CHART_DATA.length>1?'charts':'chart')+' ('+CHART_DATA.map(c=>c.title.toLowerCase()).join(', ')+').',sw(state.prefs.charts,"setPref('charts',"+!state.prefs.charts+")",'Show the Charts button')):'')+
   row('Mock exam','A timed run with no hints or answers until the end, then your score by '+unitW+' and a review of your mistakes.',sw(state.prefs.exam,"setPref('exam',"+!state.prefs.exam+")",'Show the Mock exam page'))+'</section>';
  h+='<section class="panel"><h2>Question banks</h2><p class="desc">Main is the full reviewer. Each extra bank is its own question set with its own progress. Sets you add are saved in this browser only; Export one to share it.</p>'+
@@ -1227,6 +1232,9 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'25',date:'Oct 19, 2026',title:'Harder mock exams',items:[
+  'The <b>Mock exam</b> now uses <b>look-alike choices</b> where a course has them, like the real test: every option shares the same pieces with one swapped (boy/girl, mother/father, first/second stage). Practice keeps the easier choices while you learn.',
+  'Want the hard ones in practice too? <b>Personalize → Harder choices in practice</b>.']},
  {v:'24',date:'Oct 19, 2026',title:'Mock exam like the real one',items:[
   '<b>Equal split:</b> in <b>Mock exam</b>, choose <b>Split → Equal per '+unitW+'</b> to get the same number from each '+unitW+', grouped like the real test (80 items = 20 per '+unitW+' with 4 '+unitsW+'). Pick any number with <b>Questions → Custom</b>.',
   '<b>Paperless format:</b> one question at a time, no topic labels, and no results until you submit, like the digital exam.',
