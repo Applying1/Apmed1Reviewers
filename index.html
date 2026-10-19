@@ -99,6 +99,11 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .modal p.msg{color:var(--bad);margin-top:10px}
 .modal p.msg.ok{color:var(--good)}
 .modal p.msg:empty{display:none}
+/* One-time spotlight: features people miss */
+.spot{display:flex;gap:14px;padding:14px;margin-top:12px;border:1px solid var(--line2);border-radius:14px;background:var(--bg)}
+.spot .ic{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:var(--surface);border:1px solid var(--line)}
+.spot h3{margin:0;font-size:15.5px}.spot p{margin:4px 0 10px!important}.spot .ok{color:var(--good);font-size:13.5px;font-weight:600}
+.spotfoot{display:flex;justify-content:flex-end;margin-top:16px}
 .note.inst{text-align:center}
 /* Next class, from the timetable */
 .upnext{display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow)}
@@ -153,6 +158,10 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
  <div class="mhead"><h2 id="synch">Sync your progress</h2><button class="mx" onclick="closeSync()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
  <div id="syncbody"></div>
 </div></div>
+<div class="modal" id="spot" hidden onclick="if(event.target===this)closeSpot()"><div class="box" role="dialog" aria-modal="true" aria-labelledby="spoth">
+ <div class="mhead"><h2 id="spoth">2 features you might have missed</h2><button class="mx" onclick="closeSpot()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+ <div id="spotbody"></div>
+</div></div>
 <script src="schedule-core.js"></script>
 <script>
 // Links shared on Facebook/Messenger get ?fbclid=... added; drop it so the address stays clean when copied again.
@@ -170,7 +179,7 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
  catch(e){document.getElementById('list').innerHTML='<p class="empty">Courses could not be loaded. Check your connection and reload.</p>';return}
  CLOUD=(list.find(c=>c.cloud&&c.cloud.url)||{}).cloud||null;document.getElementById('syncbtn').hidden=!CLOUD;
  if(CLOUD){drawSyncBtn();finishSignIn().then(done=>{const q=new URLSearchParams(location.search);if(done)return;
-  if(q.has('signin')){history.replaceState(null,'',location.pathname);signIn()}else if(q.has('sync')){history.replaceState(null,'',location.pathname);openSync()}})}
+  if(q.has('signin')){history.replaceState(null,'',location.pathname);signIn()}else if(q.has('sync')){history.replaceState(null,'',location.pathname);openSync()}else setTimeout(spotlight,700)})}
  const art=c=>'<span class="art">'+(c.image?'<img src="'+esc(c.image)+'" alt="" loading="lazy">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>';
  document.getElementById('list').innerHTML=list.map(c=>{
   if(c.soon)return '<div class="course soon" aria-disabled="true">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag soon">Not available yet</span></span></span></div>';
@@ -193,6 +202,17 @@ function tryBox(step){const b=document.getElementById('try');try{if(step==='ask'
   :sw+'<p><b>Like it?</b> You can change it any time in a course\'s Personalize → Appearance → Colors.</p><span class="row"><button class="btn primary" onclick="tryBox(\'done\')">Keep it</button><button class="btn" onclick="setPal(null);tryBox(\'done\')">Switch back</button></span>';
  b.hidden=false}
 tryBox('ask');
+// Shown once to everyone (new and returning): Sign in & sync, and Discuss, which are easy to miss.
+const SPOT_KEY='reviewer_spot_sync_discuss';
+function spotlight(){try{if(localStorage.getItem(SPOT_KEY))return;localStorage.setItem(SPOT_KEY,'1')}catch(e){return}
+ if(!document.getElementById('sync').hidden)return;const a=getAcc();
+ document.getElementById('spotbody').innerHTML=
+  '<div class="spot"><span class="ic" aria-hidden="true">☁️</span><div><h3>Sign in to sync your progress</h3><p>Sign in with Google once and your progress follows you to your phone, laptop and any browser. Switch devices without starting over, and nothing is lost if you clear your browser.</p>'+
+   (a?'<span class="ok">✓ You&#39;re signed in, so your progress already syncs.</span>':'<button class="btn primary" onclick="closeSpot();signIn()">Sign in with Google</button>')+'</div></div>'+
+  '<div class="spot"><span class="ic" aria-hidden="true">💬</span><div><h3>Discuss any question</h3><p>In <b>Intro to Psychology</b>, tap <b>Discuss this question</b> under any question to ask classmates or explain an answer. It opens beside the question, so you keep your place.</p><a class="btn" href="reviewer.html?course=psych">Open Psychology</a></div></div>'+
+  '<div class="spotfoot"><button class="btn" onclick="closeSpot()">Got it</button></div>';
+ document.getElementById('spot').hidden=false}
+function closeSpot(){document.getElementById('spot').hidden=true}
 // Next class (or the one going on now), from schedule.json
 (async function(){try{await Sched.load();const c=Sched.upNext();if(!c)return;const e=document.getElementById('upnext');
  e.style.setProperty('--h',+c.subj.hue||260);
