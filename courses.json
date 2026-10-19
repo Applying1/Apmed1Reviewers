@@ -123,7 +123,11 @@
   "image": "courses/pharma/topic-1.jpg",
   "extras": [],
   "assets": [
-   "courses/pharma/topic-1.jpg"
+   "courses/pharma/topic-1.jpg",
+   "courses/pharma/topic-2.jpg",
+   "courses/pharma/topic-3.jpg",
+   "courses/pharma/topic-4.jpg",
+   "courses/pharma/topic-5.jpg"
   ],
   "notesOnly": true,
   "exam": null,
@@ -165,7 +169,10 @@
   "image": "courses/botany/topic-1.jpg",
   "extras": [],
   "assets": [
-   "courses/botany/topic-1.jpg"
+   "courses/botany/topic-1.jpg",
+   "courses/botany/topic-2.jpg",
+   "courses/botany/topic-3.jpg",
+   "courses/botany/topic-4.jpg"
   ],
   "exam": {
    "name": "Midterm",
