@@ -718,10 +718,14 @@ function mixKey(e){if(!MX)return false;const k=e.key;
 const EX_COUNTS=[20,30,50];let exTick=null;
 const swHTML=(on,fn,label)=>'<button class="tgl" role="switch" aria-checked="'+on+'" aria-label="'+esc(label)+'" onclick="'+fn+'"><span class="sw"></span></button>';
 // One exam question, frozen when the exam starts. ident = typed answer instead of choices.
-function exQ(q){const o={cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))};if(isIdent(byId[q.cid]))o.ident=1;return o}
+function exQ(q,vsa){const o={cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))};if(vsa||isIdent(byId[q.cid]))o.ident=1;if(vsa)o.vsa=1;return o}
+// Can this item be asked as VSA (type the answer)? Short single answers only, and the stem must not lean on the choices.
+function vsaOK(c){if(isIdent(c))return true;if(!c.q||!c.a)return false;const a=c.a;if(a.length>32||a.split(/\s+/).length>4||/[,;]| and | or |\d.*\d/.test(a))return false;
+ if(isMol(a)||/\bNOT\b|which of these|which (is|are) (correct|true|an? |the )|which statement|which pair|following/i.test(c.q))return false;return true}
 function exOK(q,a){if(a==null||a==='')return false;if(q.ident){const t=(q.choices.find(x=>x.correct)||{}).label||'';return typedOK(a,t)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(a,x))}return q.choices.some(x=>x.correct&&x.letter===a)}
 const exMinutes=(st,n)=>typeof st.timer==='number'?st.timer:st.timer?n:0;
-function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters.slice(),timer:true});st.chs=st.chs.filter(c=>chapters.includes(c));if(!st.chs.length)st.chs=chapters.slice();return st}
+const EX_PRESETS=CONFIG.examPresets||[{label:'Paperless · 30 items, split per '+unitW,count:30,split:true,format:'paperless',vsa:0}];
+function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters.slice(),timer:true});if(st.vsa==null)st.vsa=0;st.chs=st.chs.filter(c=>chapters.includes(c));if(!st.chs.length)st.chs=chapters.slice();return st}
 function exPool(){const st=exSetup();return BANK.filter(c=>st.chs.includes(chOf(c.section)))}
 function exLeft(){const ex=state.exam;return ex.limit?ex.start+ex.limit-Date.now():Infinity}
 function clock(ms){const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
@@ -730,25 +734,44 @@ function drawExam(){const ex=state.exam,C=CHAL||ex&&ex.chal,run=!CHAL&&!!ex&&!ex
  if(CHAL)drawChalIntro();else if(ex&&!ex.done)drawExamRun();else if(ex&&ex.done)drawExamResult();else drawExamSetup()}
 function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);$('extitle').textContent='Mock exam';
  const row=(t,d,ctl)=>'<div class="prow"><div class="pl"><b>'+t+'</b><span>'+d+'</span></div><div class="ctl">'+ctl+'</div></div>';
- const counts=EX_COUNTS.filter(c=>c<pool.length).map(c=>[c,String(c)]).concat([[9999,'All '+pool.length]]);
+ const counts=EX_COUNTS.filter(c=>c<pool.length).map(c=>[c,String(c)]).concat([[9999,'All '+pool.length],['c','Custom']]);
+ const curCount=st.customCount?'c':st.count>=pool.length?9999:EX_COUNTS.includes(st.count)?st.count:'c',per=exSplit(n);
+ const vsaMax=Math.min(n,pool.filter(vsaOK).length),preset=EX_PRESETS.findIndex(p=>p.count===st.count&&!!p.split===!!st.split&&(p.format||'one')===(st.format||'one')&&(p.vsa||0)===(st.vsa||0)&&st.chs.length===chapters.length);
  const past=(state.exams||[]).slice(-5).reverse();
  $('exbody').innerHTML='<p class="lede">A practice run with no hints and no answers until the end. Afterwards you get your score by '+unitW+' and can review every mistake. Wrong answers are added to your Missed '+ITEMS+'; questions you skip are not counted against you.</p>'+
   '<section class="panel" style="margin-top:20px"><h2>Set up</h2>'+
-  row('Questions',pool.length+' '+ITEMS+' in the '+unitsW+' you picked, drawn at random.',segHTML('setExCount',counts,st.count>=pool.length?9999:st.count,'Number of questions'))+
+  (EX_PRESETS.length?row('Presets','Set up like a real test in one tap.','<div class="fchips">'+EX_PRESETS.map((p,i)=>'<button class="fchip '+(i===preset?'on':'')+'" aria-pressed="'+(i===preset)+'" onclick="exPreset('+i+')">'+esc(p.label)+'</button>').join('')+'</div>'):'')+
+  row('Questions',pool.length+' '+ITEMS+' in the '+unitsW+' you picked, drawn at random.',segHTML('setExCount',counts,curCount,'Number of questions')+(curCount==='c'?'<input class="txt exmin" type="number" min="1" max="'+pool.length+'" value="'+n+'" onchange="setExCustom(this.value)" aria-label="Number of questions">':''))+
+  (st.chs.length>1?row('Split',st.split?'Equal per '+unitW+', grouped like the real test: '+per.map(([ch,k])=>k+' from '+esc(chLabel(ch))).join(', ')+'.':'Drawn at random from all the '+unitsW+' you picked.',segHTML('setExSplit',[[false,'Random'],[true,'Equal per '+unitW]],!!st.split,'Split')):'')+
   row(UNIT+'s','Tap to include or leave out.','<div class="fchips">'+chapters.map(ch=>'<button class="fchip '+(st.chs.includes(ch)?'on':'')+'" aria-pressed="'+st.chs.includes(ch)+'" onclick="toggleExCh(\''+ch+'\')" title="'+esc(CH_NAMES[ch])+'">'+esc(chLabel(ch))+'</button>').join('')+'</div>')+
-  row('Format',st.format==='sheet'?'Answer sheet: the whole test paper on one page and a separate sheet where you shade A–D, like the real exam.':'One question at a time.',segHTML('setExFormat',[['one','One at a time'],['sheet','Answer sheet']],st.format==='sheet'?'sheet':'one','Format'))+
+  row('Format',st.format==='sheet'?'Answer sheet: the whole test paper on one page and a separate sheet where you shade A–D, like the real exam.':st.format==='paperless'?'Paperless: like the digital exam. One question at a time, no topic labels, and no results until you submit.':'One question at a time.',segHTML('setExFormat',[['one','One at a time'],['sheet','Answer sheet'],['paperless','Paperless']],st.format||'one','Format'))+
+  row('VSA','Identification items at the end: you type the answer, no choices.'+(vsaMax<n?' Up to '+vsaMax+' of these '+ITEMS+' work as VSA.':''),'<input class="txt exmin" type="number" min="0" max="'+vsaMax+'" value="'+Math.min(st.vsa||0,vsaMax)+'" onchange="setExVsa(this.value)" aria-label="Number of VSA items"><span>of '+n+'</span>')+
   row('Timer',typeof st.timer==='number'?st.timer+' minutes in total. The exam ends when time runs out.':st.timer?n+' minutes, one per question. The exam ends when time runs out.':'No time limit.',
    segHTML('setExTimer',[[false,'Off'],[true,'1 min each'],['c','Custom']],typeof st.timer==='number'?'c':!!st.timer,'Timer')+(typeof st.timer==='number'?'<input class="txt exmin" type="number" min="1" max="300" value="'+st.timer+'" onchange="setExMin(this.value)" aria-label="Minutes"><span>min</span>':''))+
   '<div class="exstart"><button class="btn" onclick="toggleChal()" aria-expanded="'+chalOpen+'" title="A link that gives your group chat the same questions">'+LINK_SM+'Class challenge</button><button class="btn primary" onclick="startExam()" '+(n?'':'disabled')+'>Start exam · '+n+' '+ITEMS+'</button></div>'+(chalOpen?chalBoxHTML():'')+'</section>'+
   (past.length?'<section class="panel" style="margin-top:12px"><h2>Recent exams</h2><ul class="exlist">'+past.map(r=>'<li><b class="num">'+Math.round(100*r.right/r.total)+'%</b><span>'+r.right+' of '+r.total+' · '+esc(r.date)+' · '+esc(r.time)+(r.chal?' · class challenge':'')+'</span></li>').join('')+'</ul></section>':'')}
-function setExCount(v){exSetup().count=v;save();drawExam()}
+function setExCount(v){const st=exSetup();if(v==='c'){st.customCount=true;st.count=Math.min(st.count,exPool().length)}else{st.customCount=false;st.count=v}save();drawExam()}
+function setExCustom(v){const st=exSetup();st.customCount=true;st.count=Math.max(1,Math.min(exPool().length,Math.round(+v)||1));save();drawExam()}
+function setExSplit(v){exSetup().split=v;save();drawExam()}
+function setExVsa(v){const st=exSetup();st.vsa=Math.max(0,Math.min(Math.min(st.count,exPool().length),Math.round(+v)||0));save();drawExam()}
+function exPreset(i){const p=EX_PRESETS[i],st=exSetup();st.chs=chapters.slice();st.count=p.count;st.customCount=!EX_COUNTS.includes(p.count);st.split=!!p.split;st.format=p.format||'one';st.vsa=p.vsa||0;if(p.timer!=null)st.timer=p.timer;save();drawExam()}
+// Equal split: n divided across the chosen units (the first ones take the remainder); a unit with too few items passes the rest on.
+function exSplit(n){const st=exSetup(),chs=st.chs.filter(ch=>BANK.some(c=>chOf(c.section)===ch)),have={};chs.forEach(ch=>have[ch]=BANK.filter(c=>chOf(c.section)===ch).length);
+ const out={};chs.forEach(ch=>out[ch]=0);let left=n,open=chs.slice();while(left>0&&open.length){const each=Math.floor(left/open.length),extra=left%open.length;let used=0;
+  open.forEach((ch,i)=>{const want=each+(i<extra?1:0),take=Math.min(want,have[ch]-out[ch]);out[ch]+=take;used+=take});left-=used;open=open.filter(ch=>out[ch]<have[ch]);if(!used)break}
+ return chs.map(ch=>[ch,out[ch]]).filter(x=>x[1])}
 function toggleExCh(ch){const st=exSetup(),on=st.chs.includes(ch);if(on&&st.chs.length===1)return;st.chs=on?st.chs.filter(c=>c!==ch):chapters.filter(c=>c===ch||st.chs.includes(c));save();drawExam()}
 function setExTimer(v){const st=exSetup(),n=Math.min(st.count,exPool().length);st.timer=v==='c'?(typeof st.timer==='number'?st.timer:Math.max(1,n)):v;save();drawExam()}
 function setExFormat(v){exSetup().format=v;save();drawExam()}
 function setExMin(v){exSetup().timer=Math.max(1,Math.min(300,Math.round(+v)||1));save();drawExam()}
 function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;
- state.exam={qs:shuffle(pool,rnd()).slice(0,n).map(c=>exQ(makeQuestion(c))),
-  ans:{},i:0,start:Date.now(),limit:exMinutes(st,n)*60000,done:false,sheet:st.format==='sheet'||undefined};
+ let picked=st.split&&st.chs.length>1?exSplit(n).flatMap(([ch,k])=>shuffle(pool.filter(c=>chOf(c.section)===ch),rnd()).slice(0,k)):shuffle(pool,rnd()).slice(0,n);
+ // VSA: take them from across the picked units and move them to the end, like the real test
+ const want=Math.min(st.vsa||0,picked.length),vs=[];if(want){const ok=picked.filter(vsaOK),byU={};ok.forEach(c=>(byU[chOf(c.section)]=byU[chOf(c.section)]||[]).push(c));
+  const us=Object.keys(byU);let k=0;while(vs.length<want&&us.some(u=>byU[u].length)){const u=us[k++%us.length];if(byU[u].length)vs.push(byU[u].splice(Math.floor(Math.random()*byU[u].length),1)[0])}
+  if(vs.length<want){const more=shuffle(pool.filter(c=>vsaOK(c)&&!picked.includes(c)),rnd()).slice(0,want-vs.length);vs.push(...more);picked=picked.filter(c=>!vs.includes(c)).slice(0,n-vs.length)}else picked=picked.filter(c=>!vs.includes(c))}
+ state.exam={qs:picked.map(c=>exQ(makeQuestion(c))).concat(vs.map(c=>exQ(makeQuestion(c),true))),
+  ans:{},i:0,start:Date.now(),limit:exMinutes(st,n)*60000,done:false,sheet:st.format==='sheet'||undefined,paperless:st.format==='paperless'||undefined};
  save();drawExam();window.scrollTo(0,0)}
 function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered=Object.keys(ex.ans).length;if(q.ident)setTimeout(()=>{const i=$('extyped');if(i)i.focus({preventScroll:true})},0);
  if(ex.limit&&exLeft()<=0){finishExam(true);return}
@@ -756,15 +779,15 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
  if(ex.sheet){$('extitle').textContent=n+' '+ITEMS;$('exbody').innerHTML=sheetHTML(ex);return}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
-  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
-  (q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
+  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(ex.paperless?(q.vsa?'VSA · type your answer':'Multiple choice'):esc(byId[q.cid].section)+' · '+(q.vsa?'VSA · identification':kindName(q.kind)))+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
+  (q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+(q.vsa?'Type the term':'Type your answer')+'" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
    :'<div class="choices'+(molq(q)?' ichoices':'')+'">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+labelHTML(x.label)+'</span></button>').join('')+'</div>')+
   '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button> · <button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button></span>'+
   '<button class="btn primary" onclick="'+(ex.i<n-1?'exGo(1)':'finishExam()')+'">'+(ex.i<n-1?'Next':'Finish')+' <kbd>Enter</kbd></button></div></section>'+
   '<div class="qnav" aria-label="Jump to a question">'+ex.qs.map((_,j)=>'<button class="'+(ex.ans[j]?'a ':'')+(j===ex.i?'cur':'')+'" onclick="exJump('+j+')" aria-label="Question '+(j+1)+(ex.ans[j]?', answered':'')+'">'+(j+1)+'</button>').join('')+'</div>'}
 // Answer sheet format: read on the test paper, shade on the sheet. Shading updates only the sheet, so the paper keeps its place.
 function sheetHTML(ex){const n=ex.qs.length,done=Object.keys(ex.ans).length;
- const paper=ex.qs.map((q,j)=>'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+esc(byId[q.cid].section)+' · '+kindName(q.kind)+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
+ const paper=ex.qs.map((q,j)=>'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+esc(byId[q.cid].section)+' · '+(q.vsa?'VSA · identification':kindName(q.kind))+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
   (q.ident?'<p class="pqid">Write your answer on the answer sheet.</p>':'<ol class="pch'+(molq(q)?' ich':'')+'">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+labelHTML(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
  const rows=ex.qs.map((q,j)=>'<div class="brow" id="br'+j+'"><button class="bn" onclick="sheetGo('+j+')" aria-label="Go to question '+(j+1)+'">'+(j+1)+'</button>'+
   (q.ident?'<input class="txt bt" value="'+esc(ex.ans[j]||'')+'" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer to question '+(j+1)+'" oninput="sheetType('+j+',this.value)">'
@@ -1204,6 +1227,11 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'24',date:'Oct 19, 2026',title:'Mock exam like the real one',items:[
+  '<b>Equal split:</b> in <b>Mock exam</b>, choose <b>Split → Equal per '+unitW+'</b> to get the same number from each '+unitW+', grouped like the real test (80 items = 20 per '+unitW+' with 4 '+unitsW+'). Pick any number with <b>Questions → Custom</b>.',
+  '<b>Paperless format:</b> one question at a time, no topic labels, and no results until you submit, like the digital exam.',
+  '<b>VSA:</b> add identification items at the end, where you type the answer instead of choosing.',
+  '<b>Presets</b> set everything up in one tap'+(CONFIG.examPresets?': '+CONFIG.examPresets.map(p=>p.label).join(', '):'')+'.']},
  {v:'23',date:'Oct 19, 2026',title:'Cram mode and Beat my score',items:[
   '<b>Short on time?</b> Tap <b>Cram mode</b> on the dashboard (or in the menu): about 45 of the highest-yield '+ITEMS+': what the class misses most, what you missed, and one key '+ITEM+' from every section.',
   'Challenge links now carry your score. When a classmate opens yours, they see what you got and find out at the end if they beat it. Make one in <b>Mock exam → Challenge</b>, then <b>Copy my score</b>.']},
