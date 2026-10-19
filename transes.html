@@ -30,6 +30,15 @@ button,a{font:inherit;color:inherit}
 .btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn[hidden]{display:none}
 /* Contents: a sidebar on wide screens, a slide-over panel on phones */
+/* Search */
+#sbar{position:sticky;top:var(--barh,55px);z-index:5;display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+#sbar[hidden]{display:none}
+#sq{flex:1;min-width:0;padding:8px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:inherit;font-size:15px;outline:0}
+#sq:focus{border-color:var(--accent)}
+#scount{flex:none;font-size:13px;color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums}
+.hl{position:absolute;background:rgba(255,200,0,.38);border-radius:2px;pointer-events:none;mix-blend-mode:multiply}
+.hl.cur{background:rgba(255,120,0,.55);outline:2px solid rgba(255,110,0,.9)}
+@media (max-width:520px){#sbar{padding:8px 10px;gap:6px}#scount{font-size:12px}}
 #toc{position:fixed;z-index:4;left:0;top:var(--barh,55px);bottom:0;width:310px;overflow-y:auto;background:var(--surface);border-right:1px solid var(--line);padding:10px 8px 40px;transform:translateX(-102%);transition:transform .22s cubic-bezier(.2,.7,.2,1)}
 #toc.open{transform:none}
 #scrim{position:fixed;inset:0;top:var(--barh,55px);z-index:3;background:#0006;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -57,9 +66,17 @@ button,a{font:inherit;color:inherit}
 <div class="bar">
  <button class="btn icon" onclick="goBack()" aria-label="Back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
  <h1 id="ttl">Transes<span id="sub">Loading…</span></h1>
+ <button class="btn icon" id="sbtn" onclick="openSearch()" aria-label="Search the transes" title="Search (Ctrl+F)" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
  <button class="btn" id="tocbtn" onclick="toggleToc()" aria-expanded="false" aria-controls="toc" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><span class="lbl">Contents</span></button>
  <div class="zoom"><button class="btn icon" onclick="zoom(-1)" aria-label="Zoom out">−</button><button class="btn icon" onclick="zoom(1)" aria-label="Zoom in">+</button></div>
  <a class="btn" id="dl" download><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="lbl">Download</span></a>
+</div>
+<div id="sbar" hidden role="search"><input id="sq" type="search" placeholder="Search the transes…" autocomplete="off" aria-label="Search the transes"
+ oninput="clearTimeout(window.__sq);window.__sq=setTimeout(runSearch,250)" onkeydown="if(event.key==='Enter'){event.preventDefault();stepHit(event.shiftKey?-1:1)}else if(event.key==='Escape')closeSearch()">
+ <span id="scount" aria-live="polite"></span>
+ <button class="btn icon" onclick="stepHit(-1)" aria-label="Previous match"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 15l-6-6-6 6"/></svg></button>
+ <button class="btn icon" onclick="stepHit(1)" aria-label="Next match"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+ <button class="btn icon" onclick="closeSearch()" aria-label="Close search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
 </div>
 <nav id="toc" aria-label="Contents"></nav><div id="scrim" onclick="toggleToc(false)"></div>
 <div id="pages"><p class="msg">Loading the transes…</p></div>
@@ -86,7 +103,7 @@ async function draw(p){
  try{const page=await pdf.getPage(p.n),vp0=page.getViewport({scale:1}),vp=page.getViewport({scale:key/vp0.width});
   const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
   await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
-  p.el.replaceChildren(c);p.done=key}catch(e){}
+  p.el.replaceChildren(c);paintHits(p);p.done=key}catch(e){}
  p.busy=false;if(p.visible&&p.done!==Math.round(fitWidth()*scale*Math.min(window.devicePixelRatio||1,2.5)))draw(p)}
 // Keep the same spot when the page width changes (zoom, sidebar, rotate)
 function keepSpot(fn){const i=curPage(),el=pages[i]&&pages[i].el,off=el?(scrollY+barH()-el.offsetTop)/el.offsetHeight:0;fn();if(el)scrollTo(0,el.offsetTop+off*el.offsetHeight-barH())}
@@ -153,6 +170,39 @@ function track(){if(!pages.length)return;const pg=curPage()+1;let ci=-1;for(let 
 addEventListener('scroll',()=>{if(!window.__tk)window.__tk=requestAnimationFrame(()=>{window.__tk=0;track()})},{passive:true});
 addEventListener('keydown',e=>{if(e.key==='Escape')toggleToc(false)});
 
+// ---- Search: page text from pdf.js; a match can span text pieces; highlights are placed in page units so they follow zoom
+let texts=[],hits=[],hitAt=-1,ptW=612;
+async function pageText(n){if(texts[n])return texts[n];const tc=await (await pdf.getPage(n)).getTextContent();let str='';const items=[];
+ for(const it of tc.items){if(!it.str)continue;if(str&&!/\s$/.test(str))str+=' ';items.push({s:str.length,str:it.str,t:it.transform,w:it.width,h:it.height||Math.hypot(it.transform[2],it.transform[3])});str+=it.str}
+ return texts[n]={str:str.toLowerCase(),items}}
+function openSearch(){const b=document.getElementById('sbar');b.hidden=false;const q=document.getElementById('sq');q.focus();q.select();if(q.value)runSearch()}
+function closeSearch(){document.getElementById('sbar').hidden=true;hits=[];hitAt=-1;document.getElementById('scount').textContent='';pages.forEach(paintHits)}
+async function runSearch(){const q=document.getElementById('sq').value.trim().toLowerCase().replace(/\s+/g,' '),cnt=document.getElementById('scount');
+ hits=[];hitAt=-1;if(q.length<2){cnt.textContent='';pages.forEach(paintHits);return}
+ cnt.textContent='Searching…';const mine=q;
+ for(let n=1;n<=pages.length;n++){const t=await pageText(n);if(document.getElementById('sq').value.trim().toLowerCase().replace(/\s+/g,' ')!==mine)return;
+  let i=t.str.indexOf(q);while(i>=0){hits.push({n,s:i,e:i+q.length});i=t.str.indexOf(q,i+1)}}
+ pages.forEach(paintHits);
+ if(!hits.length){cnt.textContent='No matches';return}
+ // start from the first match at or after the page you're on
+ const here=curPage()+1;hitAt=Math.max(0,hits.findIndex(h=>h.n>=here));stepHit(0)}
+function stepHit(d){if(!hits.length)return;hitAt=(hitAt+d+hits.length)%hits.length;const h=hits[hitAt],p=pages[h.n-1];
+ pages.forEach(paintHits);
+ const box=hitBoxes(h)[0],el=p.el,y=el.offsetTop+(box?box.top/100*el.offsetHeight:0);
+ scrollTo({top:Math.max(0,y-barH()-document.getElementById('sbar').offsetHeight-70),behavior:'smooth'});
+ let ci=-1;for(let i=0;i<toc.length;i++)if(toc[i].page<=h.n)ci=i;const c=toc[ci];
+ document.getElementById('scount').textContent=(hitAt+1)+' of '+hits.length+' · p. '+h.n+(c&&c.num?' · Ch '+c.num:'')}
+// boxes (in % of the page) for one match
+function hitBoxes(h){const t=texts[h.n];if(!t)return [];const out=[],H=ptH,W=ptW;
+ for(const it of t.items){const a=Math.max(h.s,it.s),b=Math.min(h.e,it.s+it.str.length);if(a>=b)continue;
+  const len=it.str.length||1,x0=it.t[4]+it.w*(a-it.s)/len,x1=it.t[4]+it.w*(b-it.s)/len,y=it.t[5],hh=it.h*1.15;
+  out.push({left:x0/W*100,width:(x1-x0)/W*100,top:(H-y-hh*.85)/H*100,height:hh/H*100})}
+ return out}
+function paintHits(p){if(!p||!p.el)return;p.el.querySelectorAll('.hl').forEach(e=>e.remove());if(!hits.length)return;
+ hits.forEach((h,i)=>{if(h.n!==p.n)return;for(const b of hitBoxes(h)){const d=document.createElement('div');d.className='hl'+(i===hitAt?' cur':'');
+  d.style.cssText='left:'+b.left+'%;top:'+b.top+'%;width:'+b.width+'%;height:'+b.height+'%';p.el.appendChild(d)}})}
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'&&pdf){e.preventDefault();openSearch()}});
+
 (async function(){
  if(!ok||!window.pdfjsLib){box.innerHTML='<p class="msg">'+(ok?'The PDF reader could not load. Check your connection and try again.':'This file could not be found.')+'</p>';sub.textContent='';return}
  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -160,7 +210,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape')toggleToc(false)});
  catch(e){box.innerHTML='<p class="msg">The transes could not be opened. Check your connection and try again.</p>';sub.textContent='';return}
  sub.textContent=pdf.numPages+' pages';box.innerHTML='';
  document.documentElement.style.setProperty('--barh',barH()+'px');
- const first=await pdf.getPage(1),v=first.getViewport({scale:1}),ratio=v.height/v.width;ptH=v.height;
+ const first=await pdf.getPage(1),v=first.getViewport({scale:1}),ratio=v.height/v.width;ptH=v.height;ptW=v.width;document.getElementById('sbtn').hidden=false;
  obs=new IntersectionObserver(es=>{for(const e of es){const p=pages[+e.target.dataset.i];p.visible=e.isIntersecting;if(p.visible)draw(p)}},{rootMargin:'800px 0px'});
  for(let i=0;i<pdf.numPages;i++){const el=document.createElement('div');el.className='pg';el.dataset.i=i;box.appendChild(el);pages.push({n:i+1,el,ratio,done:0});obs.observe(el)}
  layout();
