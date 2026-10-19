@@ -236,10 +236,26 @@ const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
 
 // fx (class challenges): a fixed seed and item list, so every device builds exactly the same question.
 // Look-alike wrong choices (item.dh): always in the Mock exam and challenges; in practice only if turned on.
-let HARD=false;const hardSet=c=>c.dh&&c.dh.length>=3&&(HARD||state.prefs.hardPractice)?c.dh:c.d;
+let HARD=false;
+// From the second correct recall on, an item is asked differently (practice only; challenges stay fixed).
+const round2=(c,fx)=>!fx&&!HARD&&state.concepts[c.id]&&state.concepts[c.id].right>=1;
+const hardSet=(c,fx)=>c.dh&&c.dh.length>=3&&(HARD||state.prefs.hardPractice||round2(c,fx))?c.dh:c.d;
+// "What is X?" flipped: show the definition, pick the term. Wrong choices are the terms whose definitions were its wrong choices.
+function reverseQ(c,sd){const src=BANK.filter(x=>x.q&&x.kind==='definition'&&x.id!==c.id&&x.term&&x.term!==c.term);
+ const near=src.filter(x=>(c.d||[]).concat(c.dh||[]).includes(x.a)),sec=src.filter(x=>x.section===c.section),chp=src.filter(x=>chOf(x.section)===chOf(c.section));
+ // then short term-like answers and choices from the same section (e.g. Neuroticism, Agreeableness), then the chapter
+ const low=t=>String(t).toLowerCase(),isTerm=t=>/^[A-Za-z]/.test(t)&&t.length>=8&&t.split(/\s+/).length<=3&&!/[.,;?\d–]| and /.test(t)&&low(t)!==low(c.term);
+ const secTerms=[...new Set(BANK.filter(x=>x.q&&x.section===c.section&&x.id!==c.id).flatMap(x=>[x.a,...(x.d||[])]).filter(isTerm).map(t=>t.charAt(0).toUpperCase()+t.slice(1)))];
+ const cand=[...shuffle(near,sd('rv1')).map(x=>x.term),...shuffle(sec,sd('rv2')).map(x=>x.term),...shuffle(secTerms,sd('rv4')),...shuffle(chp,sd('rv3')).map(x=>x.term)];
+ const terms=[];for(const t of cand)if(terms.length<3&&low(t)!==low(c.term)&&!terms.some(u=>low(u)===low(t)))terms.push(t);
+ if(terms.length<3)return null;
+ const ch=shuffle([{label:c.term,correct:true},...terms.map(t=>({label:t,correct:false}))],sd('choices'));
+ return {cid:c.id,kind:'term',stem:'“'+c.a+'.” Which concept is this?',choices:ch.map((x,i)=>({...x,letter:LETTERS[i]})),
+  why:'“'+c.term+'”: '+c.a.charAt(0).toLowerCase()+c.a.slice(1)+'.'+(c.why?' '+c.why:''),hint:c.hint||'',usedHint:false}}
 function makeQuestion(c,fx){const src=fx?fx.items:BANK,sd=tag=>fx?stableHash(fx.seed+'|'+c.id+'|'+tag):seedFor(c,tag),stage=fx?sd('kind')%3:state.concepts[c.id].seen%3;
  // Authored question: q (stem), a (answer), d (distractors).
- if(c.q){const ch=shuffle([{label:c.a,correct:true},...(hardSet(c)||[]).map(x=>({label:x,correct:false}))],sd('choices'));
+ if(c.q&&c.kind==='definition'&&c.term&&round2(c,fx)){const rv=reverseQ(c,sd);if(rv)return rv}
+ if(c.q){const ch=shuffle([{label:c.a,correct:true},...(hardSet(c,fx)||[]).map(x=>({label:x,correct:false}))],sd('choices'));
   if(ch.length===2&&ch.every(x=>x.label==='True'||x.label==='False'))ch.sort((x,y)=>x.label==='True'?-1:1);
   return {cid:c.id,kind:c.kind||'recall',stem:c.q,choices:ch.map((x,i)=>({...x,letter:LETTERS[i]})),why:c.why||'',hint:c.hint||'',usedHint:false}}
  let cand=src.filter(x=>x.section===c.section&&x.id!==c.id&&!x.q);
@@ -1232,6 +1248,8 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'26',date:'Oct 19, 2026',title:'Round two is different',items:[
+  'With the recall goal at <b>2×</b>, the second time you see a question it is asked differently: “What is X?” questions flip (you get the definition and pick the term), and questions with look-alike choices use them. Round one stays as written.']},
  {v:'25',date:'Oct 19, 2026',title:'Harder mock exams',items:[
   'The <b>Mock exam</b> now uses <b>look-alike choices</b> where a course has them, like the real test: every option shares the same pieces with one swapped (boy/girl, mother/father, first/second stage). Practice keeps the easier choices while you learn.',
   'Want the hard ones in practice too? <b>Personalize → Harder choices in practice</b>.']},
