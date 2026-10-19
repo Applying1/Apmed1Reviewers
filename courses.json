@@ -113,13 +113,24 @@
   }
  },
  {
-  "id": "pharmacology",
+  "id": "pharma",
   "title": "Pharmacology",
-  "soon": true,
-  "image": "courses/soon/pharmacology.jpg",
+  "scope": "Toxicity, Metabolism, Autonomics, Antidiabetics",
+  "unit": "Lesson",
+  "itemWord": "question",
+  "count": 0,
+  "storageKey": "study_reviewer_pharma_2026_v1",
+  "image": "courses/pharma/topic-1.jpg",
+  "extras": [],
   "assets": [
-   "courses/soon/pharmacology.jpg"
-  ]
+   "courses/pharma/topic-1.jpg"
+  ],
+  "notesOnly": true,
+  "exam": null,
+  "cloud": {
+   "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
+   "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
+  }
  },
  {
   "id": "botany",

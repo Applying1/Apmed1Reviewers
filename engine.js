@@ -208,8 +208,10 @@ const isDue=c=>{const k=state.concepts[c.id];return state.prefs.srs&&!!k.srs&&k.
 ALL_ITEMS.forEach(c=>{const k=state.concepts[c.id];if(k.right>=T()&&!k.srs)k.srs={lvl:0,due:Date.now()+DAY}});
 const TIMES={1:'once',2:'twice',3:'three times'};
 const VIEWS={dashboard:'dashView',study:'studyView',notes:'notesView',match:'matchView',exam:'examView',prefs:'prefsView'};
-function pageOn(p){return p==='notes'?!!NOTES_DATA&&state.prefs.notes:p==='match'?(MSETS.length>0||MIXUP.length>0)&&state.prefs.matching:p==='exam'?!!(state.prefs.exam||CHAL||state.exam&&state.exam.chal):!!VIEWS[p]}
-let page=pageOn(state.page)?state.page:'dashboard';
+const NOTES_ONLY=!!CONFIG.notesOnly;
+function pageOn(p){if(NOTES_ONLY&&p!=='notes'&&p!=='prefs')return false;return p==='notes'?!!NOTES_DATA&&state.prefs.notes:p==='match'?(MSETS.length>0||MIXUP.length>0)&&state.prefs.matching:p==='exam'?!!(state.prefs.exam||CHAL||state.exam&&state.exam.chal):!!VIEWS[p]}
+let page=pageOn(state.page)?state.page:(NOTES_ONLY?'notes':'dashboard');
+if(NOTES_ONLY)document.body.classList.add('notesonly');
 let view=null;               // index into this section's answer log when reviewing; null = current question
 const openCh=new Set(isX(state.section)?[]:[secCh(state.section)]);
 let lastCardKey='';
@@ -380,7 +382,7 @@ function chChips(keys,cur,fn){if(keys.length<2)return '';const isN=k=>/^\d/.test
    :nums.map(k=>b(k,esc(UNIT)+' '+esc(k)+' · '+esc(CH_NAMES[k]||''))).join(''))}
 // A run of underscores in a question is a blank to fill in: draw it as one solid line.
 function stemHTML(s){return esc(s).replace(/_{2,}/g,'<span class="blank" role="img" aria-label="blank"></span>')}
-function navHTML(){
+function navHTML(){if(NOTES_ONLY)return '';
  const study=page==='study',ap=progress('ALL'),aOn=state.section==='ALL'&&study;
  return '<button class="sec mixed '+(aOn?'on':'')+'" '+(aOn?'aria-current="page" ':'')+'onclick="selectSection(\'ALL\')"><span class="no">'+SHUFFLE+'</span><span class="nm">All '+unitsW+', shuffled</span><span class="ct">'+ap.done+'/'+ap.total+'</span></button>'+focusNav(study)+chapters.map(ch=>{const secs=sectionKeys.filter(k=>chOf(k)===ch),cp=chProgress(ch),wOn=state.section==='CH:'+ch&&study;
   return '<details class="ch" '+(openCh.has(ch)?'open':'')+' ontoggle="chToggle(this,\''+ch+'\')"><summary>'+CHEV+'<span class="nm">'+ch+' · '+esc(CH_NAMES[ch])+'</span><span class="ct">'+secs.filter(completed).length+'/'+secs.length+'</span><span class="mini"><i style="width:'+(100*cp.done/cp.total)+'%"></i></span></summary><div class="secs">'+
@@ -473,7 +475,7 @@ function draw(){
 function drawSetSwitch(){const el=$('setsw');el.hidden=BANKS.length<2;el.classList.toggle('many',BANKS.length>3);
  if(BANKS.length>1)el.innerHTML=BANKS.map(b=>{const on=b.id===state.bank,n=bankItems(b).length;
   return '<button role="radio" aria-checked="'+on+'" class="'+(on?'on':'')+'" onclick="setBank(\''+b.id+'\')" data-tip="<b>'+esc(b.name)+' · '+n+' '+ITEMS+'</b>'+esc(b.desc||'')+'">'+esc(b.name)+'<span class="num">'+n+'</span></button>'}).join('');
- $('brandsub').textContent=scopeLabel()+' · '+BANK.length+' '+ITEMS;drawScopeSw();$('brandtitle').textContent=CONFIG.title;
+ $('brandsub').textContent=NOTES_ONLY?'Notes and transes':scopeLabel()+' · '+BANK.length+' '+ITEMS;drawScopeSw();$('brandtitle').textContent=CONFIG.title;
 }
 function setBank(id){if(id===state.bank)return;state.bank=id;state.pmatch=null;state.pass=null;refreshBank();state.active=null;state.feedback=null;state.selected=null;view=null;save();draw()}
 function setPref(k,v){if(state.prefs[k]===v)return;state.prefs[k]=v;
