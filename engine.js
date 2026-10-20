@@ -479,7 +479,7 @@ const PG={
  prefs:['Personalize','<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>']};
 // (A page saved before this version has no #homelink: fall back to a link in the page list.)
 let HOME_LINK='';if(CONFIG.home){const h=$('homelink');if(h){h.href=CONFIG.home;h.hidden=false}else HOME_LINK='<a class="page" href="'+esc(CONFIG.home)+'">All courses</a>'}
-function drawPages(){$('pages').innerHTML=HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+discussLink()}
+function drawPages(){$('pages').innerHTML=HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+discussLink()+notifyLink()}
 // ---- per-question discussion (threads named "<course>:<question id>")
 const CHAT_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg>';
 let DCOUNT={};
@@ -504,10 +504,12 @@ addEventListener('load',()=>{const m=location.hash.match(/^#discuss=([\w.-]*)$/)
 // ---- discussion notifications: polls the course's newest posts (discussion_recent). state.dn = {base, seen, read:{thread:id}}.
 // base: the newest post when notifications started (older posts never count as unread); seen: newest post already announced.
 let DREC=[],dnT=null;
+// Settings live in notifications.html (window.Notify) on the site; a single-file reviewer keeps them in its own prefs.
+const nPref=k=>window.Notify?Notify.prefs()[k]!==false:state.prefs[k]!==false;
 const dnOn=()=>discussOn()&&cloudOn();
 function dnS(){return state.dn||(state.dn={base:null,seen:0,read:{}})}
 const dnMine=p=>{const a=account();return !!(a&&a.name&&p.author===a.name)};
-function dnUnread(thread){if(!dnOn()||state.prefs.ddot===false)return 0;const S=dnS();
+function dnUnread(thread){if(!dnOn()||!nPref('ddot'))return 0;const S=dnS();
  return DREC.filter(p=>(thread==null||p.thread===thread)&&p.id>Math.max(S.base||0,S.read[p.thread]||0)&&!dnMine(p)).length}
 const dnDot=n=>n?'<span class="ndot" aria-label="'+n+' unread">'+(n>9?'9+':n)+'</span>':'';
 function dnWhere(t){const q=t.slice(courseId().length+1);if(!q)return 'the '+CONFIG.title+' discussion';const c=BANK.find(x=>String(x.id).toLowerCase()===q);return c?'a question on “'+c.term+'”':'a question'}
@@ -515,7 +517,7 @@ function dnPoll(){if(!dnOn()||document.visibilityState==='hidden')return;const S
  rpc('discussion_recent',{p_course:courseId(),p_after:S.base==null?null:S.base}).then(rows=>{rows=Array.isArray(rows)?rows:[];
   if(S.base==null){S.base=rows.reduce((m,r)=>Math.max(m,r.id),0);S.seen=S.base;DREC=[];save();dnPaint();return}
   DREC=rows;const fresh=rows.filter(r=>r.id>S.seen&&!dnMine(r)&&r.id>(S.read[r.thread]||0));S.seen=Math.max(S.seen,...rows.map(r=>r.id));save();
-  if(fresh.length&&state.prefs.dpop!==false&&!(state.exam&&!state.exam.done&&page==='exam'))dnPop(fresh);dnPaint()}).catch(()=>{})}
+  if(fresh.length&&nPref('dpop')&&!(state.exam&&!state.exam.done&&page==='exam'))dnPop(fresh);dnPaint()}).catch(()=>{})}
 function dnPaint(){if(typeof drawPages==='function')drawPages();document.querySelectorAll('[data-dn]').forEach(e=>{e.innerHTML=dnDot(dnUnread(e.dataset.dn))})}
 function dnRead(thread){const S=dnS();const ids=DREC.filter(p=>thread==null||p.thread===thread).map(p=>p.id);const top=Math.max(S.seen||0,...ids);
  if(thread==null){DREC.forEach(p=>S.read[p.thread]=top)}else S.read[thread]=top;save();dnPaint()}
@@ -527,6 +529,23 @@ function dnPop(fresh){let b=$('dnpop');if(!b){b=document.createElement('div');b.
  b.hidden=false;void b.offsetWidth;b.classList.add('in');clearTimeout(dnPop.t);dnPop.t=setTimeout(dnClose,15000)}
 function dnClose(){const b=$('dnpop');if(b){b.classList.remove('in');setTimeout(()=>{b.hidden=true},250)}}
 function dnOpen(){const b=$('dnpop'),t=b&&b.dataset.t;dnClose();if(!t)return;const q=t.slice(courseId().length+1);const c=q&&BANK.find(x=>String(x.id).toLowerCase()===q);openDiscuss(c?c.id:undefined)}
+// Site updates (updates.json): sidebar link with an unread dot, and a one-time pop-up for news about this course.
+let NFEED=[];
+function notifyLink(){if(!window.Notify||!CONFIG.home)return '';const n=nPref('ddot')?Notify.unread(NFEED):0;
+ return '<a class="page" style="text-decoration:none" href="notifications.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notifications'+dnDot(n)+'</a>'}
+function notifyStart(){if(!window.Notify||!CONFIG.home||!courseId())return;Notify.load().then(f=>{NFEED=f;drawPages();
+ const K='reviewer_notify_pop_'+courseId();let last=null;try{last=JSON.parse(localStorage.getItem(K))}catch(e){}
+ const top=Math.max(0,...f.map(u=>u.id));try{localStorage.setItem(K,JSON.stringify(top))}catch(e){}
+ if(last==null||!nPref('pop'))return;   // first visit: nothing old pops up
+ const mine=f.filter(u=>u.id>last&&Notify.on(u.type)&&(!u.course||u.course===courseId())).sort((a,b)=>(!!b.course-!!a.course)||b.id-a.id);if(!mine.length)return;
+ setTimeout(()=>{if(state.exam&&!state.exam.done&&page==='exam')return;upPop(mine)},3500)})}
+function upPop(items){let b=$('uppop');if(!b){b=document.createElement('div');b.id='uppop';b.className='dnpop up';b.setAttribute('role','status');b.setAttribute('aria-live','polite');document.body.appendChild(b)}
+ const u=items[0],n=items.length;
+ b.innerHTML='<div class="dnh"><b>'+(n>1?n+' updates':'New')+'</b><span>'+esc(CONFIG.title)+'</span><button class="dpx" onclick="upClose()" aria-label="Dismiss">×</button></div>'+
+  '<p class="dnb" style="margin-top:8px"><b>'+esc(u.title)+'</b></p><p class="dnw" style="margin:0 0 10px">'+esc(u.text)+'</p>'+
+  '<div class="dna"><a class="btn sm primary" href="notifications.html">See all updates</a><button class="btn sm" onclick="upClose()">Got it</button></div>';
+ b.hidden=false;void b.offsetWidth;b.classList.add('in');clearTimeout(upPop.t);upPop.t=setTimeout(upClose,20000)}
+function upClose(){const b=$('uppop');if(b){b.classList.remove('in');setTimeout(()=>{b.hidden=true},250)}}
 function discussLink(){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.discussion||!CONFIG.home||!id||!/^https?:$/.test(location.protocol))return '';
  return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'" onclick="return openDiscuss()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion'+dnDot(dnUnread())+'</a>'}
 function draw(){
@@ -1326,7 +1345,8 @@ function drawPrefs(){
  h+='<section class="panel"><h2>Pages</h2>'+
   (NOTES_DATA?row('Notes','High-yield recognition notes to read before a mock exam, with a self-test mode.',sw(state.prefs.notes,"setPref('notes',"+!state.prefs.notes+")",'Show the Notes page')):'')+
   (MSETS.length||MIXUP.length?row('Drills',[MSETS.length?MSETS.length+' matching-type sets':'',MIXUP.length?MIXUP.length+' Don\'t mix up look-alike drills':''].filter(Boolean).join(' and ')+'.',sw(state.prefs.matching,"setPref('matching',"+!state.prefs.matching+")",'Show the Drills page')):'')+
-  (dnOn()?row('New comment pop-ups','A small pop-up when a classmate comments in '+esc(CONFIG.title)+', the course you have open (never during a mock exam, never for your own comments).',sw(state.prefs.dpop!==false,"setPref('dpop',"+(state.prefs.dpop===false)+")",'New comment pop-ups'))+
+  (window.Notify&&CONFIG.home?row('Notifications','Choose what you hear about: new courses and content, transes, timetable changes, comment pop-ups, red dots, and push notifications on this device.','<a class="btn" href="notifications.html#settings">Open settings</a>'):'')+
+  (dnOn()&&!window.Notify?row('New comment pop-ups','A small pop-up when a classmate comments in '+esc(CONFIG.title)+', the course you have open (never during a mock exam, never for your own comments).',sw(state.prefs.dpop!==false,"setPref('dpop',"+(state.prefs.dpop===false)+")",'New comment pop-ups'))+
    row('Unread dots','A red dot on Discussion and on “Discuss this question” when there are comments you have not opened yet.'+(dnUnread()?' <button class="link" onclick="dnRead();draw()">Mark all as read</button>':''),sw(state.prefs.ddot!==false,"setPref('ddot',"+(state.prefs.ddot===false)+");dnPaint()",'Unread dots')):'')+
   (BANK.some(c=>c.dh)?row('Harder choices in practice','The Mock exam always uses look-alike choices, like the real test (e.g. every option about boy/girl and mother/father). Turn this on to get them in practice too.',sw(!!state.prefs.hardPractice,"setPref('hardPractice',"+!state.prefs.hardPractice+")",'Harder choices in practice')):'')+
   (CHART_DATA.length?row('Charts','A Charts button on Practice, Notes and the Mock exam that opens the reference '+(CHART_DATA.length>1?'charts':'chart')+' ('+CHART_DATA.map(c=>c.title.toLowerCase()).join(', ')+').',sw(state.prefs.charts,"setPref('charts',"+!state.prefs.charts+")",'Show the Charts button')):'')+
@@ -1353,6 +1373,9 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'32',date:'Oct 21, 2026',title:'Notifications page',items:[
+  'A new <b>Notifications</b> page (bell on the home page, and in the sidebar of every course) lists what\'s new: courses, questions, transes, timetable changes and site updates.',
+  'Something new for the course you have open shows once as a pop-up. Choose what you hear about in <b>Notifications → Settings</b>.']},
  {v:'31',date:'Oct 21, 2026',title:'Comment notifications',items:[
   'When a classmate comments in the course you have open, a small <b>pop-up</b> shows who and where, with a button to open it (not during a mock exam).',
   'A <b>red dot</b> on Discussion and on “Discuss this question” counts comments you have not opened yet.',
@@ -1646,6 +1669,7 @@ document.addEventListener('keydown',e=>{
 takeLink();
 addEventListener('hashchange',()=>{if(takeLink()){toggleNav(false);draw();window.scrollTo(0,0)}});
 draw();
+notifyStart();
 if(cloudOn()){loadClassStats();loadContrib(true);loadDiscussCounts();setTimeout(dnPoll,1500);dnT=setInterval(dnPoll,60000);if(syncCode)syncNow();
  const back=()=>{try{const c=(JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||'';if(c!==syncCode){syncCode=c;syncInfo={at:0,err:''};lastPutSig='';if(c){syncNow();return}}}catch(e){}
   if(syncCode&&Date.now()-syncInfo.at>4000)syncNow()};

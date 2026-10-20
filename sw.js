@@ -1,9 +1,9 @@
 // Offline support. Pages, code and course files are fetched fresh when online (so fixes show up right away)
 // and served from the cache when offline. Pictures show the saved copy first and refresh in the background.
 // Fonts are cached after first use; transes PDFs only once opened.
-const CACHE = 'reviewers-v9';
+const CACHE = 'reviewers-v10';
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
-  'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'dialog.js', 'privacy.html',
+  'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'dialog.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
 // Saves every course (and its pictures) not saved yet, so courses added after someone's first visit also work offline.
@@ -85,4 +85,23 @@ self.addEventListener('fetch', e => {
       return res;
     })());
   }
+});
+
+// Push notifications (see push-client.js and PUSH_SETUP.md): {title, body, url, tag}.
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(d.title || "APMed '33 Reviewers", {
+    body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: d.tag || undefined,
+    data: { url: d.url || 'notifications.html' }
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || 'notifications.html', self.registration.scope).href;
+  e.waitUntil((async () => {
+    for (const w of await self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      if (w.url === url && 'focus' in w) return w.focus();
+    return self.clients.openWindow(url);
+  })());
 });
