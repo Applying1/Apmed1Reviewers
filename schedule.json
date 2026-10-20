@@ -49,6 +49,102 @@
     {"day": "Thu", "start": "13:00", "end": "16:00", "subject": "pharma", "kind": "Moved", "topic": "Anti-hypertensive drugs", "where": "Moved from Tuesday", "teacher": "Drs. Isaac Orig and MC Padilla"}
    ],
    "notes": ["Pharmacology moved from Tuesday to Thursday, 1:00 PM (same topic: anti-hypertensive drugs).", "Tuesday 1:00–4:00 PM: Intro to Medicine Life (moved from Thursday, so no IML on Thursday).", "Tuesday 4:00–7:00 PM: NSTP make-up class (Friday's NSTP still happens)."]
+  },
+  "14": {
+   "topics": {
+    "pharma": "SGD and review",
+    "psych": "Chapter 12: Stress, Health, and Coping",
+    "botany-lec": "Plant Classification",
+    "purcom": "Communicating for work purposes",
+    "iml": "Medicine in the 20th Century",
+    "mmw": "Graphical Method (Geometric Approach)",
+    "nstp": "Chapter 8: Entrepreneurship",
+    "pe": "Background of TABATA · TABATA Workout 1",
+    "chem-lab-1": "Long quiz: Units 15 and 16",
+    "chem-lab-2": "Unit 16: Proteins",
+    "chem-lec": "Activity 10: Enzymes"
+   },
+   "notes": ["Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."]
+  },
+  "15": {
+   "topics": {
+    "pharma": "Drugs for Hypertension 1 and 2 (started in Week 13)",
+    "psych": "Evals (Ch. 11–12) · Chapter 13: Psychological Disorders",
+    "botany-lec": "Herbal Medicine",
+    "purcom": "Communicating for work purposes",
+    "iml": "Global Health and Medicine in the 21st Century",
+    "mmw": "Graphical Method (Geometric Approach)",
+    "nstp": "Ch. 9: Recreation, Physical Fitness & Wellness · Ch. 10: The Social Menace of Drug Addiction",
+    "pe": "TABATA Workout 2",
+    "chem-lab-1": "Unit 17: Lipids",
+    "chem-lab-2": "Unit 18: Carbohydrates",
+    "chem-lec": "Activity 11: Qualitative analysis of carbohydrates"
+   },
+   "notes": ["Monday, Nov 2: All Souls' Day.", "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."]
+  },
+  "16": {
+   "topics": {
+    "pharma": "GI Drugs 1 and 2",
+    "psych": "Chapter 14: Therapies",
+    "botany-lec": "Reporting on Common Medicinal Plants",
+    "purcom": "Communication for academic purposes",
+    "iml": "Technology and the Future of Medicine",
+    "mmw": "Simplex Method (Algebraic Approach)",
+    "nstp": "Ch. 11: Campus Safety & Security · Ch. 12: Global Warming, DRRM Awareness",
+    "pe": "TABATA Workout 2",
+    "chem-lab-1": "Long quiz: Units 17 and 18",
+    "chem-lab-2": "Unit 19: Nucleic Acids",
+    "chem-lec": "Activity 12: RNA Vaccine"
+   },
+   "notes": ["Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."]
+  },
+  "17": {
+   "topics": {
+    "pharma": "Rational Drug Use, Prescription Writing",
+    "psych": "Chapter 15: Social Psychology",
+    "botany-lec": "\"I Grew My Own Plant\" Project Presentation",
+    "purcom": "Communication for academic purposes",
+    "iml": "History of Philippine Medicine",
+    "mmw": "Simplex Method (Algebraic Approach)",
+    "nstp": "Chapter 13: Volunteerism",
+    "pe": "Basic Exercise Program",
+    "chem-lab-1": "Long quiz: Unit 19",
+    "chem-lab-2": "Exam review for laboratory",
+    "chem-lec": "Exam review for lecture"
+   },
+   "notes": ["Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."]
+  },
+  "18": {
+   "topics": {
+    "pharma": "Prefinal Exam",
+    "psych": "Prefinal Exam",
+    "botany-lec": "Prefinal Exam",
+    "purcom": "Prefinal Exam",
+    "iml": "Prefinal Exam",
+    "mmw": "Prefinal Exam",
+    "nstp": "Prefinal Exam",
+    "pe": "Prefinal Exam",
+    "chem-lab-1": "Prefinal Exam",
+    "chem-lab-2": "Prefinal Exam",
+    "chem-lec": "Prefinal Exam"
+   },
+   "notes": ["Prefinal exam week (from the class matrix; check the official exam schedule)."]
+  },
+  "19": {
+   "topics": {
+    "pharma": "Comprehensive Exam",
+    "psych": "Comprehensive Exam",
+    "botany-lec": "Comprehensive Exam",
+    "purcom": "Comprehensive Exam",
+    "iml": "Comprehensive Exam",
+    "mmw": "Comprehensive Exam",
+    "nstp": "Comprehensive Exam",
+    "pe": "Comprehensive Exam",
+    "chem-lab-1": "Comprehensive Exam",
+    "chem-lab-2": "Comprehensive Exam",
+    "chem-lec": "Comprehensive Exam"
+   },
+   "notes": ["Monday, Nov 30: Bonifacio Day.", "Comprehensive exam week (from the class matrix; check the official exam schedule)."]
   }
  }
 }

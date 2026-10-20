@@ -10,5 +10,6 @@
  {"id": 9, "date": "2026-10-21", "type": "transes", "course": "nstp", "title": "NSTP midterm transes and slides", "text": "One transes PDF for the Bill of Rights, Leadership Training and Health Awareness, plus the slides of both new topics.", "link": "reviewer.html?course=nstp"},
  {"id": 10, "date": "2026-10-21", "type": "feature", "title": "Notifications", "text": "This page. Catch up on what's new, get a pop-up when a classmate comments in your course, and choose what you hear about in Settings.", "link": "notifications.html"},
  {"id": 11, "date": "2026-10-21", "type": "feature", "title": "Notifications on your phone", "text": "Get updates even when the site is closed: bell, Settings, then Turn on notifications.", "link": "notifications.html#settings"},
- {"id": 12, "date": "2026-10-21", "type": "feature", "course": "nstp", "title": "NSTP now has comments", "text": "Ask and answer under any NSTP question, or in the NSTP discussion, before Friday's midterm.", "link": "discuss.html?c=nstp"}
+ {"id": 12, "date": "2026-10-21", "type": "feature", "course": "nstp", "title": "NSTP now has comments", "text": "Ask and answer under any NSTP question, or in the NSTP discussion, before Friday's midterm.", "link": "discuss.html?c=nstp"},
+ {"id": 13, "date": "2026-10-21", "type": "schedule", "title": "Timetable: topics until the finals", "text": "Weeks 14–19 now show the planned topics from the class matrix, up to the prefinal and comprehensive exams. They're placeholders and may shift.", "link": "schedule.html"}
 ]
