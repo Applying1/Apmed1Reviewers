@@ -147,7 +147,9 @@
   "image": "courses/nstp/topic-1.jpg",
   "extras": [],
   "assets": [
-   "courses/nstp/topic-1.jpg"
+   "courses/nstp/topic-1.jpg",
+   "courses/nstp/topic-2.jpg",
+   "courses/nstp/topic-3.jpg"
   ],
   "exam": {
    "name": "Midterm",
