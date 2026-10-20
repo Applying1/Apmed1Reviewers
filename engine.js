@@ -844,8 +844,8 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
  // A challenge keeps your first score; later tries are shared as retakes.
  if(ex.chal){state.chalLog=state.chalLog||{};const k=ex.chal.key;ex.retake=!!state.chalLog[k];if(!ex.retake)state.chalLog[k]={right,total:n}}
  save();if(page==='exam'){drawExam();window.scrollTo(0,0)}}
-// Transmuted grade: passing raw score (default 60%) = passing grade (75); 100% = 100; 0% = the floor (60). Straight lines between.
-const GRADING=Object.assign({pass:60,passGrade:75,floor:60},CONFIG.grading||{});
+// Transmuted grade (DMSF handbook 8.1): 75 + (RSP - MPL) x 25 / (100 - MPL), MPL 60%. One straight line: 60% = 75, 100% = 100, 0% = 37.5.
+const GRADING=Object.assign({pass:60,passGrade:75,floor:37.5},CONFIG.grading||{});
 function transmute(r,t){const G=GRADING,p=100*r/t;return p>=G.pass?G.passGrade+(p-G.pass)*(100-G.passGrade)/(100-G.pass):G.floor+p*(G.passGrade-G.floor)/G.pass}
 const fmtG=g=>(Math.round(g*100)/100).toFixed(2).replace(/\.?0+$/,'');
 function gradeHTML(r,n){const g=transmute(r,n),ok=100*r/n>=GRADING.pass,need=Math.ceil(GRADING.pass*n/100-1e-9);
@@ -1258,7 +1258,7 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
  {v:'27',date:'Oct 20, 2026',title:'Predicted grade',items:[
-  'Mock exam results now show a big <b>Passed</b> or <b>Not passed</b> and your <b>predicted transmuted grade</b>: 60% right = 75 (passing), 100% = 100. It also tells you how many more right you needed, or how far you cleared it. Recent exams show it too.']},
+  'Mock exam results now show a big <b>Passed</b> or <b>Not passed</b> and your <b>predicted transmuted grade</b>: 75 + (score% − 60) × 25 ÷ 40, as in the student handbook: 60% right = 75 (passing), 100% = 100, 0% = 37.5. It also tells you how many more right you needed, or how far you cleared it. Recent exams show it too.']},
  {v:'26',date:'Oct 19, 2026',title:'Round two is different',items:[
   'With the recall goal at <b>2×</b>, the second time you see a question it is asked differently: “What is X?” questions flip (you get the definition and pick the term), and questions with look-alike choices use them. Round one stays as written.']},
  {v:'25',date:'Oct 19, 2026',title:'Harder mock exams',items:[
