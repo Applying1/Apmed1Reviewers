@@ -229,7 +229,23 @@ function progress(s){const a=inSection(s);if(s==='STAR'||s==='DUE'||s==='CLASS'|
 // What is still to be asked: unmastered items, or for starred review the ones not yet seen this round.
 // Review pass: every item of the section once, mastered or not. Mastery only drops for the ones you miss.
 const onPass=s=>!!state.pass&&state.pass.sec===s;
-function poolFor(s){if(onPass(s)){const d=state.pass.done;return inSection(s).filter(c=>!d.includes(c.id))}if(s==='DUE')return BANK.filter(isDue);const a=inSection(s);if(s==='STAR'||s==='CLASS'||s==='CRAM'){const d=(s==='STAR'?state.starDone:s==='CRAM'?state.cramDone:state.classDone)||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
+// Practice again: a free round (state.pass.free) over picked ids; answers never touch mastery.
+const freeOn=()=>!!state.pass&&!!state.pass.free&&state.pass.sec===state.section;
+let freeOpen=false;
+// n items spread evenly over groups (the first groups take the remainder; a small group passes the rest on).
+function evenPick(items,n,key){const g={};items.forEach(c=>(g[key(c)]=g[key(c)]||[]).push(c));const ks=Object.keys(g),out={};ks.forEach(k=>out[k]=0);
+ let left=Math.min(n,items.length),open=ks.slice();while(left>0&&open.length){const each=Math.floor(left/open.length),extra=left%open.length;let used=0;
+  open.forEach((k,i)=>{const t=Math.min(each+(i<extra?1:0),g[k].length-out[k]);out[k]+=t;used+=t});left-=used;open=open.filter(k=>out[k]<g[k].length);if(!used)break}
+ return ks.flatMap(k=>shuffle(g[k],rnd()).slice(0,out[k]))}
+function freeStart(n){const s=state.section,all=inSection(s),k=Math.max(1,Math.min(all.length,Math.round(+n)||1));state.prefs.freeN=k;
+ const ids=(isCh(s)?evenPick(all,k,c=>c.section):shuffle(all,rnd()).slice(0,k)).map(c=>c.id);
+ state.pass={sec:s,done:[],miss:[],free:1,ids,right:0};state.complete=state.complete.filter(x=>x!==s);freeOpen=false;state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
+function freeToggle(){freeOpen=!freeOpen;$('card').innerHTML=cardHTML()}
+function freeBoxHTML(){const s=state.section,N=inSection(s).length,cur=Math.min(state.prefs.freeN||20,N),opts=[10,20,30].filter(x=>x<N);
+ return '<div class="freebox"><p class="fbt"><b>Practice again</b> · nothing here changes your mastery'+(isCh(s)?', and the questions are split evenly across the '+new Set(inSection(s).map(c=>c.section)).size+' sections':'')+'.</p><div class="fchips">'+
+  opts.map(x=>'<button class="fchip" onclick="freeStart('+x+')">'+x+' questions</button>').join('')+'<button class="fchip" onclick="freeStart('+N+')">All '+N+'</button>'+
+  '<span class="fcust"><input id="freen" class="txt exmin" type="number" min="1" max="'+N+'" value="'+cur+'" aria-label="Number of questions" onkeydown="if(event.key===\'Enter\'){event.preventDefault();freeStart(this.value)}"><button class="btn sm primary" onclick="freeStart($(\'freen\').value)">Start</button></span></div></div>'}
+function poolFor(s){if(onPass(s)){const d=state.pass.done,ids=state.pass.ids;return inSection(s).filter(c=>!d.includes(c.id)&&(!ids||ids.includes(c.id)))}if(s==='DUE')return BANK.filter(isDue);const a=inSection(s);if(s==='STAR'||s==='CLASS'||s==='CRAM'){const d=(s==='STAR'?state.starDone:s==='CRAM'?state.cramDone:state.classDone)||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
 function completed(s){const p=progress(s);return p.done===p.total}
 const secTitle=s=>s==='DUE'?'Due for review':s==='MISSED'?'Missed '+ITEMS:s==='STAR'?'Starred '+ITEMS:s==='CLASS'?'Class\'s most missed':s==='CRAM'?'Cram mode':s==='ALL'?'All '+unitsW+', shuffled':isCh(s)?CH_NAMES[s.slice(3)]:s+' '+SECTION_NAMES[s];
 const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
@@ -352,6 +368,10 @@ function cardHTML(){
  }
  // A matching set mixed into practice (Personalize → Mix matching into practice)
  if(state.pmatch)return matchCardHTML(state.pmatch,'p');
+ // Practice again finished
+ if(!state.active&&onPass(s)&&state.pass.free){const P=state.pass,n=P.done.length,r=Math.min(P.right||0,n);
+  return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">Practice round done</span></div><h2>'+esc(secTitle(s))+'</h2><p><b>'+r+' of '+n+'</b> right ('+(n?Math.round(100*r/n):0)+'%). Your mastery is unchanged.</p>'+(freeOpen?freeBoxHTML():'')+'<div class="row">'+
+   (secLog().length?backBtn():'')+'<button class="btn" onclick="freeToggle()" aria-expanded="'+freeOpen+'">Practice again</button><button class="btn primary" id="go" onclick="endPass()">Done <kbd>Enter</kbd></button></div></div>'}
  // Review pass finished
  if(!state.active&&onPass(s)){const P=state.pass,n=P.done.length,miss=P.miss.length,slip=P.miss.filter(id=>byId[id]&&!isM(byId[id])).length;
   return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">Review pass complete</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+
@@ -366,9 +386,10 @@ function cardHTML(){
    :s==='CRAM'?'You went through the '+inSection(s).length+' highest-yield '+ITEMS+'. Go again, or practice the ones you missed under Missed '+ITEMS+'.'
    :s==='CLASS'?(none?'This list fills in once enough classmates have answered these '+ITEMS+'.':'You went through the '+ITEMS+' your class misses most. Go again before the exam.')
    :s==='MISSED'?(none?'Nothing missed yet. '+Items+' you get wrong, or check in your slides, will collect here.':'Every '+ITEM+' you had missed is now mastered.')
-   :'You answered every '+ITEM+' here correctly '+(TIMES[T()]||T()+' times')+'. Move on, or do a review pass: every '+ITEM+' once, and you keep your mastery unless you miss one.';
-  return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">'+label+'</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+text+'</p><div class="row">'+
-   (secLog().length?backBtn():'')+(none||s==='DUE'?'':'<button class="btn" onclick="extraPractice()"'+(s==='STAR'||s==='CLASS'||s==='CRAM'?'':' title="Every '+ITEM+' once. You keep your mastery unless you miss one."')+'>'+(s==='STAR'||s==='CLASS'||s==='CRAM'?'Go again':'Review pass')+'</button>')+
+   :'You answered every '+ITEM+' here correctly '+(TIMES[T()]||T()+' times')+'. Move on, <b>practice again</b> with as many questions as you like (nothing changes your mastery), or do a <b>review pass</b>: every '+ITEM+' once, and you keep your mastery unless you miss one.';
+  const canFree=!focus&&!none&&s!=='DUE';
+  return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">'+label+'</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+text+'</p>'+(canFree&&freeOpen?freeBoxHTML():'')+'<div class="row">'+
+   (secLog().length?backBtn():'')+(canFree?'<button class="btn" onclick="freeToggle()" aria-expanded="'+freeOpen+'" title="Pick how many questions. Nothing changes your mastery.">Practice again</button>':'')+(none||s==='DUE'?'':'<button class="btn" onclick="extraPractice()"'+(s==='STAR'||s==='CLASS'||s==='CRAM'?'':' title="Every '+ITEM+' once. You keep your mastery unless you miss one."')+'>'+(s==='STAR'||s==='CLASS'||s==='CRAM'?'Go again':'Review pass')+'</button>')+
    (focus?'<button class="btn primary" id="go" onclick="setPage(\'dashboard\')">Back to dashboard <kbd>Enter</kbd></button>'
     :'<button class="btn primary" id="go" onclick="advance()">'+(last?'Finish':'Next '+(isCh(s)?unitW:'section'))+' <kbd>Enter</kbd></button>')+'</div></div>';
  }
@@ -414,7 +435,7 @@ function navHTML(){if(NOTES_ONLY)return '';
 
 function drawStudy(){
  ensure();
- const s=state.section,p=progress(s),all=isX(s),ch=isCh(s),L=navList(s),idx=L.indexOf(s),pp=onPass(s)?{done:inSection(s).filter(c=>state.pass.done.includes(c.id)).length,total:inSection(s).length}:null;
+ const s=state.section,p=progress(s),all=isX(s),ch=isCh(s),L=navList(s),idx=L.indexOf(s),pp=onPass(s)?(state.pass.ids?{done:state.pass.done.length,total:state.pass.ids.length,free:1}:{done:inSection(s).filter(c=>state.pass.done.includes(c.id)).length,total:inSection(s).length}):null;
  const bp=BANKS.length>1&&state.bank!=='main'?'<span class="pill set">'+esc(bankObj().name)+'</span>':'';
  $('crumb').innerHTML=all?bp+(s==='ALL'?'Mixed review':'Focused review'):'<span class="pill">'+esc(chLabel(secCh(s)))+'</span>'+(ch?'Entire '+unitW:esc(CH_NAMES[chOf(s)]))+(bp?' '+bp:'');
  $('title').textContent=secTitle(s);
@@ -424,7 +445,7 @@ function drawStudy(){
  $('prevSec').disabled=!L.length||idx<=0;$('nextSec').disabled=!L.length||idx>=L.length-1;
  for(const [id,w] of [['prevSec','Previous '],['nextSec','Next ']]){$(id).title=w+what;$(id).setAttribute('aria-label',w+what)}
  $('notesBtn').hidden=!pageOn('notes');$('chartBtn').hidden=!chartsOn();
- $('mlabel').innerHTML=pp?'Review pass · <b>'+pp.done+'</b> of '+pp.total+' '+ITEMS+' gone through':'<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'||s==='CLASS'||s==='CRAM'?(s==='STAR'?'starred ':'')+ITEMS+' reviewed this round':s==='DUE'?ITEMS+' reviewed':ITEMS+' mastered');
+ $('mlabel').innerHTML=pp?(pp.free?'Practice round':'Review pass')+' · <b>'+pp.done+'</b> of '+pp.total+' '+ITEMS+' gone through':'<b>'+p.done+'</b> of '+p.total+' '+(s==='STAR'||s==='CLASS'||s==='CRAM'?(s==='STAR'?'starred ':'')+ITEMS+' reviewed this round':s==='DUE'?ITEMS+' reviewed':ITEMS+' mastered');
  $('goal').innerHTML=GOALS.length>1?'<span>Recall goal</span>'+goalSeg():'';
  $('fill').style.width=(100*(pp||p).done/Math.max(1,(pp||p).total))+'%';
  // Dots: in random order they are grouped by progress, so a dot's position never hints at a question.
@@ -1288,6 +1309,9 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'30',date:'Oct 21, 2026',title:'Practice again',items:[
+  'After a section or '+unitW+' is complete, <b>Practice again</b> lets you pick how many questions to redo. A whole '+unitW+' is split evenly across its sections.',
+  'It never changes your mastery, Missed '+ITEMS+' or review schedule, so you can practice as much as you like.']},
  {v:'29',date:'Oct 20, 2026',title:'Matching type in the Mock exam',items:[
   'The Mock exam can now include a <b>matching</b> part after the multiple choice: groups of items that share options A–E, each usable more than once, shaded on the same answer sheet.',
   'Psychology has presets for the real format: <b>60 items, 30 multiple choice + 30 matching</b>, on an answer sheet.']},
@@ -1460,6 +1484,7 @@ function strike(l){if(view!=null||state.pmatch||state.feedback||!state.active||s
  state.active.struck=s.includes(l)?s.filter(x=>x!==l):s.concat(l);if(state.selected===l)state.selected=null;save();$('card').innerHTML=cardHTML()}
 // Correct, but only a guess: take the mastery point back so the question stays in the queue.
 function luckyGuess(){const fb=state.feedback;if(view!=null||!fb||!fb.correct||fb.lucky||!state.active)return;
+ if(freeOn()){fb.lucky=true;state.pass.right=Math.max(0,(state.pass.right||0)-1);const l=state.log[state.log.length-1];if(l&&l.fb)l.fb.lucky=true;save();draw();return}
  const k=state.concepts[state.active.cid];if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}else k.right=Math.max(0,k.right-1);k.lucky=(k.lucky||0)+1;fb.lucky=true;if(k.right>=T())masteryDown(k);if(onPass(state.section)&&!state.pass.miss.includes(state.active.cid))state.pass.miss.push(state.active.cid);
  const last=state.log[state.log.length-1];if(last&&last.fb)last.fb.lucky=true;save();draw()}
 function starBtn(cid){if(!state.prefs.stars)return '';const on=!!state.concepts[cid].star;
@@ -1494,6 +1519,7 @@ function submitTyped(){const q=state.active;if(view!=null||state.pmatch||state.f
  state.feedback.typed=val;state.feedback.correctLabel=target.label;const last=state.log[state.log.length-1];if(last)last.fb=state.feedback;save();draw()}
 // A typed answer marked wrong that was really right (a spelling the checker did not accept).
 function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct||!fb.typed||!state.active)return;
+ if(freeOn()){state.wrong=Math.max(0,state.wrong-1);state.correct++;state.pass.right=(state.pass.right||0)+1;fb.correct=true;fb.override=true;const l=state.log[state.log.length-1];if(l)l.fb=fb;save();draw();return}
  const k=state.concepts[state.active.cid];k.wrong=Math.max(0,k.wrong-1);state.wrong=Math.max(0,state.wrong-1);if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}
  fb.prev={right:k.right,srs:k.srs?{...k.srs}:null};masteryUp(k);state.correct++;fb.correct=true;fb.override=true;if(onPass(state.section))state.pass.miss=state.pass.miss.filter(x=>x!==state.active.cid);
  const h=state.history[state.history.length-1];if(h&&h.cid===state.active.cid)h.correct=true;const kh=k.history[k.history.length-1];if(kh)kh.correct=true;
@@ -1507,11 +1533,13 @@ function record(correct,lookup){
  if(state.section==='STAR'){state.starDone=state.starDone||[];if(!state.starDone.includes(q.cid))state.starDone.push(q.cid)}
  if(state.section==='DUE'){state.dueDone=state.dueDone||[];if(!state.dueDone.includes(q.cid))state.dueDone.push(q.cid)}
  const prev={right:k.right,srs:k.srs?{...k.srs}:null};
- state.sinceMix=(state.sinceMix||0)+1;if(correct){masteryUp(k);state.correct++}else{if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}masteryDown(k)}
+ const free=freeOn();if(free&&correct)state.pass.right=(state.pass.right||0)+1;
+ state.sinceMix=(state.sinceMix||0)+1;if(free){if(correct)state.correct++;else if(lookup)state.lookups++;else state.wrong++}
+ else if(correct){masteryUp(k);state.correct++}else{if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}masteryDown(k)}
  const own=choice&&!choice.correct&&choice.owner?byId[choice.owner]:null;
  state.feedback={correct,lookup,prev,correctLabel:target.letter+'. '+target.label,wrongExplain:own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':''};
  if(lookup)state.selected=null;
- k.history.push({correct,lookup,kind:q.kind});
+ if(!free)k.history.push({correct,lookup,kind:q.kind});
  state.history.push({cid:q.cid,correct,lookup,term:byId[q.cid].term,section:byId[q.cid].section,mode:state.section});
  if(state.history.length>2000)state.history=state.history.slice(-2000);
  state.log.push({sec:state.section,sel:state.selected,fb:state.feedback,q:{cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))}});
