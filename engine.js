@@ -347,7 +347,7 @@ function feedbackHTML(q,fb,live){
  if(q.why)out+='<p>'+esc(q.why)+'</p>';
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
- if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'</a></p>';
+ if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'<span data-dn="'+esc(discKey(q.cid))+'">'+dnDot(dnUnread(discKey(q.cid)))+'</span></a></p>';
  const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' stays in your queue.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
   :'This '+ITEM+' will come back later, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
  const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
@@ -489,7 +489,7 @@ const discKey=cid=>courseId()+':'+String(cid).toLowerCase();
 function discussQ(cid){return 'discuss.html?c='+encodeURIComponent(courseId())+'&q='+encodeURIComponent(String(cid).toLowerCase())}
 function loadDiscussCounts(redraw){if(!discussOn()||!cloudOn())return;rpc('discussion_counts',{p_course:courseId()}).then(rows=>{const c={};for(const r of rows||[])c[r.thread]=r.n;DCOUNT=c;if(redraw===true&&page==='study'&&state.feedback)draw()}).catch(()=>{})}
 // The discussion panel: discuss.html (embed mode) in a frame. Wide screens: right side, the page makes room. Phones: bottom sheet.
-function openDiscuss(cid){if(!discussOn())return true;let d=$('dpanel');
+function openDiscuss(cid){if(!discussOn())return true;dnRead(cid?discKey(cid):courseId());let d=$('dpanel');
  if(!d){d=document.createElement('aside');d.id='dpanel';d.className='dpanel';d.setAttribute('aria-label','Discussion');
   d.innerHTML='<div class="dph"><b id="dpt">Discussion</b><a class="dpx" id="dpnew" target="_blank" rel="noopener" title="Open in a new tab" aria-label="Open in a new tab"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a><button class="dpx" onclick="closeDiscuss()" aria-label="Close discussion"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><iframe id="dpf" title="Discussion"></iframe>';
   const sc=document.createElement('div');sc.id='dpscrim';sc.className='dpscrim';sc.onclick=closeDiscuss;document.body.append(d,sc)}
@@ -497,12 +497,38 @@ function openDiscuss(cid){if(!discussOn())return true;let d=$('dpanel');
  $('dpt').textContent=cid?'Discuss this question':CONFIG.title+' discussion';$('dpnew').href=url;
  if($('dpf').dataset.u!==url){$('dpf').dataset.u=url;$('dpf').src=url+'&embed=1'}
  void d.offsetWidth;d.classList.add('open');document.body.classList.add('dopen');return false}
-function closeDiscuss(){const d=$('dpanel');if(d)d.classList.remove('open');document.body.classList.remove('dopen');loadDiscussCounts(true)}
+function closeDiscuss(){const d=$('dpanel');if(d)d.classList.remove('open');document.body.classList.remove('dopen');loadDiscussCounts(true);dnPoll()}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('dopen'))closeDiscuss()});
 // back from signing in inside the panel: reopen it (#discuss=<question id>, or #discuss= for the course thread)
 addEventListener('load',()=>{const m=location.hash.match(/^#discuss=([\w.-]*)$/);if(m){history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>openDiscuss(m[1]||undefined),400)}});
+// ---- discussion notifications: polls the course's newest posts (discussion_recent). state.dn = {base, seen, read:{thread:id}}.
+// base: the newest post when notifications started (older posts never count as unread); seen: newest post already announced.
+let DREC=[],dnT=null;
+const dnOn=()=>discussOn()&&cloudOn();
+function dnS(){return state.dn||(state.dn={base:null,seen:0,read:{}})}
+const dnMine=p=>{const a=account();return !!(a&&a.name&&p.author===a.name)};
+function dnUnread(thread){if(!dnOn()||state.prefs.ddot===false)return 0;const S=dnS();
+ return DREC.filter(p=>(thread==null||p.thread===thread)&&p.id>Math.max(S.base||0,S.read[p.thread]||0)&&!dnMine(p)).length}
+const dnDot=n=>n?'<span class="ndot" aria-label="'+n+' unread">'+(n>9?'9+':n)+'</span>':'';
+function dnWhere(t){const q=t.slice(courseId().length+1);if(!q)return 'the '+CONFIG.title+' discussion';const c=BANK.find(x=>String(x.id).toLowerCase()===q);return c?'a question on “'+c.term+'”':'a question'}
+function dnPoll(){if(!dnOn()||document.visibilityState==='hidden')return;const S=dnS();
+ rpc('discussion_recent',{p_course:courseId(),p_after:S.base==null?null:S.base}).then(rows=>{rows=Array.isArray(rows)?rows:[];
+  if(S.base==null){S.base=rows.reduce((m,r)=>Math.max(m,r.id),0);S.seen=S.base;DREC=[];save();dnPaint();return}
+  DREC=rows;const fresh=rows.filter(r=>r.id>S.seen&&!dnMine(r)&&r.id>(S.read[r.thread]||0));S.seen=Math.max(S.seen,...rows.map(r=>r.id));save();
+  if(fresh.length&&state.prefs.dpop!==false&&!(state.exam&&!state.exam.done&&page==='exam'))dnPop(fresh);dnPaint()}).catch(()=>{})}
+function dnPaint(){if(typeof drawPages==='function')drawPages();document.querySelectorAll('[data-dn]').forEach(e=>{e.innerHTML=dnDot(dnUnread(e.dataset.dn))})}
+function dnRead(thread){const S=dnS();const ids=DREC.filter(p=>thread==null||p.thread===thread).map(p=>p.id);const top=Math.max(S.seen||0,...ids);
+ if(thread==null){DREC.forEach(p=>S.read[p.thread]=top)}else S.read[thread]=top;save();dnPaint()}
+function dnPop(fresh){let b=$('dnpop');if(!b){b=document.createElement('div');b.id='dnpop';b.className='dnpop';b.setAttribute('role','status');b.setAttribute('aria-live','polite');document.body.appendChild(b)}
+ const p=fresh[0],n=fresh.length;b.dataset.t=p.thread;
+ b.innerHTML='<div class="dnh">'+CHAT_SM+'<b>'+(n>1?n+' new comments':'New comment')+'</b><span>'+esc(CONFIG.title)+'</span><button class="dpx" onclick="dnClose()" aria-label="Dismiss">×</button></div>'+
+  '<p class="dnw"><b>'+esc(p.author||'Someone')+'</b> on '+esc(dnWhere(p.thread))+'</p><p class="dnb">'+esc(String(p.body||'').slice(0,140))+(String(p.body||'').length>140?'…':'')+'</p>'+
+  '<div class="dna"><button class="btn sm primary" onclick="dnOpen()">Open</button>'+(n>1?'<button class="btn sm" onclick="dnRead();dnClose()">Mark all read</button>':'')+'</div>';
+ b.hidden=false;void b.offsetWidth;b.classList.add('in');clearTimeout(dnPop.t);dnPop.t=setTimeout(dnClose,15000)}
+function dnClose(){const b=$('dnpop');if(b){b.classList.remove('in');setTimeout(()=>{b.hidden=true},250)}}
+function dnOpen(){const b=$('dnpop'),t=b&&b.dataset.t;dnClose();if(!t)return;const q=t.slice(courseId().length+1);const c=q&&BANK.find(x=>String(x.id).toLowerCase()===q);openDiscuss(c?c.id:undefined)}
 function discussLink(){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.discussion||!CONFIG.home||!id||!/^https?:$/.test(location.protocol))return '';
- return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'" onclick="return openDiscuss()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion</a>'}
+ return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'" onclick="return openDiscuss()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion'+dnDot(dnUnread())+'</a>'}
 function draw(){
  if(!pageOn(page))page='dashboard';
  for(const [p,v] of Object.entries(VIEWS))$(v).hidden=p!==page;
@@ -1300,6 +1326,8 @@ function drawPrefs(){
  h+='<section class="panel"><h2>Pages</h2>'+
   (NOTES_DATA?row('Notes','High-yield recognition notes to read before a mock exam, with a self-test mode.',sw(state.prefs.notes,"setPref('notes',"+!state.prefs.notes+")",'Show the Notes page')):'')+
   (MSETS.length||MIXUP.length?row('Drills',[MSETS.length?MSETS.length+' matching-type sets':'',MIXUP.length?MIXUP.length+' Don\'t mix up look-alike drills':''].filter(Boolean).join(' and ')+'.',sw(state.prefs.matching,"setPref('matching',"+!state.prefs.matching+")",'Show the Drills page')):'')+
+  (dnOn()?row('New comment pop-ups','A small pop-up when a classmate comments in '+esc(CONFIG.title)+', the course you have open (never during a mock exam, never for your own comments).',sw(state.prefs.dpop!==false,"setPref('dpop',"+(state.prefs.dpop===false)+")",'New comment pop-ups'))+
+   row('Unread dots','A red dot on Discussion and on “Discuss this question” when there are comments you have not opened yet.'+(dnUnread()?' <button class="link" onclick="dnRead();draw()">Mark all as read</button>':''),sw(state.prefs.ddot!==false,"setPref('ddot',"+(state.prefs.ddot===false)+");dnPaint()",'Unread dots')):'')+
   (BANK.some(c=>c.dh)?row('Harder choices in practice','The Mock exam always uses look-alike choices, like the real test (e.g. every option about boy/girl and mother/father). Turn this on to get them in practice too.',sw(!!state.prefs.hardPractice,"setPref('hardPractice',"+!state.prefs.hardPractice+")",'Harder choices in practice')):'')+
   (CHART_DATA.length?row('Charts','A Charts button on Practice, Notes and the Mock exam that opens the reference '+(CHART_DATA.length>1?'charts':'chart')+' ('+CHART_DATA.map(c=>c.title.toLowerCase()).join(', ')+').',sw(state.prefs.charts,"setPref('charts',"+!state.prefs.charts+")",'Show the Charts button')):'')+
   row('Mock exam','A timed run with no hints or answers until the end, then your score by '+unitW+' and a review of your mistakes.',sw(state.prefs.exam,"setPref('exam',"+!state.prefs.exam+")",'Show the Mock exam page'))+'</section>';
@@ -1325,6 +1353,10 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'31',date:'Oct 21, 2026',title:'Comment notifications',items:[
+  'When a classmate comments in the course you have open, a small <b>pop-up</b> shows who and where, with a button to open it (not during a mock exam).',
+  'A <b>red dot</b> on Discussion and on “Discuss this question” counts comments you have not opened yet.',
+  'Both can be turned off in <b>Personalize</b>. Also new: confirmations (like discarding an exam) now appear inside the page instead of the browser\'s pop-up box.']},
  {v:'30',date:'Oct 21, 2026',title:'Practice again',items:[
   'After a section or '+unitW+' is complete, <b>Practice again</b> lets you pick how many questions to redo. A whole '+unitW+' is split evenly across its sections.',
   'It never changes your mastery, Missed '+ITEMS+' or review schedule, so you can practice as much as you like.']},
@@ -1614,11 +1646,11 @@ document.addEventListener('keydown',e=>{
 takeLink();
 addEventListener('hashchange',()=>{if(takeLink()){toggleNav(false);draw();window.scrollTo(0,0)}});
 draw();
-if(cloudOn()){loadClassStats();loadContrib(true);loadDiscussCounts();if(syncCode)syncNow();
+if(cloudOn()){loadClassStats();loadContrib(true);loadDiscussCounts();setTimeout(dnPoll,1500);dnT=setInterval(dnPoll,60000);if(syncCode)syncNow();
  const back=()=>{try{const c=(JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||'';if(c!==syncCode){syncCode=c;syncInfo={at:0,err:''};lastPutSig='';if(c){syncNow();return}}}catch(e){}
   if(syncCode&&Date.now()-syncInfo.at>4000)syncNow()};
  addEventListener('storage',e=>{if(e.key===SYNC_KEY)back()});
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else{loadClassStats();loadContrib();loadMine();loadDiscussCounts();if(page==='dashboard'&&!$('nameinput'))drawGreeting();back()}});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){crowdFlush(true);if(syncT)syncNow()}else{loadClassStats();loadContrib();loadMine();loadDiscussCounts();dnPoll();if(page==='dashboard'&&!$('nameinput'))drawGreeting();back()}});
  addEventListener('focus',back)}
 else syncBoot=false;
 // Show What's new once: on the first visit, and again only when a newer entry is added to CHANGELOG (not over a challenge).

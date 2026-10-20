@@ -488,6 +488,11 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 .prow .pl span{display:block;font-size:13px;color:var(--mute);max-width:58ch;margin-top:2px}
 .prow .pl b .pill{margin:0}
 .prow .ctl{flex:none}
+.ndot{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 5px;margin-left:6px;border-radius:9px;background:#e5484d;color:#fff;font:700 10.5px/1 var(--sans);vertical-align:1px}
+.dnpop{position:fixed;right:18px;bottom:18px;z-index:40;width:min(340px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line2);border-radius:16px;padding:12px 14px;box-shadow:0 14px 40px #0003;transform:translateY(14px);opacity:0;transition:transform .22s,opacity .22s}
+.dnpop.in{transform:none;opacity:1}.dnpop[hidden]{display:none}.dnh{display:flex;align-items:center;gap:7px;font-size:13.5px}.dnh span{color:var(--faint);font-size:12.5px;margin-left:auto}.dnh .dpx{margin-left:4px;background:none;border:0;color:var(--mute);font-size:18px;line-height:1;padding:2px 4px}
+.dnw{margin:8px 0 2px;font-size:13.5px;color:var(--mute)}.dnb{margin:0 0 10px;font-size:14px;color:var(--text);overflow-wrap:anywhere}.dna{display:flex;gap:8px}
+@media (max-width:640px){.dnpop{right:16px;bottom:16px}}
 .nmore{margin:10px 0 0;font-size:13.5px}
 .freebox{margin:14px 0 4px;padding:12px 14px;border:1px dashed var(--line2);border-radius:14px}.freebox .fbt{margin:0 0 10px;font-size:14px}.fcust{display:inline-flex;align-items:center;gap:6px}
 .prow.stack{flex-direction:column;align-items:stretch;gap:10px}.prow.stack .ctl{flex:auto}
