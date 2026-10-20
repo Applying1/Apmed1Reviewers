@@ -589,6 +589,12 @@ body.notesonly .side>.label,body.notesonly #nav{display:none}
 .exlist b{color:var(--text);width:44px}
 .exres{grid-template-columns:1fr}
 .exres::after{display:none}
+.grade{margin:0 0 18px;padding:16px 18px;border-radius:16px;background:var(--good-bg);border:2px solid var(--good-line);color:var(--good)}
+.grade.fail{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad)}
+.grade .verdict{font:700 clamp(34px,7vw,52px)/1 var(--serif);letter-spacing:.06em;text-transform:uppercase}
+.grade .gnum{margin-top:10px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.grade .gnum .num{font:700 30px/1 var(--serif)}.grade .gnum small{font-size:13px;font-weight:600;opacity:.85}
+.grade .gsub{margin:8px 0 0;font-size:13.5px;color:var(--text)}
+.gpass{color:var(--good)}.gfail{color:var(--bad)}
 .exacts{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
 .exreview{display:grid;gap:10px}
 .exq{font:500 16px/1.5 var(--serif);margin:8px 0 10px}
