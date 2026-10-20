@@ -236,6 +236,8 @@ const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
 
 // fx (class challenges): a fixed seed and item list, so every device builds exactly the same question.
 // Look-alike wrong choices (item.dh): always in the Mock exam and challenges; in practice only if turned on.
+// "Book only": the fact is in the textbook but not in the class transes (item.src==='book')
+const srcTag=cid=>{const c=byId[cid];return c&&c.src==='book'?'<span class="srctag" title="In the book, not in the transes">Book only</span>':''};
 let HARD=false;
 // From the second correct recall on, an item is asked differently (practice only; challenges stay fixed).
 const round2=(c,fx)=>!fx&&!HARD&&state.concepts[c.id]&&state.concepts[c.id].right>=1;
@@ -370,7 +372,7 @@ function cardHTML(){
  }
  // Current question
  const q=state.active,st=state.concepts[q.cid],fb=state.feedback,mixed=isX(s)||isCh(s);
- return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(q.typed?'Type the answer':kindName(q.kind))+'</span><span class="mastery">'+flagBtn("flagQ('live')")+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
+ return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(q.typed?'Type the answer':kindName(q.kind))+srcTag(q.cid)+'</span><span class="mastery">'+flagBtn("flagQ('live')")+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
   '<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
   (q.usedHint&&!fb?'<div class="hint"><b>Hint</b>'+esc(q.hint)+'</div>':'')+
   (fb?feedbackHTML(q,fb,true):'')+
@@ -607,10 +609,10 @@ function setNotesCh(k){notesCh=k;drawNotes()}
 function openNotes(ch,cid){notesCh=ch||(isX(state.section)?'all':secCh(state.section));if(!NOTES_PARSED.some(n=>n.ch===notesCh&&noteScope(n.ch)))notesCh='all';notesQ='';
  if(page==='notes'){draw();window.scrollTo(0,0)}else setPage('notes');if(cid)setTimeout(()=>focusNote(cid),80)}
 // Scrolls to the note card that best matches a question: its term and answer in the card, its section name in the title.
-function focusNote(cid){const c=byId[cid];if(!c)return;const low=t=>String(t||'').toLowerCase(),term=low(c.term),ans=low(c.a),sec=low(SECTION_NAMES[c.section]).split(/\W+/).filter(w=>w.length>3),tw=term.split(/\W+/).filter(w=>w.length>3);
+function focusNote(cid){const c=byId[cid];if(!c)return;const low=t=>String(t||'').toLowerCase(),term=low(c.term),ans=low(c.a),GEN=/^(theory|theories|perspective|perspectives|stage|stages|chapter|lesson|section|part|introduction|overview|basics|types|kinds)$/,sec=low(SECTION_NAMES[c.section]).split(/\W+/).filter(w=>w.length>3&&!GEN.test(w)),tw=term.split(/\W+/).filter(w=>w.length>3&&!GEN.test(w));
  let best=null,bs=0;document.querySelectorAll('#nbody .ncard').forEach(el=>{const t=low(el.innerText),h=low((el.querySelector('h3')||{}).textContent);
-  const sc=(term.length>2&&t.includes(term)?5:0)+(ans.length>2&&ans.length<60&&t.includes(ans)?4:0)+sec.filter(w=>h.includes(w)).length+3*tw.filter(w=>h.includes(w)).length;if(sc>bs){bs=sc;best=el}});
- if(!best)return;best.scrollIntoView({block:'center',behavior:reduceMotion?'auto':'smooth'});best.classList.add('flash');setTimeout(()=>best.classList.remove('flash'),1800)}
+  const sc=(term.length>2&&t.includes(term)?5:0)+(ans.length>2&&ans.length<60&&t.includes(ans)?4:0)+sec.filter(w=>h.includes(w)).length+3*tw.filter(w=>h.includes(w)).length+3*tw.filter(w=>w.length>=5&&!h.includes(w)&&t.includes(w)).length;if(sc>bs){bs=sc;best=el}});
+ if(!best||bs<3)return;best.scrollIntoView({block:'center',behavior:reduceMotion?'auto':'smooth'});best.classList.add('flash');setTimeout(()=>best.classList.remove('flash'),1800)}
 /* Full documents (e.g. the transes PDF): CONFIG.docs = [{title, file}], file relative to the website.
    The file version opens the website's copy (through CONFIG.shareUrl). */
 const DOCS=(CONFIG.docs||[]).filter(d=>d&&d.file);
@@ -798,7 +800,7 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
  if(ex.sheet){$('extitle').textContent=n+' '+ITEMS;$('exbody').innerHTML=sheetHTML(ex);return}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
-  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(ex.paperless?(q.vsa?'VSA · type your answer':'Multiple choice'):esc(byId[q.cid].section)+' · '+(q.vsa?'VSA · identification':kindName(q.kind)))+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
+  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(ex.paperless?(q.vsa?'VSA · type your answer':'Multiple choice'):esc(byId[q.cid].section)+' · '+(q.vsa?'VSA · identification':kindName(q.kind))+srcTag(q.cid))+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
   (q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+(q.vsa?'Type the term':'Type your answer')+'" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
    :'<div class="choices'+(molq(q)?' ichoices':'')+'">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+labelHTML(x.label)+'</span></button>').join('')+'</div>')+
   '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button> · <button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button></span>'+

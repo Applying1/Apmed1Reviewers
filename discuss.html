@@ -38,11 +38,12 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 4px;letter-spacing:-.3px}
 .post:first-child{border-top:0}
 .av{flex:none;width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--accent-soft);display:grid;place-items:center;font-weight:700;color:var(--accent)}
 .pb{flex:1;min-width:0}
-.ph{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ph{display:flex;align-items:flex-start;gap:8px}
+.who{flex:1;min-width:0;display:flex;align-items:baseline;gap:4px 8px;flex-wrap:wrap}
 .ph b{font-size:14.5px}
 .mod{font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
 .ph time{color:var(--faint);font-size:12.5px}
-.del{margin-left:auto;border:0;background:none;color:var(--faint);font-size:12.5px;cursor:pointer;padding:2px 4px}
+.del{flex:none;margin:-2px -4px 0 auto;border:0;background:none;color:var(--faint);font-size:12.5px;cursor:pointer;padding:2px 4px}
 .del:hover{color:var(--bad)}
 .tx{margin-top:2px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px}
 .tx a{color:var(--accent)}
@@ -91,7 +92,7 @@ function ago(t){const s=(Date.now()-new Date(t))/1000;if(s<60)return 'just now';
  const d=new Date(t);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+(s>31536000?', '+d.getFullYear():'')}
 function linkify(s){return esc(s).replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]/g,u=>'<a href="'+u+'" target="_blank" rel="noopener nofollow">'+u+'</a>')}
 function postHTML(p){return '<div class="post" id="p'+p.id+'">'+(p.avatar?'<img class="av" src="'+esc(p.avatar)+'" alt="" referrerpolicy="no-referrer" loading="lazy">':'<div class="av">'+esc((p.author||'?').charAt(0).toUpperCase())+'</div>')+
- '<div class="pb"><div class="ph"><b>'+esc(p.author)+'</b>'+(p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time>'+
+ '<div class="pb"><div class="ph"><span class="who"><b>'+esc(p.author)+'</b>'+(p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time></span>'+
  (p.can_delete?'<button class="del" onclick="del('+p.id+')">Delete</button>':'')+'</div><div class="tx">'+linkify(p.body)+'</div></div></div>'}
 function drawList(stick){const L=$('list'),atEnd=innerHeight+scrollY>=document.body.scrollHeight-80;
  L.innerHTML=posts.length?posts.map(postHTML).join(''):'<p class="empty">'+(qid?'No posts about this question yet. Ask or explain it here!':'No posts yet. Start the conversation!')+'</p>';
