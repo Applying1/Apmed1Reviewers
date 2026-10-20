@@ -240,7 +240,9 @@ const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
 const srcTag=cid=>{const c=byId[cid];return c&&c.src==='book'?'<span class="srctag" title="In the book, not in the transes">Book only</span>':''};
 let HARD=false;
 // From the second correct recall on, an item is asked differently (practice only; challenges stay fixed).
-const round2=(c,fx)=>!fx&&!HARD&&state.concepts[c.id]&&state.concepts[c.id].right>=1;
+// LONG: exam-style wording (item.xq) in a Harder mock exam. INEX: building a mock exam (round two never applies there).
+let LONG=false,INEX=false;
+const round2=(c,fx)=>!fx&&!HARD&&!INEX&&state.concepts[c.id]&&state.concepts[c.id].right>=1;
 const hardSet=(c,fx)=>c.dh&&c.dh.length>=3&&(HARD||state.prefs.hardPractice||round2(c,fx))?c.dh:c.d;
 // "What is X?" flipped: show the definition, pick the term. Wrong choices are the terms whose definitions were its wrong choices.
 function reverseQ(c,sd){const src=BANK.filter(x=>x.q&&x.kind==='definition'&&x.id!==c.id&&x.term&&x.term!==c.term);
@@ -259,7 +261,7 @@ function makeQuestion(c,fx){const src=fx?fx.items:BANK,sd=tag=>fx?stableHash(fx.
  if(c.q&&c.kind==='definition'&&c.term&&round2(c,fx)){const rv=reverseQ(c,sd);if(rv)return rv}
  if(c.q){const ch=shuffle([{label:c.a,correct:true},...(hardSet(c,fx)||[]).map(x=>({label:x,correct:false}))],sd('choices'));
   if(ch.length===2&&ch.every(x=>x.label==='True'||x.label==='False'))ch.sort((x,y)=>x.label==='True'?-1:1);
-  return {cid:c.id,kind:c.kind||'recall',stem:c.q,choices:ch.map((x,i)=>({...x,letter:LETTERS[i]})),why:c.why||'',hint:c.hint||'',usedHint:false}}
+  return {cid:c.id,kind:c.kind||'recall',stem:LONG&&c.xq?c.xq:c.q,choices:ch.map((x,i)=>({...x,letter:LETTERS[i]})),why:c.why||'',hint:c.hint||'',usedHint:false}}
  let cand=src.filter(x=>x.section===c.section&&x.id!==c.id&&!x.q);
  if(cand.length<4)cand=src.filter(x=>x.id!==c.id&&!x.q&&chOf(x.section)===chOf(c.section));
  if(cand.length<4)cand=src.filter(x=>x.id!==c.id&&!x.q);
@@ -752,11 +754,33 @@ function clock(ms){const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60
 function drawExam(){const ex=state.exam,C=CHAL||ex&&ex.chal,run=!CHAL&&!!ex&&!ex.done;$('examView').classList.toggle('running',run);if(run)requestAnimationFrame(()=>{const t=$('examView').querySelector('.top');if(t)$('examView').style.setProperty('--exhead',t.offsetHeight+'px')});$('main').classList.toggle('wide',!CHAL&&!!ex&&!!ex.sheet&&!ex.done);document.title=(C?'Class challenge':'Mock exam')+' · '+CONFIG.title;$('excrumb').textContent=C?'Class challenge':'Mock exam';
  $('exChartBtn').hidden=!chartsOn();clearInterval(exTick);$('extimer').hidden=true;
  if(CHAL)drawChalIntro();else if(ex&&!ex.done)drawExamRun();else if(ex&&ex.done)drawExamResult();else drawExamSetup()}
+// Matching type: exam-only sets (CONFIG.examMatch) for a unit, else its matching drills with at most 5 options (A-E).
+function exMatchSets(ch){const own=(CONFIG.examMatch||[]).filter(m=>String(m[0])===ch).map(m=>({ch,title:m[1],options:m[2],items:m[3]}));
+ return own.length?own:MSETS.filter(m=>m.ch===ch&&m.options.length<=5)}
+const matchAvail=()=>exSetup().chs.reduce((t,ch)=>t+exMatchSets(ch).reduce((u,m)=>u+m.items.length,0),0);
+function setExMatch(v){const st=exSetup();st.match=Math.max(0,Math.min(Math.min(st.count,matchAvail()),Math.round(+v)||0));save();drawExam()}
+// m items split equally over the units that have sets; each group is one set, up to 10 items, options kept in order A-E.
+function buildMatch(m){const st=exSetup(),chs=st.chs.filter(ch=>exMatchSets(ch).length),have={},out={};if(!m||!chs.length)return [];
+ chs.forEach(ch=>{have[ch]=exMatchSets(ch).reduce((u,s)=>u+s.items.length,0);out[ch]=0});let left=m,open=chs.slice();
+ while(left>0&&open.length){const each=Math.floor(left/open.length),extra=left%open.length;let used=0;open.forEach((ch,i)=>{const t=Math.min(each+(i<extra?1:0),have[ch]-out[ch]);out[ch]+=t;used+=t});left-=used;open=open.filter(ch=>out[ch]<have[ch]);if(!used)break}
+ const qs=[];let g=0;chs.forEach(ch=>{let need=out[ch];const sets=shuffle(exMatchSets(ch),rnd());
+  // groups of about 5-10: spread the need over as few sets as possible
+  const nb=Math.max(1,Math.ceil(need/10));let si=0;for(let b=0;need>0&&si<sets.length;b++,si++){const s=sets[si],want=Math.ceil(need/Math.max(1,nb-b)),take=Math.min(s.items.length,need,Math.max(want,1));
+   const its=shuffle(s.items.map((x,k)=>[x,k]),rnd()).slice(0,take);g++;need-=take;
+   its.forEach(([[clue,ans],k])=>qs.push({cid:'mx:'+ch+':'+s.title+':'+k,mt:1,grp:g,gt:s.title,gopts:s.options,ch,kind:'match',stem:clue,why:'',
+    choices:s.options.map((o,i)=>({letter:LETTERS[i],label:o,correct:i===ans}))}))}});
+ return qs}
+function mgrpHTML(q){return '<section class="card pq mgrp"><div class="pqh"><span class="kind">Matching type · '+esc(q.gt)+'</span></div><p class="mgi">Match each item below with A–E. An option may be used more than once or not at all.</p><ol class="pch">'+q.gopts.map((o,i)=>'<li><b>'+LETTERS[i]+'.</b>'+esc(o)+'</li>').join('')+'</ol></section>'}
+const exKind=q=>q.mt?'Matching · '+esc(q.gt):esc(byId[q.cid].section)+' · '+(q.vsa?'VSA · identification':kindName(q.kind));
+// Difficulty row: shown when the course has exam-style wording (xq) or look-alike choices (dh).
+const hasLevels=()=>BANK.some(c=>c.xq||c.dh);
+function setExLevel(v){exSetup().level=v;save();drawExam()}
 function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);$('extitle').textContent='Mock exam';
  const row=(t,d,ctl)=>'<div class="prow"><div class="pl"><b>'+t+'</b><span>'+d+'</span></div><div class="ctl">'+ctl+'</div></div>';
  const counts=EX_COUNTS.filter(c=>c<pool.length).map(c=>[c,String(c)]).concat([[9999,'All '+pool.length],['c','Custom']]);
- const curCount=st.customCount?'c':st.count>=pool.length?9999:EX_COUNTS.includes(st.count)?st.count:'c',per=exSplit(n);
- const vsaMax=Math.min(n,pool.filter(vsaOK).length),preset=EX_PRESETS.findIndex(p=>p.count===st.count&&!!p.split===!!st.split&&(p.format||'one')===(st.format||'one')&&(p.vsa||0)===(st.vsa||0)&&st.chs.length===chapters.length);
+ const curCount=st.customCount?'c':st.count>=pool.length?9999:EX_COUNTS.includes(st.count)?st.count:'c',per=exSplit(n-Math.min(st.match||0,matchAvail(),n));
+ const vsaMax=Math.min(n,pool.filter(vsaOK).length),preset=EX_PRESETS.findIndex(p=>p.count===st.count&&!!p.split===!!st.split&&(p.format||'one')===(st.format||'one')&&(p.vsa||0)===(st.vsa||0)&&(p.match||0)===(st.match||0)&&(p.keepChs||(p.chs?st.chs.join()===chapters.filter(c=>p.chs.includes(c)).join():st.chs.length===chapters.length)));
+ const mAv=matchAvail(),mN=Math.min(st.match||0,mAv,n);
  const past=(state.exams||[]).slice(-5).reverse();
  $('exbody').innerHTML='<p class="lede">A practice run with no hints and no answers until the end. Afterwards you get your score by '+unitW+' and can review every mistake. Wrong answers are added to your Missed '+ITEMS+'; questions you skip are not counted against you.</p>'+
   '<section class="panel" style="margin-top:20px"><h2>Set up</h2>'+
@@ -764,17 +788,19 @@ function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,po
   row('Questions',pool.length+' '+ITEMS+' in the '+unitsW+' you picked, drawn at random.',segHTML('setExCount',counts,curCount,'Number of questions')+(curCount==='c'?'<input class="txt exmin" type="number" min="1" max="'+pool.length+'" value="'+n+'" onchange="setExCustom(this.value)" aria-label="Number of questions">':''))+
   (st.chs.length>1?row('Split',st.split?'Equal per '+unitW+', grouped like the real test: '+per.map(([ch,k])=>k+' from '+esc(chLabel(ch))).join(', ')+'.':'Drawn at random from all the '+unitsW+' you picked.',segHTML('setExSplit',[[false,'Random'],[true,'Equal per '+unitW]],!!st.split,'Split')):'')+
   row(UNIT+'s','Tap to include or leave out.','<div class="fchips">'+chapters.map(ch=>'<button class="fchip '+(st.chs.includes(ch)?'on':'')+'" aria-pressed="'+st.chs.includes(ch)+'" onclick="toggleExCh(\''+ch+'\')" title="'+esc(CH_NAMES[ch])+'">'+esc(chLabel(ch))+'</button>').join('')+'</div>')+
+  (hasLevels()?row('Difficulty',st.level==='easy'?'Easier: the same questions and choices as in practice.':'Harder, like the real test: '+(pool.some(c=>c.xq)?'longer questions with more to read (cases and descriptions instead of just the term)'+(pool.some(c=>c.dh)?', and ':''):'')+(pool.some(c=>c.dh)?'look-alike choices that differ in one detail':'')+'. Same answers.',segHTML('setExLevel',[['hard','Harder'],['easy','Easier']],st.level==='easy'?'easy':'hard','Difficulty')):'')+
   row('Format',st.format==='sheet'?'Answer sheet: the whole test paper on one page and a separate sheet where you shade A–D, like the real exam.':st.format==='paperless'?'Paperless: like the digital exam. One question at a time, no topic labels, and no results until you submit.':'One question at a time.',segHTML('setExFormat',[['one','One at a time'],['sheet','Answer sheet'],['paperless','Paperless']],st.format||'one','Format'))+
+  (mAv?row('Matching','Matching type after the multiple choice: groups of items that share options A–E (each can be used more than once), answered on the same sheet.'+(mN?' This exam: <b>'+(n-mN)+' multiple choice + '+mN+' matching</b>.':''),'<input class="txt exmin" type="number" min="0" max="'+Math.min(mAv,n)+'" value="'+mN+'" onchange="setExMatch(this.value)" aria-label="Number of matching items"><span>of '+n+'</span>'):'')+
   row('VSA','Identification items at the end: you type the answer, no choices.'+(vsaMax<n?' Up to '+vsaMax+' of these '+ITEMS+' work as VSA.':''),'<input class="txt exmin" type="number" min="0" max="'+vsaMax+'" value="'+Math.min(st.vsa||0,vsaMax)+'" onchange="setExVsa(this.value)" aria-label="Number of VSA items"><span>of '+n+'</span>')+
   row('Timer',typeof st.timer==='number'?st.timer+' minutes in total. The exam ends when time runs out.':st.timer?n+' minutes, one per question. The exam ends when time runs out.':'No time limit.',
    segHTML('setExTimer',[[false,'Off'],[true,'1 min each'],['c','Custom']],typeof st.timer==='number'?'c':!!st.timer,'Timer')+(typeof st.timer==='number'?'<input class="txt exmin" type="number" min="1" max="300" value="'+st.timer+'" onchange="setExMin(this.value)" aria-label="Minutes"><span>min</span>':''))+
   '<div class="exstart"><button class="btn" onclick="toggleChal()" aria-expanded="'+chalOpen+'" title="A link that gives your group chat the same questions">'+LINK_SM+'Class challenge</button><button class="btn primary" onclick="startExam()" '+(n?'':'disabled')+'>Start exam · '+n+' '+ITEMS+'</button></div>'+(chalOpen?chalBoxHTML():'')+'</section>'+
-  (past.length?'<section class="panel" style="margin-top:12px"><h2>Recent exams</h2><ul class="exlist">'+past.map(r=>'<li><b class="num">'+Math.round(100*r.right/r.total)+'%</b><span>'+(100*r.right/r.total>=GRADING.pass?'<b class="gpass">Passed</b>':'<b class="gfail">Not passed</b>')+' · grade '+fmtG(transmute(r.right,r.total))+' · '+r.right+' of '+r.total+' · '+esc(r.date)+' · '+esc(r.time)+(r.chal?' · class challenge':'')+'</span></li>').join('')+'</ul></section>':'')}
+  (past.length?'<section class="panel" style="margin-top:12px"><h2>Recent exams</h2><ul class="exlist">'+past.map(r=>'<li><b class="num">'+Math.round(100*r.right/r.total)+'%</b><span>'+(100*r.right/r.total>=GRADING.pass?'<b class="gpass">Passed</b>':'<b class="gfail">Not passed</b>')+' · grade '+fmtG(transmute(r.right,r.total))+' · '+r.right+' of '+r.total+' · '+esc(r.date)+' · '+esc(r.time)+(r.chal?' · class challenge':'')+(r.easy?' · easier':'')+'</span></li>').join('')+'</ul></section>':'')}
 function setExCount(v){const st=exSetup();if(v==='c'){st.customCount=true;st.count=Math.min(st.count,exPool().length)}else{st.customCount=false;st.count=v}save();drawExam()}
 function setExCustom(v){const st=exSetup();st.customCount=true;st.count=Math.max(1,Math.min(exPool().length,Math.round(+v)||1));save();drawExam()}
 function setExSplit(v){exSetup().split=v;save();drawExam()}
 function setExVsa(v){const st=exSetup();st.vsa=Math.max(0,Math.min(Math.min(st.count,exPool().length),Math.round(+v)||0));save();drawExam()}
-function exPreset(i){const p=EX_PRESETS[i],st=exSetup();st.chs=chapters.slice();st.count=p.count;st.customCount=!EX_COUNTS.includes(p.count);st.split=!!p.split;st.format=p.format||'one';st.vsa=p.vsa||0;if(p.timer!=null)st.timer=p.timer;save();drawExam()}
+function exPreset(i){const p=EX_PRESETS[i],st=exSetup();if(!p.keepChs)st.chs=chapters.slice();st.count=p.count;st.customCount=!EX_COUNTS.includes(p.count);st.split=!!p.split;st.format=p.format||'one';st.vsa=p.vsa||0;st.match=p.match||0;if(p.chs)st.chs=chapters.filter(c=>p.chs.includes(c));if(p.timer!=null)st.timer=p.timer;save();drawExam()}
 // Equal split: n divided across the chosen units (the first ones take the remainder); a unit with too few items passes the rest on.
 function exSplit(n){const st=exSetup(),chs=st.chs.filter(ch=>BANK.some(c=>chOf(c.section)===ch)),have={};chs.forEach(ch=>have[ch]=BANK.filter(c=>chOf(c.section)===ch).length);
  const out={};chs.forEach(ch=>out[ch]=0);let left=n,open=chs.slice();while(left>0&&open.length){const each=Math.floor(left/open.length),extra=left%open.length;let used=0;
@@ -785,13 +811,15 @@ function setExTimer(v){const st=exSetup(),n=Math.min(st.count,exPool().length);s
 function setExFormat(v){exSetup().format=v;save();drawExam()}
 function setExMin(v){exSetup().timer=Math.max(1,Math.min(300,Math.round(+v)||1));save();drawExam()}
 function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;
- let picked=st.split&&st.chs.length>1?exSplit(n).flatMap(([ch,k])=>shuffle(pool.filter(c=>chOf(c.section)===ch),rnd()).slice(0,k)):shuffle(pool,rnd()).slice(0,n);
+ const mq=buildMatch(Math.min(st.match||0,matchAvail(),n)),nm=n-mq.length;
+ let picked=st.split&&st.chs.length>1?exSplit(nm).flatMap(([ch,k])=>shuffle(pool.filter(c=>chOf(c.section)===ch),rnd()).slice(0,k)):shuffle(pool,rnd()).slice(0,nm);
  // VSA: take them from across the picked units and move them to the end, like the real test
  const want=Math.min(st.vsa||0,picked.length),vs=[];if(want){const ok=picked.filter(vsaOK),byU={};ok.forEach(c=>(byU[chOf(c.section)]=byU[chOf(c.section)]||[]).push(c));
   const us=Object.keys(byU);let k=0;while(vs.length<want&&us.some(u=>byU[u].length)){const u=us[k++%us.length];if(byU[u].length)vs.push(byU[u].splice(Math.floor(Math.random()*byU[u].length),1)[0])}
-  if(vs.length<want){const more=shuffle(pool.filter(c=>vsaOK(c)&&!picked.includes(c)),rnd()).slice(0,want-vs.length);vs.push(...more);picked=picked.filter(c=>!vs.includes(c)).slice(0,n-vs.length)}else picked=picked.filter(c=>!vs.includes(c))}
- HARD=true;const qsBuilt=picked.map(c=>exQ(makeQuestion(c))).concat(vs.map(c=>exQ(makeQuestion(c),true)));HARD=false;
- state.exam={qs:qsBuilt,
+  if(vs.length<want){const more=shuffle(pool.filter(c=>vsaOK(c)&&!picked.includes(c)),rnd()).slice(0,want-vs.length);vs.push(...more);picked=picked.filter(c=>!vs.includes(c)).slice(0,nm-vs.length)}else picked=picked.filter(c=>!vs.includes(c))}
+ const easy=st.level==='easy'&&hasLevels();HARD=!easy;LONG=!easy;INEX=true;
+ const qsBuilt=picked.map(c=>exQ(makeQuestion(c))).concat(mq,vs.map(c=>exQ(makeQuestion(c),true)));HARD=LONG=INEX=false;
+ state.exam={qs:qsBuilt,easy:easy?1:0,
   ans:{},i:0,start:Date.now(),limit:exMinutes(st,n)*60000,done:false,sheet:st.format==='sheet'||undefined,paperless:st.format==='paperless'||undefined};
  save();drawExam();window.scrollTo(0,0)}
 function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered=Object.keys(ex.ans).length;if(q.ident)setTimeout(()=>{const i=$('extyped');if(i)i.focus({preventScroll:true})},0);
@@ -800,7 +828,7 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
  if(ex.sheet){$('extitle').textContent=n+' '+ITEMS;$('exbody').innerHTML=sheetHTML(ex);return}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
-  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(ex.paperless?(q.vsa?'VSA · type your answer':'Multiple choice'):esc(byId[q.cid].section)+' · '+(q.vsa?'VSA · identification':kindName(q.kind))+srcTag(q.cid))+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
+  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(ex.paperless?(q.vsa?'VSA · type your answer':q.mt?'Matching type':'Multiple choice'):exKind(q)+srcTag(q.cid))+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+(q.mt?'<p class="mgi">Options may be used more than once.</p>':'')+figHTML(q.cid)+
   (q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+(q.vsa?'Type the term':'Type your answer')+'" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
    :'<div class="choices'+(molq(q)?' ichoices':'')+'">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+labelHTML(x.label)+'</span></button>').join('')+'</div>')+
   '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button> · <button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button></span>'+
@@ -808,8 +836,8 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
   '<div class="qnav" aria-label="Jump to a question">'+ex.qs.map((_,j)=>'<button class="'+(ex.ans[j]?'a ':'')+(j===ex.i?'cur':'')+'" onclick="exJump('+j+')" aria-label="Question '+(j+1)+(ex.ans[j]?', answered':'')+'">'+(j+1)+'</button>').join('')+'</div>'}
 // Answer sheet format: read on the test paper, shade on the sheet. Shading updates only the sheet, so the paper keeps its place.
 function sheetHTML(ex){const n=ex.qs.length,done=Object.keys(ex.ans).length;
- const paper=ex.qs.map((q,j)=>'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+esc(byId[q.cid].section)+' · '+(q.vsa?'VSA · identification':kindName(q.kind))+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
-  (q.ident?'<p class="pqid">Write your answer on the answer sheet.</p>':'<ol class="pch'+(molq(q)?' ich':'')+'">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+labelHTML(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
+ const paper=ex.qs.map((q,j)=>(q.mt&&(!j||ex.qs[j-1].grp!==q.grp)?mgrpHTML(q):'')+'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+exKind(q)+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
+  (q.ident?'<p class="pqid">Write your answer on the answer sheet.</p>':q.mt?'':'<ol class="pch'+(molq(q)?' ich':'')+'">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+labelHTML(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
  const rows=ex.qs.map((q,j)=>'<div class="brow" id="br'+j+'"><button class="bn" onclick="sheetGo('+j+')" aria-label="Go to question '+(j+1)+'">'+(j+1)+'</button>'+
   (q.ident?'<input class="txt bt" value="'+esc(ex.ans[j]||'')+'" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer to question '+(j+1)+'" oninput="sheetType('+j+',this.value)">'
    :q.choices.map(x=>'<button class="bub'+(ex.ans[j]===x.letter?' on':'')+'" data-l="'+x.letter+'" onclick="sheetPick('+j+',\''+x.letter+'\')" aria-pressed="'+(ex.ans[j]===x.letter)+'" aria-label="Question '+(j+1)+', '+x.letter+'">'+x.letter+'</button>').join(''))+'</div>').join('');
@@ -834,13 +862,13 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
  if(!timeUp&&open===n){if(confirm('You haven\'t answered anything. Discard this '+(ex.chal?'challenge':'exam')+'?'))discardExam(true);return}
  if(!timeUp&&open&&!confirm(open+' question'+(open>1?'s are':' is')+' still unanswered. Finish anyway? Skipped ones lower your score but are not counted as missed.'))return;
  clearInterval(exTick);ex.done=true;ex.end=Math.min(Date.now(),ex.limit?ex.start+ex.limit:Infinity);ex.timeUp=!!timeUp;let right=0;const byCh={};
- ex.qs.forEach((q,j)=>{const c=byId[q.cid],k=state.concepts[q.cid],a=ex.ans[j],ok=exOK(q,a),ch=chOf(c.section);
+ ex.qs.forEach((q,j)=>{const c=byId[q.cid],k=state.concepts[q.cid],a=ex.ans[j],ok=exOK(q,a),ch=q.mt?q.ch:chOf(c.section);
   byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;if(ok){right++;byCh[ch][0]++}
-  if(a==null||a==='')return;   // skipped: no effect on mastery, Missed or class stats
+  if(a==null||a===''||q.mt)return;   // skipped (matching items are not bank questions): no effect on mastery, Missed or class stats
   k.seen++;if(ok)state.correct++;else{k.wrong++;state.wrong++;masteryDown(k)}
   crowdAdd(q.cid,!ok);state.history.push({cid:q.cid,correct:ok,lookup:false,term:c.term,section:c.section,mode:'EXAM'})});
  ex.right=right;ex.byCh=byCh;
- state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0}).slice(-20);
+ state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0,easy:ex.easy?1:0}).slice(-20);
  // A challenge keeps your first score; later tries are shared as retakes.
  if(ex.chal){state.chalLog=state.chalLog||{};const k=ex.chal.key;ex.retake=!!state.chalLog[k];if(!ex.retake)state.chalLog[k]={right,total:n}}
  save();if(page==='exam'){drawExam();window.scrollTo(0,0)}}
@@ -858,7 +886,7 @@ function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*
   '<div class="exacts">'+(ex.chal?'<button class="btn primary" onclick="copyChalScore()">Copy my score</button><button class="btn" onclick="copyChalLink(state.exam.chal)">Copy challenge link</button>':'')+(wrong.length?'<button class="btn'+(ex.chal?'':' primary')+'" onclick="toggleExReview()">'+(ex.review?'Hide my mistakes':'Review my mistakes ('+wrong.length+')')+'</button>':'')+
   (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">'+(ex.chal?'Done':'New exam')+'</button></div>'+
   (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.ident?null:q.choices.find(c=>c.letter===a);
-   return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+esc(byId[q.cid].section)+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div><p class="exq">'+esc(q.stem)+'</p>'+figHTML(q.cid)+''+
+   return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+(q.mt?exKind(q):esc(byId[q.cid].section))+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div><p class="exq">'+esc(q.stem)+'</p>'+figHTML(q.cid)+''+
     '<p class="exa bad"><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?esc(ok.label):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+'</article>'}).join('')+'</div>':'')}
 function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
 function newExam(){state.exam=null;save();draw();window.scrollTo(0,0)}
@@ -1257,6 +1285,12 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'29',date:'Oct 20, 2026',title:'Matching type in the Mock exam',items:[
+  'The Mock exam can now include a <b>matching</b> part after the multiple choice: groups of items that share options A–E, each usable more than once, shaded on the same answer sheet.',
+  'Psychology has presets for the real format: <b>60 items, 30 multiple choice + 30 matching</b>, on an answer sheet.']},
+ {v:'28',date:'Oct 20, 2026',title:'Harder or easier mock exams',items:[
+  'Mock exam setup has a new <b>Difficulty</b> switch. <b>Harder</b> asks questions the way the real test does: longer, with a case or a description to read instead of just “What is X?”, plus look-alike choices. <b>Easier</b> uses the same questions as practice.',
+  'Practice itself is unchanged.']},
  {v:'27',date:'Oct 20, 2026',title:'Predicted grade',items:[
   'Mock exam results now show a big <b>Passed</b> or <b>Not passed</b> and your <b>predicted transmuted grade</b>: 75 + (score% − 60) × 25 ÷ 40, as in the student handbook: 60% right = 75 (passing), 100% = 100, 0% = 37.5. It also tells you how many more right you needed, or how far you cleared it. Recent exams show it too.']},
  {v:'26',date:'Oct 19, 2026',title:'Round two is different',items:[
