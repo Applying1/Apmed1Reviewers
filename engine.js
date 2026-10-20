@@ -652,16 +652,19 @@ function drawNotes(){
  drawNotesBody();
 }
 function hl(s){const t=esc(s),q=notesQ.trim();if(!q)return t;return t.replace(new RegExp('('+esc(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'),'<mark>$1</mark>')}
+let notesOtherW=false;
 function drawNotesBody(){
  const q=notesQ.trim().toLowerCase(),body=$('nbody');body.classList.toggle('selftest',!!state.prefs.selftest);
  const out=NOTES_PARSED.filter(n=>noteScope(n.ch)&&(notesCh==='all'||n.ch===notesCh)).map(n=>{
   const gch=g=>{const m=String(g.title).match(/^(\d+)(?:[–-](\d+))?\s*·/);if(!m)return true;for(let c=+m[1];c<=+(m[2]||m[1]);c++)if(inScopeCh(String(c)))return true;return false};
-  const grs=/^\d/.test(n.ch)?n.groups:n.groups.filter(gch).concat(n.groups.filter(g=>!gch(g)));
+  // Who's who and other unnumbered notes: only the cards for the chapters in scope, the rest behind a link.
+  const other=/^\d/.test(n.ch)?[]:n.groups.filter(g=>!gch(g)&&secOn(g.sec)),grs=/^\d/.test(n.ch)?n.groups:n.groups.filter(gch).concat(notesOtherW?other:[]);
   const cards=grs.filter(g=>secOn(g.sec)).map(g=>{const titleHit=q&&g.title.toLowerCase().includes(q);
    const rows=g.rows.filter(([a,b])=>!q||titleHit||(a+' '+b).toLowerCase().includes(q));if(!rows.length)return '';
    return '<article class="ncard"><h3>'+hl(g.title)+'</h3><dl class="nrows">'+rows.map(([a,b])=>'<div class="nrow" onclick="this.classList.toggle(\'show\');syncReveal()"><dt>'+hl(a)+'</dt><dd>'+hl(b)+'</dd></div>').join('')+'</dl></article>'}).join('');
-  if(!cards)return '';
-  return '<section class="nsec"><div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+esc(CH_NAMES[n.ch]||'')+'</h2>'+(state.prefs.selftest?'<button class="link reveal" onclick="revealSec(this)">Reveal all</button>':'')+(chapters.includes(n.ch)?'<button class="link" onclick="selectSection(\'CH:'+n.ch+'\')">Quiz the entire '+unitW+' →</button>':'')+'</div><div class="ngrid">'+cards+'</div></section>'}).join('');
+  const more=other.length?'<p class="nmore"><button class="link" onclick="notesOtherW=!notesOtherW;drawNotesBody()">'+(notesOtherW?'Hide the '+other.length+' from other '+unitsW:'Show '+other.length+' more from other '+unitsW)+'</button></p>':'';
+  if(!cards&&!more)return '';
+  return '<section class="nsec"><div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+esc(CH_NAMES[n.ch]||'')+'</h2>'+(state.prefs.selftest?'<button class="link reveal" onclick="revealSec(this)">Reveal all</button>':'')+(chapters.includes(n.ch)?'<button class="link" onclick="selectSection(\'CH:'+n.ch+'\')">Quiz the entire '+unitW+' →</button>':'')+'</div><div class="ngrid">'+cards+'</div>'+more+'</section>'}).join('');
  body.innerHTML=out||'<p class="empty">No notes match “'+esc(notesQ)+'”.</p>';
 }
 function toggleSelfTest(){state.prefs.selftest=!state.prefs.selftest;save();drawNotes()}
