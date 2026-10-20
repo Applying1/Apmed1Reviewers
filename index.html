@@ -161,6 +161,7 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
  <div id="spotbody"></div>
 </div></div>
 <script src="schedule-core.js"></script>
+<script src="dialog.js"></script>
 <script>
 // Links shared on Facebook/Messenger get ?fbclid=... added; drop it so the address stays clean when copied again.
 if(/[?&](fbclid|utm_[a-z]+|gclid)=/.test(location.search))history.replaceState(null,'',location.pathname);
@@ -269,7 +270,7 @@ async function finishSignIn(){const h=new URLSearchParams(location.hash.slice(1)
   drawSyncBtn();drawSync(was&&was!==code?'Signed in. Open your courses and your progress here is combined with your account.':'Signed in. Your progress now follows you on every device where you sign in.',true)
  }catch(e){drawSync('Could not finish signing in. Check your connection and try again.')}
  return true}
-function signOut(){if(!confirm('Sign out on this device? Your progress stays here, but it stops syncing until you sign in again.'))return;
+function signOut(sure){if(sure!==true){ask('Your progress stays here, but it stops syncing until you sign in again.',{title:'Sign out on this device?',ok:'Sign out',danger:1}).then(y=>{if(y)signOut(true)});return}
  try{localStorage.removeItem(ACC_KEY);localStorage.removeItem('reviewer_session')}catch(e){}setCode('');drawSyncBtn();drawSync('Signed out.',true)}
 function drawSync(msg,ok){const c=getCode(),a=getAcc(),b=$('syncbody');$('synch').textContent=a&&c?'Your account':'Sign in to sync';const note='<p class="msg'+(ok?' ok':'')+'" id="syncmsg">'+(msg||'')+'</p>';
  if(a&&c){b.innerHTML='<div class="who">'+avatar(a)+'<div><b>'+esc(a.name||'Signed in')+'</b><span>'+esc(a.email||'')+'</span></div></div>'+
@@ -290,8 +291,8 @@ function linkSync(){const v=($('codein').value||'').toUpperCase().replace(/[^A-Z
  .catch(()=>{drawSync('Could not check the code. Check your connection and try again.');$('codein').value=v})}
 function startSync(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=new Uint8Array(12);crypto.getRandomValues(r);setCode(Array.from(r,x=>A[x%32]).join(''));
  drawSync('Your progress uploads each time you open a course on this device.',true)}
-function copyCode(){const c=getCode();(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(c):Promise.reject()).then(()=>drawSync('Copied.',true),()=>prompt('Copy this code:',c))}
-function stopSync(){if(!confirm('Stop syncing this device? Your progress stays here, and the other device keeps its own.'))return;setCode('');try{localStorage.removeItem(ACC_KEY)}catch(e){}drawSyncBtn();drawSync()}
+function copyCode(){const c=getCode();(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(c):Promise.reject()).then(()=>drawSync('Copied.',true),()=>copyBox(c))}
+function stopSync(sure){if(sure!==true){ask('Your progress stays here, and the other device keeps its own.',{title:'Stop syncing this device?',ok:'Stop syncing',danger:1}).then(y=>{if(y)stopSync(true)});return}setCode('');try{localStorage.removeItem(ACC_KEY)}catch(e){}drawSyncBtn();drawSync()}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body></html>

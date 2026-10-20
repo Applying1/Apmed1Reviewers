@@ -880,14 +880,27 @@ function sheetFocus(j){const r=sheetMark(j);if(!r)return;$('sheet').classList.ad
 function sheetGo(j){const p=$('pq'+j);if(!p)return;sheetMark(j);if(innerWidth<=900)$('sheet').classList.remove('open');p.scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
 function exType(v){const ex=state.exam;if(!ex||ex.done)return;if(v.trim())ex.ans[ex.i]=v;else delete ex.ans[ex.i];save();
  const b=document.querySelectorAll('.qnav button')[ex.i];if(b)b.classList.toggle('a',!!v.trim())}
-function discardExam(sure){const ex=state.exam;if(!ex||ex.done)return;if(!sure&&!confirm('Discard this '+(ex.chal?'challenge':'exam')+'? Nothing from it is saved.'))return;
+// In-page dialogs instead of the browser's confirm/alert/prompt boxes. ask() resolves true (OK) or false (Cancel, Esc, outside click).
+function ask(text,o){o=o||{};return new Promise(res=>{let m=$('askbox');if(!m){m=document.createElement('div');m.className='modal';m.id='askbox';m.hidden=true;document.body.appendChild(m)}
+ m.innerHTML='<div class="box askbox" role="'+(o.alert?'dialog':'alertdialog')+'" aria-modal="true"'+(o.title?' aria-labelledby="askh"':'')+' aria-describedby="askp">'+(o.title?'<h2 id="askh">'+esc(o.title)+'</h2>':'')+(text?'<p id="askp">'+esc(text)+'</p>':'')+
+  (o.copy!=null?'<textarea class="txt askcopy" readonly rows="3" aria-label="Text to copy">'+esc(o.copy)+'</textarea>':'')+
+  '<div class="askrow">'+(o.alert?'':'<button class="btn" id="askno">'+esc(o.no||'Cancel')+'</button>')+'<button class="btn '+(o.danger?'danger':'primary')+'" id="askyes">'+esc(o.ok||'OK')+'</button></div></div>';
+ const prev=document.activeElement;m.hidden=false;
+ const done=v=>{m.hidden=true;document.removeEventListener('keydown',key,true);try{prev&&prev.focus&&prev.focus({preventScroll:true})}catch(e){}res(v)};
+ const key=e=>{if(m.hidden)return;if(e.key==='Escape'){e.preventDefault();e.stopPropagation();done(false)}else if(e.key==='Enter'){e.preventDefault();e.stopPropagation();const a=document.activeElement;done(a&&a.id==='askno'?false:true)}
+  else if(e.key==='Tab'){const b=[...m.querySelectorAll('button,textarea')];const i=b.indexOf(document.activeElement);e.preventDefault();b[(i+(e.shiftKey?b.length-1:1))%b.length].focus()}else e.stopPropagation()};
+ document.addEventListener('keydown',key,true);m.onclick=e=>{if(e.target===m)done(false)};$('askyes').onclick=()=>done(true);if($('askno'))$('askno').onclick=()=>done(false);
+ setTimeout(()=>{const t=m.querySelector('.askcopy');if(t){t.focus();t.select()}else($(o.danger&&!o.alert?'askno':'askyes')).focus()},0)})}
+const tell=(text,o)=>ask(text,Object.assign({alert:1},o||{}));
+const copyBox=text=>tell('Your browser blocked copying. Select the text below and copy it.',{title:'Copy this',copy:text,ok:'Done'});
+function discardExam(sure){const ex=state.exam;if(!ex||ex.done)return;if(!sure){ask('Nothing from it is saved.',{title:'Discard this '+(ex.chal?'challenge':'exam')+'?',ok:'Discard',danger:1}).then(y=>{if(y)discardExam(true)});return}
  clearInterval(exTick);state.exam=null;save();draw();window.scrollTo(0,0)}
 function exAnswer(l){const ex=state.exam;if(!ex||ex.done)return;ex.ans[ex.i]=l;save();drawExam()}
 function exGo(d){const ex=state.exam;if(!ex||ex.done)return;ex.i=Math.max(0,Math.min(ex.qs.length-1,ex.i+d));save();drawExam()}
 function exJump(j){const ex=state.exam;if(!ex||ex.done)return;ex.i=j;save();drawExam()}
 function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=ex.qs.length,open=n-Object.keys(ex.ans).length;
- if(!timeUp&&open===n){if(confirm('You haven\'t answered anything. Discard this '+(ex.chal?'challenge':'exam')+'?'))discardExam(true);return}
- if(!timeUp&&open&&!confirm(open+' question'+(open>1?'s are':' is')+' still unanswered. Finish anyway? Skipped ones lower your score but are not counted as missed.'))return;
+ if(!timeUp&&open===n){ask('You haven\'t answered anything yet.',{title:'Discard this '+(ex.chal?'challenge':'exam')+'?',ok:'Discard',danger:1}).then(y=>{if(y)discardExam(true)});return}
+ if(!timeUp&&open&&!finishExam.ok){ask(open+' question'+(open>1?'s are':' is')+' still unanswered. Skipped ones lower your score but are not counted as missed.',{title:'Finish anyway?',ok:'Finish',no:'Keep going'}).then(y=>{if(y){finishExam.ok=1;try{finishExam()}finally{finishExam.ok=0}}});return}
  clearInterval(exTick);ex.done=true;ex.end=Math.min(Date.now(),ex.limit?ex.start+ex.limit:Infinity);ex.timeUp=!!timeUp;let right=0;const byCh={};
  ex.qs.forEach((q,j)=>{const c=byId[q.cid],k=state.concepts[q.cid],a=ex.ans[j],ok=exOK(q,a),ch=q.mt?q.ch:chOf(c.section);
   byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;if(ok){right++;byCh[ch][0]++}
@@ -1017,7 +1030,7 @@ function flagQ(where,j){const q=where==='ex'?state.exam&&state.exam.qs[j]:where=
 /* ---------- copy and toast ---------- */
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2800)}
 function copyText(text,msg){const done=()=>toast(msg||'Copied');
- const old=()=>{const a=document.createElement('textarea');a.value=text;a.setAttribute('readonly','');a.style.cssText='position:fixed;top:0;opacity:0';document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}a.remove();if(ok)done();else prompt('Copy this:',text)};
+ const old=()=>{const a=document.createElement('textarea');a.value=text;a.setAttribute('readonly','');a.style.cssText='position:fixed;top:0;opacity:0';document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}a.remove();if(ok)done();else copyBox(text)};
  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).then(done,old);else old()}
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type||'text/plain'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 
@@ -1038,13 +1051,13 @@ function setUpload(){const i=document.createElement('input');i.type='file';i.acc
 function saveSet(){const p=parseSet($('settext').value);if(!p.items.length)return;const s=setEdit,name=($('setname').value.trim()||p.name||'My set').slice(0,30);
  // A new set's id comes from its name, so classmates who add the same file share challenge links for it.
  const id=s?s.id:'u'+stableHash(name.toLowerCase()).toString(36);
- if(BANKS.some(b=>(b.id===id||b.name.toLowerCase()===name.toLowerCase())&&(!s||b.id!==s.id))){alert('There is already a bank called “'+name+'”. Pick another name, or edit that set.');return}
+ if(BANKS.some(b=>(b.id===id||b.name.toLowerCase()===name.toLowerCase())&&(!s||b.id!==s.id))){tell('Pick another name, or edit that set.',{title:'There is already a bank called “'+name+'”'});return}
  const used=new Set(Object.keys(COURSE_CH).concat(USER_SETS.map(x=>x.ch)));
  const rec={id,name,ch:s?s.ch:'ABCDEFGHJKLMNPQRSTUVWXYZ'.split('').find(c=>!used.has(c))||'Z',text:setText(p.items)};
  const i=USER_SETS.findIndex(x=>x.id===id);if(i>=0)USER_SETS[i]=rec;else USER_SETS.push(rec);
- try{localStorage.setItem(SETS_KEY,JSON.stringify(USER_SETS))}catch(e){alert('This browser would not save the set (storage is full or blocked).');return}
+ try{localStorage.setItem(SETS_KEY,JSON.stringify(USER_SETS))}catch(e){tell('Storage is full or blocked.',{title:'This browser would not save the set'});return}
  if(!s){state.bank=id;state.section='ALL';state.page='study'}state.active=null;state.feedback=null;state.selected=null;state.pmatch=null;save();location.reload()}
-function deleteSet(){const s=setEdit;if(!s||!confirm('Delete the set “'+s.name+'” and its progress from this browser?'))return;
+function deleteSet(sure){const s=setEdit;if(!s)return;if(sure!==true){ask('Its progress in this browser is deleted too.',{title:'Delete the set “'+s.name+'”?',ok:'Delete',danger:1}).then(y=>{if(y)deleteSet(true)});return}
  USER_SETS=USER_SETS.filter(x=>x.id!==s.id);try{localStorage.setItem(SETS_KEY,JSON.stringify(USER_SETS))}catch(e){}
  Object.keys(state.concepts).forEach(k=>{if(k.startsWith(s.id+'_'))delete state.concepts[k]});if(state.bank===s.id)state.bank='main';
  state.active=null;state.feedback=null;state.selected=null;save();location.reload()}
@@ -1248,7 +1261,7 @@ function syncLink(){const v=($('synccode').value||'').toUpperCase().replace(/[^A
  rpc('sync_known',{p_code:v}).then(ok=>{if(!ok){toast('Nothing is saved under that code yet. Check it, or tap Sync now on the other device first.');return}
   syncCode=v;syncEntry=false;state.curAt=0;state.prefsAt=0;try{localStorage.setItem(SYNC_KEY,JSON.stringify({code:v}))}catch(e){}syncInfo={at:0,err:''};drawPrefs();syncNow().then(()=>toast('Linked. Your progress from both devices is combined.'))})
   .catch(()=>toast('Could not reach the sync server. Check your connection.'))}
-function syncStop(){if(!confirm('Stop syncing this device? Your progress stays here, and the other device keeps its own.'))return;syncCode='';clearTimeout(syncT);try{localStorage.removeItem(SYNC_KEY);localStorage.removeItem('reviewer_account')}catch(e){}drawPrefs()}
+function syncStop(sure){if(sure!==true){ask('Your progress stays here, and the other device keeps its own.',{title:'Stop syncing this device?',ok:'Stop syncing',danger:1}).then(y=>{if(y)syncStop(true)});return}syncCode='';clearTimeout(syncT);try{localStorage.removeItem(SYNC_KEY);localStorage.removeItem('reviewer_account')}catch(e){}drawPrefs()}
 // Google sign-in lives on the home page (it gives this device the account's sync code); here we only show it.
 function account(){try{return JSON.parse(localStorage.getItem('reviewer_account'))||null}catch(e){return null}}
 const G_ICON='<svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>';
@@ -1562,13 +1575,13 @@ function reviewAll(){selectSection('ALL');extraPractice()}
 function scrollToCard(){const r=$('card').getBoundingClientRect();if(r.top<0)$('card').scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
 function toggleNav(open){$('app').classList.toggle('nav-open',open)}
 function closeDialog(){$('dialog').hidden=true}
-function resetAll(){if(!confirm('Start over? This erases all saved answers in this browser.'))return;try{localStorage.removeItem(KEY)}catch(e){}location.reload()}
+function resetAll(sure){if(sure!==true){ask('This erases all saved answers in this browser.',{title:'Start over?',ok:'Erase and start over',danger:1}).then(y=>{if(y)resetAll(true)});return}try{localStorage.removeItem(KEY)}catch(e){}location.reload()}
 function importProgress(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';
- i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(t=>{let d;try{d=JSON.parse(t)}catch(e){alert('That file is not a progress export.');return}
-  const st=d&&d.state?d.state:d;if(!st||!st.concepts){alert('That file is not a progress export from a reviewer.');return}
-  const known=Object.keys(st.concepts).filter(id=>byId[id]).length;if(!known){alert('That progress file belongs to a different reviewer.');return}
-  if(!confirm('Replace the progress saved in this browser with this file? It has answers for '+known+' '+ITEMS+'.'))return;
-  try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){alert('This browser would not save the file.');return}location.reload()})};
+ i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(t=>{let d;try{d=JSON.parse(t)}catch(e){tell('That file is not a progress export.');return}
+  const st=d&&d.state?d.state:d;if(!st||!st.concepts){tell('That file is not a progress export from a reviewer.');return}
+  const known=Object.keys(st.concepts).filter(id=>byId[id]).length;if(!known){tell('That progress file belongs to a different reviewer.');return}
+  ask('It has answers for '+known+' '+ITEMS+'.',{title:'Replace the progress saved in this browser with this file?',ok:'Replace',danger:1}).then(y=>{if(!y)return;
+  try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){tell('This browser would not save the file.');return}location.reload()})})};
  i.click()}
 function exportProgress(){let b=new Blob([JSON.stringify({exported:new Date().toISOString(),state},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=KEY+'-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 
