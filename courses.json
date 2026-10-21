@@ -163,10 +163,10 @@
  {
   "id": "botany",
   "title": "General Botany",
-  "scope": "Plant Tissues, Root, Stem, Leaf",
+  "scope": "Finals: Flower, Fruits and Seeds",
   "unit": "Lesson",
   "itemWord": "question",
-  "count": 522,
+  "count": 732,
   "storageKey": "study_reviewer_botany_2026_v1",
   "image": "courses/botany/topic-1.jpg",
   "extras": [],
@@ -177,7 +177,7 @@
    "courses/botany/topic-4.jpg"
   ],
   "exam": {
-   "name": "Midterm",
+   "name": "Finals",
    "date": ""
   },
   "cloud": {
