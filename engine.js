@@ -882,9 +882,16 @@ function setExTimer(v){const st=exSetup(),n=Math.min(st.count,exPool().length);s
 // Paperless exams have no matching part: switching to it clears matching (it can still be set by hand).
 function setExFormat(v){const st=exSetup();st.format=v;if(v==='paperless')st.match=0;save();drawExam()}
 function setExMin(v){exSetup().timer=Math.max(1,Math.min(300,Math.round(+v)||1));save();drawExam()}
+// Some question types (e.g. BP categories) fill a lot of the bank but come out only once or twice in the real test:
+// CONFIG.examCaps {group: max} limits items with cap:group per mock exam; the freed slots go to other items of the same unit.
+function capPick(picked,pool){const caps=CONFIG.examCaps||{};if(!Object.keys(caps).length)return picked;const capped=c=>c.cap&&caps[c.cap]!=null,cnt={},out=[],drop=[];
+ for(const c of picked){if(capped(c)&&(cnt[c.cap]=(cnt[c.cap]||0)+1)>caps[c.cap])drop.push(c);else out.push(c)}
+ const spare=shuffle(pool.filter(c=>!picked.includes(c)&&!capped(c)),rnd());
+ drop.forEach(d=>{let i=spare.findIndex(c=>chOf(c.section)===chOf(d.section));if(i<0)i=0;if(spare.length)out.push(spare.splice(i,1)[0])});return out}
 function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;
  const mq=buildMatch(Math.min(st.match||0,matchAvail(),n)),nm=n-mq.length;
  let picked=st.split&&st.chs.length>1?exSplit(nm).flatMap(([ch,k])=>shuffle(pool.filter(c=>chOf(c.section)===ch),rnd()).slice(0,k)):shuffle(pool,rnd()).slice(0,nm);
+ picked=capPick(picked,pool);
  // VSA: take them from across the picked units and move them to the end, like the real test
  const want=Math.min(st.vsa||0,picked.length),vs=[];if(want){const ok=picked.filter(vsaOK),byU={};ok.forEach(c=>(byU[chOf(c.section)]=byU[chOf(c.section)]||[]).push(c));
   const us=Object.keys(byU);let k=0;while(vs.length<want&&us.some(u=>byU[u].length)){const u=us[k++%us.length];if(byU[u].length)vs.push(byU[u].splice(Math.floor(Math.random()*byU[u].length),1)[0])}
