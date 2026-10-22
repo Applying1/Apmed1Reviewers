@@ -125,10 +125,10 @@ async function del(id){if(!await ask('This cannot be undone.',{title:'Delete thi
  try{await Auth.rpc('discussion_delete',{p_id:id},true);posts=posts.filter(p=>p.id!==id);drawList(false);pingOthers()}catch(e){tell('Could not delete it. Try again.')}}
 // Live: others viewing this thread reload at once; the course pages hear about it too (pop-ups, red dots)
 function pingOthers(){if(!window.Live)return;Live.ping('discuss:'+thread);Live.ping('course:'+course,{thread})}
-function grow(){const t=$('msg');if(!t)return;t.style.height='auto';t.style.height=Math.min(160,t.scrollHeight)+'px';$('count').textContent=t.value.length>1800?(2000-t.value.length)+' left':''}
+function grow(){const t=$('msg');if(!t)return;t.style.height='auto';t.style.height=Math.min(160,t.scrollHeight)+'px';$('count').textContent=t.value.length>850?(1000-t.value.length)+' left':''}
 function drawDock(msg){const a=Auth.acc(),d=$('dock');
  if(!Auth.ses()||!a){d.innerHTML='<button class="gbtn" onclick="this.disabled=true;startSignIn()">'+G+'Sign in with Google to post</button>'+(msg?'<div class="hint"><span class="err">'+esc(msg)+'</span></div>':'');return}
- d.innerHTML='<div class="compose"><textarea id="msg" rows="1" maxlength="2000" placeholder="Write a message…" oninput="grow()" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
+ d.innerHTML='<div class="compose"><textarea id="msg" rows="1" maxlength="1000" placeholder="Write a message…" oninput="grow()" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
   '<button class="btn primary" id="sendbtn" onclick="send()">Post</button></div><div class="hint"><span id="note">Posting as '+esc(a.name||a.email)+'</span><span id="count"></span></div>'}
 (async function(){
  if(!/^[a-z0-9_-]{1,40}$/.test(course)||(qid&&!/^[a-z0-9_.-]{1,60}$/.test(qid))){$('list').innerHTML='<p class="empty">This discussion could not be found.</p>';return}
