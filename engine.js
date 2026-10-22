@@ -129,10 +129,30 @@ function labelHTML(t){return isMol(t)?'<span class="molc" role="img" aria-label=
 function labelText(t){return isMol(t)?'(structure)':t}
 function ansHTML(t){const m=String(t).match(/^([A-E])\. (@m:.+)$/);return m?m[1]+'. <span class="molc sm" role="img" aria-label="Structure">'+(MOLS[m[2].slice(3)]||'')+'</span>':isMol(t)?labelHTML(t).replace('class="molc"','class="molc sm"'):esc(t)}
 function figHTML(cid){const c=byId[cid],f=c&&c.fig;if(!f)return '';const ks=[].concat(f);
- return '<figure class="qfig'+(ks.length>1?' two':'')+'" role="img" aria-label="Structure">'+ks.map((k,i)=>(i?'<span class="figsep">'+esc(c.figsep||'and')+'</span>':'')+'<span class="mol"'+molW(k)+'>'+(MOLS[k]||'')+'</span>').join('')+'</figure>'}
+ return '<figure class="qfig'+(ks.length>1?' two':'')+'" role="img" aria-label="'+esc(c.figlabel||(MATH?'Figure':'Structure'))+'">'+ks.map((k,i)=>(i?'<span class="figsep">'+esc(c.figsep||'and')+'</span>':'')+'<span class="mol"'+molW(k)+'>'+(MOLS[k]||'')+'</span>').join('')+'</figure>'}
 function molW(k){const m=/data-w='(\d+)'|viewBox='0 0 ([\d.]+)/.exec(MOLS[k]||'');return m?' style="flex-basis:'+Math.round(+(m[1]||m[2]))+'px"':''}
 const GOALS=CONFIG.recallGoals||[1,2];
-const MLETTERS='ABCDEFGHIJKL';  // matching drills can have more choices than the A–E answer sheet
+const MLETTERS='ABCDEFGHIJKL';
+/* ---------- math courses (CONFIG.math) ----------
+   Write equations as $…$ (inline) or $$…$$ (on their own) in questions, choices, explanations, hints, steps and notes.
+   KaTeX renders them after every redraw; without a connection the TeX source stays readable as plain text. */
+const MATH=!!CONFIG.math;
+function mathBoot(){if(!MATH||window.__mathBoot)return;window.__mathBoot=1;const V='0.16.9',B='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/'+V+'/';
+ const l=document.createElement('link');l.rel='stylesheet';l.href=B+'katex.min.css';document.head.appendChild(l);
+ const add=(src,cb)=>{const s=document.createElement('script');s.src=src;s.defer=true;s.onload=cb;document.head.appendChild(s)};
+ add(B+'katex.min.js',()=>add(B+'contrib/auto-render.min.js',()=>{mathRender();new MutationObserver(()=>{if(!mathT)mathT=requestAnimationFrame(mathRender)}).observe(document.body,{childList:true,subtree:true,characterData:true})}))}
+let mathT=0,mathBusy=false;
+function mathRender(){mathT=0;if(mathBusy||typeof renderMathInElement!=='function')return;mathBusy=true;
+ try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false}],
+  ignoredTags:['script','noscript','style','textarea','pre','code','option','input'],ignoredClasses:['nomath'],throwOnError:false,strict:false})}catch(e){}
+ // the observer sees KaTeX's own changes too: let them settle before listening again
+ setTimeout(()=>{mathBusy=false},0)}
+mathBoot();
+// Numeric answers: an item with "num" accepts any typed number within "tol" (default 1% or 0.005, whichever is bigger).
+function numIn(s){const m=String(s).replace(/[−–]/g,'-').replace(/(\d),(\d{3})\b/g,'$1$2').match(/-?\d*\.?\d+(?:e-?\d+)?/i);return m?parseFloat(m[0]):NaN}
+function numOK(input,c){if(!c||c.num==null)return false;const v=numIn(input);if(isNaN(v))return false;const tol=c.tol!=null?c.tol:Math.max(.005,Math.abs(c.num)*.01);return Math.abs(v-c.num)<=tol+1e-12}
+function stepsHTML(c){return c&&c.steps&&c.steps.length?'<ol class="steps">'+c.steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol>':''}
+  // matching drills can have more choices than the A–E answer sheet
 const LETTERS='ABCDE',THEME_KEY='reviewer_theme';
 const $=id=>document.getElementById(id);
 const byId=Object.fromEntries(ALL_ITEMS.map(c=>[c.id,c]));
@@ -345,7 +365,7 @@ function feedbackHTML(q,fb,live){
  let head=fb.correct?'Correct':fb.lookup?'Marked for review':'Not quite';
  let out='<div class="fb '+cls+'"><h3>'+FBICON[cls]+head+'</h3>';
  if(!fb.correct)out+='<p><b>Answer:</b> '+ansHTML(fb.correctLabel)+'</p>';
- if(q.why)out+='<p>'+esc(q.why)+'</p>';
+ if(q.why)out+='<p>'+esc(q.why)+'</p>';out+=stepsHTML(q.cid&&byId[q.cid]);
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'<span data-dn="'+esc(discKey(q.cid))+'">'+dnDot(dnUnread(discKey(q.cid)))+'</span></a></p>';
@@ -669,7 +689,10 @@ function drawDash(){
 
 /* ---------- notes ---------- */
 // NOTES rows look like "Term — what it points to | Term — ..."; " = " and " – " also split a row.
-const NOTES_PARSED=(NOTES_DATA||[]).map(([ch,groups])=>({ch:String(ch),groups:groups.map(([title,txt,sec])=>({title,sec,rows:String(txt).split(/\s*\|\s*/).filter(Boolean).map(p=>{const m=p.match(/^(.+?)\s+[—–=]\s+(.+)$/);return m?[m[1],m[2]]:[p,'']})}))}));
+// Rows split on " | " and "Term — cue", but never inside $…$ math (where | and = are part of the formula).
+function noteRows(t){const keep=[],hide=x=>x.replace(/\$\$[\s\S]*?\$\$|\$[^$]*\$/g,m=>{keep.push(m);return '\u0000'+(keep.length-1)+'\u0000'}),back=x=>x.replace(/\u0000(\d+)\u0000/g,(_,i)=>keep[+i]);
+ return hide(t).split(/\s*\|\s*/).filter(Boolean).map(p=>{const m=p.match(/^(.+?)\s+[—–=]\s+(.+)$/);return m?[back(m[1]),back(m[2])]:[back(p),'']})}
+const NOTES_PARSED=(NOTES_DATA||[]).map(([ch,groups])=>({ch:String(ch),groups:groups.map(([title,txt,sec])=>({title,sec,rows:noteRows(String(txt))}))}));
 let notesCh='all',notesQ='';
 // A notes section with a non-numeric id (like "W" for a Who's who page) spans every chapter: it is always shown and has no chapter number.
 const noteScope=ch=>!/^\d/.test(ch)||inScopeCh(ch);
@@ -812,10 +835,11 @@ const swHTML=(on,fn,label)=>'<button class="tgl" role="switch" aria-checked="'+o
 // One exam question, frozen when the exam starts. ident = typed answer instead of choices.
 function exQ(q,vsa){const o={cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))};if(vsa||isIdent(byId[q.cid]))o.ident=1;if(vsa)o.vsa=1;return o}
 // Can this item be asked as VSA (type the answer)? Short single answers only, and the stem must not lean on the choices.
-function vsaOK(c){if(isIdent(c))return true;if(!c.q||!c.a)return false;const a=c.a;if(a.length>32||a.split(/\s+/).length>4||/[,;]| and | or |\d.*\d/.test(a))return false;
+function vsaOK(c){if(isIdent(c)||(c&&c.num!=null))return true;if(!c.q||!c.a)return false;const a=c.a;if(a.length>32||a.split(/\s+/).length>4||/[,;]| and | or |\d.*\d/.test(a))return false;
  if(isMol(a)||/\bNOT\b|which of these|which (is|are) (correct|true|an? |the )|which statement|which pair|following/i.test(c.q))return false;return true}
-function exOK(q,a){if(a==null||a==='')return false;if(q.ident){const t=(q.choices.find(x=>x.correct)||{}).label||'';return typedOK(a,t)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(a,x))}return q.choices.some(x=>x.correct&&x.letter===a)}
-const exMinutes=(st,n)=>typeof st.timer==='number'?st.timer:st.timer?n:0;
+function exOK(q,a){if(a==null||a==='')return false;if(q.ident){const t=(q.choices.find(x=>x.correct)||{}).label||'';return typedOK(a,t)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(a,x))||numOK(a,byId[q.cid])}return q.choices.some(x=>x.correct&&x.letter===a)}
+const PER_ITEM=CONFIG.examMinutesPerItem||1;
+const exMinutes=(st,n)=>typeof st.timer==='number'?st.timer:st.timer?Math.round(n*PER_ITEM):0;
 const EX_PRESETS=CONFIG.examPresets||[{label:'Paperless · 30 items, split per '+unitW,count:30,split:true,format:'paperless',vsa:0}];
 function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters.slice(),timer:true});if(st.vsa==null)st.vsa=0;st.chs=st.chs.filter(c=>chapters.includes(c));if(!st.chs.length)st.chs=chapters.slice();return st}
 function exPool(){const st=exSetup();return BANK.filter(c=>st.chs.includes(chOf(c.section)))}
@@ -862,8 +886,8 @@ function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,po
   row('Format',st.format==='sheet'?'Answer sheet: the whole test paper on one page and a separate sheet where you shade A–D, like the real exam.':st.format==='paperless'?'Paperless: like the digital exam. One question at a time, no topic labels, and no results until you submit.':'One question at a time.',segHTML('setExFormat',[['one','One at a time'],['sheet','Answer sheet'],['paperless','Paperless']],st.format||'one','Format'))+
   (mAv?row('Matching',(st.format==='paperless'?'Paperless exams have no matching type, so this starts at 0. Set a number only if you want it anyway.':'Matching type after the multiple choice: groups of items that share options A–E (each can be used more than once), answered on the same sheet.')+(mN?' This exam: <strong>'+(n-mN)+' multiple choice + '+mN+' matching</strong>.':''),'<input class="txt exmin" type="number" min="0" max="'+Math.min(mAv,n)+'" value="'+mN+'" onchange="setExMatch(this.value)" aria-label="Number of matching items"><span>of '+n+'</span>'+(mN?'<button class="btn sm" onclick="setExMatch(0)">Set to 0</button>':'')):'')+
   row('VSA','Identification items at the end: you type the answer, no choices.'+(vsaMax<n?' Up to '+vsaMax+' of these '+ITEMS+' work as VSA.':''),'<input class="txt exmin" type="number" min="0" max="'+vsaMax+'" value="'+Math.min(st.vsa||0,vsaMax)+'" onchange="setExVsa(this.value)" aria-label="Number of VSA items"><span>of '+n+'</span>'+(Math.min(st.vsa||0,vsaMax)?'<button class="btn sm" onclick="setExVsa(0)">Set to 0</button>':''))+
-  row('Timer',typeof st.timer==='number'?st.timer+' minutes in total. The exam ends when time runs out.':st.timer?n+' minutes, one per question. The exam ends when time runs out.':'No time limit.',
-   segHTML('setExTimer',[[false,'Off'],[true,'1 min each'],['c','Custom']],typeof st.timer==='number'?'c':!!st.timer,'Timer')+(typeof st.timer==='number'?'<input class="txt exmin" type="number" min="1" max="300" value="'+st.timer+'" onchange="setExMin(this.value)" aria-label="Minutes"><span>min</span>':''))+
+  row('Timer',typeof st.timer==='number'?st.timer+' minutes in total. The exam ends when time runs out.':st.timer?Math.round(n*PER_ITEM)+' minutes, '+(PER_ITEM===1?'one':PER_ITEM)+' per question. The exam ends when time runs out.':'No time limit.',
+   segHTML('setExTimer',[[false,'Off'],[true,PER_ITEM+' min each'],['c','Custom']],typeof st.timer==='number'?'c':!!st.timer,'Timer')+(typeof st.timer==='number'?'<input class="txt exmin" type="number" min="1" max="300" value="'+st.timer+'" onchange="setExMin(this.value)" aria-label="Minutes"><span>min</span>':''))+
   '<div class="exstart"><button class="btn" onclick="toggleChal()" aria-expanded="'+chalOpen+'" title="A link that gives your group chat the same questions">'+LINK_SM+'Class challenge</button><button class="btn primary" onclick="startExam()" '+(n?'':'disabled')+'>Start exam · '+n+' '+ITEMS+'</button></div>'+(chalOpen?chalBoxHTML():'')+'</section>'+
   (past.length?'<section class="panel" style="margin-top:12px"><h2>Recent exams</h2><ul class="exlist">'+past.map(r=>'<li><b class="num">'+Math.round(100*r.right/r.total)+'%</b><span>'+(100*r.right/r.total>=GRADING.pass?'<b class="gpass">Passed</b>':'<b class="gfail">Not passed</b>')+' · grade '+fmtG(transmute(r.right,r.total))+' · '+r.right+' of '+r.total+' · '+esc(r.date)+' · '+esc(r.time)+(r.chal?' · class challenge':'')+(r.easy?' · easier':'')+'</span></li>').join('')+'</ul></section>':'')}
 function setExCount(v){const st=exSetup();if(v==='c'){st.customCount=true;st.count=Math.min(st.count,exPool().length)}else{st.customCount=false;st.count=v}exClampMatch(st);save();drawExam()}
@@ -980,7 +1004,7 @@ function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*
   (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">'+(ex.chal?'Done':'New exam')+'</button></div>'+
   (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.ident?null:q.choices.find(c=>c.letter===a);
    return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+(q.mt?exKind(q):esc(byId[q.cid].section))+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div><p class="exq">'+esc(q.stem)+'</p>'+figHTML(q.cid)+''+
-    '<p class="exa bad"><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?esc(ok.label):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+'</article>'}).join('')+'</div>':'')}
+    '<p class="exa bad"><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?esc(ok.label):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+stepsHTML(byId[q.cid])+'</article>'}).join('')+'</div>':'')}
 function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
 function newExam(){state.exam=null;save();draw();window.scrollTo(0,0)}
 function examKey(e){const ex=state.exam;if(!ex||ex.done||ex.sheet)return false;const k=e.key;
@@ -1583,7 +1607,7 @@ function masteryDown(k){if(k.right>=T()){k.right=T()-1;k.srs=null}}
 // Short recall answers only; definitions and long answers keep their choices.
 // Identification items ("type":"id") are always typed, in practice and in the mock exam; "alt" lists other accepted answers.
 const isIdent=c=>!!c&&c.type==='id';
-function canType(q){if(!q)return false;if(q.choices.some(x=>isMol(x.label)))return false;if(isIdent(byId[q.cid]))return true;if(!state.prefs.typeMode)return false;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
+function canType(q){if(!q)return false;if(q.choices.some(x=>isMol(x.label)))return false;if(isIdent(byId[q.cid]))return true;if(!state.prefs.typeMode)return false;if(byId[q.cid]&&byId[q.cid].num!=null)return true;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
  if(c.q?q.kind!=='recall':q.kind==='definition')return false;return ans.length<=40&&ans.split(/\s+/).length<=5&&!/[,;]| to | and /.test(ans)&&!/^(as|in|by|for|to|of|on|at|with|from|through)\b/i.test(ans)&&(ans.match(/\d+/g)||[]).length<=1}
 function normAns(s){return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\(.*?\)/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\b(the|a|an)\b/g,' ').replace(/\s+/g,' ').trim()}
 function lev(a,b){let p=Array.from({length:b.length+1},(_,j)=>j);for(let i=1;i<=a.length;i++){const c=[i];for(let j=1;j<=b.length;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[b.length]}
@@ -1594,7 +1618,7 @@ function typedHTML(fb){
  if(!fb)return '<div class="typein"><input id="typed" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer, then press Enter" aria-label="Your answer" onkeydown="if(event.key===\'Enter\'){event.preventDefault();submitTyped()}"></div>';
  return '<div class="typein done '+(fb.correct?'ok':'bad')+'"><span class="yl">You typed</span><b>'+esc(fb.typed||'')+'</b>'+(fb.override?'<span class="ov">counted as right</span>':'')+'</div>'}
 function submitTyped(){const q=state.active;if(view!=null||state.pmatch||state.feedback||!q||!q.typed)return;const el=$('typed'),val=(el&&el.value||'').trim();if(!val){if(el)el.focus();return}
- const target=q.choices.find(x=>x.correct),ok=typedOK(val,target.label)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(val,x));state.selected=ok?target.letter:null;record(ok,false);
+ const target=q.choices.find(x=>x.correct),ok=typedOK(val,target.label)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(val,x))||numOK(val,byId[q.cid]);state.selected=ok?target.letter:null;record(ok,false);
  state.feedback.typed=val;state.feedback.correctLabel=target.label;const last=state.log[state.log.length-1];if(last)last.fb=state.feedback;save();draw()}
 // A typed answer marked wrong that was really right (a spelling the checker did not accept).
 function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct||!fb.typed||!state.active)return;
