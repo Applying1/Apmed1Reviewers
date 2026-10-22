@@ -118,7 +118,7 @@
   "scope": "Finals: Antihypertensives (+ midterm topics)",
   "unit": "Lesson",
   "itemWord": "question",
-  "count": 0,
+  "count": 564,
   "storageKey": "study_reviewer_pharma_2026_v1",
   "image": "courses/pharma/topic-1.jpg",
   "extras": [],
@@ -129,8 +129,10 @@
    "courses/pharma/topic-4.jpg",
    "courses/pharma/topic-5.jpg"
   ],
-  "notesOnly": true,
-  "exam": null,
+  "exam": {
+   "name": "Prefinals",
+   "date": ""
+  },
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
    "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
