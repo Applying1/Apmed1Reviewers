@@ -57,10 +57,10 @@
  {
   "id": "purcom",
   "title": "Purposive Communication",
-  "scope": "Registers, Inclusive Language, Phonetics",
+  "scope": "Finals: Nature of Research (+ midterm topics)",
   "unit": "Topic",
   "itemWord": "question",
-  "count": 304,
+  "count": 372,
   "storageKey": "study_reviewer_purcom_midterm_2026_v1",
   "image": "courses/purcom/topic-1.jpg",
   "extras": [],
@@ -70,7 +70,7 @@
    "courses/purcom/topic-3.jpg"
   ],
   "exam": {
-   "name": "Midterm",
+   "name": "Research quiz",
    "date": ""
   },
   "cloud": {
