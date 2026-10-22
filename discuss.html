@@ -76,6 +76,7 @@ textarea:focus{border-color:var(--accent)}
 <div class="dock"><div class="in" id="dock"></div></div>
 <script src="auth.js"></script>
 <script src="dialog.js"></script>
+<script src="live.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -116,12 +117,14 @@ async function loadMore(){if(oldest==null)return;$('more').disabled=true;
  $('more').disabled=false}
 async function send(){const t=$('msg'),b=t.value.trim(),btn=$('sendbtn');if(!b)return;
  btn.disabled=true;$('note').textContent='';$('note').className='';
- try{await Auth.rpc('discussion_post',{p_thread:thread,p_body:b},true);t.value='';grow();await load();drawList(true)}
+ try{await Auth.rpc('discussion_post',{p_thread:thread,p_body:b},true);t.value='';grow();pingOthers();await load();drawList(true)}
  catch(e){$('note').textContent=/JWT|sign in|401/i.test(e.message)?'Your sign-in expired. Sign in again to post.':e.message;$('note').className='err';
   if(!(await Auth.token())){drawDock()}}
  btn.disabled=false;t.focus()}
 async function del(id){if(!await ask('This cannot be undone.',{title:'Delete this post?',ok:'Delete',danger:1}))return;
- try{await Auth.rpc('discussion_delete',{p_id:id},true);posts=posts.filter(p=>p.id!==id);drawList(false)}catch(e){tell('Could not delete it. Try again.')}}
+ try{await Auth.rpc('discussion_delete',{p_id:id},true);posts=posts.filter(p=>p.id!==id);drawList(false);pingOthers()}catch(e){tell('Could not delete it. Try again.')}}
+// Live: others viewing this thread reload at once; the course pages hear about it too (pop-ups, red dots)
+function pingOthers(){if(!window.Live)return;Live.ping('discuss:'+thread);Live.ping('course:'+course,{thread})}
 function grow(){const t=$('msg');if(!t)return;t.style.height='auto';t.style.height=Math.min(160,t.scrollHeight)+'px';$('count').textContent=t.value.length>1800?(2000-t.value.length)+' left':''}
 function drawDock(msg){const a=Auth.acc(),d=$('dock');
  if(!Auth.ses()||!a){d.innerHTML='<button class="gbtn" onclick="this.disabled=true;startSignIn()">'+G+'Sign in with Google to post</button>'+(msg?'<div class="hint"><span class="err">'+esc(msg)+'</span></div>':'');return}
@@ -147,7 +150,9 @@ function drawDock(msg){const a=Auth.acc(),d=$('dock');
  const ret=Q.get('return');if(done&&ret){try{const u=new URL(ret);if(u.origin===location.origin){location.replace(u.href);return}}catch(e){}}
  drawDock(msg);
  await load(true);
- poll=setInterval(()=>{if(document.visibilityState==='visible')load()},20000);
+ // instant via Realtime; the slow check is only a backup for sleeping phones and dropped connections
+ if(window.Live)Live.listen(cl,'discuss:'+thread,()=>load(),()=>load());
+ poll=setInterval(()=>{if(document.visibilityState==='visible')load()},60000);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load()});
 })();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');

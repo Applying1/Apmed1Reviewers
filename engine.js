@@ -1678,7 +1678,8 @@ takeLink();
 addEventListener('hashchange',()=>{if(takeLink()){toggleNav(false);draw();window.scrollTo(0,0)}});
 draw();
 notifyStart();
-if(cloudOn()){loadClassStats();loadContrib(true);loadDiscussCounts();setTimeout(dnPoll,1500);dnT=setInterval(dnPoll,60000);if(syncCode)syncNow();
+if(cloudOn()){loadClassStats();loadContrib(true);loadDiscussCounts();setTimeout(dnPoll,1500);dnT=setInterval(dnPoll,60000);
+ if(window.Live&&dnOn())Live.listen(CLOUD,'course:'+courseId(),()=>setTimeout(()=>{dnPoll();loadDiscussCounts()},400),()=>dnPoll());if(syncCode)syncNow();
  const back=()=>{try{const c=(JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||'';if(c!==syncCode){syncCode=c;syncInfo={at:0,err:''};lastPutSig='';if(c){syncNow();return}}}catch(e){}
   if(syncCode&&Date.now()-syncInfo.at>4000)syncNow()};
  addEventListener('storage',e=>{if(e.key===SYNC_KEY)back()});
