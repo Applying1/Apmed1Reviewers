@@ -132,6 +132,7 @@ function figHTML(cid){const c=byId[cid],f=c&&c.fig;if(!f)return '';const ks=[].c
  return '<figure class="qfig'+(ks.length>1?' two':'')+'" role="img" aria-label="Structure">'+ks.map((k,i)=>(i?'<span class="figsep">'+esc(c.figsep||'and')+'</span>':'')+'<span class="mol"'+molW(k)+'>'+(MOLS[k]||'')+'</span>').join('')+'</figure>'}
 function molW(k){const m=/data-w='(\d+)'|viewBox='0 0 ([\d.]+)/.exec(MOLS[k]||'');return m?' style="flex-basis:'+Math.round(+(m[1]||m[2]))+'px"':''}
 const GOALS=CONFIG.recallGoals||[1,2];
+const MLETTERS='ABCDEFGHIJKL';  // matching drills can have more choices than the A–E answer sheet
 const LETTERS='ABCDE',THEME_KEY='reviewer_theme';
 const $=id=>document.getElementById(id);
 const byId=Object.fromEntries(ALL_ITEMS.map(c=>[c.id,c]));
@@ -752,14 +753,14 @@ function drawMatch(){
 function setDrillTab(k){drillTab=k;drawMatch()}
 // ctx 'm' = Matching page, 'p' = a set mixed into practice (same card, different buttons at the bottom).
 function matchCardHTML(X,ctx){
- const m=MSETS[X.i],L=X.opt.map((o,k)=>({k,letter:LETTERS[k],label:m.options[o]})),n=X.items.length,answered=Object.keys(X.ans).length,best=state.match.best[m.title];
+ const m=MSETS[X.i],L=X.opt.map((o,k)=>({k,letter:MLETTERS[k],label:m.options[o]})),n=X.items.length,answered=Object.keys(X.ans).length,best=state.match.best[m.title];
  let hits=0;
  const rows=X.items.map((it,r)=>{const [text,correct]=m.items[it],pick=X.ans[r],rightK=X.opt.indexOf(correct),ok=X.checked&&pick===rightK;if(ok)hits++;
-  return '<div class="mrow '+(X.checked?(ok?'ok':'bad'):(r===(X.cur??0)?'cur':''))+'"><span class="mn">'+(r+1)+'</span><span class="mt">'+esc(text)+(X.checked&&!ok?'<span class="mfix">Answer: '+LETTERS[rightK]+' · '+esc(m.options[correct])+'</span>':'')+'</span>'+
+  return '<div class="mrow '+(X.checked?(ok?'ok':'bad'):(r===(X.cur??0)?'cur':''))+'"><span class="mn">'+(r+1)+'</span><span class="mt">'+esc(text)+(X.checked&&!ok?'<span class="mfix">Answer: '+MLETTERS[rightK]+' · '+esc(m.options[correct])+'</span>':'')+'</span>'+
    '<span class="seg mseg" role="radiogroup" aria-label="Answer for item '+(r+1)+'">'+L.map(x=>'<button role="radio" aria-checked="'+(pick===x.k)+'" class="'+(pick===x.k?'on':'')+(X.checked&&!ok&&x.k===rightK?' ans':'')+'" '+(X.checked?'disabled':'')+' onclick="matchPick(\''+ctx+'\','+r+','+x.k+')">'+x.letter+'</button>').join('')+'</span></div>'}).join('');
  const p=ctx==='p';
  return '<div class="qhead"><span class="kind">Matching type · '+esc(UNIT)+' '+esc(m.ch)+'</span><span>'+(best!=null?'Best '+best+'/'+n:'New set')+'</span></div>'+
-  '<p class="prompt">'+esc(m.title)+'</p><p class="mtip">Match each item with A–'+LETTERS[L.length-1]+'. A letter can be used more than once.<span class="khint"> Keys: ↑ ↓ or 1–'+n+' pick an item, A–'+LETTERS[L.length-1]+' answers it, Enter checks.</span></p>'+
+  '<p class="prompt">'+esc(m.title)+'</p><p class="mtip">Match each item with A–'+MLETTERS[L.length-1]+'. A letter can be used more than once.<span class="khint"> Keys: ↑ ↓ or 1–'+n+' pick an item, A–'+MLETTERS[L.length-1]+' answers it, Enter checks.</span></p>'+
   '<div class="mkeys">'+L.map(x=>'<div class="mkey"><span class="lt">'+x.letter+'</span>'+esc(x.label)+'</div>').join('')+'</div>'+
   '<div class="mrows">'+rows+'</div>'+
   (X.checked?'<div class="fb '+(hits===n?'good':'bad')+'" style="margin-top:18px"><h3>'+FBICON[hits===n?'good':'bad']+hits+' of '+n+' correct</h3><p>'+(hits===n?(p?'Clean sweep.':'Clean sweep. Try another set.'):'The right answer is shown under each item you missed.')+'</p></div>':'')+
@@ -997,7 +998,7 @@ function matchKey(e,ctx){const X=getM(ctx);if(!X)return false;const k=e.key,n=X.
  if(X.checked)return false;
  if(k==='ArrowDown'||k==='ArrowUp'){X.cur=Math.max(0,Math.min(n-1,cur+(k==='ArrowDown'?1:-1)));redrawMatch(ctx);scrollCur();return true}
  if(/^[1-9]$/.test(k)&&+k<=n){X.cur=+k-1;redrawMatch(ctx);scrollCur();return true}
- const li=k.length===1?LETTERS.indexOf(k.toUpperCase()):-1;
+ const li=k.length===1?MLETTERS.indexOf(k.toUpperCase()):-1;
  if(li>=0&&li<X.opt.length){matchPick(ctx,cur,li);scrollCur();return true}
  return false}
 function retryMatch(){newMatch(M.i);drawMatchCard();$('mcard').scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
