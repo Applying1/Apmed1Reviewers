@@ -1,31 +1,156 @@
 {
- "_how": "classes = the standard weekly timetable. weeks.<n> changes one week only: topics (by class id), times (class id -> {start, end}), cancel (class ids), extra (make-up or added classes), notes. Week 1 starts on week1 (a Monday).",
+ "_how": "classes = the standard weekly timetable. weeks.<n> changes one week only: topics (by class id), times (class id -> {start, end}), cancel (class ids), extra (make-up or added classes), notes. Week 1 starts on week1 (a Monday). holidays = {\"YYYY-MM-DD\": \"name\"}: no classes that day (shown as an overlay; tests that day are cancelled).",
  "term": "1st Semester · AY 2026–2027",
  "week1": "2026-07-27",
- "freeDays": {"Mon": "Self-directed learning (SDL)", "Sun": ""},
+ "freeDays": {
+  "Mon": "Self-directed learning (SDL)",
+  "Sun": ""
+ },
+ "holidays": {
+  "2026-10-31": "Institutional holiday"
+ },
  "subjects": {
-  "botany": {"name": "General Botany", "hue": 145, "course": "botany"},
-  "pharma": {"name": "Pharmacology", "hue": 110, "course": "pharma"},
-  "psych": {"name": "Intro to Psychology", "hue": 295, "course": "psych"},
-  "iml": {"name": "Intro to Medicine Life", "hue": 350, "course": "iml"},
-  "purcom": {"name": "Purposive Communication", "hue": 70, "course": "purcom"},
-  "mmw": {"name": "Math in the Modern World", "hue": 255, "course": "mmw"},
-  "nstp": {"name": "NSTP 1", "hue": 30, "course": "nstp"},
-  "pe": {"name": "PE 1", "hue": 185},
-  "chem": {"name": "General Chemistry", "hue": 220, "course": "chem"}
+  "botany": {
+   "name": "General Botany",
+   "hue": 145,
+   "course": "botany"
+  },
+  "pharma": {
+   "name": "Pharmacology",
+   "hue": 110,
+   "course": "pharma"
+  },
+  "psych": {
+   "name": "Intro to Psychology",
+   "hue": 295,
+   "course": "psych"
+  },
+  "iml": {
+   "name": "Intro to Medicine Life",
+   "hue": 350,
+   "course": "iml"
+  },
+  "purcom": {
+   "name": "Purposive Communication",
+   "hue": 70,
+   "course": "purcom"
+  },
+  "mmw": {
+   "name": "Math in the Modern World",
+   "hue": 255,
+   "course": "mmw"
+  },
+  "nstp": {
+   "name": "NSTP 1",
+   "hue": 30,
+   "course": "nstp"
+  },
+  "pe": {
+   "name": "PE 1",
+   "hue": 185
+  },
+  "chem": {
+   "name": "General Chemistry",
+   "hue": 220,
+   "course": "chem"
+  }
  },
  "classes": [
-  {"id": "pharma", "day": "Tue", "start": "08:00", "end": "13:00", "subject": "pharma", "official": "General Botany Lab, 7:00 AM–1:00 PM", "teacher": "Drs. Isaac Orig and MC Padilla"},
-  {"id": "psych", "day": "Wed", "start": "10:00", "end": "13:00", "subject": "psych", "official": "9:00 AM–12:00 PM (moved to 10 AM)", "teacher": "Dr. Sheila Quiachon"},
-  {"id": "botany-lec", "day": "Wed", "start": "13:00", "end": "16:00", "subject": "botany", "kind": "Lecture", "teacher": "Dr. Claire Frances Miyake"},
-  {"id": "purcom", "day": "Wed", "start": "16:00", "end": "19:00", "subject": "purcom", "teacher": "Prof. Arjay Arcena"},
-  {"id": "iml", "day": "Thu", "start": "09:00", "end": "12:00", "subject": "iml", "where": "VMG of DMSFI", "teacher": "Drs. Bretana, Quiachon and De Guzman"},
-  {"id": "mmw", "day": "Fri", "start": "07:00", "end": "10:00", "subject": "mmw", "teacher": "Prof. Verona Vigor"},
-  {"id": "nstp", "day": "Fri", "start": "10:00", "end": "13:00", "subject": "nstp", "teacher": "Prof. Anna Liza Mones"},
-  {"id": "pe", "day": "Fri", "start": "13:00", "end": "15:00", "subject": "pe", "teacher": "Prof. Cherry Agustin"},
-  {"id": "chem-lab-1", "day": "Sat", "start": "07:30", "end": "10:30", "subject": "chem", "kind": "Lab", "teacher": "Profs. Ranay and Orbita"},
-  {"id": "chem-lab-2", "day": "Sat", "start": "10:30", "end": "13:30", "subject": "chem", "kind": "Lab", "teacher": "Profs. Ranay and Orbita"},
-  {"id": "chem-lec", "day": "Sat", "start": "13:30", "end": "16:30", "subject": "chem", "kind": "Lecture", "teacher": "Prof. L. Ranay"}
+  {
+   "id": "pharma",
+   "day": "Tue",
+   "start": "08:00",
+   "end": "13:00",
+   "subject": "pharma",
+   "official": "General Botany Lab, 7:00 AM–1:00 PM",
+   "teacher": "Drs. Isaac Orig and MC Padilla"
+  },
+  {
+   "id": "psych",
+   "day": "Wed",
+   "start": "10:00",
+   "end": "13:00",
+   "subject": "psych",
+   "official": "9:00 AM–12:00 PM (moved to 10 AM)",
+   "teacher": "Dr. Sheila Quiachon"
+  },
+  {
+   "id": "botany-lec",
+   "day": "Wed",
+   "start": "13:00",
+   "end": "16:00",
+   "subject": "botany",
+   "kind": "Lecture",
+   "teacher": "Dr. Claire Frances Miyake"
+  },
+  {
+   "id": "purcom",
+   "day": "Wed",
+   "start": "16:00",
+   "end": "19:00",
+   "subject": "purcom",
+   "teacher": "Prof. Arjay Arcena"
+  },
+  {
+   "id": "iml",
+   "day": "Thu",
+   "start": "09:00",
+   "end": "12:00",
+   "subject": "iml",
+   "where": "VMG of DMSFI",
+   "teacher": "Drs. Bretana, Quiachon and De Guzman"
+  },
+  {
+   "id": "mmw",
+   "day": "Fri",
+   "start": "07:00",
+   "end": "10:00",
+   "subject": "mmw",
+   "teacher": "Prof. Verona Vigor"
+  },
+  {
+   "id": "nstp",
+   "day": "Fri",
+   "start": "10:00",
+   "end": "13:00",
+   "subject": "nstp",
+   "teacher": "Prof. Anna Liza Mones"
+  },
+  {
+   "id": "pe",
+   "day": "Fri",
+   "start": "13:00",
+   "end": "15:00",
+   "subject": "pe",
+   "teacher": "Prof. Cherry Agustin"
+  },
+  {
+   "id": "chem-lab-1",
+   "day": "Sat",
+   "start": "07:30",
+   "end": "10:30",
+   "subject": "chem",
+   "kind": "Lab",
+   "teacher": "Profs. Ranay and Orbita"
+  },
+  {
+   "id": "chem-lab-2",
+   "day": "Sat",
+   "start": "10:30",
+   "end": "13:30",
+   "subject": "chem",
+   "kind": "Lab",
+   "teacher": "Profs. Ranay and Orbita"
+  },
+  {
+   "id": "chem-lec",
+   "day": "Sat",
+   "start": "13:30",
+   "end": "16:30",
+   "subject": "chem",
+   "kind": "Lecture",
+   "teacher": "Prof. L. Ranay"
+  }
  ],
  "weeks": {
   "13": {
@@ -42,13 +167,45 @@
     "chem-lab-2": "Unit 16: Introduction to Biochemistry",
     "chem-lec": "Activity 9: Gel electrophoresis"
    },
-   "cancel": ["pharma", "iml"],
-   "extra": [
-    {"day": "Tue", "start": "13:00", "end": "16:00", "subject": "iml", "kind": "Moved", "topic": "The Birth of Modern Medicine", "where": "Moved from Thursday", "teacher": "Drs. Bretana, Quiachon and De Guzman"},
-    {"day": "Tue", "start": "16:00", "end": "19:00", "subject": "nstp", "kind": "Make-up", "teacher": "Prof. Anna Liza Mones"},
-    {"day": "Thu", "start": "13:00", "end": "16:00", "subject": "pharma", "kind": "Moved", "topic": "Anti-hypertensive drugs", "where": "Moved from Tuesday", "teacher": "Drs. Isaac Orig and MC Padilla"}
+   "cancel": [
+    "pharma",
+    "iml"
    ],
-   "notes": ["Pharmacology moved from Tuesday to Thursday, 1:00 PM (same topic: anti-hypertensive drugs).", "Tuesday 1:00–4:00 PM: Intro to Medicine Life (moved from Thursday, so no IML on Thursday).", "Tuesday 4:00–7:00 PM: NSTP make-up class (Friday's NSTP still happens)."]
+   "extra": [
+    {
+     "day": "Tue",
+     "start": "13:00",
+     "end": "16:00",
+     "subject": "iml",
+     "kind": "Moved",
+     "topic": "The Birth of Modern Medicine",
+     "where": "Moved from Thursday",
+     "teacher": "Drs. Bretana, Quiachon and De Guzman"
+    },
+    {
+     "day": "Tue",
+     "start": "16:00",
+     "end": "19:00",
+     "subject": "nstp",
+     "kind": "Make-up",
+     "teacher": "Prof. Anna Liza Mones"
+    },
+    {
+     "day": "Thu",
+     "start": "13:00",
+     "end": "16:00",
+     "subject": "pharma",
+     "kind": "Moved",
+     "topic": "Anti-hypertensive drugs",
+     "where": "Moved from Tuesday",
+     "teacher": "Drs. Isaac Orig and MC Padilla"
+    }
+   ],
+   "notes": [
+    "Pharmacology moved from Tuesday to Thursday, 1:00 PM (same topic: anti-hypertensive drugs).",
+    "Tuesday 1:00–4:00 PM: Intro to Medicine Life (moved from Thursday, so no IML on Thursday).",
+    "Tuesday 4:00–7:00 PM: NSTP make-up class (Friday's NSTP still happens)."
+   ]
   },
   "14": {
    "topics": {
@@ -64,7 +221,15 @@
     "chem-lab-2": "Unit 16: Proteins",
     "chem-lec": "Activity 10: Enzymes"
    },
-   "notes": ["Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."]
+   "notes": [
+    "Saturday, Oct 31 is an institutional holiday: no classes, and the Chem Lab long quiz (Units 15 and 16) is cancelled. New date to follow.",
+    "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
+   ],
+   "cancel": [
+    "chem-lab-1",
+    "chem-lab-2",
+    "chem-lec"
+   ]
   },
   "15": {
    "topics": {
@@ -80,7 +245,10 @@
     "chem-lab-2": "Unit 18: Carbohydrates",
     "chem-lec": "Activity 11: Qualitative analysis of carbohydrates"
    },
-   "notes": ["Monday, Nov 2: All Souls' Day.", "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."]
+   "notes": [
+    "Monday, Nov 2: All Souls' Day.",
+    "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
+   ]
   },
   "16": {
    "topics": {
@@ -96,7 +264,9 @@
     "chem-lab-2": "Unit 19: Nucleic Acids",
     "chem-lec": "Activity 12: RNA Vaccine"
    },
-   "notes": ["Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."]
+   "notes": [
+    "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
+   ]
   },
   "17": {
    "topics": {
@@ -112,7 +282,9 @@
     "chem-lab-2": "Exam review for laboratory",
     "chem-lec": "Exam review for lecture"
    },
-   "notes": ["Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."]
+   "notes": [
+    "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
+   ]
   },
   "18": {
    "topics": {
@@ -128,7 +300,9 @@
     "chem-lab-2": "Prefinal Exam",
     "chem-lec": "Prefinal Exam"
    },
-   "notes": ["Prefinal exam week (from the class matrix; check the official exam schedule)."]
+   "notes": [
+    "Prefinal exam week (from the class matrix; check the official exam schedule)."
+   ]
   },
   "19": {
    "topics": {
@@ -144,7 +318,10 @@
     "chem-lab-2": "Comprehensive Exam",
     "chem-lec": "Comprehensive Exam"
    },
-   "notes": ["Monday, Nov 30: Bonifacio Day.", "Comprehensive exam week (from the class matrix; check the official exam schedule)."]
+   "notes": [
+    "Monday, Nov 30: Bonifacio Day.",
+    "Comprehensive exam week (from the class matrix; check the official exam schedule)."
+   ]
   }
  }
 }

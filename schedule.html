@@ -116,6 +116,16 @@ a.now:hover .go{color:var(--accent)}
 .card a{display:inline-block;margin-top:8px;font-size:13.5px;font-weight:600;color:var(--c);text-decoration:none}
 .card.off{opacity:.6}.card.off b{text-decoration:line-through}
 .empty{padding:28px 16px;text-align:center;color:var(--faint);border:1px dashed var(--line2);border-radius:14px}
+/* holidays: a striped veil over the whole day */
+.col .hol{position:absolute;inset:0;z-index:3;display:grid;place-items:start center;padding:18px 10px;text-align:center;pointer-events:none;
+ background:repeating-linear-gradient(135deg,color-mix(in oklab,#e11d48 14%,var(--bg)) 0 12px,color-mix(in oklab,#e11d48 6%,var(--bg)) 12px 24px);opacity:.93}
+.col .hol div{background:var(--surface);border:1px solid color-mix(in oklab,#e11d48 40%,var(--line));border-radius:12px;padding:10px 8px;box-shadow:var(--shadow,0 2px 8px #0001)}
+.col .hol b{display:block;font-size:13px;color:#e11d48}.col .hol span{display:block;font-size:11.5px;color:var(--mute);margin-top:3px;line-height:1.3}
+.dh.hol{color:#e11d48}.dh .hl{display:block;margin:6px auto 0;width:max-content;max-width:100%;padding:2px 8px;border-radius:99px;font-size:11px;text-transform:none;letter-spacing:0;background:color-mix(in oklab,#e11d48 15%,var(--surface));color:#e11d48}
+.chip.hol:not(.on){border-color:color-mix(in oklab,#e11d48 45%,var(--line));background:repeating-linear-gradient(135deg,var(--surface) 0 6px,color-mix(in oklab,#e11d48 10%,var(--surface)) 6px 12px)}
+.chip.hol:not(.on) b{color:#e11d48}
+.holban{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;margin:0 0 12px;border-radius:14px;border:1px solid color-mix(in oklab,#e11d48 40%,var(--line));background:color-mix(in oklab,#e11d48 8%,var(--surface))}
+.holban b{display:block;color:#e11d48}.holban span{font-size:13.5px;color:var(--mute)}
 .foot{margin-top:18px;color:var(--faint);font-size:13px}
 /* Class details */
 .modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:#0f172a66}
@@ -181,7 +191,7 @@ function draw(){
  const H=(hi-lo)*HH,top=m=>(m/60-lo)*HH;
  let g='<div class="corner"></div>';
  for(let i=0;i<ndays;i++){const dt=new Date(start);dt.setDate(dt.getDate()+i);
-  g+='<div class="dh'+(isToday(i)?' today':'')+'">'+DAYS[i]+'<b>'+dt.getDate()+'</b>'+ex(i).map(e=>'<span class="ex sw"'+hue(e)+' title="'+esc(e.title+': '+e.name)+'">'+esc(e.name)+'</span>').join('')+'</div>'}
+  const hol=Sched.holiday(dt);g+='<div class="dh'+(isToday(i)?' today':'')+(hol?' hol':'')+'">'+DAYS[i]+'<b>'+dt.getDate()+'</b>'+(hol?'<span class="hl">'+esc(hol)+'</span>':'')+ex(i).map(e=>'<span class="ex sw"'+hue(e)+' title="'+esc(e.title+': '+e.name)+'">'+esc(e.name)+'</span>').join('')+'</div>'}
  g+='<div class="gut" style="height:'+H+'px">';for(let h=lo+1;h<hi;h++)g+='<span style="top:'+(h-lo)*HH+'px">'+(h%12||12)+' '+(h<12?'AM':'PM')+'</span>';g+='</div>';
  for(let i=0;i<ndays;i++){
   const cs=LIST.filter(c=>c.di===i),free=d.freeDays&&d.freeDays[DAYS[i]];
@@ -191,6 +201,7 @@ function draw(){
    g+='<button class="blk sw'+(c.cancelled?' off':'')+'"'+hue(c).slice(0,-1)+';top:'+(top(a)+2)+'px;height:'+((b-a)/60*HH-4)+'px" onclick="openDlg(\''+c.id+'\')">'+
     '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b><span class="t">'+Sched.span(c)+(c.kind&&!c.extra?' · '+esc(c.kind):'')+(c.cancelled?' · Cancelled':'')+(c.changed?' · <b class="newt">New time</b>':'')+'</span>'+
     (c.topic?'<em>'+esc(c.topic)+'</em>':'')+'</button>'}
+  {const hd=new Date(start);hd.setDate(hd.getDate()+i);const hol=Sched.holiday(hd);if(hol)g+='<div class="hol"><div><b>'+esc(hol)+'</b><span>No classes. Tests set for this day are cancelled.</span></div></div>'}
   if(isToday(i)){const m=now.getHours()*60+now.getMinutes();if(m>lo*60&&m<hi*60)g+='<div class="nowline" style="top:'+top(m)+'px"></div>'}
   g+='</div>'}
  const wk=document.getElementById('wk');wk.style.gridTemplateColumns='58px repeat('+ndays+',minmax(0,1fr))';wk.innerHTML=g;
@@ -198,11 +209,12 @@ function draw(){
  if(day<0)day=week===cur?Math.min((now.getDay()+6)%7,ndays-1):0;
  if(day===6&&!sun)day=0;
  let ch='';for(let i=0;i<ndays;i++){const dt=new Date(start);dt.setDate(dt.getDate()+i);const e=ex(i)[0];
-  ch+='<button class="chip'+(i===day?' on':'')+(isToday(i)?' today':'')+'" role="tab" aria-selected="'+(i===day)+'" onclick="day='+i+';draw()">'+DAYS[i]+'<b>'+dt.getDate()+'</b>'+(e?'<i class="sw"'+hue(e)+'></i>':'')+'</button>'}
+  ch+='<button class="chip'+(i===day?' on':'')+(isToday(i)?' today':'')+(Sched.holiday(dt)?' hol':'')+'" role="tab" aria-selected="'+(i===day)+'" onclick="day='+i+';draw()">'+DAYS[i]+'<b>'+dt.getDate()+'</b>'+(e?'<i class="sw"'+hue(e)+'></i>':'')+'</button>'}
  document.getElementById('chips').innerHTML=ch;
  const dt=new Date(start);dt.setDate(dt.getDate()+day);
  const cs=LIST.filter(c=>c.di===day),free=d.freeDays&&d.freeDays[DAYS[day]];
  let h='<h2 class="dayh">'+DAY_NAMES[day]+' <span>'+Sched.date(dt)+'</span></h2>';
+ {const hol=Sched.holiday(dt);if(hol)h+='<div class="holban"><span aria-hidden="true">🚫</span><div><b>'+esc(hol)+'</b><span>No classes today. Quizzes and tests planned for this day are cancelled.</span></div></div>'}
  for(const e of ex(day))h+='<div class="item sw"'+hue(e)+'><div class="tm"><b>Test</b></div><div class="card"><b>'+esc(e.title)+'</b><div class="k">'+esc(e.name)+'</div></div></div>';
  h+=cs.length?cs.map(c=>'<div class="item sw"'+hue(c)+'><div class="tm"><b>'+Sched.time(c.start).replace(' ','&nbsp;')+'</b>'+Sched.time(c.end).replace(' ','&nbsp;')+'</div><div class="card'+(c.cancelled?' off':'')+'">'+
    '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b>'+(c.changed?'<div class="k"><b class="newt">New time this week</b></div>':'')+'<div class="k">'+esc([c.cancelled?'Cancelled':'',kindOf(c),c.teacher,c.official?'on the sheet: '+c.official:''].filter(Boolean).join(' · '))+'</div>'+

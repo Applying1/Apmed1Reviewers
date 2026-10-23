@@ -32,9 +32,12 @@ const Sched = {
       c.di = di; c.date = at;
       c.from = new Date(+at + this.mins(c.start) * 6e4); c.to = new Date(+at + this.mins(c.end) * 6e4);
       c.subj = d.subjects[c.subject] || { name: c.subject, hue: 260 };
+      const hol = this.holiday(at); if (hol) { c.cancelled = true; c.holiday = hol; }
     }
     return list.sort((a, b) => a.from - b.from);
   },
+  // holidays: {"YYYY-MM-DD": name}; classes that day count as cancelled
+  holiday(d) { const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); return (this.data.holidays || {})[k] || ''; },
   notes(n) { return (((this.data.weeks || {})[n] || {}).notes) || []; },
   // The class going on now, or the next one (looks up to two weeks ahead).
   upNext(now = new Date()) {
