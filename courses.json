@@ -67,7 +67,8 @@
   "assets": [
    "courses/purcom/topic-1.jpg",
    "courses/purcom/topic-2.jpg",
-   "courses/purcom/topic-3.jpg"
+   "courses/purcom/topic-3.jpg",
+   "courses/purcom/topic-4.jpg"
   ],
   "exam": {
    "name": "Research quiz",
@@ -190,21 +191,34 @@
   }
  },
  {
+  "id": "mmw",
+  "title": "Math in the Modern World",
+  "scope": "Finals: Linear Programming",
+  "unit": "Lesson",
+  "itemWord": "problem",
+  "count": 93,
+  "storageKey": "study_reviewer_mmw_2026_v1",
+  "image": "courses/mmw/topic-8.jpg",
+  "extras": [],
+  "assets": [
+   "courses/mmw/topic-8.jpg"
+  ],
+  "exam": {
+   "name": "Finals",
+   "date": ""
+  },
+  "cloud": {
+   "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
+   "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
+  }
+ },
+ {
   "id": "pe1",
   "title": "PE 1",
   "soon": true,
   "image": "courses/soon/pe1.jpg",
   "assets": [
    "courses/soon/pe1.jpg"
-  ]
- },
- {
-  "id": "mmw",
-  "title": "Math in the Modern World",
-  "soon": true,
-  "image": "courses/soon/mmw.jpg",
-  "assets": [
-   "courses/soon/mmw.jpg"
   ]
  }
 ]
