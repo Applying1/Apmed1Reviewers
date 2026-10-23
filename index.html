@@ -24,7 +24,7 @@ main{max-width:1000px;margin:0 auto;padding:40px 24px 64px}
 .top .acts{margin-left:auto;display:flex;gap:8px}
 .btn{display:inline-flex;align-items:center;gap:8px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s}
 .btn:hover{background:var(--raised)}
-.btn.bell{position:relative;padding:8px 11px}.bdot{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#e5484d;color:#fff;font:700 10.5px/18px var(--sans);text-align:center;box-shadow:0 0 0 2px var(--bg)}.bdot[hidden]{display:none}
+.btn.bell{position:relative;padding:8px 11px}.bdot{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#d34247;color:#fff;font:700 10.5px/18px var(--sans);text-align:center;box-shadow:0 0 0 2px var(--bg)}.bdot[hidden]{display:none}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
 h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:36px 0 22px}
@@ -50,6 +50,9 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .prog{margin-top:auto;padding-top:12px}
 .track{height:6px;border-radius:9px;background:var(--raised);overflow:hidden}
 .fill{height:100%;border-radius:9px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+/* Phones: two courses per row with the whole picture, so the list is a third as long */
+@media (max-width:520px){.grid{grid-template-columns:1fr 1fr;gap:10px}.art{aspect-ratio:4/3}.body{padding:10px 11px 12px;gap:2px}.body .t{font-size:15px;line-height:1.25}.body .s{font-size:12.5px}
+ .tags{gap:4px;margin-top:4px}.tag{font-size:11px;padding:1px 7px}.prog{padding-top:8px}.meta{font-size:11px;flex-wrap:wrap;gap:2px 6px}.course:hover{transform:none}}
 .meta{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:12.5px;color:var(--faint);font-variant-numeric:tabular-nums}
 .note{margin-top:28px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--mute);font-size:13.5px}
 .note b{color:var(--text)}
@@ -145,10 +148,27 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
  .top .acts>.btn{flex:none}#syncbtn{flex:0 1 auto;max-width:none}#theme .tl{display:none}#theme{padding:8px 11px}
  .upnext .go{display:none}.upnext .l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* One-time welcome intro (see the script at the end of the page) */
+.intro{position:fixed;inset:0;z-index:1000;background:var(--bg);overflow:hidden;cursor:pointer}
+.intro .ibg{position:absolute;left:50%;top:42%;width:min(90vw,560px);height:min(90vw,560px);margin:calc(min(90vw,560px)/-2) 0 0 calc(min(90vw,560px)/-2);border-radius:50%;background:radial-gradient(circle,color-mix(in oklab,var(--accent) 24%,transparent),transparent 65%);opacity:0}
+.icards{position:absolute;inset:0}
+.icard{position:absolute;left:0;top:0;border-radius:14px;overflow:hidden;box-shadow:0 12px 30px #0003;background:var(--surface);opacity:0}
+.icard img{width:100%;height:100%;object-fit:cover;display:block}
+.ilogo{position:absolute;border-radius:24%;box-shadow:0 10px 40px color-mix(in oklab,var(--accent) 45%,transparent);opacity:0;z-index:3}
+.ispark i{position:absolute;opacity:0;z-index:2;pointer-events:none}
+.ispark .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.ispark .star{width:15px;height:15px;background:currentColor;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
+.itext{position:absolute;left:0;right:0;text-align:center;z-index:3;pointer-events:none}
+.itext b,.itext span{display:block;width:max-content;max-width:92vw;margin:0 auto;opacity:0}
+.itext b{font:700 clamp(26px,7vw,40px)/1.15 var(--sans);color:var(--text);letter-spacing:-.3px}
+.itext span{margin-top:6px;font-size:clamp(14px,3.8vw,18px);color:var(--mute)}
+.iskip{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:4;border:1px solid var(--line2);background:var(--surface);color:var(--mute);border-radius:999px;padding:7px 16px;font:600 13px var(--sans);cursor:pointer}
+html.introing .brand img,html.introing .brand b,html.introing .brand span{visibility:hidden}
+html.introing body{overflow:hidden}
 </style></head><body>
 <main>
  <div class="top">
-  <div class="brand"><img src="icons/icon-192.png" alt="" width="40" height="40"><div><b>APMed '33 Reviewers</b><span>Practice, notes and matching</span></div></div>
+  <div class="brand"><img src="icons/icon-192.png" alt="" width="40" height="40"><div><b>APMed '33 Reviewers</b><span>Practice, notes, and review</span></div></div>
   <div class="acts"><a class="btn bell" id="bell" href="notifications.html" aria-label="Notifications" title="Notifications"><svg class="i" width="17" height="17" aria-hidden="true"><use href="icons.svg#i-bell"/></svg><span class="bdot" id="bdot" hidden></span></a><a class="btn" href="schedule.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>Timetable</a><button class="btn" id="syncbtn" onclick="openSync()" hidden>Sign in</button><button class="btn" id="theme" onclick="toggleTheme()">Theme</button></div>
  </div>
  <h1 id="hi">Pick a course</h1>
@@ -326,5 +346,60 @@ function startSync(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=new Uint8Array
 function copyCode(){const c=getCode();(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(c):Promise.reject()).then(()=>drawSync('Copied.',true),()=>copyBox(c))}
 function stopSync(sure){if(sure!==true){ask('Your progress stays here, and the other device keeps its own.',{title:'Stop syncing this device?',ok:'Stop syncing',danger:1}).then(y=>{if(y)stopSync(true)});return}setCode('');try{localStorage.removeItem(ACC_KEY)}catch(e){}drawSyncBtn();drawSync()}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+<script>
+// One-time welcome intro (once per device): the course pictures shuffle, gather, the logo pops out with sparkles,
+// the name and tagline appear, then everything glides into the header at the top left. Tap or Skip to end it early.
+// Skipped for anyone who has reduced motion on.
+(function(){
+ const KEY='reviewer_intro_v1';let seen=false;try{seen=localStorage.getItem(KEY)==='1'}catch(e){}
+ if(seen||matchMedia('(prefers-reduced-motion: reduce)').matches||!Element.prototype.animate)return;
+ try{localStorage.setItem(KEY,'1')}catch(e){}
+ const ov=document.createElement('div');ov.className='intro';ov.setAttribute('role','dialog');ov.setAttribute('aria-label','Welcome to APMed \'33 Reviewers');
+ ov.innerHTML='<div class="ibg"></div><div class="icards"></div><div class="ispark"></div><img class="ilogo" src="icons/icon-192.png" alt="">'+
+  '<div class="itext"><b>APMed \'33 Reviewers</b><span>Practice, notes, and review</span></div><button class="iskip" type="button">Skip</button>';
+ document.body.appendChild(ov);document.documentElement.classList.add('introing');
+ const $=s=>ov.querySelector(s),W=innerWidth,H=innerHeight,cx=W/2,cy=H*0.42,R=Math.min(W,H);
+ let done=false;const anims=[];const A=(el,kf,o)=>{const a=el.animate(kf,Object.assign({fill:'forwards',easing:'cubic-bezier(.2,.7,.2,1)'},o));anims.push(a);return a};
+ function finish(fast){if(done)return;done=true;anims.forEach(a=>{try{a.pause()}catch(e){}});
+  const f=ov.animate([{opacity:1},{opacity:0}],{duration:fast?220:420,fill:'forwards'});f.onfinish=()=>{ov.remove();document.documentElement.classList.remove('introing')}}
+ $('.iskip').onclick=e=>{e.stopPropagation();finish(true)};ov.addEventListener('click',()=>finish(true));
+ addEventListener('keydown',function k(e){if(e.key==='Escape'||e.key==='Enter'||e.key===' '){removeEventListener('keydown',k);finish(true)}});
+ const rnd=(a,b)=>a+Math.random()*(b-a);
+ fetch('courses.json').then(r=>r.json()).catch(()=>[]).then(list=>{
+  const pics=(Array.isArray(list)?list:[]).map(c=>c.image).filter(Boolean).slice(0,10);
+  const n=Math.max(pics.length,6),cw=Math.round(Math.min(150,R*0.3)),ch=Math.round(cw*0.75),box=$('.icards');
+  for(let i=0;i<n;i++){const c=document.createElement('div');c.className='icard';c.style.width=cw+'px';c.style.height=ch+'px';
+   c.innerHTML=pics.length?'<img src="'+pics[i%pics.length]+'" alt="">':'';box.appendChild(c);
+   // fly in from off screen, shuffle through two spots, then gather in the middle and vanish behind the logo
+   const ang=Math.random()*Math.PI*2,far=Math.max(W,H)*0.8,p=()=>[rnd(-W*0.42,W*0.42),rnd(-H*0.34,H*0.34),rnd(-25,25)],a=p(),b=p(),d=p(),E='cubic-bezier(.45,0,.25,1)';
+   const at=(x,y,r,s,o,off)=>Object.assign({transform:'translate('+(cx-cw/2+x)+'px,'+(cy-ch/2+y)+'px) rotate('+r+'deg) scale('+s+')',opacity:o,easing:E},off==null?{}:{offset:off});
+   A(c,[at(Math.cos(ang)*far,Math.sin(ang)*far,rnd(-60,60),.8,0),at(...a,1,1,.2),at(...b,1.04,1,.42),at(...d,1,1,.64),at(d[0]*0.15,d[1]*0.15,d[2]*0.2,.9,1,.84),at(0,0,0,.2,0)],{duration:2600,delay:i*60,easing:'linear'})}
+  // logo: pops out as the cards gather
+  const logo=$('.ilogo'),L=Math.round(Math.min(120,R*0.28));logo.style.width=logo.style.height=L+'px';
+  logo.style.left=(cx-L/2)+'px';logo.style.top=(cy-L/2)+'px';
+  A(logo,[{transform:'scale(0) rotate(-25deg)',opacity:0},{transform:'scale(1.18) rotate(6deg)',opacity:1,offset:.6},{transform:'scale(1) rotate(0)',opacity:1}],{duration:700,delay:2300,easing:'cubic-bezier(.3,1.4,.5,1)'});
+  // sparkles: little stars and dots bursting from the logo
+  const sp=$('.ispark');const cols=['var(--accent)','var(--accent-2)','#f2c14e','#ff8fab','#5ec8e5','#ffffff'];
+  for(let i=0;i<26;i++){const s=document.createElement('i');s.className=i%3?'dot':'star';s.style.left=cx+'px';s.style.top=cy+'px';s.style.color=cols[i%cols.length];sp.appendChild(s);
+   const a=i/26*Math.PI*2+rnd(-.2,.2),d=rnd(L*0.75,L*1.9),sz=rnd(.6,1.3);
+   A(s,[{transform:'translate(-50%,-50%) scale(0)',opacity:1},{transform:'translate(calc(-50% + '+Math.cos(a)*d+'px),calc(-50% + '+Math.sin(a)*d+'px)) scale('+sz+') rotate('+rnd(-90,90)+'deg)',opacity:1,offset:.7},
+    {transform:'translate(calc(-50% + '+Math.cos(a)*d*1.15+'px),calc(-50% + '+Math.sin(a)*d*1.15+'px)) scale(0)',opacity:0}],{duration:1100,delay:2400+rnd(0,160),easing:'cubic-bezier(.15,.8,.3,1)'})}
+  A($('.ibg'),[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)'}],{duration:900,delay:2150});
+  // name, then tagline
+  const tx=$('.itext');tx.style.top=(cy+L/2+18)+'px';
+  A(tx.querySelector('b'),[{opacity:0,transform:'translateY(14px)',filter:'blur(6px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:600,delay:2800});
+  A(tx.querySelector('span'),[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:550,delay:3200});
+  // glide into the header: the logo onto the header logo, the words onto the header words
+  setTimeout(()=>{if(done)return;const hi=document.querySelector('.brand img'),hb=document.querySelector('.brand b'),hs=document.querySelector('.brand span');
+   if(!hi||!hb){finish();return}
+   const g=(el,to,dur)=>{const r=el.getBoundingClientRect(),t=to.getBoundingClientRect(),s=t.height/r.height;
+    return A(el,[{transform:getComputedStyle(el).transform==='none'?'none':getComputedStyle(el).transform},{transform:'translate('+(t.left-r.left)+'px,'+(t.top-r.top)+'px) scale('+s+')'}],{duration:dur,easing:'cubic-bezier(.65,0,.25,1)',composite:'replace'})};
+   const tb=tx.querySelector('b'),ts=tx.querySelector('span');tb.style.transformOrigin=ts.style.transformOrigin=logo.style.transformOrigin='0 0';
+   anims.forEach(a=>{try{a.commitStyles()}catch(e){}a.cancel()});
+   g(logo,hi,850);g(tb,hb,850);if(hs)g(ts,hs,850);
+   A($('.ibg'),[{opacity:1},{opacity:0}],{duration:600,delay:250});A($('.iveil')||ov,[{backgroundColor:getComputedStyle(ov).backgroundColor},{backgroundColor:'transparent'}],{duration:700,delay:200});
+   $('.iskip').remove();setTimeout(()=>finish(),900)},4150);
+ })})();
 </script>
 </body></html>

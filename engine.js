@@ -478,7 +478,7 @@ function drawStudy(){
  if(!$('dots').hidden){let list=items.map(c=>({c,r:Math.min(state.concepts[c.id].right,T())}));if(rand)list.sort((a,b)=>b.r-a.r);
   $('dots').innerHTML=list.map(({c,r})=>'<i class="'+(r>=T()?'full':r>0?'half':'')+(!rand&&state.active&&state.active.cid===c.id&&view==null?' cur':'')+'"></i>').join('')}
 
- const card=$('card');card.innerHTML=cardHTML();
+ const card=$('card');card.innerHTML=cardHTML();card.classList.toggle('fbnew',!!(state.feedback&&view==null&&Date.now()-(state.feedback.at||0)<900));
  const ck=s+'|'+view+'|'+(state.pmatch?'m'+state.pmatch.i:'')+(state.active?.cid||'done')+'|'+(state.concepts[state.active?.cid]?.seen??'');
  if(ck!==lastCardKey&&!reduceMotion){card.classList.remove('enter');void card.offsetWidth;card.classList.add('enter')}
  lastCardKey=ck;
@@ -1000,7 +1000,7 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
   if(a==null||a===''||q.mt)return;   // skipped (matching items are not bank questions): no effect on mastery, Missed or class stats
   k.seen++;if(ok)state.correct++;else{k.wrong++;state.wrong++;masteryDown(k)}
   crowdAdd(q.cid,!ok);state.history.push({cid:q.cid,correct:ok,lookup:false,term:c.term,section:c.section,mode:'EXAM'})});
- ex.right=right;ex.byCh=byCh;
+ ex.right=right;ex.byCh=byCh;if(100*right/n>=(Object.assign({pass:60},CONFIG.grading||{})).pass)setTimeout(()=>celebrate('exam'),380);
  state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0,easy:ex.easy?1:0}).slice(-20);
  // A challenge keeps your first score; later tries are shared as retakes.
  if(ex.chal){state.chalLog=state.chalLog||{};const k=ex.chal.key;ex.retake=!!state.chalLog[k];if(!ex.retake)state.chalLog[k]={right,total:n}}
@@ -1671,6 +1671,14 @@ function wrBox(c,id,val,extra){const multi=c.wr.t==='cons'||c.wr.t==='pts';
   '<div class="wrfoot"><span>'+esc(WR_TIP[c.wr.t])+(multi?' Ctrl+Enter checks it.':'')+'</span>'+wrKeys()+'</div></div>'}
 function caseHTML(cid){const c=byId[cid];return c&&c.cstem?'<div class="cstem"><span class="ck">'+esc(c.clabel||'Problem')+'</span>'+stemHTML(c.cstem)+'</div>':''}
 
+// v69 (3) confetti for milestones: a short burst of the theme's colors (skipped with reduced motion)
+function celebrate(kind){if(reduceMotion)return;const big=kind!=='section',n=big?90:60,box=document.createElement('div');box.className='confetti';box.setAttribute('aria-hidden','true');
+ const cs=['var(--accent)','var(--accent-2)','var(--good)','#f2c14e','#ff8fab','#5ec8e5'];let h='';
+ for(let i=0;i<n;i++){const w=6+Math.round(Math.random()*6);h+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;--dx:'+Math.round(Math.random()*180-90)+'px;--r:'+Math.round(Math.random()*900-450)+'deg;width:'+w+'px;height:'+Math.round(w*1.5)+'px;background:'+cs[i%cs.length]+';animation-duration:'+(.95+Math.random()*.7).toFixed(2)+'s;animation-delay:'+(Math.random()*.3).toFixed(2)+'s'+(i%3?'':';border-radius:50%')+'"></i>'}
+ box.innerHTML=h;document.body.appendChild(box);setTimeout(()=>box.remove(),2400);
+ const t=document.querySelector(kind==='exam'?'.exres':'.done-card');if(t){t.classList.remove('cel');void t.offsetWidth;t.classList.add('cel')}}
+// v69 (2) a short vibration on phones that allow it (Android); iPhones ignore it
+function buzz(ok){if(reduceMotion||!navigator.vibrate)return;try{navigator.vibrate(ok?12:[16,50,16])}catch(e){}}
 /* ---------- type the answer (identification) ---------- */
 // Short recall answers only; definitions and long answers keep their choices.
 // Identification items ("type":"id") are always typed, in practice and in the mock exam; "alt" lists other accepted answers.
@@ -1706,11 +1714,13 @@ function record(correct,lookup){
  if(state.section==='STAR'){state.starDone=state.starDone||[];if(!state.starDone.includes(q.cid))state.starDone.push(q.cid)}
  if(state.section==='DUE'){state.dueDone=state.dueDone||[];if(!state.dueDone.includes(q.cid))state.dueDone.push(q.cid)}
  const prev={right:k.right,srs:k.srs?{...k.srs}:null};
- const free=freeOn();if(free&&correct)state.pass.right=(state.pass.right||0)+1;
+ const free=freeOn(),c0=byId[q.cid],secAll=c0?BANK.filter(c=>c.section===c0.section):[],chAll=c0?BANK.filter(c=>chOf(c.section)===chOf(c0.section)):[],wasSec=secAll.every(isM),wasCh=chAll.every(isM);if(free&&correct)state.pass.right=(state.pass.right||0)+1;
  state.sinceMix=(state.sinceMix||0)+1;if(free){if(correct)state.correct++;else if(lookup)state.lookups++;else state.wrong++}
  else if(correct){masteryUp(k);state.correct++}else{if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}masteryDown(k)}
+ if(!lookup)buzz(correct);
+ if(correct&&!free&&c0&&!wasSec&&secAll.every(isM))setTimeout(()=>celebrate(!wasCh&&chAll.every(isM)?'lesson':'section'),280);
  const own=choice&&!choice.correct&&choice.owner?byId[choice.owner]:null;
- state.feedback={correct,lookup,prev,correctLabel:target.letter+'. '+target.label,wrongExplain:own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':''};
+ state.feedback={at:Date.now(),correct,lookup,prev,correctLabel:target.letter+'. '+target.label,wrongExplain:own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':''};
  if(lookup)state.selected=null;
  if(!free)k.history.push({correct,lookup,kind:q.kind});
  state.history.push({cid:q.cid,correct,lookup,term:byId[q.cid].term,section:byId[q.cid].section,mode:state.section});
