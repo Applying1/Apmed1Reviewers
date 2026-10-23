@@ -7,7 +7,10 @@
   "Sun": ""
  },
  "holidays": {
-  "2026-10-31": "Institutional holiday"
+  "2026-10-31": "Institutional non-working day",
+  "2026-11-01": "All Saints' Day",
+  "2026-11-02": "All Souls' Day",
+  "2026-11-03": "Institutional Family Day"
  },
  "subjects": {
   "botany": {
@@ -222,7 +225,7 @@
     "chem-lec": "Activity 10: Enzymes"
    },
    "notes": [
-    "Saturday, Oct 31 is an institutional holiday: no classes, and the Chem Lab long quiz (Units 15 and 16) is cancelled. New date to follow.",
+    "Saturday, Oct 31 is an institutional non-working day: no classes, and the Chem Lab long quiz (Units 15 and 16) is cancelled. New date to follow.",
     "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
    ],
    "cancel": [
@@ -246,8 +249,11 @@
     "chem-lec": "Activity 11: Qualitative analysis of carbohydrates"
    },
    "notes": [
-    "Monday, Nov 2: All Souls' Day.",
+    "Holidays: All Saints' Day (Sun, Nov 1), All Souls' Day (Mon, Nov 2) and Institutional Family Day (Tue, Nov 3). No Pharmacology class on Tuesday.",
     "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
+   ],
+   "cancel": [
+    "pharma"
    ]
   },
   "16": {
