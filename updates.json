@@ -321,5 +321,14 @@
   "title": "Smarter practice",
   "text": "Missed questions come back after a few others while the explanation is fresh. Math problems go part by part with your earlier parts in view. Each course shows its next quiz or exam from the timetable, and reviews are timed to land before it. The phone's Back button stays inside the course, courses open instantly, and an \"Update ready\" banner shows when there's something new.",
   "link": "./"
+ },
+ {
+  "id": 39,
+  "date": "2026-10-24",
+  "type": "course",
+  "course": "botany",
+  "title": "Botany and NSTP question fixes",
+  "text": "Every Botany and NSTP question now explains its answer, including all of Botany Lesson 5 (flowers, fruits, seeds) and NSTP Health. The right answer is no longer the longest choice: experiment questions now have wrong designs that are just as detailed, each with one flaw to spot.",
+  "link": "reviewer.html?course=botany"
  }
 ]
