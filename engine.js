@@ -5,6 +5,7 @@
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
 const APP_VERSION='70',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
+let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
  Object.assign(s,{section:null,active:null,feedback:null,selected:null,pmatch:null,pass:null,page:'dashboard',exam:s.exam&&!s.exam.done?s.exam:null,__recovered:1});
  localStorage.setItem(k,JSON.stringify(s));location.reload()}}catch(e){}});
@@ -141,13 +142,16 @@ const MATH=!!CONFIG.math;
 function mathBoot(){if(!MATH||window.__mathBoot)return;window.__mathBoot=1;const V='0.16.9',B='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/'+V+'/';
  const l=document.createElement('link');l.rel='stylesheet';l.href=B+'katex.min.css';document.head.appendChild(l);
  const add=(src,cb)=>{const s=document.createElement('script');s.src=src;s.defer=true;s.onload=cb;document.head.appendChild(s)};
- add(B+'katex.min.js',()=>add(B+'contrib/auto-render.min.js',()=>{mathRender();new MutationObserver(()=>{if(!mathT)mathT=requestAnimationFrame(mathRender)}).observe(document.body,{childList:true,subtree:true,characterData:true})}))}
-let mathT=0,mathBusy=false;
+ add(B+'katex.min.js',()=>add(B+'contrib/auto-render.min.js',()=>{mathRender();new MutationObserver(ms=>{for(const m of ms){const el=m.type==='characterData'?m.target.parentElement:m.target;if(el&&el.nodeType===1&&!(el.closest&&el.closest('.katex')))mathQ.add(el)}if(mathQ.size&&!mathT)mathT=requestAnimationFrame(mathRender)}).observe(document.body,{childList:true,subtree:true,characterData:true})}))}
+// v70: only the elements that changed since the last pass are rendered (it used to scan the whole page after every change)
+let mathT=0,mathBusy=false,mathQ=new Set(),mathFirst=true;
 function mathRender(){mathT=0;if(mathBusy||typeof renderMathInElement!=='function')return;mathBusy=true;
- try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false}],
-  ignoredTags:['script','noscript','style','textarea','pre','code','option','input'],ignoredClasses:['nomath'],throwOnError:false,strict:false})}catch(e){}
- // the observer sees KaTeX's own changes too: let them settle before listening again
- setTimeout(()=>{mathBusy=false},0)}
+ const roots=mathFirst?[document.body]:[...mathQ].filter(el=>el.isConnected&&![...mathQ].some(o=>o!==el&&o.contains(el)));mathQ.clear();mathFirst=false;
+ const opts={delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false}],
+  ignoredTags:['script','noscript','style','textarea','pre','code','option','input'],ignoredClasses:['nomath'],throwOnError:false,strict:false};
+ for(const r of roots){try{renderMathInElement(r,opts)}catch(e){}}
+ // KaTeX's own changes come back through the observer once; that pass finds nothing left to render and stops
+ mathBusy=false;if(mathQ.size&&!mathT)mathT=requestAnimationFrame(mathRender)}
 mathBoot();
 // Numeric answers: an item with "num" accepts any typed number within "tol" (default 1% or 0.005, whichever is bigger).
 function numIn(s){s=String(s).replace(/[−–]/g,'-').replace(/(\d)[,\s](?=\d{3}(?!\d))/g,'$1');if(s.includes('='))s=s.slice(s.lastIndexOf('=')+1);
@@ -221,7 +225,7 @@ const inScopeCh=ch=>{const e=examObj();ch=String(ch);return !e||examAll(e)||!(ch
 const inScope=sec=>{const e=examObj(),ch=chOf(sec);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).includes(sec)};
 const bankItems=b=>b.items.filter(c=>!c.retired&&(state.prefs.extras||!c.extra)&&secOn(c.section)&&inScope(c.section));
 function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(s==='CLASS'&&classOn())||(s==='CRAM'&&cramOn())||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
-function refreshBank(){const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
+function refreshBank(){PV++;const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
  sectionKeys=ALL_SECTIONS.filter(k=>BANK.some(c=>c.section===k));
  chapters=ALL_CHAPTERS.filter(ch=>sectionKeys.some(k=>chOf(k)===ch));
  AUTHORED=BANK.every(c=>c.q);NCHOICE=BANK.some(c=>!c.q)?5:Math.max(...BANK.map(c=>1+(c.d||[]).length));
@@ -269,7 +273,7 @@ const mbs=n=>(n/1048576).toFixed(n<1048576?2:1)+' MB';
 // v70: several save() calls during one action (answer, next question, redraw) write once, at the end of that action and
 // before the browser does anything else. flushSave() writes at once (before a reload, or when the app goes to the background).
 let saveQ=false;
-function save(){if(state.active&&!state.active.sig&&typeof byId!=='undefined'&&byId[state.active.cid])state.active.sig=qsig(byId[state.active.cid]);const ps=prefSig();if(ps!==prefSigLast){if(prefSigLast!==null)state.prefsAt=Date.now();prefSigLast=ps}
+function save(){PV++;if(state.active&&!state.active.sig&&typeof byId!=='undefined'&&byId[state.active.cid])state.active.sig=qsig(byId[state.active.cid]);const ps=prefSig();if(ps!==prefSigLast){if(prefSigLast!==null)state.prefsAt=Date.now();prefSigLast=ps}
  if(!saveQ){saveQ=true;queueMicrotask(flushSave)}
  if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
 function flushSave(){if(!saveQ)return;saveQ=false;
@@ -282,8 +286,16 @@ function shuffle(a,seed){let b=a.slice(),x=seed||1;for(let i=b.length-1;i>0;i--)
 const rnd=()=>((Math.random()*4294967296)>>>0)||1;
 // Random order: a new seed every time, so answer letters can't be memorized. In order: stable per attempt.
 const seedFor=(c,tag)=>state.prefs.order==='random'?rnd():stableHash(c.id+tag+state.concepts[c.id].seen);
-function inSection(s){return s==='ALL'?BANK:s==='DUE'?BANK.filter(c=>isDue(c)||(state.dueDone||[]).includes(c.id)):s==='MISSED'?BANK.filter(isMissedC):s==='STAR'?BANK.filter(isStar):s==='CLASS'?classList():s==='CRAM'?cramList():isCh(s)?BANK.filter(c=>chOf(c.section)===s.slice(3)):BANK.filter(c=>c.section===s)}
-function progress(s){const a=inSection(s);if(s==='STAR'||s==='DUE'||s==='CLASS'||s==='CRAM'){const d=(s==='STAR'?state.starDone:s==='CLASS'?state.classDone:s==='CRAM'?state.cramDone:state.dueDone)||[];return {done:a.filter(c=>d.includes(c.id)).length,total:a.length}}return {done:a.filter(isM).length,total:a.length}}
+// v70: the questions of a section and its progress are worked out once per change of your progress, not again for every
+// place on the screen that shows them (49 sections x 935 questions, several times per redraw, in Chem). PV moves on with
+// every save() and redraw, which drops the remembered counts.
+const pcache=()=>{if(PC.v!==PV)PC={v:PV,list:new Map(),prog:new Map(),grp:null};return PC};
+// plain sections and whole chapters come from one pass over the bank
+function secGroups(c){if(c.grp)return c.grp;const g=new Map();for(const x of BANK){for(const k of [x.section,'CH:'+chOf(x.section)]){let a=g.get(k);if(!a)g.set(k,a=[]);a.push(x)}}return c.grp=g}
+function inSection(s){const c=pcache();let r=c.list.get(s);if(!r){r=isX(s)?inSectionRaw(s):secGroups(c).get(s)||[];c.list.set(s,r)}return r}
+function progress(s){const c=pcache();let r=c.prog.get(s);if(!r){r=progressRaw(s);c.prog.set(s,r)}return {done:r.done,total:r.total}}
+function inSectionRaw(s){return s==='ALL'?BANK:s==='DUE'?BANK.filter(c=>isDue(c)||(state.dueDone||[]).includes(c.id)):s==='MISSED'?BANK.filter(isMissedC):s==='STAR'?BANK.filter(isStar):s==='CLASS'?classList():s==='CRAM'?cramList():isCh(s)?BANK.filter(c=>chOf(c.section)===s.slice(3)):BANK.filter(c=>c.section===s)}
+function progressRaw(s){const a=inSection(s);if(s==='STAR'||s==='DUE'||s==='CLASS'||s==='CRAM'){const d=(s==='STAR'?state.starDone:s==='CLASS'?state.classDone:s==='CRAM'?state.cramDone:state.dueDone)||[];return {done:a.filter(c=>d.includes(c.id)).length,total:a.length}}return {done:a.filter(isM).length,total:a.length}}
 // What is still to be asked: unmastered items, or for starred review the ones not yet seen this round.
 // Review pass: every item of the section once, mastered or not. Mastery only drops for the ones you miss.
 const onPass=s=>!!state.pass&&state.pass.sec===s;
@@ -525,7 +537,7 @@ function drawStudy(){
 
  const card=$('card');card.innerHTML=cardHTML();card.classList.toggle('fbnew',!!(state.feedback&&view==null&&Date.now()-(state.feedback.at||0)<900));
  const ck=s+'|'+view+'|'+(state.pmatch?'m'+state.pmatch.i:'')+(state.active?.cid||'done')+'|'+(state.concepts[state.active?.cid]?.seen??'');
- if(ck!==lastCardKey&&!reduceMotion){card.classList.remove('enter');void card.offsetWidth;card.classList.add('enter')}
+ if(ck!==lastCardKey&&!reduceMotion){if(card.animate)card.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});else{card.classList.remove('enter');void card.offsetWidth;card.classList.add('enter')}}   // no forced layout (v70)
  lastCardKey=ck;
  if(state.active&&state.active.typed&&!state.feedback&&view==null&&!state.pmatch){const i=$('typed');if(i)i.focus({preventScroll:true})}
 
@@ -634,6 +646,7 @@ function upClose(){const b=$('uppop');if(b){b.classList.remove('in');setTimeout(
 function discussLink(){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.discussion||!CONFIG.home||!id||!/^https?:$/.test(location.protocol))return '';
  return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'" onclick="return openDiscuss()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion'+dnDot(dnUnread())+'</a>'}
 function draw(){
+ PV++;
  if(!pageOn(page))page='dashboard';
  navTrack();
  for(const [p,v] of Object.entries(VIEWS))$(v).hidden=p!==page;
@@ -685,7 +698,7 @@ const ICON={
  bulb:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>'
 };
 function mastered(){return BANK.filter(isM).length}
-function chProgress(ch){let a=BANK.filter(c=>chOf(c.section)===String(ch));return {done:a.filter(isM).length,total:a.length}}
+function chProgress(ch){return progress('CH:'+ch);let a=BANK.filter(c=>chOf(c.section)===String(ch));return {done:a.filter(isM).length,total:a.length}}
 function nextSection(){if(!isX(state.section)&&!isCh(state.section)&&!completed(state.section))return state.section;return sectionKeys.find(k=>!completed(k))||sectionKeys[0]}
 
 /* ---------- name (saved with progress in this browser only) ---------- */

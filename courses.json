@@ -7,15 +7,15 @@
   "itemWord": "question",
   "count": 460,
   "storageKey": "study_reviewer_iml_history_of_medicine_2026_v1",
-  "image": "courses/iml/topic-1.jpg",
+  "image": "courses/iml/topic-1-card.webp",
   "extras": [
    "Yuri"
   ],
   "assets": [
-   "courses/iml/topic-1.jpg",
-   "courses/iml/topic-2.jpg",
-   "courses/iml/topic-3.jpg",
-   "courses/iml/topic-4.jpg"
+   "courses/iml/topic-1-card.webp",
+   "courses/iml/topic-2-card.webp",
+   "courses/iml/topic-3-card.webp",
+   "courses/iml/topic-4-card.webp"
   ],
   "exam": {
    "name": "Prefinals",
@@ -34,16 +34,16 @@
   "itemWord": "concept",
   "count": 629,
   "storageKey": "psych_midterm_tutor_2026_v1",
-  "image": "courses/psych/chapter-6.jpg",
+  "image": "courses/psych/chapter-6-card.webp",
   "extras": [],
   "assets": [
-   "courses/psych/chapter-6.jpg",
-   "courses/psych/chapter-7.jpg",
-   "courses/psych/chapter-8.jpg",
-   "courses/psych/chapter-9.jpg",
-   "courses/psych/chapter-10.jpg",
-   "courses/psych/chapter-11.jpg",
-   "courses/psych/chapter-12.jpg"
+   "courses/psych/chapter-6-card.webp",
+   "courses/psych/chapter-7-card.webp",
+   "courses/psych/chapter-8-card.webp",
+   "courses/psych/chapter-9-card.webp",
+   "courses/psych/chapter-10-card.webp",
+   "courses/psych/chapter-11-card.webp",
+   "courses/psych/chapter-12-card.webp"
   ],
   "exam": {
    "name": "Evals",
@@ -62,13 +62,13 @@
   "itemWord": "question",
   "count": 372,
   "storageKey": "study_reviewer_purcom_midterm_2026_v1",
-  "image": "courses/purcom/topic-1.jpg",
+  "image": "courses/purcom/topic-1-card.webp",
   "extras": [],
   "assets": [
-   "courses/purcom/topic-1.jpg",
-   "courses/purcom/topic-2.jpg",
-   "courses/purcom/topic-3.jpg",
-   "courses/purcom/topic-4.jpg"
+   "courses/purcom/topic-1-card.webp",
+   "courses/purcom/topic-2-card.webp",
+   "courses/purcom/topic-3-card.webp",
+   "courses/purcom/topic-4-card.webp"
   ],
   "exam": {
    "name": "Research quiz",
@@ -87,22 +87,22 @@
   "itemWord": "question",
   "count": 935,
   "storageKey": "study_reviewer_chem_midterm_2026_v1",
-  "image": "courses/chem/topic-1.jpg",
+  "image": "courses/chem/topic-1-card.webp",
   "extras": [
    "Transes quizzes"
   ],
   "assets": [
-   "courses/chem/topic-1.jpg",
-   "courses/chem/topic-2.jpg",
-   "courses/chem/topic-3.jpg",
-   "courses/chem/topic-4.jpg",
-   "courses/chem/topic-5.jpg",
-   "courses/chem/topic-6.jpg",
-   "courses/chem/topic-7.jpg",
-   "courses/chem/topic-8.jpg",
-   "courses/chem/topic-9.jpg",
-   "courses/chem/topic-10.jpg",
-   "courses/chem/topic-11.jpg"
+   "courses/chem/topic-1-card.webp",
+   "courses/chem/topic-2-card.webp",
+   "courses/chem/topic-3-card.webp",
+   "courses/chem/topic-4-card.webp",
+   "courses/chem/topic-5-card.webp",
+   "courses/chem/topic-6-card.webp",
+   "courses/chem/topic-7-card.webp",
+   "courses/chem/topic-8-card.webp",
+   "courses/chem/topic-9-card.webp",
+   "courses/chem/topic-10-card.webp",
+   "courses/chem/topic-11-card.webp"
   ],
   "exam": {
    "name": "Prefinals",
@@ -121,15 +121,15 @@
   "itemWord": "question",
   "count": 611,
   "storageKey": "study_reviewer_pharma_2026_v1",
-  "image": "courses/pharma/topic-1.jpg",
+  "image": "courses/pharma/topic-1-card.webp",
   "extras": [],
   "assets": [
-   "courses/pharma/topic-1.jpg",
-   "courses/pharma/topic-2.jpg",
-   "courses/pharma/topic-3.jpg",
-   "courses/pharma/topic-4.jpg",
-   "courses/pharma/topic-5.jpg",
-   "courses/pharma/topic-6.jpg"
+   "courses/pharma/topic-1-card.webp",
+   "courses/pharma/topic-2-card.webp",
+   "courses/pharma/topic-3-card.webp",
+   "courses/pharma/topic-4-card.webp",
+   "courses/pharma/topic-5-card.webp",
+   "courses/pharma/topic-6-card.webp"
   ],
   "exam": {
    "name": "Evals (antihypertensives)",
@@ -148,12 +148,12 @@
   "itemWord": "question",
   "count": 452,
   "storageKey": "study_reviewer_nstp_2026_v1",
-  "image": "courses/nstp/topic-1.jpg",
+  "image": "courses/nstp/topic-1-card.webp",
   "extras": [],
   "assets": [
-   "courses/nstp/topic-1.jpg",
-   "courses/nstp/topic-2.jpg",
-   "courses/nstp/topic-3.jpg"
+   "courses/nstp/topic-1-card.webp",
+   "courses/nstp/topic-2-card.webp",
+   "courses/nstp/topic-3-card.webp"
   ],
   "exam": {
    "name": "Prefinals",
@@ -172,14 +172,14 @@
   "itemWord": "question",
   "count": 732,
   "storageKey": "study_reviewer_botany_2026_v1",
-  "image": "courses/botany/topic-1.jpg",
+  "image": "courses/botany/topic-1-card.webp",
   "extras": [],
   "assets": [
-   "courses/botany/topic-1.jpg",
-   "courses/botany/topic-2.jpg",
-   "courses/botany/topic-3.jpg",
-   "courses/botany/topic-4.jpg",
-   "courses/botany/topic-5.jpg"
+   "courses/botany/topic-1-card.webp",
+   "courses/botany/topic-2-card.webp",
+   "courses/botany/topic-3-card.webp",
+   "courses/botany/topic-4-card.webp",
+   "courses/botany/topic-5-card.webp"
   ],
   "exam": {
    "name": "Finals",
@@ -198,10 +198,10 @@
   "itemWord": "problem",
   "count": 464,
   "storageKey": "study_reviewer_mmw_2026_v1",
-  "image": "courses/mmw/topic-8.jpg",
+  "image": "courses/mmw/topic-8-card.webp",
   "extras": [],
   "assets": [
-   "courses/mmw/topic-8.jpg"
+   "courses/mmw/topic-8-card.webp"
   ],
   "exam": {
    "name": "Finals",
@@ -216,9 +216,9 @@
   "id": "pe1",
   "title": "PE 1",
   "soon": true,
-  "image": "courses/soon/pe1.jpg",
+  "image": "courses/soon/pe1-card.webp",
   "assets": [
-   "courses/soon/pe1.jpg"
+   "courses/soon/pe1-card.webp"
   ]
  }
 ]

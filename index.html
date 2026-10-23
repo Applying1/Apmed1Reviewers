@@ -213,13 +213,13 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
  if(CLOUD&&window.Push){Push.init(CLOUD);setTimeout(()=>Push.heal(),1500)}
  if(CLOUD){drawSyncBtn();finishSignIn().then(done=>{const q=new URLSearchParams(location.search);if(done)return;
   if(q.has('signin')){history.replaceState(null,'',location.pathname);signIn()}else if(q.has('sync')){history.replaceState(null,'',location.pathname);openSync()}else setTimeout(spotlight,700)})}
- const art=c=>'<span class="art">'+(c.image?'<img src="'+esc(c.image)+'" alt="" loading="lazy">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>';
+ const art=c=>'<span class="art">'+(c.image?'<img src="'+esc(c.thumb||c.image)+'" alt="" loading="lazy" decoding="async" width="480" height="360">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>';
  document.getElementById('list').innerHTML=list.map(c=>{
   if(c.soon)return '<div class="course soon" aria-disabled="true">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag soon">Not available yet</span></span></span></div>';
   if(c.notesOnly)return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag exam">Notes &amp; transes</span><span class="tag soon">Questions coming soon</span></span></span></a>';
   const s=summary(c.storageKey),pct=s&&s.t?Math.round(100*s.m/s.t):0;
   return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+
-   '<span class="art">'+(c.image?'<img src="'+esc(c.image)+'" alt="" loading="lazy">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>'+
+   '<span class="art">'+(c.image?'<img src="'+esc(c.thumb||c.image)+'" alt="" loading="lazy" decoding="async" width="480" height="360">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>'+
    '<span class="body"><span class="t">'+esc(c.title)+'</span>'+
    (c.exam?'<span class="tags">'+examTag(c.exam)+'</span>':'')+
    '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?(s.scope&&!(c.exam&&c.exam.name===s.scope)?esc(s.scope)+': ':'')+pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('');
