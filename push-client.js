@@ -19,7 +19,21 @@
     },
     b64(s) { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)) },
     async sub() { const r = await P.reg(); await navigator.serviceWorker.ready; return r.pushManager.getSubscription() },
-    prefs() { const o = Object.fromEntries(Object.keys(Notify.TYPES).map(k => [k, Notify.on(k)])); if (window.Remind) o.rem = Remind.prefs(); return o },
+    prefs() { const o = Object.fromEntries(Object.keys(Notify.TYPES).map(k => [k, Notify.on(k)])), r = Notify.prefs().rem; if (window.Remind) o.rem = Remind.prefs(); else if (r) o.rem = r; return o },
+    // If the server's push key changed, this device's old subscription can't receive anything: quietly make a new one
+    // (same settings). Runs on the home, course and notifications pages; does nothing when the keys match.
+    async heal() {
+      try {
+        if (!P.supported() || !P.cloud || Notification.permission !== 'granted') return;
+        const s = await P.sub(), cur = s && s.options && s.options.applicationServerKey; if (!cur) return;
+        const k = await P.getKey(), mine = btoa(String.fromCharCode(...new Uint8Array(cur))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        if (mine === k.replace(/=+$/, '')) return;
+        const old = s.endpoint; await s.unsubscribe();
+        const r = await P.reg(), n = await r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: P.b64(k) });
+        await P.rpc('push_subscribe', { p_sub: n.toJSON(), p_prefs: P.prefs() });
+        if (n.endpoint !== old) { try { await P.rpc('push_unsubscribe', { p_endpoint: old }) } catch (e) { } }
+      } catch (e) { }
+    },
     async testRem() { const s = await P.sub(); if (!s) return; const r = await fetch(P.fn(), { method: 'POST', headers: P.hdr(), body: JSON.stringify({ testrem: s.endpoint }) }); if (!r.ok) throw new Error(r.status) },
     async turnOn() {
       const perm = await Notification.requestPermission();

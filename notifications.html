@@ -119,7 +119,7 @@ function drawRem(){const el=$('remsec');if(!el)return;const r=Remind.prefs();
  el.innerHTML=h}
 (async()=>{let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
  try{await Sched.load()}catch(e){}
- list.forEach(c=>COURSES[c.id]=c);Push.init((list.find(x=>x.cloud&&x.cloud.url)||{}).cloud);
+ list.forEach(c=>COURSES[c.id]=c);Push.init((list.find(x=>x.cloud&&x.cloud.url)||{}).cloud);Push.heal().then(()=>{if(!$('settings').hidden)drawSettings()});
  READ0=Notify.readUpTo();tab(location.hash==='#settings'?'settings':'feed')})();
 </script>
 </body></html>

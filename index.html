@@ -164,6 +164,7 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
 <script src="schedule-core.js"></script>
 <script src="dialog.js"></script>
 <script src="notify-core.js"></script>
+<script src="push-client.js"></script>
 <script>Notify.load().then(f=>{const n=Notify.prefs().ddot===false?0:Notify.unread(f),d=document.getElementById('bdot');if(n){d.textContent=n>9?'9+':n;d.hidden=false;document.getElementById('bell').setAttribute('aria-label','Notifications, '+n+' new')}})</script>
 <script>
 // Links shared on Facebook/Messenger get ?fbclid=... added; drop it so the address stays clean when copied again.
@@ -180,6 +181,7 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
  try{list=await (await fetch('courses.json')).json()}
  catch(e){document.getElementById('list').innerHTML='<p class="empty">Courses could not be loaded. Check your connection and reload.</p>';return}
  CLOUD=(list.find(c=>c.cloud&&c.cloud.url)||{}).cloud||null;document.getElementById('syncbtn').hidden=!CLOUD;
+ if(CLOUD&&window.Push){Push.init(CLOUD);setTimeout(()=>Push.heal(),1500)}
  if(CLOUD){drawSyncBtn();finishSignIn().then(done=>{const q=new URLSearchParams(location.search);if(done)return;
   if(q.has('signin')){history.replaceState(null,'',location.pathname);signIn()}else if(q.has('sync')){history.replaceState(null,'',location.pathname);openSync()}else setTimeout(spotlight,700)})}
  const art=c=>'<span class="art">'+(c.image?'<img src="'+esc(c.image)+'" alt="" loading="lazy">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>';

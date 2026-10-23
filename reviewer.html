@@ -948,6 +948,7 @@ c. Euphrates</pre>
  window.FULL_BANK=d.bank;window.VARIANTS=d.variants||[];window.NOTES=d.notes||[];window.MATCHING=d.matching||[];window.CONFUSABLES=d.confusables||[];window.CHARTS=d.charts||[];window.MOLECULES=d.mols||{};
  const lv=document.createElement('script');lv.src='live.js';lv.async=false;document.body.appendChild(lv);
  const nc=document.createElement('script');nc.src='notify-core.js';nc.async=false;document.body.appendChild(nc);
+ const pc=document.createElement('script');pc.src='push-client.js';pc.async=false;pc.onload=()=>{if(d.config.cloud&&window.Push){Push.init(d.config.cloud);setTimeout(()=>Push.heal(),3000)}};document.body.appendChild(pc);
  const s=document.createElement('script');s.src='engine.js';s.async=false;document.body.appendChild(s);
 })();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
