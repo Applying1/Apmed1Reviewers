@@ -44,6 +44,12 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
 .sw:disabled{opacity:.45}
 .pstat{font-size:13.5px;color:var(--mute);margin:4px 0 12px}.pstat b{color:var(--text)}
 .ok{color:var(--good)}
+.opt{padding:12px 0;border-top:1px solid var(--line)}.opt>b{display:block;font-size:14.5px;font-weight:600;margin:0 0 8px}.opt>span{display:block;color:var(--mute);font-size:12.5px;margin-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1px solid var(--line2);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13.5px;font-weight:500;color:var(--mute)}
+.chips button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--text);font-weight:600}
+.up{list-style:none;margin:0;padding:0}.up li{padding:8px 0;border-top:1px dashed var(--line)}.up li:first-child{border-top:0}
+.up b{font-size:14px}.up .s{display:block;color:var(--mute);font-size:13px}.up .w{display:block;font-size:12.5px;color:var(--faint);margin-top:2px}.up .w.on{color:var(--accent)}
 </style></head><body>
 <main>
  <a class="back" href="index.html">← All courses</a>
@@ -57,6 +63,8 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
 </main>
 <script src="dialog.js"></script>
 <script src="notify-core.js"></script>
+<script src="schedule-core.js"></script>
+<script src="reminders-core.js"></script>
 <script src="push-client.js"></script>
 <script>
 const $=id=>document.getElementById(id),esc=Notify.esc;
@@ -77,13 +85,40 @@ function drawSettings(){const p=Notify.prefs();
  $('settings').innerHTML=
   '<div class="sec"><h2>What you hear about</h2><p class="d">Turned-off types are hidden from Updates, the red dots and push notifications.</p>'+
   Object.entries(Notify.TYPES).map(([k,[t,d]])=>row(esc(t),esc(d),sw(p.types[k]!==false,"flip('types."+k+"')",t))).join('')+'</div>'+
+  '<div class="sec" id="remsec"></div>'+
   '<div class="sec"><h2>Inside a course</h2>'+
   row('Update pop-ups','A one-time pop-up when something new arrives for the course you have open.',sw(p.pop!==false,"flip('pop')",'Update pop-ups'))+
   row('New comment pop-ups','A pop-up when a classmate comments in the course you have open (never during a mock exam, never your own).',sw(p.dpop!==false,"flip('dpop')",'New comment pop-ups'))+
   row('Unread dots','Red dots on Discussion and Notifications for things you haven\'t opened yet.',sw(p.ddot!==false,"flip('ddot')",'Unread dots'))+'</div>'+
   '<div class="sec" id="pushsec"><h2>On this device</h2><p class="d">Push notifications reach you even when the site is closed.</p><div id="pushbody"><p class="pstat">Checking…</p></div></div>';
- Push.draw($('pushbody'))}
+ drawRem();Push.draw($('pushbody'))}
+// ---------- exam reminders ----------
+const chip=(on,fn,label)=>'<button aria-pressed="'+!!on+'" onclick="'+fn+'">'+esc(label)+'</button>';
+const hourTxt=h=>h===12?'12 noon':(h%12||12)+(h<12?' AM':' PM');
+function remSet(ch){Remind.set(ch);drawRem()}
+function remDay(d){const r=Remind.prefs(),has=r.days.includes(d);if(has&&r.days.length===1)return tell('Keep at least one, or switch reminders off.',{title:'Reminders'});remSet({days:has?r.days.filter(x=>x!==d):r.days.concat(d)})}
+function remKind(k){const r=Remind.prefs(),has=r.kinds.includes(k);if(has&&r.kinds.length===1)return tell('Keep at least one, or switch reminders off.',{title:'Reminders'});remSet({kinds:has?r.kinds.filter(x=>x!==k):r.kinds.concat(k)})}
+function remSubj(s){const r=Remind.prefs();remSet({off:r.off.includes(s)?r.off.filter(x=>x!==s):r.off.concat(s)})}
+async function remTest(b){b.disabled=true;b.textContent='Sending…';try{await Push.testRem();b.textContent='Sent. Check your notifications'}catch(e){b.textContent='Turn on notifications below first';b.disabled=false}}
+function drawRem(){const el=$('remsec');if(!el)return;const r=Remind.prefs();
+ let h='<h2>Exam reminders</h2><p class="d">A push notification before the exams, evals and quizzes on the timetable. Works on devices where notifications are turned on (below).</p>'+
+  row('Remind me','Pick when, what and for which subjects.',sw(r.on,'remSet({on:'+!r.on+'})','Exam reminders'));
+ if(r.on&&Sched.data){
+  const subs=Object.entries(Sched.data.subjects||{});
+  h+='<div class="opt"><b>When</b><div class="chips">'+Remind.DAYS.map(([d,t])=>chip(r.days.includes(d),'remDay('+d+')',t)).join('')+'</div><span>Pick as many as you like.</span></div>'+
+   '<div class="opt"><b>At</b><div class="chips">'+Remind.HOURS.map(([v,t])=>chip(r.hour===v,'remSet({hour:'+v+'})',t)).join('')+'</div><span>For the reminders before the day itself. "Morning of" always comes at 6 AM.</span></div>'+
+   '<div class="opt"><b>For</b><div class="chips">'+Object.entries(Remind.KINDS).map(([k,t])=>chip(r.kinds.includes(k),"remKind('"+k+"')",t)).join('')+'</div></div>'+
+   '<div class="opt"><b>Subjects</b><div class="chips">'+subs.map(([id,s])=>chip(!r.off.includes(id),"remSubj('"+id+"')",s.name)).join('')+'</div><span>Tap a subject to mute its reminders.</span></div>';
+  const up=Remind.list(4).slice(0,8);
+  h+='<div class="opt"><b>Coming up</b>'+(up.length?'<ul class="up">'+up.map(a=>{const ok=Remind.wants(r,a),ms=ok?Remind.moments(r,a):[];
+    return '<li><b>'+esc(a.subj.name)+'</b><span class="s">'+esc(a.label)+' · '+esc(Sched.when(a.date))+', '+esc(Sched.time(a.start))+'</span><span class="w'+(ms.length?' on':'')+'">'+
+     (!ok?'No reminder (muted in your settings)':ms.length?'🔔 '+ms.map(m=>esc(Sched.when(m)+', '+hourTxt(m.getHours()))).join(' · '):'No reminder left before it')+'</span></li>'}).join('')+'</ul>':'<span>No exams, evals or quizzes on the timetable in the next 4 weeks.</span>')+
+   '<span>From the class timetable. Dates change when the timetable does.</span></div>'+
+   '<div class="opt"><button class="btn" onclick="remTest(this)">Send a test reminder</button></div>';
+ }
+ el.innerHTML=h}
 (async()=>{let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
+ try{await Sched.load()}catch(e){}
  list.forEach(c=>COURSES[c.id]=c);Push.init((list.find(x=>x.cloud&&x.cloud.url)||{}).cloud);
  READ0=Notify.readUpTo();tab(location.hash==='#settings'?'settings':'feed')})();
 </script>

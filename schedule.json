@@ -5,11 +5,11 @@
  "freeDays": {"Mon": "Self-directed learning (SDL)", "Sun": ""},
  "subjects": {
   "botany": {"name": "General Botany", "hue": 145, "course": "botany"},
-  "pharma": {"name": "Pharmacology", "hue": 110},
+  "pharma": {"name": "Pharmacology", "hue": 110, "course": "pharma"},
   "psych": {"name": "Intro to Psychology", "hue": 295, "course": "psych"},
   "iml": {"name": "Intro to Medicine Life", "hue": 350, "course": "iml"},
   "purcom": {"name": "Purposive Communication", "hue": 70, "course": "purcom"},
-  "mmw": {"name": "Math in the Modern World", "hue": 255},
+  "mmw": {"name": "Math in the Modern World", "hue": 255, "course": "mmw"},
   "nstp": {"name": "NSTP 1", "hue": 30, "course": "nstp"},
   "pe": {"name": "PE 1", "hue": 185},
   "chem": {"name": "General Chemistry", "hue": 220, "course": "chem"}

@@ -19,7 +19,8 @@
     },
     b64(s) { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)) },
     async sub() { const r = await P.reg(); await navigator.serviceWorker.ready; return r.pushManager.getSubscription() },
-    prefs() { return Object.fromEntries(Object.keys(Notify.TYPES).map(k => [k, Notify.on(k)])) },
+    prefs() { const o = Object.fromEntries(Object.keys(Notify.TYPES).map(k => [k, Notify.on(k)])); if (window.Remind) o.rem = Remind.prefs(); return o },
+    async testRem() { const s = await P.sub(); if (!s) return; const r = await fetch(P.fn(), { method: 'POST', headers: P.hdr(), body: JSON.stringify({ testrem: s.endpoint }) }); if (!r.ok) throw new Error(r.status) },
     async turnOn() {
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') throw new Error(perm === 'denied' ? 'blocked' : 'dismissed');
