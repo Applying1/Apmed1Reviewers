@@ -247,7 +247,7 @@ function closeSpot(){document.getElementById('spot').hidden=true}
   return d>=1?d+'d '+h+'h '+p(m)+'m':h>=1?h+'h '+p(m)+'m '+p(x)+'s':m+'m '+p(x)+'s'};
  const draw=()=>{pick();if(!list.length){box.hidden=true;return}
   box.innerHTML='<h2>⏳ Tests coming up<a href="notifications.html#settings">Reminders →</a></h2>'+list.map((a,i)=>{const c=a.subj.course;
-   return '<a class="trow'+(i?'':' first')+'" style="--h:'+(+a.subj.hue||260)+'" href="'+(c?'reviewer.html?course='+encodeURIComponent(c):'schedule.html')+'"><span class="bar"></span><span class="w"><b>'+esc(a.subj.name)+'</b><span class="s">'+esc(a.label)+' · '+esc(Sched.when(a.date))+', '+esc(Sched.time(a.start))+'</span></span><span class="cd"><b data-at="'+(+a.from)+'"></b><span>'+(c?'Review now →':'Timetable →')+'</span></span></a>'}).join('');
+   return '<a class="trow'+(i?'':' first')+'" style="--h:'+(+a.subj.hue||260)+'" href="'+(c?'reviewer.html?course='+encodeURIComponent(c):'schedule.html')+'"><span class="bar"></span><span class="w"><b>'+esc(a.subj.name)+'</b><span class="s">'+esc(Sched.when(a.date))+', '+esc(Sched.time(a.start))+' · '+esc(a.label)+'</span></span><span class="cd"><b data-at="'+(+a.from)+'"></b><span>'+(c?'Review now →':'Timetable →')+'</span></span></a>'}).join('');
   box.hidden=false;tick()};
  const tick=()=>{const now=Date.now();let gone=false;box.querySelectorAll('[data-at]').forEach(b=>{const ms=+b.dataset.at-now;if(ms<=0)gone=true;b.textContent=left(ms);b.closest('.trow').classList.toggle('soon',ms<864e5)});if(gone)draw()};
  draw();setInterval(tick,1000)}catch(err){}})();
