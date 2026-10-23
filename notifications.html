@@ -128,4 +128,5 @@ function backLink(){const el=document.querySelector('.back');let r=null;
  list.forEach(c=>COURSES[c.id]=c);backLink();Push.init((list.find(x=>x.cloud&&x.cloud.url)||{}).cloud);Push.heal().then(()=>{if(!$('settings').hidden)drawSettings()});
  READ0=Notify.readUpTo();tab(location.hash==='#settings'?'settings':'feed')})();
 </script>
+<script src="update.js" defer></script>
 </body></html>

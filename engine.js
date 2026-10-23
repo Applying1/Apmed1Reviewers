@@ -3,6 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
+const APP_VERSION='70',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
  Object.assign(s,{section:null,active:null,feedback:null,selected:null,pmatch:null,pass:null,page:'dashboard',exam:s.exam&&!s.exam.done?s.exam:null,__recovered:1});
@@ -158,6 +159,8 @@ function stepsHTML(c){return (c&&c.steps&&c.steps.length?'<ol class="steps">'+c.
   // matching drills can have more choices than the A–E answer sheet
 const LETTERS='ABCDE',THEME_KEY='reviewer_theme';
 const $=id=>document.getElementById(id);
+// v70: rebuild a part of the page only when its content changed (the sidebar used to be rebuilt after every answer)
+const setHTML=(el,h)=>{if(el&&el._h!==h){el.innerHTML=h;el._h=h}};
 const byId=Object.fromEntries(ALL_ITEMS.map(c=>[c.id,c]));
 const blank=()=>({right:0,wrong:0,hints:0,lookups:0,seen:0,history:[]});
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -173,7 +176,7 @@ const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -263,9 +266,16 @@ function storeWarn(){let w=$('storewarn');if(!STORE_FULL){if(w)w.remove();return
 function freeUp(){const f=freeSpace();save();toast(STORE_FULL?'Still full. Clear other sites\' data in your browser settings, or reset a course you no longer need.':'Freed '+Math.max(.1,f/524288).toFixed(1)+' MB. Your answers are saving again.');if(page==='prefs')drawPrefs()}
 function storageUse(){let all=0,mine=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),n=2*(k.length+(localStorage.getItem(k)||'').length);all+=n;if(k===KEY||k.startsWith(KEY+'_'))mine+=n}}catch(e){}return {all,mine}}
 const mbs=n=>(n/1048576).toFixed(n<1048576?2:1)+' MB';
+// v70: several save() calls during one action (answer, next question, redraw) write once, at the end of that action and
+// before the browser does anything else. flushSave() writes at once (before a reload, or when the app goes to the background).
+let saveQ=false;
 function save(){if(state.active&&!state.active.sig&&typeof byId!=='undefined'&&byId[state.active.cid])state.active.sig=qsig(byId[state.active.cid]);const ps=prefSig();if(ps!==prefSigLast){if(prefSigLast!==null)state.prefsAt=Date.now();prefSigLast=ps}
+ if(!saveQ){saveQ=true;queueMicrotask(flushSave)}
+ if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
+function flushSave(){if(!saveQ)return;saveQ=false;
  let ok=putState();if(!ok){trimState(state,true);ok=putState();if(!ok){freeSpace();ok=putState()}}if(ok===STORE_FULL){STORE_FULL=!ok;storeWarn()}
- try{const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
+ try{const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}}
+addEventListener('pagehide',flushSave);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSave()});
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function stableHash(s){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0}
 function shuffle(a,seed){let b=a.slice(),x=seed||1;for(let i=b.length-1;i>0;i--){x^=x<<13;x^=x>>>17;x^=x<<5;let j=(x>>>0)%(i+1);[b[i],b[j]]=[b[j],b[i]]}return b}
@@ -286,7 +296,9 @@ function evenPick(items,n,key){const g={};items.forEach(c=>(g[key(c)]=g[key(c)]|
   open.forEach((k,i)=>{const t=Math.min(each+(i<extra?1:0),g[k].length-out[k]);out[k]+=t;used+=t});left-=used;open=open.filter(k=>out[k]<g[k].length);if(!used)break}
  return ks.flatMap(k=>shuffle(g[k],rnd()).slice(0,out[k]))}
 function freeStart(n){const s=state.section,all=inSection(s),k=Math.max(1,Math.min(all.length,Math.round(+n)||1));state.prefs.freeN=k;
- const ids=(isCh(s)?evenPick(all,k,c=>c.section):shuffle(all,rnd()).slice(0,k)).map(c=>c.id);
+ let ids=(isCh(s)?evenPick(all,k,c=>c.section):shuffle(all,rnd()).slice(0,k)).map(c=>c.id);
+ if(all.some(c=>c.case)){const out=[];for(const c of shuffle(all,rnd())){if(out.length>=k)break;if(out.includes(c.id))continue;
+  (c.case?all.filter(x=>x.case===c.case).sort((a,b)=>a.part-b.part):[c]).forEach(x=>{if(!out.includes(x.id))out.push(x.id)})}ids=out}
  state.pass={sec:s,done:[],miss:[],free:1,ids,right:0};state.complete=state.complete.filter(x=>x!==s);freeOpen=false;state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
 function freeToggle(){freeOpen=!freeOpen;$('card').innerHTML=cardHTML()}
 function freeBoxHTML(){const s=state.section,N=inSection(s).length,cur=Math.min(state.prefs.freeN||20,N),opts=[10,20,30].filter(x=>x<N);
@@ -339,17 +351,26 @@ function makeQuestion(c,fx){const src=fx?fx.items:BANK,sd=tag=>fx?stableHash(fx.
  return {cid:c.id,kind,stem,choices:choices.map((x,i)=>({...x,letter:LETTERS[i]})),why,hint:c.hint,usedHint:false};
 }
 function chooseNext(){const s=state.section;let pool=poolFor(s);if(!pool.length)return null;
- const recent=state.history.filter(h=>h.cid).slice(-3).map(h=>h.cid);
+ const recent=state.history.filter(h=>h.cid).slice(-3).map(h=>h.cid),K=id=>state.concepts[id],qn=state.qn||0;
+ // v70: a problem with parts goes on part by part, so your work for part 1 is still fresh for part 2
+ const last=secLog().slice(-1)[0],lc=last&&last.q&&byId[last.q.cid];
+ if(lc&&lc.case){const nx=pool.filter(c=>c.case===lc.case&&(c.part||0)>(lc.part||0)).sort((a,b)=>a.part-b.part)[0];if(nx)return makeQuestion(nx)}
+ // and starts at its first part still to do
+ const start=c=>c&&c.case?pool.filter(x=>x.case===c.case).sort((a,b)=>a.part-b.part)[0]||c:c;
+ // v70: a question you missed comes back after a few others (relearning), not only after the whole section
+ const ready=pool.filter(c=>K(c.id).back&&K(c.id).back<=qn&&!recent.includes(c.id)).sort((a,b)=>K(a.id).back-K(b.id).back);
+ if(ready.length)return makeQuestion(start(ready[0]));
+ if(pool.some(c=>!(K(c.id).back>qn)))pool=pool.filter(c=>!(K(c.id).back>qn));
  // In order: lecture order, least-seen first (shuffled mode is always random).
  if(state.prefs.order!=='random'&&!isX(s)){const last=recent[recent.length-1],ix=new Map(BANK.map((c,i)=>[c.id,i]));
   pool.sort((a,b)=>(state.concepts[a.id].seen-state.concepts[b.id].seen)||(ix.get(a.id)-ix.get(b.id)));
-  return makeQuestion(pool.find(x=>x.id!==last)||pool[0])}
+  return makeQuestion(start(pool.find(x=>x.id!==last)||pool[0]))}
  // Shuffled mode: avoid the sections of the last few questions.
  if(isX(s)){const rs=recent.map(id=>byId[id]?.section),v=pool.filter(c=>!rs.includes(c.section));if(v.length)pool=v}
  // Random: everything comes up once per pass, in a new order each pass.
  const notRecent=pool.filter(c=>!recent.includes(c.id)),from=notRecent.length?notRecent:pool;
  const minSeen=Math.min(...from.map(c=>state.concepts[c.id].seen)),least=from.filter(c=>state.concepts[c.id].seen===minSeen);
- return makeQuestion(least[Math.floor(Math.random()*least.length)])}
+ return makeQuestion(start(least[Math.floor(Math.random()*least.length)]))}
 function ensure(){
  const ac=state.active&&byId[state.active.cid];
  if(state.active&&(!ac||!inSection(state.section).includes(ac)||(!state.feedback&&!poolFor(state.section).includes(ac)))){state.active=null;state.feedback=null;state.selected=null}
@@ -396,8 +417,8 @@ function feedbackHTML(q,fb,live){
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'<span data-dn="'+esc(discKey(q.cid))+'">'+dnDot(dnUnread(discKey(q.cid)))+'</span></a></p>';
- const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' stays in your queue.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
-  :'This '+ITEM+' will come back later, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
+ const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' comes back in a few questions.':fb.hinted?'Right, with a hint. It counts toward mastery once you get it without one.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
+  :'This '+ITEM+' comes back in a few questions, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
  const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
  return out;
 }
@@ -430,7 +451,7 @@ function cardHTML(){
  if(!state.active){
   const L=navList(s),last=!L.length||L.indexOf(s)===L.length-1,focus=s==='MISSED'||s==='STAR'||s==='DUE'||s==='CLASS'||s==='CRAM',none=!inSection(s).length;
   const label=s==='ALL'?'Shuffle complete':s==='DUE'?(none?'Nothing due':'All reviewed'):s==='STAR'?(none?'Nothing starred':'Round complete'):s==='MISSED'?'All caught up':s==='CLASS'?(none?'Nothing yet':'Round complete'):s==='CRAM'?'Cram round done':isCh(s)?esc(UNIT)+' complete':'Section complete';
-  const text=s==='DUE'?(none?'Nothing is due right now. Mastered '+ITEMS+' come back for review after 1, 3, 7, 14 and 30 days.':'You reviewed everything that was due. Each one is now scheduled further out.'):s==='STAR'?(none?'No starred '+ITEMS+' yet. Tap the star on any question, or press S, to collect it here.':'You went through every starred '+ITEM+'. Go again the night before the exam.')
+  const text=s==='DUE'?(none?'Nothing is due right now. Mastered '+ITEMS+' come back for review after 1, 3, 7, 14 and 30 days, and sooner when a test is coming up.':'You reviewed everything that was due. Each one is now scheduled further out.'):s==='STAR'?(none?'No starred '+ITEMS+' yet. Tap the star on any question, or press S, to collect it here.':'You went through every starred '+ITEM+'. Go again the night before the exam.')
    :s==='CRAM'?'You went through the '+inSection(s).length+' highest-yield '+ITEMS+'. Go again, or practice the ones you missed under Missed '+ITEMS+'.'
    :s==='CLASS'?(none?'This list fills in once enough classmates have answered these '+ITEMS+'.':'You went through the '+ITEMS+' your class misses most. Go again before the exam.')
    :s==='MISSED'?(none?'Nothing missed yet. '+Items+' you get wrong, or check in your slides, will collect here.':'Every '+ITEM+' you had missed is now mastered.')
@@ -444,11 +465,11 @@ function cardHTML(){
  // Current question
  const q=state.active,st=state.concepts[q.cid],fb=state.feedback,mixed=isX(s)||isCh(s);
  return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(isWr(byId[q.cid])?'Written answer':q.typed?'Type the answer':kindName(q.kind))+srcTag(q.cid)+'</span><span class="mastery">'+flagBtn("flagQ('live')")+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
-  caseHTML(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
+  caseHTML(q.cid)+casePrev(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
   (q.usedHint&&!fb?'<div class="hint"><b>Hint</b>'+esc(q.hint)+'</div>':'')+
   (fb?feedbackHTML(q,fb,true):'')+
   '<div class="actions">'+backBtn()+'<span class="aux">'+(fb?'':(q.usedHint||!q.hint?'':'<button class="link" onclick="hint()">Show hint</button>')+'<button class="link" onclick="looked()" title="Counts as a review, not a correct recall">I checked my slides</button>')+'</span>'+
-  (fb?'<button class="btn primary" id="go" onclick="next()">Next question <kbd>Enter</kbd></button>'
+  (fb?'<button class="btn primary" id="go" onclick="next()">'+(nextPart(q.cid)?'Next part':'Next question')+' <kbd>Enter</kbd></button>'
      :'<button class="btn primary" id="go" onclick="'+(q.typed?'submitTyped()':'submit()')+'" '+(q.typed||state.selected?'':'disabled')+'>Check answer <kbd>Enter</kbd></button>')+'</div>';
 }
 
@@ -514,8 +535,10 @@ function drawStudy(){
  $('ccount').textContent=p.done+'/'+items.length;$('cword').textContent=Items;
  $('concepts').querySelector('summary').childNodes[2].textContent='in this '+(s==='ALL'?'shuffle':all?'review':ch?unitW:'section');
  $('ctip').textContent='Each '+ITEM+' needs '+T()+' correct answer'+(T()>1?'s':'')+'. '+(AUTHORED?'Topic labels':'Names')+' here can give answers away, so open this after you\'ve practiced.';
- $('grid').innerHTML=items.map(c=>{let r=Math.min(state.concepts[c.id].right,T());return '<div class="chip '+(r>=T()?'done':'')+'"><span>'+esc(c.term)+'</span>'+pips(r)+'</div>'}).join('');
+ if($('concepts').open)drawGrid(items);else if($('grid').firstChild)$('grid').innerHTML='';
 }
+// v70: the list of every question in the section is drawn only while it's open (it was redrawn after every answer)
+function drawGrid(items){$('grid').innerHTML=(items||inSection(state.section)).map(c=>{let r=Math.min(state.concepts[c.id].right,T());return '<div class="chip '+(r>=T()?'done':'')+'"><span>'+esc(c.term)+'</span>'+pips(r)+'</div>'}).join('')}
 
 /* ---------- page switching ---------- */
 const PG={
@@ -529,15 +552,15 @@ const PG={
 let HOME_LINK='';if(CONFIG.home){const h=$('homelink');if(h){h.href=CONFIG.home;h.hidden=false}else HOME_LINK='<a class="page" href="'+esc(CONFIG.home)+'">All courses</a>'}
 // v66 bottom tab bar (phones): the first four pages that are on, then More (the side menu with topics and the rest)
 const MORE_IC='<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>';
-function drawTabbar(){const tb=$('tabbar');if(!tb)return;const exam=state.exam&&!state.exam.done;
+function drawTabbar(){const tb=$('tabbar');if(!tb)return;const exam=state.exam&&!state.exam.done&&page==='exam';   // hidden only on a running exam itself
  const ps=['dashboard','study','notes','exam','match','prefs'].filter(pageOn).slice(0,4);
- const show=ps.length>=2&&!exam;document.body.classList.toggle('tabs',show);if(!show){tb.innerHTML='';return}
+ const show=ps.length>=2&&!exam;document.body.classList.toggle('tabs',show);if(!show){setHTML(tb,'');return}
  const sv=(d)=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
  const nm=p=>p==='dashboard'?'Home':p==='study'?'Practice':p==='exam'?'Mock exam':PG[p][0];
  const dot=$('pages')&&$('pages').querySelector('.dndot,.ndot,[data-dn] .dot');
- tb.innerHTML=ps.map(p=>'<button class="'+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')">'+sv(PG[p][1])+nm(p)+'</button>').join('')+
-  '<button onclick="toggleNav(true)" aria-label="More: topics, discussion, notifications">'+sv(MORE_IC)+'More'+(dot?'<span class="tbdot"></span>':'')+'</button>'}
-function drawPages(){$('pages').innerHTML=HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+discussLink()+notifyLink();drawTabbar()}
+ setHTML(tb,ps.map(p=>'<button class="'+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')">'+sv(PG[p][1])+nm(p)+'</button>').join('')+
+  '<button onclick="toggleNav(true)" aria-label="More: topics, discussion, notifications">'+sv(MORE_IC)+'More'+(dot?'<span class="tbdot"></span>':'')+'</button>')}
+function drawPages(){setHTML($('pages'),HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+discussLink()+notifyLink());drawTabbar()}
 // ---- per-question discussion (threads named "<course>:<question id>")
 const CHAT_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg>';
 let DCOUNT={};
@@ -554,11 +577,11 @@ function openDiscuss(cid){if(!discussOn())return true;dnRead(cid?discKey(cid):co
  const url=(cid?discussQ(cid):'discuss.html?c='+encodeURIComponent(courseId()));
  $('dpt').textContent=cid?'Discuss this question':CONFIG.title+' discussion';$('dpnew').href=url;
  if($('dpf').dataset.u!==url){$('dpf').dataset.u=url;$('dpf').src=url+'&embed=1'}
- void d.offsetWidth;d.classList.add('open');document.body.classList.add('dopen');return false}
-function closeDiscuss(){const d=$('dpanel');if(d)d.classList.remove('open');document.body.classList.remove('dopen');loadDiscussCounts(true);dnPoll()}
+ void d.offsetWidth;d.classList.add('open');document.body.classList.add('dopen');ovOpen('discuss',closeDiscuss);return false}
+function closeDiscuss(){const d=$('dpanel');if(d)d.classList.remove('open');document.body.classList.remove('dopen');ovClosed('discuss');loadDiscussCounts(true);dnPoll()}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('dopen'))closeDiscuss()});
 // back from signing in inside the panel: reopen it (#discuss=<question id>, or #discuss= for the course thread)
-addEventListener('load',()=>{const m=location.hash.match(/^#discuss=([\w.-]*)$/);if(m){history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>openDiscuss(m[1]||undefined),400)}});
+addEventListener('load',()=>{const m=location.hash.match(/^#discuss=([\w.-]*)$/);if(m){history.replaceState(history.state,'',location.pathname+location.search);setTimeout(()=>openDiscuss(m[1]||undefined),400)}});
 // ---- discussion notifications: polls the course's newest posts (discussion_recent). state.dn = {base, seen, read:{thread:id}}.
 // base: the newest post when notifications started (older posts never count as unread); seen: newest post already announced.
 let DREC=[],dnT=null;
@@ -612,10 +635,11 @@ function discussLink(){const id=new URLSearchParams(location.search).get('course
  return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'" onclick="return openDiscuss()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion'+dnDot(dnUnread())+'</a>'}
 function draw(){
  if(!pageOn(page))page='dashboard';
+ navTrack();
  for(const [p,v] of Object.entries(VIEWS))$(v).hidden=p!==page;
  $('main').classList.toggle('wide',page==='dashboard'||page==='notes');
  drawPages();
- $('nav').innerHTML=navHTML();
+ setHTML($('nav'),navHTML());
  drawSetSwitch();
  drawTheme();
  drawNewsDot();
@@ -623,8 +647,8 @@ function draw(){
 }
 /* ---------- question banks: Main, plus one tab per extra set (e.g. a friend's) ---------- */
 function drawSetSwitch(){const el=$('setsw');el.hidden=BANKS.length<2;el.classList.toggle('many',BANKS.length>3);
- if(BANKS.length>1)el.innerHTML=BANKS.map(b=>{const on=b.id===state.bank,n=bankItems(b).length;
-  return '<button role="radio" aria-checked="'+on+'" class="'+(on?'on':'')+'" onclick="setBank(\''+b.id+'\')" data-tip="<b>'+esc(b.name)+' · '+n+' '+ITEMS+'</b>'+esc(b.desc||'')+'">'+esc(b.name)+'<span class="num">'+n+'</span></button>'}).join('');
+ if(BANKS.length>1)setHTML(el,BANKS.map(b=>{const on=b.id===state.bank,n=bankItems(b).length;
+  return '<button role="radio" aria-checked="'+on+'" class="'+(on?'on':'')+'" onclick="setBank(\''+b.id+'\')" data-tip="<b>'+esc(b.name)+' · '+n+' '+ITEMS+'</b>'+esc(b.desc||'')+'">'+esc(b.name)+'<span class="num">'+n+'</span></button>'}).join(''));
  $('brandsub').textContent=NOTES_ONLY?'Notes and transes':scopeLabel()+' · '+BANK.length+' '+ITEMS;drawScopeSw();$('brandtitle').textContent=CONFIG.title;
 }
 function setBank(id){if(id===state.bank)return;state.bank=id;state.pmatch=null;state.pass=null;refreshBank();state.active=null;state.feedback=null;state.selected=null;view=null;save();draw()}
@@ -683,7 +707,7 @@ function editName(){
 }
 
 function drawDash(){
- drawGreeting();drawClassPanel();drawContribPanel();loadMine();const ex=examObj(),when=examWhen(ex);$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
+ drawGreeting();drawClassPanel();drawContribPanel();loadMine();const ex=examObj(),nt=nextTest(),when=nt?whenAt(nt.at):'';$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
  document.title='Dashboard · '+CONFIG.title;
  const nMiss=BANK.filter(c=>isMissedC(c)&&!isM(c)).length,nStar=BANK.filter(isStar).length,nDue=state.prefs.srs?BANK.filter(isDue).length:0;
  $('weakgo').hidden=!(state.prefs.missed&&nMiss);$('weakgo').textContent='Practice missed only ('+nMiss+')';
@@ -692,7 +716,7 @@ function drawDash(){
  const secDone=sectionKeys.filter(completed).length,nx=nextSection(),np=progress(nx);
  const bn=BANKS.length>1?esc(bankObj().name)+' · ':'';
  $('hero').innerHTML='<div><div class="big num">'+pct+'%<small>mastered</small></div>'+
-  '<p class="sub">'+(when?'<span class="when">'+esc(ex.name)+' '+when+'</span> · ':'')+bn+'<b class="num">'+m+'</b> of <span class="num">'+BANK.length+'</span> '+ITEMS+' mastered '+(ex?'for '+esc(ex.name):'across '+esc(scopeLabel()))+' · <b class="num">'+secDone+'</b> of '+sectionKeys.length+' sections complete</p>'+
+  '<p class="sub">'+(when?'<span class="when">'+esc(nt.name)+' '+when+'</span> · ':'')+bn+'<b class="num">'+m+'</b> of <span class="num">'+BANK.length+'</span> '+ITEMS+' mastered '+(ex?'for '+esc(ex.name):'across '+esc(scopeLabel()))+' · <b class="num">'+secDone+'</b> of '+sectionKeys.length+' sections complete</p>'+
   '<div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'" aria-label="Overall mastery"><div class="fill" style="width:'+pct+'%"></div></div></div>'+
   '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div>'+(secDone===sectionKeys.length?'<button class="btn primary" onclick="reviewAll()" title="Every '+ITEM+' once, shuffled. You keep your mastery unless you miss one.">Review pass · '+(ex?'all of '+esc(ex.name):'all '+unitsW)+'</button>':'<button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button>')+(nDue?'<button class="shuffle-link due" onclick="selectSection(\'DUE\')">'+CLOCK_SM+'Review '+nDue+' due today</button>':'')+(cramOn()?'<button class="shuffle-link cram" onclick="selectSection(\'CRAM\')">'+FLAME_SM+'Short on time? Cram mode · '+cramList().length+' highest-yield '+ITEMS+'</button>':'')+'<button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
   (pageOn('notes')?'<button class="shuffle-link" onclick="openNotes(\'all\')">'+NOTE_SM+'Read the high-yield notes</button>':'')+
@@ -976,7 +1000,7 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
  if(ex.sheet){$('extitle').textContent=n+' '+ITEMS;$('exbody').innerHTML=sheetHTML(ex);return}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
-  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(q.wr?'Written answer'+(byId[q.cid].part?' · part '+byId[q.cid].part+' of '+byId[q.cid].parts:''):ex.paperless?(q.vsa?'VSA · type your answer':q.mt?'Matching type':'Multiple choice'):exKind(q)+srcTag(q.cid))+'</span></div>'+caseHTML(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+(q.mt?'<p class="mgi">Options may be used more than once.</p>':'')+figHTML(q.cid)+
+  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(q.wr?'Written answer'+(byId[q.cid].part?' · part '+byId[q.cid].part+' of '+byId[q.cid].parts:''):ex.paperless?(q.vsa?'VSA · type your answer':q.mt?'Matching type':'Multiple choice'):exKind(q)+srcTag(q.cid))+'</span></div>'+caseHTML(q.cid)+caseMine(ex,ex.i)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+(q.mt?'<p class="mgi">Options may be used more than once.</p>':'')+figHTML(q.cid)+
   (q.wr?wrBox(byId[q.cid],'extyped',ex.ans[ex.i],' oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"'):q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+(q.vsa?'Type the term':'Type your answer')+'" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
    :'<div class="choices'+(molq(q)?' ichoices':'')+'">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+labelHTML(x.label)+'</span></button>').join('')+'</div>')+
   '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button> · <button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button></span>'+
@@ -1006,8 +1030,8 @@ function ask(text,o){o=o||{};return new Promise(res=>{let m=$('askbox');if(!m){m
  m.innerHTML='<div class="box askbox" role="'+(o.alert?'dialog':'alertdialog')+'" aria-modal="true"'+(o.title?' aria-labelledby="askh"':'')+' aria-describedby="askp">'+(o.title?'<h2 id="askh">'+esc(o.title)+'</h2>':'')+(text?'<p id="askp">'+esc(text)+'</p>':'')+
   (o.copy!=null?'<textarea class="txt askcopy" readonly rows="3" aria-label="Text to copy">'+esc(o.copy)+'</textarea>':'')+
   '<div class="askrow">'+(o.alert?'':'<button class="btn" id="askno">'+esc(o.no||'Cancel')+'</button>')+'<button class="btn '+(o.danger?'danger':'primary')+'" id="askyes">'+esc(o.ok||'OK')+'</button></div></div>';
- const prev=document.activeElement;m.hidden=false;
- const done=v=>{m.hidden=true;document.removeEventListener('keydown',key,true);try{prev&&prev.focus&&prev.focus({preventScroll:true})}catch(e){}res(v)};
+ const prev=document.activeElement;m.hidden=false;ovOpen('ask',()=>done(false));
+ const done=v=>{m.hidden=true;ovClosed('ask');document.removeEventListener('keydown',key,true);try{prev&&prev.focus&&prev.focus({preventScroll:true})}catch(e){}res(v)};
  const key=e=>{if(m.hidden)return;if(e.key==='Escape'){e.preventDefault();e.stopPropagation();done(false)}else if(e.key==='Enter'){e.preventDefault();e.stopPropagation();const a=document.activeElement;done(a&&a.id==='askno'?false:true)}
   else if(e.key==='Tab'){const b=[...m.querySelectorAll('button,textarea')];const i=b.indexOf(document.activeElement);e.preventDefault();b[(i+(e.shiftKey?b.length-1:1))%b.length].focus()}else e.stopPropagation()};
  document.addEventListener('keydown',key,true);m.onclick=e=>{if(e.target===m)done(false)};$('askyes').onclick=()=>done(true);if($('askno'))$('askno').onclick=()=>done(false);
@@ -1026,7 +1050,7 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
  ex.qs.forEach((q,j)=>{const c=byId[q.cid],k=state.concepts[q.cid],a=ex.ans[j],ok=exOK(q,a),ch=q.mt?q.ch:chOf(c.section);
   byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;if(ok){right++;byCh[ch][0]++}
   if(a==null||a===''||q.mt)return;   // skipped (matching items are not bank questions): no effect on mastery, Missed or class stats
-  k.seen++;if(ok)state.correct++;else{k.wrong++;state.wrong++;masteryDown(k)}
+  k.seen++;if(ok){state.correct++;masteryUp(k);delete k.back}else{k.wrong++;state.wrong++;masteryDown(k);relearn(k)}
   crowdAdd(q.cid,!ok);state.history.push({cid:q.cid,correct:ok,lookup:false,mode:'EXAM'})});
  ex.right=right;ex.byCh=byCh;if(100*right/n>=(Object.assign({pass:60},CONFIG.grading||{})).pass)setTimeout(()=>celebrate('exam'),380);
  state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0,easy:ex.easy?1:0}).slice(-20);
@@ -1087,7 +1111,7 @@ function readChallenge(){const h=location.hash.replace(/^#/,'');if(!/^challenge=
 // Opening a challenge link: show its intro, or simply resume it if it is the one in progress.
 function takeLink(){const c=readChallenge();if(!c)return false;const ex=state.exam;
  if(ex&&!ex.done&&ex.chal&&ex.chal.key===chalKey(c)){CHAL=null;clearHash()}else CHAL=c;page='exam';return true}
-function clearHash(){if(/^#challenge=/.test(location.hash))try{history.replaceState(null,'',location.pathname+location.search)}catch(e){location.hash=''}}
+function clearHash(){if(/^#challenge=/.test(location.hash))try{history.replaceState(history.state,'',location.pathname+location.search)}catch(e){location.hash=''}}
 function chalPool(c){const b=BANKS.find(x=>x.id===c.bank);if(!b)return null;
  return b.items.filter(it=>(!c.chs.length||c.chs.includes(chOf(it.section)))&&(c.x||!it.extra)&&(!OPT[it.section]||c.o.includes(it.section)))}
 const poolSig=pool=>stableHash(pool.map(c=>c.id).join('|')).toString(36).slice(0,5);
@@ -1160,8 +1184,8 @@ let setEdit=null,setTimer=null;
 function openSetEditor(id){const s=id?USER_SETS.find(x=>x.id===id):null;setEdit=s;
  $('seth').textContent=s?'Edit question set':'Add a question set';$('setname').value=s?s.name:'';$('settext').value=s?s.text:'';$('setdel').hidden=!s;
  $('secex').textContent='# '+(ALL_SECTIONS.find(k=>k in COURSE_SECS)||'1-1');
- setPreview();$('setmodal').hidden=false;$('setmodal').querySelector('.box').scrollTop=0;(s?$('settext'):$('setname')).focus({preventScroll:true})}
-function closeSetEditor(){$('setmodal').hidden=true;setEdit=null}
+ setPreview();$('setmodal').hidden=false;ovOpen('sets',closeSetEditor);$('setmodal').querySelector('.box').scrollTop=0;(s?$('settext'):$('setname')).focus({preventScroll:true})}
+function closeSetEditor(){$('setmodal').hidden=true;setEdit=null;ovClosed('sets')}
 function setPreview(){const v=$('settext').value,p=parseSet(v),N=p.items.length,nid=p.items.filter(i=>i.ident).length,tops=new Set(p.items.map(i=>i.topic)).size;
  if(p.name&&!$('setname').value.trim())$('setname').value=p.name.slice(0,30);
  $('setinfo').innerHTML=(N?'<b>'+N+' question'+(N>1?'s':'')+'</b>'+(nid?' ('+nid+' identification)':'')+(tops>1?' in '+tops+' topics':'')+(p.problems.length?', and '+p.problems.length+' to fix:':', ready to save.'):v.trim()?'No questions found yet.':'Paste questions here or upload a file.')+
@@ -1177,11 +1201,11 @@ function saveSet(){const p=parseSet($('settext').value);if(!p.items.length)retur
  const rec={id,name,ch:s?s.ch:'ABCDEFGHJKLMNPQRSTUVWXYZ'.split('').find(c=>!used.has(c))||'Z',text:setText(p.items)};
  const i=USER_SETS.findIndex(x=>x.id===id);if(i>=0)USER_SETS[i]=rec;else USER_SETS.push(rec);
  try{localStorage.setItem(SETS_KEY,JSON.stringify(USER_SETS))}catch(e){tell('Storage is full or blocked.',{title:'This browser would not save the set'});return}
- if(!s){state.bank=id;state.section='ALL';state.page='study'}state.active=null;state.feedback=null;state.selected=null;state.pmatch=null;save();location.reload()}
+ if(!s){state.bank=id;state.section='ALL';state.page='study'}state.active=null;state.feedback=null;state.selected=null;state.pmatch=null;save();flushSave();location.reload()}
 function deleteSet(sure){const s=setEdit;if(!s)return;if(sure!==true){ask('Its progress in this browser is deleted too.',{title:'Delete the set “'+s.name+'”?',ok:'Delete',danger:1}).then(y=>{if(y)deleteSet(true)});return}
  USER_SETS=USER_SETS.filter(x=>x.id!==s.id);try{localStorage.setItem(SETS_KEY,JSON.stringify(USER_SETS))}catch(e){}
  Object.keys(state.concepts).forEach(k=>{if(k.startsWith(s.id+'_'))delete state.concepts[k]});if(state.bank===s.id)state.bank='main';
- state.active=null;state.feedback=null;state.selected=null;save();location.reload()}
+ state.active=null;state.feedback=null;state.selected=null;save();flushSave();location.reload()}
 function exportSet(id){const s=USER_SETS.find(x=>x.id===id);if(!s)return;
  download((s.name.replace(/[^\w\- ']+/g,'').trim()||'question set')+'.txt','// A question set for '+CONFIG.title+'. To add it: open the reviewer, then Personalize → Question banks → Add a set → Upload file.\nName: '+s.name+'\n\n'+s.text);
  toast('Saved “'+s.name+'”. Send the file to your classmates.')}
@@ -1229,7 +1253,7 @@ function classRate(id){const r=cloudOn()&&CSTATS&&CSTATS.rows&&CSTATS.rows[id];r
 function loadClassStats(){if(!cloudOn()||CSTATS&&CSTATS.at>STATS_RESET&&Date.now()-CSTATS.at<18e5)return;
  rpc('class_stats',{p_course:KEY}).then(rows=>{const r={};(rows||[]).forEach(x=>{r[x.qid]=[x.attempts,x.missed]});CSTATS={at:Date.now(),rows:r};classMemo.k='';
   try{localStorage.setItem(KEY+'_class',JSON.stringify(CSTATS))}catch(e){}
-  $('nav').innerHTML=navHTML();if(page==='dashboard')drawDash()}).catch(()=>{})}
+  setHTML($('nav'),navHTML());if(page==='dashboard')drawDash()}).catch(()=>{})}
 /* ---------- class contributions (cloud): suggest a question, report a problem ----------
    Everything goes to a moderator's queue (moderate.html on the site, supabase_contrib.sql). Nothing a classmate sends shows
    up until a moderator approves it; approved questions join Main as "Class question", credited if a name was given.
@@ -1257,7 +1281,7 @@ function loadContrib(force){if(!contribOn()||!force&&Date.now()-(CONTRIB.at||0)<
    if(!old){FULL_BANK.push(it);ALL_ITEMS.push(it);byId[it.id]=it;BUILTIN.add(it.id);if(!state.concepts[it.id])state.concepts[it.id]=blank();added++;changed=true}
    else if(old.kind==='class'){if(old.retired)added++;delete old.retired;Object.assign(old,it);changed=true}});
   FULL_BANK.forEach(c=>{if(c.kind==='class'&&!c.retired&&!now.has(c.id)){c.retired=true;changed=true}});
-  if(!changed)return;refreshBank();$('nav').innerHTML=navHTML();if(page==='dashboard')drawDash();
+  if(!changed)return;refreshBank();setHTML($('nav'),navHTML());if(page==='dashboard')drawDash();
   if(added&&!first)toast(added+' new class question'+(added>1?'s were':' was')+' added by the moderator.')}).catch(()=>{})}
 function loadMine(force){const t=contribToken(false);if(!contribOn()||!t||!force&&Date.now()-(MINE.at||0)<3e5)return Promise.resolve();
  return rpc('contrib_mine',{p_token:t}).then(rows=>{MINE.rows=rows||[];MINE.at=Date.now();saveMine();if(page==='dashboard')drawContribPanel();
@@ -1272,10 +1296,10 @@ function drawContribPanel(){let el=$('contribPanel');if(!contribOn()){if(el)el.h
 function contribModal(){let m=$('contribmodal');if(m)return m;m=document.createElement('div');m.className='modal';m.id='contribmodal';m.hidden=true;
  m.innerHTML='<div class="box setbox" role="dialog" aria-modal="true" aria-labelledby="cfh"></div>';
  m.addEventListener('click',e=>{if(e.target===m)closeContrib()});document.body.appendChild(m);return m}
-function openContrib(mode,ctx){if(!contribOn())return;cfMode=mode;if(ctx)cfCtx=ctx;cfDup='';const m=contribModal();drawContrib();m.hidden=false;m.querySelector('.box').scrollTop=0;
+function openContrib(mode,ctx){if(!contribOn())return;cfMode=mode;if(ctx)cfCtx=ctx;cfDup='';const m=contribModal();drawContrib();m.hidden=false;ovOpen('contrib',closeContrib);m.querySelector('.box').scrollTop=0;
  if(mode==='mine'){loadMine(true);MINE.seen=Date.now();saveMine();if(page==='dashboard')drawContribPanel()}
  const f=m.querySelector(mode==='report'?'#cfnote':'#cfq');if(f)f.focus({preventScroll:true})}
-function closeContrib(){const m=$('contribmodal');if(m)m.hidden=true;cfMode=''}
+function closeContrib(){const m=$('contribmodal');if(m)m.hidden=true;cfMode='';ovClosed('contrib')}
 const cfName=()=>esc(lsGet(CONTRIB_NAME)||state.name||'');
 function cfSecOptions(){const cur=state.section in COURSE_SECS?state.section:'',secs=ALL_SECTIONS.filter(k=>k in COURSE_SECS&&inScope(k)&&secOn(k));
  return ALL_CHAPTERS.filter(ch=>ch in COURSE_CH&&secs.some(k=>chOf(k)===ch)).map(ch=>'<optgroup label="'+esc(ch+' · '+COURSE_CH[ch])+'">'+
@@ -1403,6 +1427,7 @@ function drawPrefs(){
  const ex=bankObj().items.filter(c=>c.extra).length,rand=state.prefs.order==='random';
  let h='<section class="panel"><h2>Practice</h2>'+
   (GOALS.length>1?row('Recall goal','How many times you must answer a '+ITEM+' correctly before it counts as mastered. You can also switch this on the Practice page.',goalSeg()):'')+
+  row('Stricter mastery',state.prefs.strict?'On: a miss takes one recall away (1 of 2 goes back to 0 of 2), and a right answer after Show hint doesn\'t count toward mastery.':'Off: a miss only matters once a '+ITEM+' is mastered, and hints don\'t change anything. Turn on for a stricter "mastered".',sw(state.prefs.strict,"setPref('strict',"+!state.prefs.strict+")",'Stricter mastery'))+
   row('Question order',rand?'Random: '+ITEMS+' come in a new order every pass and the answer letters are reshuffled each time, so you can\'t memorize positions.':'In order: '+ITEMS+' follow the lecture order and keep their answer letters. Easier to follow, but easier to memorize.',segHTML('setOrder',[['random','Random'],['fixed','In order']],state.prefs.order,'Question order'))+
   row('Answer mode',state.prefs.typeMode?'Type the answer: short recall '+ITEMS+' hide the choices and you type the term. Small typos are accepted, and you can count a typed answer as right if the checker missed it.':'Choices: pick the answer from the list. Switch to typing for identification-style practice.',segHTML('setTypeMode',[[false,'Choices'],[true,'Type the answer']],state.prefs.typeMode,'Answer mode'))+
   (MSETS.length?row('Mix matching into practice',state.prefs.mix?'After every '+state.prefs.mix+' '+ITEMS+', the next card is a matching set from the '+unitW+' you are practicing. It counts toward your matching scores, not '+ITEM+' mastery.':'Matching sets stay on their own page. Turn this on to get one now and then while you practice.',segHTML('setMix',[[0,'Off'],[10,'Every 10'],[5,'Every 5']],state.prefs.mix,'Mix matching into practice')):'')+
@@ -1414,7 +1439,7 @@ function drawPrefs(){
   row('Lucky guess button','After a correct answer, undo the mastery point if you were only guessing, so the '+ITEM+' stays in your queue.',sw(state.prefs.lucky,"setPref('lucky',"+!state.prefs.lucky+")",'Lucky guess button'))+
   row('Star '+ITEMS,'Flag tricky '+ITEMS+' with the star or the S key, then review them together, even after they are mastered.',sw(state.prefs.stars,"setPref('stars',"+!state.prefs.stars+")",'Star '+ITEMS))+
   row('Missed '+ITEMS+' drill','A sidebar list and a dashboard button that drill only the '+ITEMS+' you got wrong or checked in your slides, until they are mastered.',sw(state.prefs.missed,"setPref('missed',"+!state.prefs.missed+")",'Missed '+ITEMS+' drill'))+
-  row('Spaced review','Mastered '+ITEMS+' come back as Due for review after 1, 3, 7, 14 and 30 days, so they stick until the exam. Missing one sends it back to practice.',sw(state.prefs.srs,"setPref('srs',"+!state.prefs.srs+")",'Spaced review'))+
+  row('Spaced review','Mastered '+ITEMS+' come back as Due for review after 1, 3, 7, 14 and 30 days (sooner when a test is coming up), so they stick until the exam. Missing one sends it back to practice.',sw(state.prefs.srs,"setPref('srs',"+!state.prefs.srs+")",'Spaced review'))+
   row('Flag button',contribOn()?'A flag next to the star reports a typo or a wrong answer key to the moderator (or copies it for your group chat).':'A flag next to the star copies the '+ITEM+', its ID and the answer key, so you can paste it in your group chat to point out a typo or a wrong answer.',sw(state.prefs.flag,"setPref('flag',"+!state.prefs.flag+")",'Flag button'))+
   (cloudOn()?row('Class stats','A Class stats panel on the dashboard, a sidebar list of the '+CLASS_TOP+' '+ITEMS+' your class misses most, and how many classmates missed each '+ITEM+' after you answer it. Updates every 30 minutes.',sw(state.prefs.classmiss,"setPref('classmiss',"+!state.prefs.classmiss+")",'Class most missed')):'')+
   '</section>';
@@ -1443,13 +1468,19 @@ function drawPrefs(){
  // Tabs: All, or one section at a time (remembered on this device).
  const parts=h.split('<section class="panel">').filter(Boolean).map(x=>'<section class="panel">'+x),names=parts.map(x=>(x.match(/<h2>(.*?)<\/h2>/)||[])[1]||'');
  let tab='all';try{tab=localStorage.getItem('reviewer_prefs_tab')||'all'}catch(e){}if(!names.includes(tab))tab='all';
- $('prefs').innerHTML=parts.filter((_,i)=>tab==='all'||names[i]===tab).join('');
+ $('prefs').innerHTML=parts.filter((_,i)=>tab==='all'||names[i]===tab).join('')+'<p class="appver">App version '+APP_VERSION+' · '+APP_DATE+'</p>';
  let t=$('ptabs');if(!t){t=document.createElement('div');t.id='ptabs';t.className='fchips ptabs';t.setAttribute('role','tablist');$('prefs').before(t)}
  t.innerHTML=['all'].concat(names).map(n=>'<button class="fchip'+(n===tab?' on':'')+'" role="tab" aria-selected="'+(n===tab)+'" onclick="setPrefTab(\''+esc(n).replace(/'/g,'&#39;')+'\')">'+(n==='all'?'All':esc(n.replace(/ and you$/,'')))+'</button>').join('')}
 function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e){}drawPrefs();window.scrollTo(0,0)}
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'33',date:'Oct 24, 2026',title:'Smarter practice',items:[
+  'A question you miss now comes back after a few others, while the explanation is still fresh, instead of at the end of the section.',
+  ...(BANK.some(c=>c.case)?['Problems with parts go <b>part by part</b>, and your earlier parts stay on the card as an answer key.']:[]),
+  'Your next quiz or exam comes from the <b>timetable</b>, and reviews of what you mastered are timed to land before it.',
+  'Right answers in a <b>mock exam</b> now count toward mastery. Want a stricter "mastered"? <b>Personalize → Stricter mastery</b>.',
+  'The phone\'s <b>Back</b> button goes to the previous page instead of leaving the course. Courses open instantly from your phone, and an <b>Update ready</b> banner appears when there\'s something new.']},
  {v:'32',date:'Oct 21, 2026',title:'Notifications page',items:[
   'A new <b>Notifications</b> page (bell on the home page, and in the sidebar of every course) lists what\'s new: courses, questions, transes, timetable changes and site updates.',
   'Something new for the course you have open shows once as a pop-up. Choose what you hear about in <b>Notifications → Settings</b>.']},
@@ -1571,15 +1602,15 @@ function openNews(){toggleNav(false);const last=newsLast(),box=$('news').querySe
   h.insertAdjacentHTML('beforeend','<button class="newsx" onclick="closeNews()" aria-label="Close">'+XSVG+'</button>');const intro=box.querySelector('p');if(intro)intro.remove()}
  let n=last?CHANGELOG.filter(r=>+r.v>last).length:1;n=Math.min(3,Math.max(1,n));
  $('newsbody').innerHTML=CHANGELOG.slice(0,n).map(newsRel).join('')+(CHANGELOG.length>n?'<button class="link older" onclick="this.outerHTML=CHANGELOG.slice('+n+').map(newsRel).join(\'\')">Earlier changes ('+(CHANGELOG.length-n)+')</button>':'');
- $('news').hidden=false;state.seenNews=CHANGELOG[0].v;try{localStorage.setItem(NEWS_KEY,String(Math.max(+CHANGELOG[0].v,+localStorage.getItem(NEWS_KEY)||0)))}catch(e){}save();drawNewsDot();const bx=$('news').querySelector('.box');bx.scrollTop=0;bx.querySelector('.btn').focus({preventScroll:true})}
-function closeNews(){$('news').hidden=true}
+ $('news').hidden=false;ovOpen('news',closeNews);state.seenNews=CHANGELOG[0].v;try{localStorage.setItem(NEWS_KEY,String(Math.max(+CHANGELOG[0].v,+localStorage.getItem(NEWS_KEY)||0)))}catch(e){}save();drawNewsDot();const bx=$('news').querySelector('.box');bx.scrollTop=0;bx.querySelector('.btn').focus({preventScroll:true})}
+function closeNews(){$('news').hidden=true;ovClosed('news')}
 
 /* ---------- reference charts ---------- */
 function chartsOn(){return CHART_DATA.length>0&&state.prefs.charts}
 function drawCharts(){$('chtabs').hidden=CHART_DATA.length<2;
  $('chtabs').innerHTML=CHART_DATA.map((c,i)=>'<button role="tab" aria-selected="'+(i===chartTab)+'" class="'+(i===chartTab?'on':'')+'" onclick="chartTab='+i+';drawCharts()">'+esc(c.title)+'</button>').join('');
  $('chbody').innerHTML=CHART_DATA[chartTab].html;$('chh').textContent=CHART_DATA.length<2?CHART_DATA[0].title:'Charts'}
-function openCharts(){if(!CHART_DATA.length)return;drawCharts();cwApply();$('charts').hidden=false;if(!(CW&&CW.on))$('charts').querySelector('.close').focus({preventScroll:true})}
+function openCharts(){if(!CHART_DATA.length)return;drawCharts();cwApply();$('charts').hidden=false;ovOpen('charts',closeCharts);if(!(CW&&CW.on))$('charts').querySelector('.close').focus({preventScroll:true})}
 /* Floating charts: drag the title bar to move, the corner to resize; the page underneath stays usable.
    Position, size and floating on/off are remembered on this device (shared by all courses). */
 const CWKEY='reviewer_chartwin';let CW=null;try{CW=JSON.parse(localStorage.getItem(CWKEY))}catch(e){}
@@ -1600,7 +1631,7 @@ function toggleChartFloat(){if(CW&&CW.on)CW.on=false;else{const first=!(CW&&CW.h
  head.addEventListener('pointerdown',e=>down(e,'move'));grip.addEventListener('pointerdown',e=>down(e,'size'));
  for(const el of [head,grip]){el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)}
  addEventListener('resize',()=>{if(CW&&CW.on&&!$('charts').hidden)cwApply()})})();
-function closeCharts(){$('charts').hidden=true}
+function closeCharts(){$('charts').hidden=true;ovClosed('charts')}
 
 /* ---------- tooltip ---------- */
 (function(){const tip=$('tip');let cur=null;
@@ -1637,7 +1668,7 @@ function strike(l){if(view!=null||state.pmatch||state.feedback||!state.active||s
 // Correct, but only a guess: take the mastery point back so the question stays in the queue.
 function luckyGuess(){const fb=state.feedback;if(view!=null||!fb||!fb.correct||fb.lucky||!state.active)return;
  if(freeOn()){fb.lucky=true;state.pass.right=Math.max(0,(state.pass.right||0)-1);const l=state.log[state.log.length-1];if(l&&l.fb)l.fb.lucky=true;save();draw();return}
- const k=state.concepts[state.active.cid];if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}else k.right=Math.max(0,k.right-1);k.lucky=(k.lucky||0)+1;fb.lucky=true;if(k.right>=T())masteryDown(k);if(onPass(state.section)&&!state.pass.miss.includes(state.active.cid))state.pass.miss.push(state.active.cid);
+ const k=state.concepts[state.active.cid];if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}else k.right=Math.max(0,k.right-1);k.lucky=(k.lucky||0)+1;fb.lucky=true;relearn(k);if(k.right>=T())masteryDown(k);if(onPass(state.section)&&!state.pass.miss.includes(state.active.cid))state.pass.miss.push(state.active.cid);
  const last=state.log[state.log.length-1];if(last&&last.fb)last.fb.lucky=true;save();draw()}
 function starBtn(cid){if(!state.prefs.stars)return '';const on=!!state.concepts[cid].star;
  return '<button class="starbtn'+(on?' on':'')+'" onclick="toggleStar()" aria-pressed="'+on+'" aria-label="'+(on?'Remove star':'Star this '+ITEM)+'" title="'+(on?'Starred · click to remove':'Star this '+ITEM+' to review it later')+' (S)">'+STAR_SVG+'</button>'}
@@ -1647,10 +1678,31 @@ function looked(){if(view!=null||state.pmatch||state.feedback||!state.active)ret
 function submit(){if(view!=null||state.pmatch||!state.selected||state.feedback)return;record(state.active.choices.find(x=>x.letter===state.selected).correct,false)}
 // Reaching the recall goal schedules the first review in a day; each on-time correct review moves it further out.
 function masteryUp(k){const before=k.right,now=Date.now();k.right++;
- if(before<T()&&k.right>=T())k.srs={lvl:0,due:now+SRS_DAYS[0]*DAY};
- else if(before>=T()&&k.srs&&k.srs.due<=now){k.srs.lvl=Math.min(k.srs.lvl+1,SRS_DAYS.length-1);k.srs.due=now+SRS_DAYS[k.srs.lvl]*DAY}}
+ if(before<T()&&k.right>=T())k.srs={lvl:0,due:now+srsGap(0)};
+ else if(before>=T()&&k.srs&&k.srs.due<=now){k.srs.lvl=Math.min(k.srs.lvl+1,SRS_DAYS.length-1);k.srs.due=now+srsGap(k.srs.lvl)}}
+/* ---------- v70: reviews timed to the next test ----------
+   Review gaps follow the 1, 3, 7, 14, 30-day ladder but shrink to about a third of the time left before the next test
+   (spacing research: the best gap is roughly 20-40% of the time until a test a week away). Reviews already scheduled for
+   after the test are spread over the days before it, once per test. The next test is the sooner of the course's exam
+   date and, on the website, the course's next quiz, evals or exam on the timetable. */
+let NEXT_TEST=null;
+function nextTest(){const e=examObj(),now=Date.now(),c=e&&e.date?{name:e.name,at:+new Date(e.date+'T08:00')}:null,a=c&&c.at>now?c:null,b=NEXT_TEST&&NEXT_TEST.at>now?NEXT_TEST:null;return a&&b?(b.at<a.at?b:a):a||b}
+function daysToTest(){const t=nextTest();return t?(t.at-Date.now())/DAY:null}
+function srsGap(lvl){let d=SRS_DAYS[lvl];const left=daysToTest();if(left!=null&&left>1.5)d=Math.min(d,Math.max(1,Math.round(left*.35)));return d*DAY}
+function srsPull(){const t=nextTest();if(!t)return;const left=(t.at-Date.now())/DAY,key=t.name+'|'+t.at;if(left<=1.5||state.srsFor===key)return;let n=0;
+ for(const c of BANK){const k=state.concepts[c.id];if(k&&k.srs&&isM(c)&&k.srs.due>t.at){k.srs.due=Date.now()+DAY*(1+(stableHash(c.id+key)%1000)/1000*(left-1.5));n++}}
+ state.srsFor=key;save()}
+const whenAt=at=>{const t=new Date();t.setHours(0,0,0,0);const d=new Date(at);d.setHours(0,0,0,0);const n=Math.round((d-t)/DAY);return n<0?'':n===0?'today':n===1?'tomorrow':'in '+n+' days'};
+// CONFIG.timetable === false: the course's next timetable test isn't covered by the reviewer yet, so it isn't used.
+function loadTimetable(){if(CONFIG.timetable===false||!CONFIG.home||!/^https?:$/.test(location.protocol)||!window.Notify)return;
+ const add=(src,ok,cb)=>{if(ok())return cb();const el=document.createElement('script');el.src=src;el.onload=cb;el.onerror=()=>{};document.head.appendChild(el)};
+ add('schedule-core.js',()=>typeof Sched!=='undefined',()=>add('reminders-core.js',()=>!!window.Remind,()=>{if(typeof Sched==='undefined'||!window.Remind)return;
+  Sched.load().then(()=>{const subj=Sched.data.subjects||{},id=courseId(),t=Remind.list(6).find(a=>(subj[a.subject]||{}).course===id);
+   NEXT_TEST=t?{name:t.label,at:+t.from}:null;srsPull();if(page==='dashboard')drawDash()}).catch(()=>{})}))}
 // Missing a mastered item sends it back to practice: one more correct answer masters it again.
-function masteryDown(k){if(k.right>=T()){k.right=T()-1;k.srs=null}}
+function masteryDown(k){if(k.right>=T()){k.right=T()-1;k.srs=null}else if(state.prefs.strict)k.right=Math.max(0,(k.right||0)-1)}
+// v70: a missed question comes back after 4-6 other questions in practice
+function relearn(k){k.back=(state.qn||0)+4+Math.floor(Math.random()*3)}
 
 /* ---------- v68 written answers (math) and case problems ---------- */
 // wr items are always typed and checked by meaning: objective (max/min + coefficients), constraints (any order, any equivalent
@@ -1708,6 +1760,16 @@ function wrIns(k){const t=document.querySelector('textarea.wrin, input.wrin');if
 function wrBox(c,id,val,extra){const multi=c.wr.t==='cons'||c.wr.t==='pts';
  return '<div class="typein wr"><textarea id="'+id+'" class="typed wrin" rows="'+(c.wr.t==='cons'?4:2)+'" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+esc(WR_PH[c.wr.t])+'" aria-label="Your answer"'+(extra||'')+'>'+esc(val||'')+'</textarea>'+
   '<div class="wrfoot"><span>'+esc(WR_TIP[c.wr.t])+(multi?' Ctrl+Enter checks it.':'')+'</span>'+wrKeys()+'</div></div>'}
+// v70: the earlier parts of a problem stay in view: the answer key for each, marked with how you did on it just now
+const partTitle=p=>p.wr?({obj:'Objective function',cons:'Constraints',pts:'Corner points',opt:'Optimal value'})[p.wr.t]:(String(p.q).match(/·\s*([^.?,(]+)/)||[])[1]||p.term;
+function casePrev(cid){const c=byId[cid];if(!c||!c.case||!(c.part>1))return '';const parts=ALL_ITEMS.filter(x=>x.case===c.case&&x.part<c.part).sort((a,b)=>a.part-b.part);if(!parts.length)return '';
+ const lastOf=id=>{for(let i=state.log.length-1;i>=0&&i>=state.log.length-12;i--){const e=state.log[i];if(e&&e.q&&e.q.cid===id)return e}return null};
+ return '<div class="cprev"><div class="cph">Earlier parts · answer key</div>'+parts.map(p=>{const e=lastOf(p.id),tag=e&&e.fb?(e.fb.correct?'<span class="cpy" aria-label="you got it">✓</span>':'<span class="cpn" aria-label="you missed it">✗</span>'):isM(p)?'<span class="cpm">mastered</span>':'';
+  return '<div class="cprow"><span class="cpl">Part '+p.part+' · '+esc(partTitle(p))+tag+'</span><span class="cpa">'+ansHTML(p.a)+'</span></div>'}).join('')+'</div>'}
+// in a mock exam: your own earlier answers to the same problem (no answer key)
+function caseMine(ex,i){const c=byId[ex.qs[i].cid];if(!c||!c.case||!(c.part>1))return '';const rows=ex.qs.map((x,j)=>({j,p:byId[x.cid]})).filter(o=>o.j!==i&&o.p&&o.p.case===c.case&&o.p.part<c.part).sort((a,b)=>a.p.part-b.p.part);if(!rows.length)return '';
+ return '<div class="cprev"><div class="cph">Your earlier parts</div>'+rows.map(o=>'<div class="cprow"><span class="cpl">Part '+o.p.part+' · '+esc(partTitle(o.p))+'</span><span class="cpa mine">'+(ex.ans[o.j]?esc(ex.ans[o.j]):'<i>not answered yet</i>')+'</span></div>').join('')+'</div>'}
+const nextPart=cid=>{const c=byId[cid];return !!c&&!!c.case&&poolFor(state.section).some(x=>x.case===c.case&&(x.part||0)>(c.part||0))};
 function caseHTML(cid){const c=byId[cid];return c&&c.cstem?'<div class="cstem"><span class="ck">'+esc(c.clabel||'Problem')+'</span>'+stemHTML(c.cstem)+'</div>':''}
 
 // v69 (3) confetti for milestones: a short burst of the theme's colors (skipped with reduced motion)
@@ -1770,7 +1832,7 @@ function submitTyped(){const q=state.active;if(view!=null||state.pmatch||state.f
 // A typed answer marked wrong that was really right (a spelling the checker did not accept).
 function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct||!fb.typed||!state.active)return;
  if(freeOn()){state.wrong=Math.max(0,state.wrong-1);state.correct++;state.pass.right=(state.pass.right||0)+1;fb.correct=true;fb.override=true;const l=state.log[state.log.length-1];if(l)l.fb=fb;save();draw();return}
- const k=state.concepts[state.active.cid];k.wrong=Math.max(0,k.wrong-1);state.wrong=Math.max(0,state.wrong-1);if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}
+ const k=state.concepts[state.active.cid];delete k.back;k.wrong=Math.max(0,k.wrong-1);state.wrong=Math.max(0,state.wrong-1);if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}
  fb.prev={right:k.right,srs:k.srs?{...k.srs}:null};masteryUp(k);state.correct++;fb.correct=true;fb.override=true;if(onPass(state.section))state.pass.miss=state.pass.miss.filter(x=>x!==state.active.cid);
  const h=state.history[state.history.length-1];if(h&&h.cid===state.active.cid)h.correct=true;const kh=k.history[k.history.length-1];if(kh)kh.correct=true;
  const last=state.log[state.log.length-1];if(last)last.fb=fb;save();draw()}
@@ -1785,11 +1847,13 @@ function record(correct,lookup){
  const prev={right:k.right,srs:k.srs?{...k.srs}:null};
  const free=freeOn(),c0=byId[q.cid],secAll=c0?BANK.filter(c=>c.section===c0.section):[],chAll=c0?BANK.filter(c=>chOf(c.section)===chOf(c0.section)):[],wasSec=secAll.every(isM),wasCh=chAll.every(isM);if(free&&correct)state.pass.right=(state.pass.right||0)+1;
  state.sinceMix=(state.sinceMix||0)+1;if(free){if(correct)state.correct++;else if(lookup)state.lookups++;else state.wrong++}
- else if(correct){masteryUp(k);state.correct++}else{if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}masteryDown(k)}
+ if(!free)state.qn=(state.qn||0)+1;
+ const hinted=correct&&!free&&state.prefs.strict&&q.usedHint;   // stricter mastery: right with a hint is practice, not a recall
+ if(!free)if(correct){if(!hinted)masteryUp(k);state.correct++;delete k.back}else{if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}masteryDown(k);relearn(k)}
  if(!lookup)buzz(correct);
  if(correct&&!free&&c0&&!wasSec&&secAll.every(isM))setTimeout(()=>celebrate(!wasCh&&chAll.every(isM)?'lesson':'section'),280);
  const own=choice&&!choice.correct&&choice.owner?byId[choice.owner]:null;
- state.feedback={at:Date.now(),correct,lookup,prev,correctLabel:target.letter+'. '+target.label,wrongExplain:own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':''};
+ state.feedback={at:Date.now(),correct,lookup,prev,hinted,correctLabel:target.letter+'. '+target.label,wrongExplain:own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':''};
  if(lookup)state.selected=null;
  if(!free){k.history.push({correct,lookup,kind:q.kind});if(k.history.length>5)k.history.splice(0,k.history.length-5)}
  state.history.push({cid:q.cid,correct,lookup,mode:state.section});
@@ -1803,14 +1867,25 @@ function next(){if(!state.feedback)return;state.feedback=null;state.active=null;
 function goSection(sec){if(sec===state.section)return;state.section=sec;state.pmatch=null;state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;if(!isX(sec))openCh.add(secCh(sec));if(sec==='STAR'&&completed('STAR'))state.starDone=[];if(sec==='CLASS'&&completed('CLASS'))state.classDone=[];if(sec==='CRAM'&&completed('CRAM'))state.cramDone=[];if(sec==='DUE')state.dueDone=[];save();draw();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'})}
 function selectSection(sec){toggleNav(false);if(page!=='study'){page='study';state.page=page;if(sec===state.section){save();draw();window.scrollTo(0,0);return}}goSection(sec)}
 function stepSection(d){const L=navList(state.section),i=L.indexOf(state.section)+d;if(i>=0&&i<L.length)goSection(L[i])}
-function advance(){const L=navList(state.section),i=L.indexOf(state.section);if(!L.length||i===L.length-1){$('modalbody').textContent=completed('ALL')?'You have mastered all '+BANK.length+' '+ITEMS+(examObj()?' for '+examObj().name:' across '+scopeLabel())+'. Keep practicing any section to stay sharp.':'You reached the end. '+(BANK.length-mastered())+' '+ITEMS+' are still waiting elsewhere, so check the dashboard for what is left.';$('dialog').hidden=false;return}goSection(L[i+1])}
+function advance(){const L=navList(state.section),i=L.indexOf(state.section);if(!L.length||i===L.length-1){$('modalbody').textContent=completed('ALL')?'You have mastered all '+BANK.length+' '+ITEMS+(examObj()?' for '+examObj().name:' across '+scopeLabel())+'. Keep practicing any section to stay sharp.':'You reached the end. '+(BANK.length-mastered())+' '+ITEMS+' are still waiting elsewhere, so check the dashboard for what is left.';$('dialog').hidden=false;ovOpen('dialog',closeDialog);return}goSection(L[i+1])}
 // Starred review restarts its round; everything else starts a review pass (mastery is kept unless you miss).
 function extraPractice(){if(state.section==='STAR')state.starDone=[];else if(state.section==='CLASS')state.classDone=[];else if(state.section==='CRAM')state.cramDone=[];else state.pass={sec:state.section,done:[],miss:[]};state.complete=state.complete.filter(x=>x!==state.section);state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
 function endPass(){state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;save();draw();scrollToCard()}
 function reviewAll(){selectSection('ALL');extraPractice()}
 function scrollToCard(){const r=$('card').getBoundingClientRect();if(r.top<0)$('card').scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
-function toggleNav(open){$('app').classList.toggle('nav-open',open)}
-function closeDialog(){$('dialog').hidden=true}
+/* ---------- v70: the Back button ----------
+   Each page change in a course is one step back (Practice -> Dashboard), and an open panel (menu, discussion, What's new,
+   charts, a dialog) is closed by Back before anything else. On the first page, Back leaves the course as before. */
+const NAV={shown:null,pop:false,skip:false,ov:[]};
+function navTrack(){if(page===NAV.shown)return;try{if(NAV.shown==null)history.replaceState(Object.assign({},history.state,{rv:1,pg:page}),'');
+ else if(!NAV.pop){const st=history.state;if(st&&st.ov&&!NAV.ov.some(o=>o.name===st.ov))history.replaceState({rv:1,pg:page},'');else history.pushState({rv:1,pg:page},'')}}catch(e){}NAV.shown=page}
+function ovOpen(name,close){if(NAV.pop||NAV.ov.some(o=>o.name===name))return;NAV.ov.push({name,close});try{history.pushState({rv:1,pg:page,ov:name},'')}catch(e){}}
+function ovClosed(name){const i=NAV.ov.findIndex(o=>o.name===name);if(i<0)return;NAV.ov.splice(i,1);if(NAV.pop)return;
+ setTimeout(()=>{const st=history.state;if(st&&st.ov===name&&!NAV.ov.some(o=>o.name===name)){NAV.skip=true;history.back()}},0)}
+addEventListener('popstate',e=>{if(NAV.skip){NAV.skip=false;return}const st=e.state||{};NAV.pop=true;
+ try{if(NAV.ov.length){NAV.ov.pop().close();return}if(st.rv&&st.pg&&st.pg!==page&&pageOn(st.pg))setPage(st.pg)}finally{NAV.pop=false}});
+function toggleNav(open){const was=$('app').classList.contains('nav-open');$('app').classList.toggle('nav-open',open);if(open&&!was&&innerWidth<=920)ovOpen('nav',()=>toggleNav(false));else if(!open&&was)ovClosed('nav')}
+function closeDialog(){$('dialog').hidden=true;ovClosed('dialog')}
 function resetAll(sure){if(sure!==true){ask('This erases all saved answers in this browser.',{title:'Start over?',ok:'Erase and start over',danger:1}).then(y=>{if(y)resetAll(true)});return}try{localStorage.removeItem(KEY)}catch(e){}location.reload()}
 function importProgress(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';
  i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(t=>{let d;try{d=JSON.parse(t)}catch(e){tell('That file is not a progress export.');return}
@@ -1848,9 +1923,11 @@ document.addEventListener('keydown',e=>{
  if((k==='h'||k==='H')&&view==null&&!state.pmatch&&state.active&&!state.feedback)hint();
 });
 takeLink();
+$('concepts').addEventListener('toggle',()=>{if($('concepts').open&&page==='study')drawGrid()});
 addEventListener('hashchange',()=>{if(takeLink()){toggleNav(false);draw();window.scrollTo(0,0)}});
 draw();
 notifyStart();
+srsPull();loadTimetable();
 if(cloudOn()){loadClassStats();loadContrib(true);loadDiscussCounts();setTimeout(dnPoll,1500);dnT=setInterval(dnPoll,60000);
  if(window.Live&&dnOn())Live.listen(CLOUD,'course:'+courseId(),()=>setTimeout(()=>{dnPoll();loadDiscussCounts()},400),()=>dnPoll());if(syncCode)syncNow();
  const back=()=>{try{const c=(JSON.parse(localStorage.getItem(SYNC_KEY))||{}).code||'';if(c!==syncCode){syncCode=c;syncInfo={at:0,err:''};lastPutSig='';if(c){syncNow();return}}}catch(e){}

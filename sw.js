@@ -1,21 +1,54 @@
-// Offline support. Pages, code and course files are fetched fresh when online (so fixes show up right away)
-// and served from the cache when offline. Pictures show the saved copy first and refresh in the background.
-// Fonts are cached after first use; transes PDFs only once opened.
+// Offline support and fast opening.
+// Pages, code and course files: a saved copy from the last 6 hours opens at once and is checked against the network in
+// the background; when something changed, the open page shows an "Update ready · Reload" banner (update.js). An older
+// saved copy waits up to 1.5 s for the network first, so someone coming back after a while gets the newest version when
+// the connection allows. Without a connection, the saved copy is used. Pictures show the saved copy first and refresh in
+// the background. Fonts are cached after first use; transes PDFs only once opened.
 const CACHE = 'reviewers-v13';
+const FRESH = 6 * 3600e3, WAIT = 1500;
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
-  'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'dialog.js', 'live.js', 'ui.css', 'icons.svg', 'reminders-core.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html',
+  'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'dialog.js', 'live.js', 'ui.css', 'icons.svg', 'reminders-core.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html', 'update.js',
   'icons/icon-192.png', 'icons/icon-512.png'];
+
+// A saved copy remembers when it was saved (x-saved-at), so its age can be checked.
+async function stamp(res) {
+  const h = new Headers(res.headers);
+  h.set('x-saved-at', String(Date.now()));
+  return new Response(await res.blob(), { status: res.status, statusText: res.statusText, headers: h });
+}
+async function save(c, url) {
+  try { const res = await fetch(new Request(url, { cache: 'no-cache' })); if (res.ok) await c.put(url, await stamp(res)); } catch (err) { /* next visit */ }
+}
 
 // Saves every course (and its pictures) not saved yet, so courses added after someone's first visit also work offline.
 async function cacheCourses(c, list) {
   for (const u of list.flatMap(x => [...(x.soon ? [] : ['courses/' + x.id + '.json']), ...(x.assets || [])]))
-    if (!(await c.match(u))) { try { await c.add(new Request(u, { cache: 'no-cache' })); } catch (err) { /* try again next visit */ } }
+    if (!(await c.match(u))) await save(c, u);
 }
+
+// Pages are saved without their query (every reviewer.html?course=… is the same page); files keep theirs.
+function keyFor(url, nav) {
+  const u = new URL(url);
+  if (nav || /(\.html|\/)$/.test(u.pathname)) u.search = '';
+  return u.href;
+}
+
+// Tell the open pages that a file changed, so they can offer a reload. A page that starts listening a little later asks
+// (update.js sends 'changes?') and gets the changes of the last two minutes.
+const CHANGED = new Map();
+async function tell(url) {
+  for (const w of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) w.postMessage({ type: 'updated', url });
+}
+self.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'changes?' || !e.source) return;
+  const since = +e.data.since || 0;      // when that page started loading: older changes are already in it
+  for (const [url, at] of CHANGED) if (at > since && Date.now() - at < 120000) e.source.postMessage({ type: 'updated', url });
+});
 
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
-    await c.addAll(SHELL);
+    await Promise.all(SHELL.map(u => save(c, u)));
     // Every course, so all of them work offline after the first visit.
     try {
       await cacheCourses(c, await (await fetch('courses.json')).json());
@@ -54,22 +87,36 @@ self.addEventListener('fetch', e => {
       return;
     }
     e.respondWith((async () => {
-      const c = await caches.open(CACHE);
-      try {
-        // Always ask GitHub whether a file changed (a cheap check when it did not) instead of trusting the
-        // 10-minute browser cache, so a page and its code are never from different versions.
+      const c = await caches.open(CACHE), key = keyFor(req.url, nav), hit = await c.match(key), old = hit ? hit.clone() : null;
+      let served = false;   // true once the saved copy was handed to the page (its body can then be read only once: compare with old)
+      const net = (async () => {
         let res = await (nav ? fetch(url.href, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(req, { cache: 'no-cache' }));
         // Chrome refuses a page load answered with a response that was redirected along the way (ERR_FAILED),
         // which happens when an extension or network rewrites the link. Re-wrap it as a plain response.
         if (nav && res.redirected) res = new Response(await res.blob(), { status: res.status, statusText: res.statusText, headers: res.headers });
-        if (res.ok && !url.search) c.put(req, res.clone());
+        if (res.ok) {
+          const fresh = await stamp(res.clone());
+          const changed = !!old && (await old.text()) !== (await fresh.clone().text());
+          await c.put(key, fresh);
+          if (changed && served) { CHANGED.set(req.url, Date.now()); await tell(req.url); }
+        }
         // On every online page visit, quietly save any course that is not stored yet.
         if (nav && res.ok) e.waitUntil(fetch('courses.json', { cache: 'no-cache' }).then(r => r.json()).then(list => cacheCourses(c, list)).catch(() => {}));
         return res;
+      })();
+      if (hit) {
+        const recent = Date.now() - (+hit.headers.get('x-saved-at') || 0) < FRESH;
+        const res = recent ? null : await Promise.race([net.catch(() => null), new Promise(r => setTimeout(() => r(null), WAIT))]);
+        if (res && res.ok) return res;
+        served = true;
+        e.waitUntil(net.catch(() => {}));
+        return hit;
+      }
+      try {
+        return await net;
       } catch (err) {
-        // Offline or blocked: serve the saved copy. Links shared on Facebook/Messenger carry ?fbclid=...,
-        // so match without the query; a page we never saved falls back to the home screen.
-        // Only pages fall back to a saved page; a file (like a PDF) never gets the home page in its place.
+        // Offline or blocked and nothing saved under this address: a page falls back to the saved reviewer page or the
+        // home screen. A file (like a PDF) never gets a page in its place.
         const isPage = /(\/|\.html)$/.test(url.pathname);
         const page = url.pathname.endsWith('reviewer.html') ? 'reviewer.html' : nav && isPage ? 'index.html' : null;
         return (await c.match(req, { ignoreSearch: true })) || (page && await c.match(page)) || Response.error();

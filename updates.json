@@ -313,5 +313,13 @@
   "title": "Clearer questions in Pharmacology and Psychology",
   "text": "In 44 Pharmacology questions the right answer stood out by being the longest; their wrong choices are now just as detailed. Hints no longer give the answer away, and a few Psychology questions got the same fixes. Discussion is now open in every course, and Chem, IML and NSTP now point to the prefinals.",
   "link": "./"
+ },
+ {
+  "id": 38,
+  "date": "2026-10-24",
+  "type": "feature",
+  "title": "Smarter practice",
+  "text": "Missed questions come back after a few others while the explanation is fresh. Math problems go part by part with your earlier parts in view. Each course shows its next quiz or exam from the timetable, and reviews are timed to land before it. The phone's Back button stays inside the course, courses open instantly, and an \"Update ready\" banner shows when there's something new.",
+  "link": "./"
  }
 ]

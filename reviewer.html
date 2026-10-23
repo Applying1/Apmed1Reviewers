@@ -878,6 +878,8 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
  .app.nav-open~.tabbar,body.tabs .app.nav-open .tabbar{display:none}
 }
 .storewarn{position:fixed;z-index:45;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100vw - 24px));display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:11px 14px;border-radius:12px;background:var(--bad-bg);color:var(--text);border:1px solid var(--bad);font-size:14px;line-height:1.45;box-shadow:0 10px 30px rgba(0,0,0,.18)}.storewarn span{flex:1 1 220px}
+.cprev{margin:-4px 0 14px;border:1px solid var(--line);border-radius:12px;padding:9px 12px;display:grid;gap:7px;font-size:14.5px;line-height:1.45}.cprev .cph{font:700 11px/1.2 var(--sans,inherit);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}.cprow{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:2px 12px;align-items:baseline}.cpl{color:var(--mute);font-size:13px}.cpa{min-width:0;overflow-wrap:anywhere}.cpa.mine{white-space:pre-line;font-family:ui-monospace,Consolas,monospace;font-size:13px}.cpy{color:var(--good);font-weight:700;margin-left:6px}.cpn{color:var(--bad);font-weight:700;margin-left:6px}.cpm{color:var(--mute);margin-left:6px;font-size:12px}@media (max-width:640px){.cprow{grid-template-columns:1fr}}
+.appver{margin:18px 4px 0;color:var(--mute);font-size:13px;font-variant-numeric:tabular-nums}
 </style><style>.app.booting main>.view{display:none!important}.skel{display:grid;gap:14px;padding-top:6px}.skel i{display:block;border-radius:16px;background:linear-gradient(100deg,var(--line) 30%,var(--raised) 50%,var(--line) 70%);background-size:300% 100%;animation:skel 1.3s linear infinite}.skel .k1{height:30px;width:55%;border-radius:10px}.skel .k2{height:190px}.skel .k3{height:22px;width:35%;border-radius:8px;margin-top:6px}.skel .kg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.skel .kg i{height:96px}.skel .k4{height:240px}@media (max-width:640px){.skel .kg{grid-template-columns:1fr 1fr}}@keyframes skel{from{background-position:100% 0}to{background-position:-100% 0}}@media (prefers-reduced-motion:reduce){.skel i{animation:none}}</style></head><body>
 <div class="app booting" id="app">
  <aside class="side" id="side" aria-label="Navigation">
@@ -1009,6 +1011,8 @@ c. Euphrates</pre>
 (async function(){
  const id=new URLSearchParams(location.search).get('course');
  if(!id||!/^[a-z0-9_-]+$/i.test(id)){location.replace('./');return}
+ // download the app code while the course loads (one wait instead of two on slow data)
+ ['engine.js','live.js','notify-core.js','push-client.js'].forEach(src=>{const l=document.createElement('link');l.rel='preload';l.as='script';l.href=src;document.head.appendChild(l)});
  let d;
  try{const r=await fetch('courses/'+id+'.json');if(!r.ok)throw new Error(r.status);d=await r.json()}
  catch(e){document.getElementById('app').classList.remove('booting');document.getElementById('main').innerHTML='<div class="panel" style="margin-top:40px"><h2>This course could not be loaded</h2><p class="desc">Check your connection and reload, or go back to <a href="./">all courses</a>.</p></div>';return}
@@ -1017,6 +1021,7 @@ c. Euphrates</pre>
  const lv=document.createElement('script');lv.src='live.js';lv.async=false;document.body.appendChild(lv);
  const nc=document.createElement('script');nc.src='notify-core.js';nc.async=false;document.body.appendChild(nc);
  const pc=document.createElement('script');pc.src='push-client.js';pc.async=false;pc.onload=()=>{if(d.config.cloud&&window.Push){Push.init(d.config.cloud);setTimeout(()=>Push.heal(),3000)}};document.body.appendChild(pc);
+ const up=document.createElement('script');up.src='update.js';document.body.appendChild(up);
  const s=document.createElement('script');s.src='engine.js';s.async=false;s.onload=s.onerror=()=>{document.getElementById('app').classList.remove('booting');const k=document.getElementById('skel');if(k)k.remove()};document.body.appendChild(s);
 })();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
