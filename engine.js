@@ -191,6 +191,9 @@ const NAME_KEY='reviewer_name';
 function setName(v){state.name=String(v||'').trim().slice(0,40);save();try{localStorage.setItem(NAME_KEY,state.name)}catch(e){}}
 try{const nm=localStorage.getItem(NAME_KEY);if(nm)state.name=nm;else if(state.name&&nm===null)localStorage.setItem(NAME_KEY,state.name)}catch(e){}
 if(state.active&&state.active.cid&&!byId[state.active.cid]){state.active=null;state.feedback=null;state.selected=null}
+// v67: a question card saved before its wording changed is rebuilt (the card keeps a fingerprint of the question it was made from)
+function qsig(c){return c?stableHash((c.q||'')+'|'+(c.a||'')+'|'+(c.d||[]).join('|')):0}
+if(state.active&&!state.feedback&&byId[state.active.cid]&&state.active.sig!==qsig(byId[state.active.cid])){state.active=null;state.selected=null}
 
 /* ---------- active question bank: Main, or a variant someone added ---------- */
 let BANK=[],sectionKeys=[],chapters=[],AUTHORED=true,NCHOICE=4;
@@ -238,7 +241,7 @@ const openCh=new Set(isX(state.section)?[]:[secCh(state.section)]);
 let lastCardKey='';
 
 // The summary lets a courses home screen show progress without loading the whole reviewer.
-function save(){const ps=prefSig();if(ps!==prefSigLast){if(prefSigLast!==null)state.prefsAt=Date.now();prefSigLast=ps}try{localStorage.setItem(KEY,JSON.stringify(state));const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
+function save(){if(state.active&&!state.active.sig&&typeof byId!=='undefined'&&byId[state.active.cid])state.active.sig=qsig(byId[state.active.cid]);const ps=prefSig();if(ps!==prefSigLast){if(prefSigLast!==null)state.prefsAt=Date.now();prefSigLast=ps}try{localStorage.setItem(KEY,JSON.stringify(state));const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function stableHash(s){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0}
 function shuffle(a,seed){let b=a.slice(),x=seed||1;for(let i=b.length-1;i>0;i--){x^=x<<13;x^=x>>>17;x^=x<<5;let j=(x>>>0)%(i+1);[b[i],b[j]]=[b[j],b[i]]}return b}
