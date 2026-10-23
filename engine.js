@@ -151,7 +151,7 @@ mathBoot();
 // Numeric answers: an item with "num" accepts any typed number within "tol" (default 1% or 0.005, whichever is bigger).
 function numIn(s){const m=String(s).replace(/[−–]/g,'-').replace(/(\d),(\d{3})\b/g,'$1$2').match(/-?\d*\.?\d+(?:e-?\d+)?/i);return m?parseFloat(m[0]):NaN}
 function numOK(input,c){if(!c||c.num==null)return false;const v=numIn(input);if(isNaN(v))return false;const tol=c.tol!=null?c.tol:Math.max(.005,Math.abs(c.num)*.01);return Math.abs(v-c.num)<=tol+1e-12}
-function stepsHTML(c){return c&&c.steps&&c.steps.length?'<ol class="steps">'+c.steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol>':''}
+function stepsHTML(c){return (c&&c.steps&&c.steps.length?'<ol class="steps">'+c.steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol>':'')+(c&&c.solfig&&MOLS[c.solfig]?'<figure class="qfig" role="img" aria-label="'+esc(c.solfiglabel||'Solution graph')+'"><span class="mol"'+molW(c.solfig)+'>'+MOLS[c.solfig]+'</span></figure>':'')}
   // matching drills can have more choices than the A–E answer sheet
 const LETTERS='ABCDE',THEME_KEY='reviewer_theme';
 const $=id=>document.getElementById(id);
