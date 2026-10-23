@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Study Reviewer</title>
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5"><link rel="apple-touch-icon" href="icons/icon-192.png"><script>(function(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const f=()=>{if(document.body)m.content=getComputedStyle(document.body).backgroundColor},g=()=>{f();setTimeout(f,350)};addEventListener('DOMContentLoaded',f);new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',g)})()</script>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5"><link rel="apple-touch-icon" href="icons/icon-192.png"><script>(function(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const f=()=>{if(document.body)m.content=getComputedStyle(document.body).backgroundColor},g=()=>{f();setTimeout(f,350)};addEventListener('DOMContentLoaded',f);new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',g)})()</script><style>@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.2s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}::view-transition-old(root){animation-name:vt-out}::view-transition-new(root){animation-name:vt-in}@keyframes vt-out{to{opacity:0;transform:translateY(-6px)}}@keyframes vt-in{from{opacity:0;transform:translateY(8px)}}@media (prefers-reduced-motion:reduce){@view-transition{navigation:none}}</style>
 <link rel="icon" id="favicon"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
 <script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
@@ -811,6 +811,22 @@ body.notesonly .side>.label,body.notesonly #nav{display:none}
 .qfig .mtab th{background:var(--accent-soft,#7c6cf022);font-weight:700}.qfig .mplot{display:block;max-width:100%;height:auto}
 .qfig .mol:has(.mplot),.qfig .mol:has(.mtab){flex:1 1 auto;max-width:560px}.qfig .mol svg.mplot{max-height:440px}
 .molc svg.mplot{max-height:none;max-width:280px;margin:0 auto}.molc.sm svg.mplot{max-width:150px}
+/* v66 bottom tab bar (phones) */
+.tabbar{display:none}
+@media (max-width:920px){
+ body.tabs{--tbh:calc(58px + env(safe-area-inset-bottom))}
+ body.tabs .tabbar{display:flex;position:fixed;z-index:13;left:0;right:0;bottom:0;height:var(--tbh);padding:0 6px env(safe-area-inset-bottom);background:color-mix(in oklab,var(--surface) 92%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+ .tabbar button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:none;color:var(--mute);font:600 11px/1.1 var(--sans,inherit);padding:6px 0;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent}
+ .tabbar button svg{width:22px;height:22px}
+ .tabbar button.on{color:var(--accent)}
+ .tabbar button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+ .tabbar .tbdot{position:absolute;top:7px;left:calc(50% + 6px);width:8px;height:8px;border-radius:50%;background:#e5484d;box-shadow:0 0 0 2px var(--surface)}
+ body.tabs main{padding-bottom:calc(var(--tbh) + 24px)}
+ body.tabs .actions{bottom:var(--tbh)}
+ body.tabs .toast{bottom:calc(var(--tbh) + 14px)}
+ body.tabs .dnpop{bottom:calc(var(--tbh) + 12px)}
+ .app.nav-open~.tabbar,body.tabs .app.nav-open .tabbar{display:none}
+}
 </style></head><body>
 <div class="app" id="app">
  <aside class="side" id="side" aria-label="Navigation">
@@ -824,6 +840,7 @@ body.notesonly .side>.label,body.notesonly #nav{display:none}
   <div class="side-foot"><button class="theme" id="themeBtn" onclick="toggleTheme()"></button><button class="link newsbtn" id="newsBtn" onclick="openNews()">What's new</button></div>
  </aside>
  <div class="scrim" onclick="toggleNav(false)"></div>
+ <nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
  <main id="main">
   <!-- Dashboard -->
   <div class="view" id="dashView">

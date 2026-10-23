@@ -5,14 +5,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script><script>(function(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const f=()=>{if(document.body)m.content=getComputedStyle(document.body).backgroundColor},g=()=>{f();setTimeout(f,350)};addEventListener('DOMContentLoaded',f);new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',g)})()</script>
+<link rel="stylesheet" href="ui.css">
 <style>
-:root{--sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:light;
- --bg:#f6f4ef;--surface:#fff;--raised:#f3f0e9;--line:#e8e3d9;--line2:#d8d1c4;--text:#1d1b18;--mute:#5f5a51;--faint:#8e877b;--accent:#4f46e5;--accent-ink:#fff;--paper:#e9e5dc}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;--text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--paper:#0b0d12}}
-:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;--text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--paper:#0b0d12}
-:root[data-palette="apmed"]{--bg:#f5eedb;--surface:#fffdf6;--raised:#f0e6cc;--line:#e6d9b6;--line2:#d6c59a;--text:#1b2a2a;--mute:#566360;--faint:#86907f;--accent:#1d7a80;--accent-ink:#fff;--paper:#e9dfc4}
-@media (prefers-color-scheme:dark){:root[data-palette="apmed"]:not([data-theme="light"]){--bg:#0e1a1a;--surface:#162828;--raised:#1c3232;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--paper:#0a1414}}
-:root[data-palette="apmed"][data-theme="dark"]{--bg:#0e1a1a;--surface:#162828;--raised:#1c3232;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--paper:#0a1414}
+:root{--paper:#e9e5dc}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0b0d12}}
+:root[data-theme="dark"]{--paper:#0b0d12}
+:root[data-palette="apmed"]{--accent-ink:#fff;--paper:#e9dfc4}
+@media (prefers-color-scheme:dark){:root[data-palette="apmed"]:not([data-theme="light"]){--paper:#0a1414}}
+:root[data-palette="apmed"][data-theme="dark"]{--paper:#0a1414}
 *{box-sizing:border-box}html,body{margin:0}
 body{background:var(--paper);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
 button,a{font:inherit;color:inherit}
@@ -84,21 +84,21 @@ button,a{font:inherit;color:inherit}
 @media (max-width:520px){.bar{padding:8px 10px;gap:6px}.btn .lbl{display:none}#toc{width:min(88vw,340px)}}
 </style></head><body>
 <div class="bar">
- <button class="btn icon" onclick="goBack()" aria-label="Back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+ <button class="btn icon" onclick="goBack()" aria-label="Back"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg></button>
  <h1 id="ttl">Transes<span id="sub">Loading…</span></h1>
- <button class="btn icon" id="sbtn" onclick="openSearch()" aria-label="Search the transes" title="Search (Ctrl+F)" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
- <button class="btn" id="tocbtn" onclick="toggleToc()" aria-expanded="false" aria-controls="toc" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><span class="lbl">Contents</span></button>
+ <button class="btn icon" id="sbtn" onclick="openSearch()" aria-label="Search the transes" title="Search (Ctrl+F)" hidden><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-search"/></svg></button>
+ <button class="btn" id="tocbtn" onclick="toggleToc()" aria-expanded="false" aria-controls="toc" hidden><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-list"/></svg><span class="lbl">Contents</span></button>
  <div class="zoom"><button class="btn icon" onclick="zoom(-1)" aria-label="Zoom out">−</button><button class="btn icon" onclick="zoom(1)" aria-label="Zoom in">+</button></div>
- <a class="btn" id="dl" download><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="lbl">Download</span></a>
+ <a class="btn" id="dl" download><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-download"/></svg><span class="lbl">Download</span></a>
 </div>
 <div id="tabs" hidden role="tablist" aria-label="Chapters"></div>
 <div id="sbar" hidden role="search"><input id="sq" type="search" placeholder="Search the transes…" autocomplete="off" aria-label="Search the transes"
  oninput="clearTimeout(window.__sq);window.__sq=setTimeout(runSearch,250)" onkeydown="if(event.key==='Enter'){event.preventDefault();stepHit(event.shiftKey?-1:1)}else if(event.key==='Escape')closeSearch()">
  <button class="btn" id="sscope" onclick="toggleScope()" aria-pressed="false" title="Search only the chapter you're reading" hidden>This chapter</button>
  <span id="scount" aria-live="polite"></span>
- <button class="btn icon" onclick="stepHit(-1)" aria-label="Previous match"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 15l-6-6-6 6"/></svg></button>
- <button class="btn icon" onclick="stepHit(1)" aria-label="Next match"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
- <button class="btn icon" onclick="closeSearch()" aria-label="Close search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+ <button class="btn icon" onclick="stepHit(-1)" aria-label="Previous match"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-up"/></svg></button>
+ <button class="btn icon" onclick="stepHit(1)" aria-label="Next match"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg></button>
+ <button class="btn icon" onclick="closeSearch()" aria-label="Close search"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>
 </div>
 <nav id="toc" aria-label="Contents"></nav><div id="scrim" onclick="toggleToc(false)"></div>
 <div id="pages"><p class="msg">Loading the transes…</p></div>
@@ -189,7 +189,7 @@ async function buildToc(){
  document.getElementById('toc').innerHTML='<div class="th">Contents</div>'+toc.map((c,i)=>'<div class="ch" data-i="'+i+'">'+
   '<div class="row" role="button" tabindex="0" onclick="go('+i+')" onkeydown="if(event.key===\'Enter\')go('+i+')">'+
   '<span class="num">'+(c.num||'•')+'</span><span class="ct">'+esc(c.name)+'</span><span class="pgn">p. '+c.page+'</span>'+
-  (c.kids.length?'<button class="tw" onclick="event.stopPropagation();this.closest(\'.ch\').classList.toggle(\'exp\')" aria-label="Show sections"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>':'')+
+  (c.kids.length?'<button class="tw" onclick="event.stopPropagation();this.closest(\'.ch\').classList.toggle(\'exp\')" aria-label="Show sections"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></button>':'')+
   '</div>'+(c.kids.length?'<div class="secs">'+c.kids.map((k,j)=>'<button onclick="go('+i+','+j+')"><span>'+esc(k.name)+'</span><span class="pgn">'+k.page+'</span></button>').join('')+'</div>':'')+'</div>').join('');
  document.getElementById('tocbtn').hidden=false;
  drawTabs();let want=-1;try{const v=localStorage.getItem('transes_tab_'+file);if(v!=null)want=+v}catch(e){}

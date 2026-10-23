@@ -6,29 +6,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
 <script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script><script>(function(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const f=()=>{if(document.body)m.content=getComputedStyle(document.body).backgroundColor},g=()=>{f();setTimeout(f,350)};addEventListener('DOMContentLoaded',f);new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',g)})()</script>
+<link rel="stylesheet" href="ui.css">
 <style>
-:root{
- --sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
- --serif:"Source Serif 4","Iowan Old Style",Charter,Georgia,serif;
- color-scheme:light;
- --bg:#f6f4ef;--surface:#fff;--raised:#f3f0e9;--line:#e8e3d9;--line2:#d8d1c4;
- --text:#1d1b18;--mute:#5f5a51;--faint:#8e877b;
- --accent:#4f46e5;--accent-ink:#fff;--accent-soft:#eeeefd;--accent-line:#c4c3f6;--accent-2:#7c3aed;--bad:#c2410c;
- --shadow:0 1px 2px #1018280a,0 1px 3px #1018280f;
- /* subject colors: oklch(lightness chroma hue), hue set per class */
- --cl:.55;--cc:.13;--tint:12%;--now:#e11d48;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
- color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;
- --text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--accent-line:#4a4c8f;--accent-2:#c4a5ff;--bad:#fb923c;--shadow:0 1px 2px #0006;
- --cl:.80;--cc:.11;--tint:15%;--now:#fb7185}}
-:root[data-theme="dark"]{
- color-scheme:dark;--bg:#0f1117;--surface:#181b25;--raised:#1f2330;--line:#272b38;--line2:#383d4e;
- --text:#ecebf2;--mute:#a09fb0;--faint:#6f6e80;--accent:#a5a8ff;--accent-ink:#14153a;--accent-soft:#25264a;--accent-line:#4a4c8f;--accent-2:#c4a5ff;--bad:#fb923c;--shadow:0 1px 2px #0006;
- --cl:.80;--cc:.11;--tint:15%;--now:#fb7185}
-:root[data-palette="apmed"]{--bg:#f5eedb;--surface:#fffdf6;--raised:#f0e6cc;--line:#e6d9b6;--line2:#d6c59a;--text:#1b2a2a;--mute:#566360;--faint:#86907f;--accent:#1d7a80;--accent-ink:#ffffff;--accent-soft:#dcefed;--accent-line:#9fcfcc;--accent-2:#e3a21a}
-@media (prefers-color-scheme:dark){:root[data-palette="apmed"]:not([data-theme="light"]){color-scheme:dark;--bg:#0e1a1a;--surface:#162828;--raised:#1c3232;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--accent-soft:#33301a;--accent-line:#77652a;--accent-2:#55c4c8}}
-:root[data-palette="apmed"][data-theme="dark"]{color-scheme:dark;--bg:#0e1a1a;--surface:#162828;--raised:#1c3232;--line:#24403f;--line2:#315552;--text:#f1efe2;--mute:#a9b8b0;--faint:#71877f;--accent:#f2c14e;--accent-ink:#22190a;--accent-soft:#33301a;--accent-line:#77652a;--accent-2:#55c4c8}
+:root{/* subject colors:oklch(lightness chroma hue), hue set per class */
+ --cl:.55;--cc:.13;--tint:12%;--now:#e11d48}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--cl:.80;--cc:.11;--tint:15%;--now:#fb7185}}
+:root[data-theme="dark"]{--cl:.80;--cc:.11;--tint:15%;--now:#fb7185}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
@@ -158,9 +141,9 @@ dd.none{color:var(--faint);font-style:italic}
  <p class="term" id="term">&nbsp;</p>
  <a class="now sw" id="now" hidden></a>
  <div class="wbar">
-  <button class="btn icon" id="prev" aria-label="Previous week" onclick="go(week-1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
-  <div class="wl" aria-live="polite"><b id="wname">Week</b><span id="wdates"></span><button class="today" id="tw" onclick="go(Sched.defaultWeek())">↺ Back to this week</button></div>
-  <button class="btn icon" id="next" aria-label="Next week" onclick="go(week+1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+  <button class="btn icon" id="prev" aria-label="Previous week" onclick="go(week-1)"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg></button>
+  <div class="wl" aria-live="polite"><b id="wname">Week</b><span id="wdates"></span><button class="today" id="tw" onclick="go(Sched.defaultWeek())"><svg class="i" aria-hidden="true"><use href="icons.svg#i-rotate-ccw"/></svg> Back to this week</button></div>
+  <button class="btn icon" id="next" aria-label="Next week" onclick="go(week+1)"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></button>
  </div>
  <ul class="notes" id="notes"></ul>
  <div class="vsw" role="group" aria-label="View"><button id="v-day" onclick="setView('day')">Day</button><button id="v-week" onclick="setView('week')">Week</button></div>
@@ -171,6 +154,7 @@ dd.none{color:var(--faint);font-style:italic}
 <div class="modal" id="dlg" hidden onclick="if(event.target===this)closeDlg()"><div class="box sw" id="dbox" role="dialog" aria-modal="true" aria-labelledby="dtitle"></div></div>
 <script src="schedule-core.js"></script>
 <script>
+const ic=(n,c)=>'<svg class="i'+(c?' '+c:'')+'" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const HH=58; // pixels per hour in the week grid
 let week=0,day=-1,EXAMS=[],LIST=[];
@@ -225,7 +209,7 @@ function draw(){
  const dt=new Date(start);dt.setDate(dt.getDate()+day);
  const cs=LIST.filter(c=>c.di===day),free=d.freeDays&&d.freeDays[DAYS[day]];
  let h='<h2 class="dayh">'+DAY_NAMES[day]+' <span>'+Sched.date(dt)+'</span></h2>';
- {const hol=Sched.holiday(dt);if(hol)h+='<div class="holban"><span aria-hidden="true">🚫</span><div><b>'+esc(hol)+'</b><span>No classes today. Quizzes and tests planned for this day are cancelled.</span></div></div>'}
+ {const hol=Sched.holiday(dt);if(hol)h+='<div class="holban">'+ic('calendar-off')+'<div><b>'+esc(hol)+'</b><span>No classes today. Quizzes and tests planned for this day are cancelled.</span></div></div>'}
  for(const e of ex(day))h+='<div class="item sw"'+hue(e)+'><div class="tm"><b>Test</b></div><div class="card"><b>'+esc(e.title)+'</b><div class="k">'+esc(e.name)+'</div></div></div>';
  h+=cs.length?cs.map(c=>'<div class="item sw"'+hue(c)+'><div class="tm"><b>'+Sched.time(c.start).replace(' ','&nbsp;')+'</b>'+Sched.time(c.end).replace(' ','&nbsp;')+'</div><div class="card'+(c.cancelled?' off':'')+'">'+
    '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b>'+(c.changed?'<div class="k"><b class="newt">New time this week</b></div>':'')+'<div class="k">'+esc([c.cancelled?'Cancelled':'',kindOf(c),c.teacher,c.official?'on the sheet: '+c.official:''].filter(Boolean).join(' · '))+'</div>'+
@@ -236,7 +220,7 @@ function draw(){
 }
 function openDlg(id){const c=LIST.find(x=>x.id===id);if(!c)return;
  const b=document.getElementById('dbox');b.setAttribute('style','--h:'+(+c.subj.hue||260));
- b.innerHTML='<div class="mhead"><h2 id="dtitle">'+esc(c.subj.name)+'</h2><button class="mx" onclick="closeDlg()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>'+
+ b.innerHTML='<div class="mhead"><h2 id="dtitle">'+esc(c.subj.name)+'</h2><button class="mx" onclick="closeDlg()" aria-label="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></div>'+
   '<dl><dt>When</dt><dd>'+DAY_NAMES[c.di]+', '+Sched.date(c.date)+' · '+Sched.span(c)+(c.cancelled?' <b>(cancelled)</b>':'')+'</dd>'+
   (kindOf(c)?'<dt>Class</dt><dd>'+esc(kindOf(c))+'</dd>':'')+
   (c.official?'<dt>On the sheet</dt><dd>'+esc(c.official)+'</dd>':'')+
