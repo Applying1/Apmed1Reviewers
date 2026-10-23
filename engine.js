@@ -569,9 +569,13 @@ function notifyLink(){if(!window.Notify||!CONFIG.home)return '';const n=nPref('d
  return '<a class="page" style="text-decoration:none" href="notifications.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notifications'+dnDot(n)+'</a>'}
 function notifyStart(){if(!window.Notify||!CONFIG.home||!courseId())return;Notify.load().then(f=>{NFEED=f;drawPages();
  const K='reviewer_notify_pop_'+courseId();let last=null;try{last=JSON.parse(localStorage.getItem(K))}catch(e){}
- const top=Math.max(0,...f.map(u=>u.id));try{localStorage.setItem(K,JSON.stringify(top))}catch(e){}
+ // site-wide news pops up once on the whole site (not once per course); course news once in that course
+ const G='reviewer_notify_pop_all';let g=null;try{g=JSON.parse(localStorage.getItem(G))}catch(e){}
+ if(g==null){g=last;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.indexOf('reviewer_notify_pop_')===0&&k!==G)g=Math.max(g||0,+localStorage.getItem(k)||0)}}catch(e){}}
+ const top=Math.max(0,...f.map(u=>u.id));try{localStorage.setItem(K,JSON.stringify(top));localStorage.setItem(G,JSON.stringify(top))}catch(e){}
  if(last==null||!nPref('pop'))return;   // first visit: nothing old pops up
- const mine=f.filter(u=>u.id>last&&Notify.on(u.type)&&(!u.course||u.course===courseId())).sort((a,b)=>(!!b.course-!!a.course)||b.id-a.id);if(!mine.length)return;
+ const seen=Math.max(g||0,Notify.readUpTo());
+ const mine=f.filter(u=>Notify.on(u.type)&&(u.course?u.course===courseId()&&u.id>last:u.id>seen)).sort((a,b)=>(!!b.course-!!a.course)||b.id-a.id);if(!mine.length)return;
  setTimeout(()=>{if(state.exam&&!state.exam.done&&page==='exam')return;upPop(mine)},3500)})}
 function upPop(items){let b=$('uppop');if(!b){b=document.createElement('div');b.id='uppop';b.className='dnpop up';b.setAttribute('role','status');b.setAttribute('aria-live','polite');document.body.appendChild(b)}
  const u=items[0],n=items.length;
