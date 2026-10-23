@@ -330,5 +330,14 @@
   "title": "Botany and NSTP question fixes",
   "text": "Every Botany and NSTP question now explains its answer, including all of Botany Lesson 5 (flowers, fruits, seeds) and NSTP Health. The right answer is no longer the longest choice: experiment questions now have wrong designs that are just as detailed, each with one flaw to spot.",
   "link": "reviewer.html?course=botany"
+ },
+ {
+  "id": 40,
+  "date": "2026-10-24",
+  "type": "content",
+  "course": "chem",
+  "title": "Chem and PurCom question fixes",
+  "text": "In Chemistry and Purposive Communication, the right answer is no longer the obviously longest choice: 99 questions got wrong choices that are just as specific. Bea's practice exams and the teacher's quizzes stay as written.",
+  "link": "reviewer.html?course=chem"
  }
 ]
