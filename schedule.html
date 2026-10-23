@@ -141,7 +141,12 @@ dt{color:var(--faint);font-weight:600}
 dd{margin:0}
 dd.none{color:var(--faint);font-style:italic}
 .modal .btn{margin-top:16px;width:100%}
-@media (max-width:760px){.wk{display:none}.mob{display:block}}
+/* phones: Day (one day, big) or Week (the full grid, scaled to fit the screen) */
+.vsw{display:none;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface);width:max-content;margin:0 auto 12px}
+.vsw button{border:0;background:none;padding:6px 16px;border-radius:9px;font:600 13.5px var(--sans);color:var(--mute);cursor:pointer}
+.vsw button[aria-pressed="true"]{background:var(--accent-soft);color:var(--text)}
+@media (max-width:760px){.wk{display:none}.mob{display:block}.vsw{display:flex}
+ body.wkview .wk{display:grid;width:900px;zoom:var(--z,1)}body.wkview .mob{display:none}}
 @media (max-width:520px){main{padding:20px 16px 48px}.now .go{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
@@ -158,6 +163,7 @@ dd.none{color:var(--faint);font-style:italic}
   <button class="btn icon" id="next" aria-label="Next week" onclick="go(week+1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
  </div>
  <ul class="notes" id="notes"></ul>
+ <div class="vsw" role="group" aria-label="View"><button id="v-day" onclick="setView('day')">Day</button><button id="v-week" onclick="setView('week')">Week</button></div>
  <div class="wk" id="wk"></div>
  <div class="mob"><div class="chips" id="chips" role="tablist"></div><div id="day"></div></div>
  <p class="foot">This is the standard timetable. Topics, make-up classes and cancellations are added week by week as they're announced.</p>
@@ -173,6 +179,11 @@ const kindOf=c=>[c.kind,c.where].filter(Boolean).join(' · ');
 const reviewer=c=>c.subj.course?'reviewer.html?course='+encodeURIComponent(c.subj.course):'';
 
 function go(n){week=n;day=-1;history.replaceState(null,'','#w'+n);draw()}
+// phone view choice (remembered on this device): the week grid is laid out 900px wide and zoomed to the screen
+let VIEW=(()=>{try{return localStorage.getItem('reviewer_tt_view')||'day'}catch(e){return 'day'}})();
+function fitWeek(){const w=document.querySelector('main').clientWidth-parseFloat(getComputedStyle(document.querySelector('main')).paddingLeft)*2;document.getElementById('wk').style.setProperty('--z',Math.min(1,w/900).toFixed(4))}
+function applyView(){document.body.classList.toggle('wkview',VIEW==='week');document.getElementById('v-day').setAttribute('aria-pressed',VIEW!=='week');document.getElementById('v-week').setAttribute('aria-pressed',VIEW==='week');fitWeek()}
+function setView(v){VIEW=v;try{localStorage.setItem('reviewer_tt_view',v)}catch(e){}applyView()}
 function draw(){
  const d=Sched.data,start=Sched.weekStart(week),end=new Date(start);end.setDate(end.getDate()+5);
  const now=new Date(),cur=Sched.weekNo(now);
@@ -249,6 +260,7 @@ function drawNow(){
  try{await Sched.load()}catch(e){document.getElementById('wk').outerHTML='<div class="empty">The timetable could not be loaded. Check your connection and reload.</div>';return}
  document.getElementById('term').textContent=Sched.data.term||'';
  const m=location.hash.match(/^#w(\d+)$/);week=m?+m[1]:Sched.defaultWeek();
+ applyView();addEventListener('resize',fitWeek);
  draw();drawNow();
  // tests from the course list (e.g. Psych Evals), shown on their day
  try{const list=await (await fetch('courses.json')).json(),subs=Sched.data.subjects;
