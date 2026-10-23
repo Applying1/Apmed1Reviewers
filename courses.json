@@ -18,7 +18,7 @@
    "courses/iml/topic-4.jpg"
   ],
   "exam": {
-   "name": "Midterm",
+   "name": "Prefinals",
    "date": ""
   },
   "cloud": {
@@ -105,8 +105,8 @@
    "courses/chem/topic-11.jpg"
   ],
   "exam": {
-   "name": "Lecture midterm",
-   "date": ""
+   "name": "Prefinals",
+   "date": "2026-11-28"
   },
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
@@ -156,8 +156,8 @@
    "courses/nstp/topic-3.jpg"
   ],
   "exam": {
-   "name": "Midterm",
-   "date": "2026-10-23"
+   "name": "Prefinals",
+   "date": ""
   },
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",

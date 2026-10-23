@@ -305,5 +305,13 @@
   "title": "Fairer answer checking",
   "text": "Typed answers no longer accept a different term as a typo (like Section 5 for Section 4, or hypo- for hyper-), and real typos still count. Math written answers now read work like \"x = 6, y = 4, P = 460\" and labels like \"Prep: x + y ≤ 10\". Progress is stored more compactly, and if your device's storage ever fills up, you'll see a warning instead of losing answers.",
   "link": "./"
+ },
+ {
+  "id": 37,
+  "date": "2026-10-24",
+  "type": "content",
+  "title": "Clearer questions in Pharmacology and Psychology",
+  "text": "In 44 Pharmacology questions the right answer stood out by being the longest; their wrong choices are now just as detailed. Hints no longer give the answer away, and a few Psychology questions got the same fixes. Discussion is now open in every course, and Chem, IML and NSTP now point to the prefinals.",
+  "link": "./"
  }
 ]
