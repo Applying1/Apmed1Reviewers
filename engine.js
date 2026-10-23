@@ -842,7 +842,7 @@ const PER_ITEM=CONFIG.examMinutesPerItem||1;
 const exMinutes=(st,n)=>typeof st.timer==='number'?st.timer:st.timer?Math.round(n*PER_ITEM):0;
 const EX_PRESETS=CONFIG.examPresets||[{label:'Paperless · 30 items, split per '+unitW,count:30,split:true,format:'paperless',vsa:0}];
 function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters.slice(),timer:true});if(st.vsa==null)st.vsa=0;st.chs=st.chs.filter(c=>chapters.includes(c));if(!st.chs.length)st.chs=chapters.slice();return st}
-function exPool(){const st=exSetup();return BANK.filter(c=>st.chs.includes(chOf(c.section))&&(!st.secs||st.secs.includes(c.section)))}
+function exPool(){const st=exSetup(),qs=st.quota&&st.quota.flatMap(q=>q[0]);return BANK.filter(c=>st.chs.includes(chOf(c.section))&&(!st.secs||st.secs.includes(c.section))&&(!qs||qs.includes(c.section)))}
 function exLeft(){const ex=state.exam;return ex.limit?ex.start+ex.limit-Date.now():Infinity}
 function clock(ms){const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
 function drawExam(){const ex=state.exam,C=CHAL||ex&&ex.chal,run=!CHAL&&!!ex&&!ex.done;$('examView').classList.toggle('running',run);if(run)requestAnimationFrame(()=>{const t=$('examView').querySelector('.top');if(t)$('examView').style.setProperty('--exhead',t.offsetHeight+'px')});$('main').classList.toggle('wide',!CHAL&&!!ex&&!!ex.sheet&&!ex.done);document.title=(C?'Class challenge':'Mock exam')+' · '+CONFIG.title;$('excrumb').textContent=C?'Class challenge':'Mock exam';
@@ -873,7 +873,7 @@ function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,po
  const row=(t,d,ctl)=>'<div class="prow"><div class="pl"><b>'+t+'</b><span>'+d+'</span></div><div class="ctl">'+ctl+'</div></div>',srow=(t,d,ctl)=>row(t,d,ctl).replace('class="prow"','class="prow stack"');
  const counts=EX_COUNTS.filter(c=>c<pool.length).map(c=>[c,String(c)]).concat([[9999,'All '+pool.length],['c','Custom']]);
  const curCount=st.customCount?'c':st.count>=pool.length?9999:EX_COUNTS.includes(st.count)?st.count:'c',per=exSplit(n-Math.min(st.match||0,matchAvail(),n));
- const vsaMax=Math.min(n,pool.filter(vsaOK).length),preset=EX_PRESETS.findIndex(p=>p.count===st.count&&!!p.split===!!st.split&&(p.format||'one')===(st.format||'one')&&(p.vsa||0)===(st.vsa||0)&&(p.match||0)===(st.match||0)&&(p.secs||[]).join()===(st.secs||[]).join()&&(p.keepChs||(p.chs?st.chs.join()===chapters.filter(c=>p.chs.includes(c)).join():st.chs.length===chapters.length)));
+ const vsaMax=Math.min(n,pool.filter(vsaOK).length),preset=EX_PRESETS.findIndex(p=>p.count===st.count&&!!p.split===!!st.split&&(p.format||'one')===(st.format||'one')&&(p.vsa||0)===(st.vsa||0)&&(p.match||0)===(st.match||0)&&(p.secs||[]).join()===(st.secs||[]).join()&&JSON.stringify(p.quota||null)===JSON.stringify(st.quota||null)&&(p.keepChs||(p.chs?st.chs.join()===chapters.filter(c=>p.chs.includes(c)).join():st.chs.length===chapters.length)));
  const mAv=matchAvail(),mN=Math.min(st.match||0,mAv,n);
  const past=(state.exams||[]).slice(-5).reverse();
  $('exbody').innerHTML='<p class="lede">A practice run with no hints and no answers until the end. Afterwards you get your score by '+unitW+' and can review every mistake. Wrong answers are added to your Missed '+ITEMS+'; questions you skip are not counted against you.</p>'+
@@ -896,13 +896,13 @@ function setExCustom(v){const st=exSetup();st.customCount=true;st.count=Math.max
 function exClampMatch(st){st.match=Math.min(st.match||0,Math.floor(Math.min(st.count,exPool().length)/2))}
 function setExSplit(v){exSetup().split=v;save();drawExam()}
 function setExVsa(v){const st=exSetup();st.vsa=Math.max(0,Math.min(Math.min(st.count,exPool().length),Math.round(+v)||0));save();drawExam()}
-function exPreset(i){const p=EX_PRESETS[i],st=exSetup();if(!p.keepChs)st.chs=chapters.slice();st.secs=p.secs||null;st.count=p.count;st.customCount=!EX_COUNTS.includes(p.count);st.split=!!p.split;st.format=p.format||'one';st.vsa=p.vsa||0;st.match=p.match||0;if(p.chs)st.chs=chapters.filter(c=>p.chs.includes(c));if(p.timer!=null)st.timer=p.timer;save();drawExam()}
+function exPreset(i){const p=EX_PRESETS[i],st=exSetup();if(!p.keepChs)st.chs=chapters.slice();st.secs=p.secs||null;st.quota=p.quota||null;st.count=p.count;st.customCount=!EX_COUNTS.includes(p.count);st.split=!!p.split;st.format=p.format||'one';st.vsa=p.vsa||0;st.match=p.match||0;if(p.chs)st.chs=chapters.filter(c=>p.chs.includes(c));if(p.timer!=null)st.timer=p.timer;save();drawExam()}
 // Equal split: n divided across the chosen units (the first ones take the remainder); a unit with too few items passes the rest on.
 function exSplit(n){const st=exSetup(),chs=st.chs.filter(ch=>BANK.some(c=>chOf(c.section)===ch)),have={};chs.forEach(ch=>have[ch]=BANK.filter(c=>chOf(c.section)===ch).length);
  const out={};chs.forEach(ch=>out[ch]=0);let left=n,open=chs.slice();while(left>0&&open.length){const each=Math.floor(left/open.length),extra=left%open.length;let used=0;
   open.forEach((ch,i)=>{const want=each+(i<extra?1:0),take=Math.min(want,have[ch]-out[ch]);out[ch]+=take;used+=take});left-=used;open=open.filter(ch=>out[ch]<have[ch]);if(!used)break}
  return chs.map(ch=>[ch,out[ch]]).filter(x=>x[1])}
-function toggleExCh(ch){const st=exSetup(),on=st.chs.includes(ch);st.secs=null;if(on&&st.chs.length===1)return;st.chs=on?st.chs.filter(c=>c!==ch):chapters.filter(c=>c===ch||st.chs.includes(c));save();drawExam()}
+function toggleExCh(ch){const st=exSetup(),on=st.chs.includes(ch);st.secs=null;st.quota=null;if(on&&st.chs.length===1)return;st.chs=on?st.chs.filter(c=>c!==ch):chapters.filter(c=>c===ch||st.chs.includes(c));save();drawExam()}
 function setExTimer(v){const st=exSetup(),n=Math.min(st.count,exPool().length);st.timer=v==='c'?(typeof st.timer==='number'?st.timer:Math.max(1,n)):v;save();drawExam()}
 // Paperless exams have no matching part: switching to it clears matching (it can still be set by hand).
 function setExFormat(v){const st=exSetup();st.format=v;if(v==='paperless')st.match=0;save();drawExam()}
@@ -916,6 +916,7 @@ function capPick(picked,pool){const caps=CONFIG.examCaps||{};if(!Object.keys(cap
 function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;
  const mq=buildMatch(Math.min(st.match||0,matchAvail(),n)),nm=n-mq.length;
  let picked=st.split&&st.chs.length>1?exSplit(nm).flatMap(([ch,k])=>shuffle(pool.filter(c=>chOf(c.section)===ch),rnd()).slice(0,k)):shuffle(pool,rnd()).slice(0,nm);
+ if(st.quota)picked=st.quota.flatMap(([ss,k])=>shuffle(pool.filter(c=>ss.includes(c.section)),rnd()).slice(0,k)).slice(0,nm);
  picked=capPick(picked,pool);
  // VSA: take them from across the picked units and move them to the end, like the real test
  const want=Math.min(st.vsa||0,picked.length),vs=[];if(want){const ok=picked.filter(vsaOK),byU={};ok.forEach(c=>(byU[chOf(c.section)]=byU[chOf(c.section)]||[]).push(c));
