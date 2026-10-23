@@ -65,8 +65,9 @@ a.now:hover .go{color:var(--accent)}
 .wbar .wl{min-width:0;text-align:center;flex:1}
 .wbar .wl b{display:block;font-size:16px}
 .wbar .wl span{color:var(--mute);font-size:13.5px}
-.wbar .today{visibility:hidden}
-.wbar .today.on{visibility:visible}
+.wbar .today{display:none;margin:4px auto 0;border:0;background:none;padding:2px 8px;border-radius:99px;font:600 12.5px var(--sans);color:var(--accent);cursor:pointer}
+.wbar .today.on{display:block}.wbar .today:hover{background:var(--accent-soft)}
+.wbar .wl span{display:block}
 .notes{margin:0 0 14px;padding:10px 14px 10px 30px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent-line);font-size:14px}
 .notes:empty{display:none}
 .notes li+li{margin-top:4px}
@@ -141,7 +142,7 @@ dd{margin:0}
 dd.none{color:var(--faint);font-style:italic}
 .modal .btn{margin-top:16px;width:100%}
 @media (max-width:760px){.wk{display:none}.mob{display:block}}
-@media (max-width:520px){main{padding:20px 16px 48px}.now .go{display:none}.wbar .today{padding:8px 10px}}
+@media (max-width:520px){main{padding:20px 16px 48px}.now .go{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
 <main>
@@ -153,9 +154,8 @@ dd.none{color:var(--faint);font-style:italic}
  <a class="now sw" id="now" hidden></a>
  <div class="wbar">
   <button class="btn icon" id="prev" aria-label="Previous week" onclick="go(week-1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
-  <div class="wl" aria-live="polite"><b id="wname">Week</b><span id="wdates"></span></div>
+  <div class="wl" aria-live="polite"><b id="wname">Week</b><span id="wdates"></span><button class="today" id="tw" onclick="go(Sched.defaultWeek())">↺ Back to this week</button></div>
   <button class="btn icon" id="next" aria-label="Next week" onclick="go(week+1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
-  <button class="btn today" id="tw" onclick="go(Sched.defaultWeek())">This week</button>
  </div>
  <ul class="notes" id="notes"></ul>
  <div class="wk" id="wk"></div>
