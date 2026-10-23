@@ -577,7 +577,7 @@ function drawTabbar(){const tb=$('tabbar');if(!tb)return;const exam=state.exam&&
  const dot=$('pages')&&$('pages').querySelector('.dndot,.ndot,[data-dn] .dot');
  setHTML(tb,ps.map(p=>'<button class="'+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')">'+sv(PG[p][1])+nm(p)+'</button>').join('')+
   '<button onclick="toggleNav(true)" aria-label="More: topics, discussion, notifications">'+sv(MORE_IC)+'More'+(dot?'<span class="tbdot"></span>':'')+'</button>')}
-function drawPages(){setHTML($('pages'),HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+discussLink()+notifyLink()+toolLinks());drawTabbar()}
+function drawPages(){setHTML($('pages'),HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+(NOTES_ONLY?'':'<button class="page" onclick="toggleNav(false);openLastLook()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Last look</button>')+discussLink()+notifyLink()+toolLinks());drawTabbar()}
 // v71: the site's live quiz, opened for this course (the grade calculator waits for the class's grading scheme)
 function toolLinks(){if(!CONFIG.home||!courseId())return '';const svg=d=>'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>',c=encodeURIComponent(courseId());
  return '<a class="page" style="text-decoration:none" href="quiz.html?course='+c+'">'+svg('<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>')+'Live quiz</a>'}
@@ -725,6 +725,32 @@ function bkCard(){let el=$('bkcard');if(!bkShow()){if(el)el.hidden=true;return}
   '<div class="bkr"><a class="btn sm primary" href="./?signin=1" style="text-decoration:none">Sign in with Google</a>'+(el.dataset.steps?'':'<button class="btn sm" onclick="$(\'bkcard\').dataset.steps=1;bkCard()">Add to Home Screen</button>')+'<button class="btn sm" onclick="bkDone()">Not now</button></div></div>';
  el.hidden=false}
 function bkDone(){try{localStorage.setItem(BK_KEY,'1')}catch(e){}bkCard()}
+/* ---------- v71: exam-eve "last look" ----------
+   One page with the questions you've had the most trouble with in the current scope (missed, looked up, hinted, starred,
+   not mastered yet), with their answers, to read the night before. Not enough history yet: the class's most missed, then
+   the highest-yield set. "Hide answers" turns it into a quick self-test; it prints cleanly. */
+let LL={n:25,hide:false};
+function llList(){const sc=c=>{const k=state.concepts[c.id]||{};return 3*(k.wrong||0)+2*(k.lookups||0)+(k.hints||0)+(k.star?2:0)+(isM(c)?0:2)};
+ const mine=BANK.filter(c=>{const k=state.concepts[c.id]||{};return k.wrong||k.lookups||k.star||(k.seen&&!isM(c))}).sort((a,b)=>sc(b)-sc(a));
+ if(mine.length>=8)return {src:'mine',list:mine};
+ const extra=(classOn()?classList():cramOn()?cramList():BANK).filter(c=>!mine.includes(c));
+ return {src:mine.length?'mix':classOn()?'class':'yield',list:mine.concat(extra)}}
+function openLastLook(){let el=$('lastlook');if(!el){el=document.createElement('div');el.id='lastlook';el.className='llwrap';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Last look');document.body.appendChild(el)}
+ drawLastLook();el.hidden=false;document.body.classList.add('llopen');el.scrollTop=0;ovOpen('lastlook',closeLastLook)}
+function closeLastLook(){const el=$('lastlook');if(el)el.hidden=true;document.body.classList.remove('llopen');ovClosed('lastlook')}
+function llSet(ch){Object.assign(LL,ch);drawLastLook()}
+function drawLastLook(){const el=$('lastlook');if(!el)return;const {src,list}=llList(),show=LL.n?list.slice(0,LL.n):list,nt=nextTest(),when=nt?whenAt(nt.at):'';
+ const note=src==='mine'?'The '+ITEMS+' you\'ve missed, looked up or starred most, hardest first.':src==='mix'?'Your misses first, then '+(classOn()?'the class\'s most missed':'the highest-yield '+ITEMS)+' (answer more to make this list yours).':src==='class'?'You haven\'t missed enough yet, so these are the class\'s most missed.':'You haven\'t missed enough yet, so these are the highest-yield '+ITEMS+'.';
+ const stem=c=>c.q?esc(c.q):c.definition?esc(c.definition):esc(c.term),ans=c=>c.q?ansHTML(c.a):esc(c.term);
+ el.innerHTML='<div class="llbox"><div class="llhead"><div><div class="eyebrow">'+esc(CONFIG.title)+' · '+esc(scopeLabel())+(when?' · '+(nt.name===scopeLabel()?'':esc(nt.name)+' ')+when:'')+'</div><h2>Last look</h2><p>'+note+'</p></div>'+
+  '<button class="icon llx" onclick="closeLastLook()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>'+
+  '<div class="llbar"><span class="seg">'+[15,25,50,0].map(n=>'<button aria-pressed="'+(LL.n===n)+'" onclick="llSet({n:'+n+'})">'+(n||'All '+list.length)+'</button>').join('')+'</span>'+
+  '<label class="llhide"><input type="checkbox"'+(LL.hide?' checked':'')+' onchange="llSet({hide:this.checked})"> Hide answers</label><span class="sp"></span><button class="btn sm" onclick="window.print()">Print</button></div>'+
+  (show.length?'<ol class="llist'+(LL.hide?' hid':'')+'">'+show.map(c=>{const k=state.concepts[c.id]||{};
+   return '<li><p class="llq">'+stem(c)+'</p>'+figHTML(c.id)+'<button class="btn sm llshow" onclick="this.closest(\'li\').classList.add(\'shown\')">Show answer</button><p class="lla">'+ans(c)+'</p>'+(c.why?'<p class="llw">'+esc(c.why)+'</p>':'')+
+    (k.wrong||k.lookups?'<span class="llm">missed '+((k.wrong||0)+(k.lookups||0))+'×</span>':'')+'</li>'}).join('')+'</ol>':'<p class="llw">Nothing here yet. Practice a few '+ITEMS+' first.</p>')+
+  '</div>'}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('llopen'))closeLastLook()});
 /* ---------- v71: daily goal and streak, across every course on this device (site/daily.js) ---------- */
 function dailyAdd(n){if(!n||!window.Daily||!CONFIG.home)return;try{const g=Daily.add(n);if(g)setTimeout(()=>{toast('Daily goal reached: '+g.goal+' questions'+(g.streak>1?' · '+g.streak+'-day streak':''));celebrate('section')},650)}catch(e){}}
 function dailyTile(tile){const d=window.Daily&&CONFIG.home?Daily.now():null;if(!d)return '';
@@ -763,7 +789,7 @@ function drawDash(){
  $('hero').innerHTML='<div><div class="big num">'+pct+'%<small>mastered</small></div>'+
   '<p class="sub">'+(when?'<span class="when">'+esc(nt.name)+' '+when+'</span> · ':'')+bn+'<b class="num">'+m+'</b> of <span class="num">'+BANK.length+'</span> '+ITEMS+' mastered '+(ex?'for '+esc(ex.name):'across '+esc(scopeLabel()))+' · <b class="num">'+secDone+'</b> of '+sectionKeys.length+' sections complete</p>'+
   '<div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'" aria-label="Overall mastery"><div class="fill" style="width:'+pct+'%"></div></div></div>'+
-  '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div>'+(secDone===sectionKeys.length?'<button class="btn primary" onclick="reviewAll()" title="Every '+ITEM+' once, shuffled. You keep your mastery unless you miss one.">Review pass · '+(ex?'all of '+esc(ex.name):'all '+unitsW)+'</button>':'<button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button>')+(nDue?'<button class="shuffle-link due" onclick="selectSection(\'DUE\')">'+CLOCK_SM+'Review '+nDue+' due today</button>':'')+(cramOn()?'<button class="shuffle-link cram" onclick="selectSection(\'CRAM\')">'+FLAME_SM+'Short on time? Cram mode · '+cramList().length+' highest-yield '+ITEMS+'</button>':'')+'<button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
+  '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div>'+(secDone===sectionKeys.length?'<button class="btn primary" onclick="reviewAll()" title="Every '+ITEM+' once, shuffled. You keep your mastery unless you miss one.">Review pass · '+(ex?'all of '+esc(ex.name):'all '+unitsW)+'</button>':'<button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button>')+(nt&&nt.at-Date.now()<4*DAY?'<button class="shuffle-link" onclick="openLastLook()">'+NOTE_SM+esc(nt.name)+' '+when+'? Read your last look</button>':'')+(nDue?'<button class="shuffle-link due" onclick="selectSection(\'DUE\')">'+CLOCK_SM+'Review '+nDue+' due today</button>':'')+(cramOn()?'<button class="shuffle-link cram" onclick="selectSection(\'CRAM\')">'+FLAME_SM+'Short on time? Cram mode · '+cramList().length+' highest-yield '+ITEMS+'</button>':'')+'<button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
   (pageOn('notes')?'<button class="shuffle-link" onclick="openNotes(\'all\')">'+NOTE_SM+'Read the high-yield notes</button>':'')+
   (state.prefs.stars&&nStar?'<button class="shuffle-link" onclick="selectSection(\'STAR\')">'+STAR_SM+'Review starred ('+nStar+')</button>':'')+(classOn()?'<button class="shuffle-link" onclick="selectSection(\'CLASS\')">'+CLASS_SM+'Class\'s most missed ('+classList().length+')</button>':'')+'</div>';
 
@@ -1521,7 +1547,8 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
- ...(CONFIG.home?[{v:'34',date:'Oct 24, 2026',title:'Daily goal and live quiz',items:[
+ ...(CONFIG.home?[{v:'34',date:'Oct 24, 2026',title:'Daily goal, last look and live quiz',items:[
+  '<b>Last look</b>: the night before a test, one page with the '+ITEMS+' you missed most and their answers. Hide the answers to test yourself, or print it. In the menu, and on your dashboard when a test is near.',
   'A <b>daily goal</b> and <b>streak</b>: every answer in any course counts. Track it on the home page and in <b>Today</b> on your dashboard.',
   '<b>Live quiz</b>: host a quiz for your study group from this course, and everyone joins on their phone with a code. Find it in the menu.',
  ]}]:[]),

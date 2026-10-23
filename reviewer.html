@@ -877,6 +877,31 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
  body.tabs .dnpop:not(.up){bottom:calc(var(--tbh) + 12px)}
  .app.nav-open~.tabbar,body.tabs .app.nav-open .tabbar{display:none}
 }
+/* v71: exam-eve "last look" sheet */
+.llwrap{position:fixed;inset:0;z-index:60;overflow-y:auto;background:var(--bg);-webkit-overflow-scrolling:touch}
+.llwrap[hidden]{display:none}body.llopen{overflow:hidden}
+.llbox{max-width:760px;margin:0 auto;padding:22px 18px 60px}
+.llhead{display:flex;gap:14px;align-items:flex-start}.llhead>div{flex:1;min-width:0}
+.llhead h2{font:600 28px/1.2 var(--serif);margin:4px 0 4px}.llhead p{margin:0;color:var(--mute);font-size:14px}
+.llbar{position:sticky;top:0;z-index:1;display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:16px -18px 6px;padding:10px 18px;background:var(--bg);border-bottom:1px solid var(--line)}
+.llbar .sp{flex:1}
+.llbar .seg{display:inline-flex;padding:3px;gap:2px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.llbar .seg button{border:0;background:none;padding:5px 11px;border-radius:7px;font:600 13px var(--sans);color:var(--mute);cursor:pointer}
+.llbar .seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--text)}
+.llhide{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--mute);cursor:pointer}
+.llist{list-style:none;counter-reset:ll;margin:0;padding:0}
+.llist li{counter-increment:ll;position:relative;padding:14px 0 14px 38px;border-bottom:1px solid var(--line)}
+.llist li::before{content:counter(ll);position:absolute;left:0;top:15px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--raised);color:var(--mute);font:700 12px/1 var(--sans)}
+.llq{margin:0 0 6px;font-weight:600;font-size:15.5px;line-height:1.45}
+.lla{margin:0;font-size:15px;color:var(--good);font-weight:600}.lla::before{content:"✓ "}
+.llshow{display:none!important}
+.llist.hid li:not(.shown) .llshow{display:inline-flex!important}
+.llist.hid li:not(.shown) .lla,.llist.hid li:not(.shown) .llw{display:none}
+.llw{margin:6px 0 0;color:var(--mute);font-size:13.5px;line-height:1.5}
+.llm{position:absolute;right:0;top:15px;font-size:11.5px;font-weight:700;color:var(--bad);background:var(--bad-bg);padding:1px 7px;border-radius:999px}
+.llist li:has(.llm) .llq{padding-right:80px}
+@media print{body.llopen>*:not(#lastlook){display:none!important}.llwrap{position:static;overflow:visible}.llbar,.llx{display:none!important}
+ .llist li{break-inside:avoid;padding-top:8px;padding-bottom:8px}.lla,.llw{display:block!important;color:#000!important}.llshow{display:none!important}}
 /* v71: iPhone Safari "back up your progress" card on the dashboard */
 .bkcard{display:flex;gap:14px;align-items:flex-start;margin-top:18px;padding:16px 18px;border-radius:var(--r-lg);background:var(--surface);border:1px solid var(--accent-line);box-shadow:var(--shadow)}
 .bkcard[hidden]{display:none}

@@ -347,5 +347,13 @@
   "title": "Daily goal, streak and live quiz",
   "text": "Every answer in any course now counts toward a daily goal and streak, shown on the home page with the reviews due in each course. New: Live quiz. Host a quiz for your study group, and everyone joins on their phone with a code. On iPhone Safari, a one-time card shows how to keep your progress safe.",
   "link": "./"
+ },
+ {
+  "id": 42,
+  "date": "2026-10-24",
+  "type": "feature",
+  "title": "Last look before a test",
+  "text": "The night before a test, open Last look in any course: one page with the questions you missed most and their answers. Hide the answers to test yourself, or print it.",
+  "link": "./"
  }
 ]
