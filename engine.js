@@ -387,7 +387,7 @@ function cardHTML(){
   const nextIsLive=view+1>=liveIdx();
   return '<div class="review-note"><span>Earlier answer · '+(view+1)+' of '+secLog().length+(isX(s)?' in this '+(s==='ALL'?'shuffle':'review'):isCh(s)?' in this '+unitW:' in this section')+'</span><button class="link" onclick="goLive()">Back to current question</button></div>'+
    '<div class="qhead"><span class="kind">'+kindName(e.q.kind)+'</span><span class="mastery">'+flagBtn("flagQ('log')")+'</span></div>'+
-   '<p class="prompt">'+stemHTML(e.q.stem)+'</p>'+figHTML(e.q.cid)+choicesHTML(e.q,e.sel,e.fb)+feedbackHTML(e.q,e.fb)+
+   caseHTML(e.q.cid)+'<p class="prompt">'+stemHTML(e.q.stem)+'</p>'+figHTML(e.q.cid)+(e.q.typed&&e.fb&&e.fb.typed!=null?typedHTML(e.fb,e.q):choicesHTML(e.q,e.sel,e.fb))+feedbackHTML(e.q,e.fb)+
    '<div class="actions">'+backBtn()+'<span class="aux"></span><button class="btn primary" id="go" onclick="goForward()">'+(nextIsLive?'Return to current':'Forward')+' <kbd>→</kbd></button></div>';
  }
  // A matching set mixed into practice (Personalize → Mix matching into practice)
@@ -419,8 +419,8 @@ function cardHTML(){
  }
  // Current question
  const q=state.active,st=state.concepts[q.cid],fb=state.feedback,mixed=isX(s)||isCh(s);
- return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(q.typed?'Type the answer':kindName(q.kind))+srcTag(q.cid)+'</span><span class="mastery">'+flagBtn("flagQ('live')")+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
-  '<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
+ return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(isWr(byId[q.cid])?'Written answer':q.typed?'Type the answer':kindName(q.kind))+srcTag(q.cid)+'</span><span class="mastery">'+flagBtn("flagQ('live')")+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
+  caseHTML(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
   (q.usedHint&&!fb?'<div class="hint"><b>Hint</b>'+esc(q.hint)+'</div>':'')+
   (fb?feedbackHTML(q,fb,true):'')+
   '<div class="actions">'+backBtn()+'<span class="aux">'+(fb?'':(q.usedHint||!q.hint?'':'<button class="link" onclick="hint()">Show hint</button>')+'<button class="link" onclick="looked()" title="Counts as a review, not a correct recall">I checked my slides</button>')+'</span>'+
@@ -846,11 +846,11 @@ function mixKey(e){if(!MX)return false;const k=e.key;
 const EX_COUNTS=[20,30,50];let exTick=null;
 const swHTML=(on,fn,label)=>'<button class="tgl" role="switch" aria-checked="'+on+'" aria-label="'+esc(label)+'" onclick="'+fn+'"><span class="sw"></span></button>';
 // One exam question, frozen when the exam starts. ident = typed answer instead of choices.
-function exQ(q,vsa){const o={cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))};if(vsa||isIdent(byId[q.cid]))o.ident=1;if(vsa)o.vsa=1;return o}
+function exQ(q,vsa){const o={cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))};if(vsa||isIdent(byId[q.cid])||isWr(byId[q.cid]))o.ident=1;if(isWr(byId[q.cid]))o.wr=1;if(vsa)o.vsa=1;return o}
 // Can this item be asked as VSA (type the answer)? Short single answers only, and the stem must not lean on the choices.
 function vsaOK(c){if(isIdent(c)||(c&&c.num!=null))return true;if(!c.q||!c.a)return false;const a=c.a;if(a.length>32||a.split(/\s+/).length>4||/[,;]| and | or |\d.*\d/.test(a))return false;
  if(isMol(a)||/\bNOT\b|which of these|which (is|are) (correct|true|an? |the )|which statement|which pair|following/i.test(c.q))return false;return true}
-function exOK(q,a){if(a==null||a==='')return false;if(q.ident){const t=(q.choices.find(x=>x.correct)||{}).label||'';return typedOK(a,t)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(a,x))||numOK(a,byId[q.cid])}return q.choices.some(x=>x.correct&&x.letter===a)}
+function exOK(q,a){if(a==null||a==='')return false;if(q.wr){const c=byId[q.cid];return !!c&&wrCheck(a,c.wr).ok}if(q.ident){const t=(q.choices.find(x=>x.correct)||{}).label||'';return typedOK(a,t)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(a,x))||numOK(a,byId[q.cid])}return q.choices.some(x=>x.correct&&x.letter===a)}
 const PER_ITEM=CONFIG.examMinutesPerItem||1;
 const exMinutes=(st,n)=>typeof st.timer==='number'?st.timer:st.timer?Math.round(n*PER_ITEM):0;
 const EX_PRESETS=CONFIG.examPresets||[{label:'Paperless · 30 items, split per '+unitW,count:30,split:true,format:'paperless',vsa:0}];
@@ -886,7 +886,7 @@ function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,po
  const row=(t,d,ctl)=>'<div class="prow"><div class="pl"><b>'+t+'</b><span>'+d+'</span></div><div class="ctl">'+ctl+'</div></div>',srow=(t,d,ctl)=>row(t,d,ctl).replace('class="prow"','class="prow stack"');
  const counts=EX_COUNTS.filter(c=>c<pool.length).map(c=>[c,String(c)]).concat([[9999,'All '+pool.length],['c','Custom']]);
  const curCount=st.customCount?'c':st.count>=pool.length?9999:EX_COUNTS.includes(st.count)?st.count:'c',per=exSplit(n-Math.min(st.match||0,matchAvail(),n));
- const vsaMax=Math.min(n,pool.filter(vsaOK).length),preset=EX_PRESETS.findIndex(p=>p.count===st.count&&!!p.split===!!st.split&&(p.format||'one')===(st.format||'one')&&(p.vsa||0)===(st.vsa||0)&&(p.match||0)===(st.match||0)&&(p.secs||[]).join()===(st.secs||[]).join()&&JSON.stringify(p.quota||null)===JSON.stringify(st.quota||null)&&(p.keepChs||(p.chs?st.chs.join()===chapters.filter(c=>p.chs.includes(c)).join():st.chs.length===chapters.length)));
+ const vsaMax=Math.min(n,pool.filter(vsaOK).length),preset=EX_PRESETS.findIndex(p=>p.count===st.count&&!!p.split===!!st.split&&(p.format||'one')===(st.format||'one')&&(p.vsa||0)===(st.vsa||0)&&(p.match||0)===(st.match||0)&&(p.secs||[]).join()===(st.secs||[]).join()&&JSON.stringify(p.quota||null)===JSON.stringify(st.quota||null)&&JSON.stringify(p.cases||null)===JSON.stringify(st.cases||null)&&(p.keepChs||(p.chs?st.chs.join()===chapters.filter(c=>p.chs.includes(c)).join():st.chs.length===chapters.length)));
  const mAv=matchAvail(),mN=Math.min(st.match||0,mAv,n);
  const past=(state.exams||[]).slice(-5).reverse();
  $('exbody').innerHTML='<p class="lede">A practice run with no hints and no answers until the end. Afterwards you get your score by '+unitW+' and can review every mistake. Wrong answers are added to your Missed '+ITEMS+'; questions you skip are not counted against you.</p>'+
@@ -909,13 +909,13 @@ function setExCustom(v){const st=exSetup();st.customCount=true;st.count=Math.max
 function exClampMatch(st){st.match=Math.min(st.match||0,Math.floor(Math.min(st.count,exPool().length)/2))}
 function setExSplit(v){exSetup().split=v;save();drawExam()}
 function setExVsa(v){const st=exSetup();st.vsa=Math.max(0,Math.min(Math.min(st.count,exPool().length),Math.round(+v)||0));save();drawExam()}
-function exPreset(i){const p=EX_PRESETS[i],st=exSetup();if(!p.keepChs)st.chs=chapters.slice();st.secs=p.secs||null;st.quota=p.quota||null;st.count=p.count;st.customCount=!EX_COUNTS.includes(p.count);st.split=!!p.split;st.format=p.format||'one';st.vsa=p.vsa||0;st.match=p.match||0;if(p.chs)st.chs=chapters.filter(c=>p.chs.includes(c));if(p.timer!=null)st.timer=p.timer;save();drawExam()}
+function exPreset(i){const p=EX_PRESETS[i],st=exSetup();if(!p.keepChs)st.chs=chapters.slice();st.secs=p.secs||null;st.quota=p.quota||null;st.cases=p.cases||null;st.count=p.count;st.customCount=!EX_COUNTS.includes(p.count);st.split=!!p.split;st.format=p.format||'one';st.vsa=p.vsa||0;st.match=p.match||0;if(p.chs)st.chs=chapters.filter(c=>p.chs.includes(c));if(p.timer!=null)st.timer=p.timer;save();drawExam()}
 // Equal split: n divided across the chosen units (the first ones take the remainder); a unit with too few items passes the rest on.
 function exSplit(n){const st=exSetup(),chs=st.chs.filter(ch=>BANK.some(c=>chOf(c.section)===ch)),have={};chs.forEach(ch=>have[ch]=BANK.filter(c=>chOf(c.section)===ch).length);
  const out={};chs.forEach(ch=>out[ch]=0);let left=n,open=chs.slice();while(left>0&&open.length){const each=Math.floor(left/open.length),extra=left%open.length;let used=0;
   open.forEach((ch,i)=>{const want=each+(i<extra?1:0),take=Math.min(want,have[ch]-out[ch]);out[ch]+=take;used+=take});left-=used;open=open.filter(ch=>out[ch]<have[ch]);if(!used)break}
  return chs.map(ch=>[ch,out[ch]]).filter(x=>x[1])}
-function toggleExCh(ch){const st=exSetup(),on=st.chs.includes(ch);st.secs=null;st.quota=null;if(on&&st.chs.length===1)return;st.chs=on?st.chs.filter(c=>c!==ch):chapters.filter(c=>c===ch||st.chs.includes(c));save();drawExam()}
+function toggleExCh(ch){const st=exSetup(),on=st.chs.includes(ch);st.secs=null;st.quota=null;st.cases=null;if(on&&st.chs.length===1)return;st.chs=on?st.chs.filter(c=>c!==ch):chapters.filter(c=>c===ch||st.chs.includes(c));save();drawExam()}
 function setExTimer(v){const st=exSetup(),n=Math.min(st.count,exPool().length);st.timer=v==='c'?(typeof st.timer==='number'?st.timer:Math.max(1,n)):v;save();drawExam()}
 // Paperless exams have no matching part: switching to it clears matching (it can still be set by hand).
 function setExFormat(v){const st=exSetup();st.format=v;if(v==='paperless')st.match=0;save();drawExam()}
@@ -929,7 +929,9 @@ function capPick(picked,pool){const caps=CONFIG.examCaps||{};if(!Object.keys(cap
 function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;
  const mq=buildMatch(Math.min(st.match||0,matchAvail(),n)),nm=n-mq.length;
  let picked=st.split&&st.chs.length>1?exSplit(nm).flatMap(([ch,k])=>shuffle(pool.filter(c=>chOf(c.section)===ch),rnd()).slice(0,k)):shuffle(pool,rnd()).slice(0,nm);
- if(st.quota)picked=st.quota.flatMap(([ss,k])=>shuffle(pool.filter(c=>ss.includes(c.section)),rnd()).slice(0,k)).slice(0,nm);
+ if(st.cases){const used=new Set();picked=st.cases.flatMap(([ss,k])=>{const ids=shuffle([...new Set(pool.filter(c=>c.case&&ss.includes(c.section)).map(c=>c.case))],rnd()).filter(id=>!used.has(id)).slice(0,k);ids.forEach(i=>used.add(i));
+  return ids.flatMap(id=>pool.filter(c=>c.case===id).sort((a,b)=>(a.part||0)-(b.part||0)))})}
+ else if(st.quota)picked=st.quota.flatMap(([ss,k])=>shuffle(pool.filter(c=>ss.includes(c.section)),rnd()).slice(0,k)).slice(0,nm);
  picked=capPick(picked,pool);
  // VSA: take them from across the picked units and move them to the end, like the real test
  const want=Math.min(st.vsa||0,picked.length),vs=[];if(want){const ok=picked.filter(vsaOK),byU={};ok.forEach(c=>(byU[chOf(c.section)]=byU[chOf(c.section)]||[]).push(c));
@@ -946,15 +948,15 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
  if(ex.sheet){$('extitle').textContent=n+' '+ITEMS;$('exbody').innerHTML=sheetHTML(ex);return}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
-  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(ex.paperless?(q.vsa?'VSA · type your answer':q.mt?'Matching type':'Multiple choice'):exKind(q)+srcTag(q.cid))+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+(q.mt?'<p class="mgi">Options may be used more than once.</p>':'')+figHTML(q.cid)+
-  (q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+(q.vsa?'Type the term':'Type your answer')+'" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
+  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(q.wr?'Written answer'+(byId[q.cid].part?' · part '+byId[q.cid].part+' of '+byId[q.cid].parts:''):ex.paperless?(q.vsa?'VSA · type your answer':q.mt?'Matching type':'Multiple choice'):exKind(q)+srcTag(q.cid))+'</span></div>'+caseHTML(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+(q.mt?'<p class="mgi">Options may be used more than once.</p>':'')+figHTML(q.cid)+
+  (q.wr?wrBox(byId[q.cid],'extyped',ex.ans[ex.i],' oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"'):q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+(q.vsa?'Type the term':'Type your answer')+'" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
    :'<div class="choices'+(molq(q)?' ichoices':'')+'">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+labelHTML(x.label)+'</span></button>').join('')+'</div>')+
   '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button> · <button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button></span>'+
   '<button class="btn primary" onclick="'+(ex.i<n-1?'exGo(1)':'finishExam()')+'">'+(ex.i<n-1?'Next':'Finish')+' <kbd>Enter</kbd></button></div></section>'+
   '<div class="qnav" aria-label="Jump to a question">'+ex.qs.map((_,j)=>'<button class="'+(ex.ans[j]?'a ':'')+(j===ex.i?'cur':'')+'" onclick="exJump('+j+')" aria-label="Question '+(j+1)+(ex.ans[j]?', answered':'')+'">'+(j+1)+'</button>').join('')+'</div>'}
 // Answer sheet format: read on the test paper, shade on the sheet. Shading updates only the sheet, so the paper keeps its place.
 function sheetHTML(ex){const n=ex.qs.length,done=Object.keys(ex.ans).length;
- const paper=ex.qs.map((q,j)=>(q.mt&&(!j||ex.qs[j-1].grp!==q.grp)?mgrpHTML(q):'')+'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+exKind(q)+'</span></div><p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
+ const paper=ex.qs.map((q,j)=>(q.mt&&(!j||ex.qs[j-1].grp!==q.grp)?mgrpHTML(q):'')+'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+exKind(q)+'</span></div>'+caseHTML(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
   (q.ident?'<p class="pqid">Write your answer on the answer sheet.</p>':q.mt?'':'<ol class="pch'+(molq(q)?' ich':'')+'">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+labelHTML(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
  const rows=ex.qs.map((q,j)=>'<div class="brow" id="br'+j+'"><button class="bn" onclick="sheetGo('+j+')" aria-label="Go to question '+(j+1)+'">'+(j+1)+'</button>'+
   (q.ident?'<input class="txt bt" value="'+esc(ex.ans[j]||'')+'" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer to question '+(j+1)+'" oninput="sheetType('+j+',this.value)">'
@@ -1017,8 +1019,8 @@ function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*
   '<div class="exacts">'+(ex.chal?'<button class="btn primary" onclick="copyChalScore()">Copy my score</button><button class="btn" onclick="copyChalLink(state.exam.chal)">Copy challenge link</button>':'')+(wrong.length?'<button class="btn'+(ex.chal?'':' primary')+'" onclick="toggleExReview()">'+(ex.review?'Hide my mistakes':'Review my mistakes ('+wrong.length+')')+'</button>':'')+
   (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">'+(ex.chal?'Done':'New exam')+'</button></div>'+
   (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.ident?null:q.choices.find(c=>c.letter===a);
-   return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+(q.mt?exKind(q):esc(byId[q.cid].section))+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div><p class="exq">'+esc(q.stem)+'</p>'+figHTML(q.cid)+''+
-    '<p class="exa bad"><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?esc(ok.label):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+stepsHTML(byId[q.cid])+'</article>'}).join('')+'</div>':'')}
+   return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+(q.mt?exKind(q):esc(byId[q.cid].section))+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div>'+caseHTML(q.cid)+'<p class="exq">'+esc(q.stem)+'</p>'+figHTML(q.cid)+(q.wr&&a?wrCheck(a,byId[q.cid].wr).html:'')+
+    '<p class="exa bad"'+(q.wr?' style="white-space:pre-line"':'')+'><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?(q.wr?ansHTML(ok.label):esc(ok.label)):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+stepsHTML(byId[q.cid])+'</article>'}).join('')+'</div>':'')}
 function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
 function newExam(){state.exam=null;save();draw();window.scrollTo(0,0)}
 function examKey(e){const ex=state.exam;if(!ex||ex.done||ex.sheet)return false;const k=e.key;
@@ -1617,23 +1619,74 @@ function masteryUp(k){const before=k.right,now=Date.now();k.right++;
 // Missing a mastered item sends it back to practice: one more correct answer masters it again.
 function masteryDown(k){if(k.right>=T()){k.right=T()-1;k.srs=null}}
 
+/* ---------- v68 written answers (math) and case problems ---------- */
+// wr items are always typed and checked by meaning: objective (max/min + coefficients), constraints (any order, any equivalent
+// multiple, x, y >= 0 optional), corner points (any order, fractions ok), optimum (value, and the point if one is given).
+const isWr=c=>!!c&&!!c.wr;
+const WR_PH={obj:'e.g.  Maximize P = 50x + 40y',cons:'One per line, e.g.\nx + y <= 10\n2x + y <= 16',pts:'e.g.  (0, 0), (8, 0), (6, 4), (0, 10)',opt:'e.g.  P = 460 at (6, 4)'};
+const WR_TIP={obj:'Start with Maximize or Minimize.',cons:'One per line. Type <= and >= (or tap ≤ ≥). x, y ≥ 0 is optional here.',pts:'All the corner points, in any order.',opt:'The best value, and where it happens.'};
+function wrNum(s){s=String(s).replace(/\s+/g,'');const f=s.match(/^(-?\d*\.?\d+)\/(\d*\.?\d+)$/);return f?(+f[1])/(+f[2]):(s===''?NaN:+s)}
+function wrClean(s){return String(s).replace(/[−–—]/g,'-').replace(/[×·*]/g,'').replace(/[₱$]/g,'').replace(/≤|=<|⩽/g,'<=').replace(/≥|=>|⩾/g,'>=')}
+function wrLin(s){s=String(s).replace(/\s+/g,'').replace(/(\d),(?=\d{3}(?!\d))/g,'$1');if(!s)return null;const r={x:0,y:0,k:0},ts=s.match(/[+-]?[^+-]+/g);if(!ts||ts.join('')!==s)return null;
+ for(const t of ts){const m=t.match(/^([+-]?)(\d*\.?\d*(?:\/\d*\.?\d+)?)([xy]?)$/i);if(!m||(!m[2]&&!m[3]))return null;let v=m[2]===''?1:wrNum(m[2]);if(isNaN(v))return null;if(m[1]==='-')v=-v;if(m[3])r[m[3].toLowerCase()]+=v;else r.k+=v}return r}
+function wrIneq(line){const s=wrClean(line),m=s.match(/^(.*?)(<=|>=|<|>|=)(.*)$/);if(!m)return null;const L=wrLin(m[1]),R=wrLin(m[3]);if(!L||!R)return null;
+ return [L.x-R.x,L.y-R.y,m[2]==='<'?'<=':m[2]==='>'?'>=':m[2],R.k-L.k]}
+// the same constraint up to a nonzero factor (a negative factor flips the inequality)
+function wrSame(u,e){const big=[0,1,3].reduce((b,i)=>Math.abs(e[i])>Math.abs(e[b])?i:b,0);if(!e[big]||!u[big])return false;const l=u[big]/e[big];
+ if(![0,1,3].every(i=>Math.abs(u[i]-l*e[i])<=1e-6*Math.max(1,Math.abs(u[i]))))return false;return u[2]===(l>0?e[2]:({'<=':'>=','>=':'<=','=':'='})[e[2]])}
+const wrNonneg=u=>u[3]===0&&((u[0]>0&&!u[1]&&u[2]==='>=')||(!u[0]&&u[1]>0&&u[2]==='>=')||(u[0]<0&&!u[1]&&u[2]==='<=')||(!u[0]&&u[1]<0&&u[2]==='<='));
+function wrLines(s){return wrClean(s).replace(/\bx\s*,\s*y\s*>=\s*0/gi,'x>=0;y>=0').replace(/\band\b/gi,';').split(/[\n;]+/)
+ .flatMap(p=>(p.match(/<=|>=|<|>|=/g)||[]).length>1?p.split(','):[p]).map(p=>p.trim()).filter(Boolean)}
+function wrPts(s){const out=[],re=/\(\s*([^(),;]+?)\s*[,;]\s*([^(),;]+?)\s*\)/g;let m;s=wrClean(s);while((m=re.exec(s)))out.push([wrNum(m[1]),wrNum(m[2])]);return out.filter(p=>!isNaN(p[0])&&!isNaN(p[1]))}
+const wrNear=(a,b)=>Math.abs(a-b)<=Math.max(.011,Math.abs(b)*.002),wrSamePt=(p,q)=>wrNear(p[0],q[0])&&wrNear(p[1],q[1]);
+const wrFmt=v=>Math.abs(v-Math.round(v))<1e-9?String(Math.round(v)):String(Math.round(v*100)/100);
+const wrLi=(ok,t)=>'<li class="'+(ok?'y':'n')+'">'+(ok?'✓ ':'✗ ')+t+'</li>';
+function wrCheck(input,wr){const s=String(input||''),L=[];let ok=false;
+ if(wr.t==='obj'){const t=wrClean(s),sense=/max/i.test(t)?'max':/min/i.test(t)?'min':'';
+  const ex=t.includes('=')?t.slice(t.lastIndexOf('=')+1):t.replace(/^\s*(maximi[sz]e|minimi[sz]e|max|min)\s*[a-wz]?\s*:?/i,''),e=wrLin(ex);
+  const sOK=sense===wr.sense,cOK=!!e&&wrNear(e.x,wr.c[0])&&wrNear(e.y,wr.c[1])&&Math.abs(e.k)<1e-9;ok=sOK&&cOK;
+  L.push(wrLi(sOK,sense?(sOK?'Correctly '+(sense==='max'?'maximized':'minimized'):'This one should be '+(wr.sense==='max'?'maximized':'minimized')):'Say whether to maximize or minimize'));
+  L.push(wrLi(cOK,e?(cOK?'Coefficients match':'Coefficients don\'t match (got '+wrFmt(e.x)+'x + '+wrFmt(e.y)+'y)'):'Couldn\'t read the expression, e.g. P = 50x + 40y'))}
+ else if(wr.t==='cons'){const exp=wr.cons,hit=exp.map(()=>false);let bad=0,non=false;
+  for(const line of wrLines(s)){const u=wrIneq(line);if(!u){bad++;L.push(wrLi(false,'Couldn\'t read: '+esc(line)));continue}
+   if(wrNonneg(u)){non=true;continue}const i=exp.findIndex((e,j)=>!hit[j]&&wrSame(u,e));if(i>=0){hit[i]=true;L.push(wrLi(true,esc(line)))}else{bad++;L.push(wrLi(false,esc(line)+' isn\'t one of the constraints'))}}
+  const miss=hit.filter(h=>!h).length;if(miss)L.push(wrLi(false,miss+' constraint'+(miss>1?'s':'')+' missing'));ok=!miss&&!bad;
+  if(ok&&!non)L.push('<li class="tip">On paper, also write x, y ≥ 0.</li>')}
+ else if(wr.t==='pts'){const got=wrPts(s),exp=wr.pts,uniq=got.filter((p,i)=>got.findIndex(q=>wrSamePt(p,q))===i);
+  const found=exp.filter(e=>uniq.some(p=>wrSamePt(p,e))).length,extra=uniq.filter(p=>!exp.some(e=>wrSamePt(p,e)));ok=found===exp.length&&!extra.length&&uniq.length>0;
+  if(!uniq.length)L.push(wrLi(false,'Write points like (6, 4)'));else{L.push(wrLi(found===exp.length,'Found '+found+' of '+exp.length+' corner points'));
+   if(extra.length)L.push(wrLi(false,'Not corners: '+extra.map(p=>'('+wrFmt(p[0])+', '+wrFmt(p[1])+')').join(', ')))}}
+ else if(wr.t==='opt'){const pts=wrPts(s),rest=wrClean(s).replace(/\([^)]*\)/g,' ').replace(/(\d),(?=\d{3}(?!\d))/g,'$1'),m=rest.match(/-?\d*\.?\d+(?:\/\d*\.?\d+)?/),v=m?wrNum(m[0]):NaN;
+  const vOK=!isNaN(v)&&Math.abs(v-wr.v)<=Math.max(.005,Math.abs(wr.v)*.005),pOK=!pts.length||!wr.pt||wrSamePt(pts[0],wr.pt);ok=vOK&&pOK;
+  L.push(wrLi(vOK,isNaN(v)?'Give the value, e.g. P = 460':vOK?'Value is right':'Value isn\'t the '+(wr.sense==='min'?'minimum':'maximum')));
+  if(pts.length)L.push(wrLi(pOK,pOK?'Point is right':'Wrong point'));else if(wr.pt)L.push('<li class="tip">Also say where: at ('+wrFmt(wr.pt[0])+', '+wrFmt(wr.pt[1])+').</li>')}
+ return {ok,html:'<ul class="wrn">'+L.join('')+'</ul>'}}
+function wrKeys(){return '<div class="wrkeys" aria-label="Symbols">'+['≤','≥','(',')',',','/'].map(k=>'<button type="button" onmousedown="event.preventDefault()" onclick="wrIns(\''+k+'\')">'+k+'</button>').join('')+'</div>'}
+function wrIns(k){const t=document.querySelector('textarea.wrin, input.wrin');if(!t)return;const a=t.selectionStart??t.value.length,b=t.selectionEnd??a;t.value=t.value.slice(0,a)+k+t.value.slice(b);t.selectionStart=t.selectionEnd=a+k.length;t.focus();t.dispatchEvent(new Event('input'))}
+function wrBox(c,id,val,extra){const multi=c.wr.t==='cons'||c.wr.t==='pts';
+ return '<div class="typein wr"><textarea id="'+id+'" class="typed wrin" rows="'+(c.wr.t==='cons'?4:2)+'" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+esc(WR_PH[c.wr.t])+'" aria-label="Your answer"'+(extra||'')+'>'+esc(val||'')+'</textarea>'+
+  '<div class="wrfoot"><span>'+esc(WR_TIP[c.wr.t])+(multi?' Ctrl+Enter checks it.':'')+'</span>'+wrKeys()+'</div></div>'}
+function caseHTML(cid){const c=byId[cid];return c&&c.cstem?'<div class="cstem"><span class="ck">'+esc(c.clabel||'Problem')+'</span>'+stemHTML(c.cstem)+'</div>':''}
+
 /* ---------- type the answer (identification) ---------- */
 // Short recall answers only; definitions and long answers keep their choices.
 // Identification items ("type":"id") are always typed, in practice and in the mock exam; "alt" lists other accepted answers.
 const isIdent=c=>!!c&&c.type==='id';
-function canType(q){if(!q)return false;if(q.choices.some(x=>isMol(x.label)))return false;if(isIdent(byId[q.cid]))return true;if(!state.prefs.typeMode)return false;if(byId[q.cid]&&byId[q.cid].num!=null)return true;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
+function canType(q){if(!q)return false;if(isWr(byId[q.cid]))return true;if(q.choices.some(x=>isMol(x.label)))return false;if(isIdent(byId[q.cid]))return true;if(!state.prefs.typeMode)return false;if(byId[q.cid]&&byId[q.cid].num!=null)return true;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
  if(c.q?q.kind!=='recall':q.kind==='definition')return false;return ans.length<=40&&ans.split(/\s+/).length<=5&&!/[,;]| to | and /.test(ans)&&!/^(as|in|by|for|to|of|on|at|with|from|through)\b/i.test(ans)&&(ans.match(/\d+/g)||[]).length<=1}
 function normAns(s){return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\(.*?\)/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\b(the|a|an)\b/g,' ').replace(/\s+/g,' ').trim()}
 function lev(a,b){let p=Array.from({length:b.length+1},(_,j)=>j);for(let i=1;i<=a.length;i++){const c=[i];for(let j=1;j<=b.length;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[b.length]}
 // Accepts small typos (none for very short answers) and either side of "A / B" or "A or B".
 function typedOK(input,answer){const t=normAns(input);if(!t)return false;
  return [answer].concat(String(answer).split(/\s*\/\s*|\s+or\s+/)).some(v=>{const a=normAns(v);if(!a)return false;return lev(t,a)<=(a.length<=4?0:a.length<=8?1:2)})}
-function typedHTML(fb){
+function typedHTML(fb,q){q=q||state.active;const wc=q&&byId[q.cid];
+ if(isWr(wc)){if(!fb)return wrBox(wc,'typed','',' onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey||'+(wc.wr.t==='cons'||wc.wr.t==='pts'?'false':'true')+')){event.preventDefault();submitTyped()}"');
+  return '<div class="typein done wr '+(fb.correct?'ok':'bad')+'"><span class="yl">You wrote</span><b class="wrout">'+esc(fb.typed||'')+'</b>'+(fb.override?'<span class="ov">counted as right</span>':'')+(fb.wrnote||'')+'</div>'}
  if(!fb)return '<div class="typein"><input id="typed" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer, then press Enter" aria-label="Your answer" onkeydown="if(event.key===\'Enter\'){event.preventDefault();submitTyped()}"></div>';
  return '<div class="typein done '+(fb.correct?'ok':'bad')+'"><span class="yl">You typed</span><b>'+esc(fb.typed||'')+'</b>'+(fb.override?'<span class="ov">counted as right</span>':'')+'</div>'}
 function submitTyped(){const q=state.active;if(view!=null||state.pmatch||state.feedback||!q||!q.typed)return;const el=$('typed'),val=(el&&el.value||'').trim();if(!val){if(el)el.focus();return}
- const target=q.choices.find(x=>x.correct),ok=typedOK(val,target.label)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(val,x))||numOK(val,byId[q.cid]);state.selected=ok?target.letter:null;record(ok,false);
- state.feedback.typed=val;state.feedback.correctLabel=target.label;const last=state.log[state.log.length-1];if(last)last.fb=state.feedback;save();draw()}
+ const wrc=byId[q.cid],wres=isWr(wrc)?wrCheck(val,wrc.wr):null,target=q.choices.find(x=>x.correct),ok=wres?wres.ok:(typedOK(val,target.label)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(val,x))||numOK(val,byId[q.cid]));state.selected=ok?target.letter:null;record(ok,false);
+ state.feedback.typed=val;state.feedback.correctLabel=target.label;if(wres)state.feedback.wrnote=wres.html;const last=state.log[state.log.length-1];if(last)last.fb=state.feedback;save();draw()}
 // A typed answer marked wrong that was really right (a spelling the checker did not accept).
 function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct||!fb.typed||!state.active)return;
  if(freeOn()){state.wrong=Math.max(0,state.wrong-1);state.correct++;state.pass.right=(state.pass.right||0)+1;fb.correct=true;fb.override=true;const l=state.log[state.log.length-1];if(l)l.fb=fb;save();draw();return}

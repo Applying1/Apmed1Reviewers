@@ -811,6 +811,17 @@ body.notesonly .side>.label,body.notesonly #nav{display:none}
 .qfig .mtab th{background:var(--accent-soft,#7c6cf022);font-weight:700}.qfig .mplot{display:block;max-width:100%;height:auto}
 .qfig .mol:has(.mplot),.qfig .mol:has(.mtab){flex:1 1 auto;max-width:560px}.qfig .mol svg.mplot{max-height:440px}
 .molc svg.mplot{max-height:none;max-width:280px;margin:0 auto}.molc.sm svg.mplot{max-width:150px}
+/* v68 written answers and case problems */
+.cstem{border-left:3px solid var(--accent);background:var(--raised,#0001);padding:12px 14px;border-radius:12px;margin:0 0 14px;font-size:15px;line-height:1.55}
+.cstem .ck{display:block;font:700 11px/1.2 var(--sans,inherit);letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:5px}
+.typein.wr textarea.wrin{display:block;width:100%;min-height:52px;resize:vertical;font:500 16px/1.55 var(--sans,inherit);padding:10px 12px}
+.wrfoot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;font-size:12.5px;color:var(--mute)}
+.wrkeys{display:flex;gap:5px}.wrkeys button{min-width:34px;height:32px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);font:600 15px var(--sans,inherit);color:var(--text);cursor:pointer}
+.wrkeys button:active{background:var(--accent-soft)}
+.typein.done.wr{flex-wrap:wrap}.typein.done.wr ul.wrn{flex-basis:100%}
+.typein.done.wr b.wrout{white-space:pre-line;font-weight:600}
+.typein.wr textarea.wrin,.typein.done.wr b.wrout,ul.wrn,.exa{font-variant-ligatures:none;font-feature-settings:'calt' 0,'liga' 0}
+ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}ul.wrn li.y{color:var(--good,#1d8657)}ul.wrn li.n{color:var(--bad,#c2410c)}ul.wrn li.tip{color:var(--mute)}
 /* v66 bottom tab bar (phones) */
 .tabbar{display:none}
 @media (max-width:920px){
