@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='70',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='71',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -278,7 +278,12 @@ function save(){PV++;if(state.active&&!state.active.sig&&typeof byId!=='undefine
  if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
 function flushSave(){if(!saveQ)return;saveQ=false;
  let ok=putState();if(!ok){trimState(state,true);ok=putState();if(!ok){freeSpace();ok=putState()}}if(ok===STORE_FULL){STORE_FULL=!ok;storeWarn()}
- try{const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}}
+ // v71: on the website the summary also names the course and when its mastered questions come due, so the home page and
+ // the daily review reminder (daily.js) can count reviews without opening the course
+ try{const main=bankItems(BANKS[0]),e=examObj(),id=courseId(),due=[];
+  if(id&&state.prefs.srs)for(const c of main){const k=state.concepts[c.id];if(k&&k.srs&&isM(c))due.push(k.srs.due)}
+  localStorage.setItem(KEY+'_summary',JSON.stringify(Object.assign({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''},id?{id,title:CONFIG.title,due:due.sort((a,b)=>a-b).slice(0,400)}:{})))}catch(e){}
+ if(window.Daily)Daily.digestSoon()}
 addEventListener('pagehide',flushSave);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSave()});
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function stableHash(s){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0}
@@ -572,7 +577,10 @@ function drawTabbar(){const tb=$('tabbar');if(!tb)return;const exam=state.exam&&
  const dot=$('pages')&&$('pages').querySelector('.dndot,.ndot,[data-dn] .dot');
  setHTML(tb,ps.map(p=>'<button class="'+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')">'+sv(PG[p][1])+nm(p)+'</button>').join('')+
   '<button onclick="toggleNav(true)" aria-label="More: topics, discussion, notifications">'+sv(MORE_IC)+'More'+(dot?'<span class="tbdot"></span>':'')+'</button>')}
-function drawPages(){setHTML($('pages'),HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+discussLink()+notifyLink());drawTabbar()}
+function drawPages(){setHTML($('pages'),HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+discussLink()+notifyLink()+toolLinks());drawTabbar()}
+// v71: the site's live quiz, opened for this course (the grade calculator waits for the class's grading scheme)
+function toolLinks(){if(!CONFIG.home||!courseId())return '';const svg=d=>'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>',c=encodeURIComponent(courseId());
+ return '<a class="page" style="text-decoration:none" href="quiz.html?course='+c+'">'+svg('<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>')+'Live quiz</a>'}
 // ---- per-question discussion (threads named "<course>:<question id>")
 const CHAT_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg>';
 let DCOUNT={};
@@ -594,6 +602,9 @@ function closeDiscuss(){const d=$('dpanel');if(d)d.classList.remove('open');docu
 addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('dopen'))closeDiscuss()});
 // back from signing in inside the panel: reopen it (#discuss=<question id>, or #discuss= for the course thread)
 addEventListener('load',()=>{const m=location.hash.match(/^#discuss=([\w.-]*)$/);if(m){history.replaceState(history.state,'',location.pathname+location.search);setTimeout(()=>openDiscuss(m[1]||undefined),400)}});
+// v71: #due (from the daily review reminder) opens the reviews that are due today, if there are any
+function openDue(){if(location.hash!=='#due')return;history.replaceState(history.state,'',location.pathname+location.search);if(state.prefs.srs&&BANK.some(isDue))selectSection('DUE')}
+if(document.readyState==='complete')setTimeout(openDue,300);else addEventListener('load',()=>setTimeout(openDue,300));
 // ---- discussion notifications: polls the course's newest posts (discussion_recent). state.dn = {base, seen, read:{thread:id}}.
 // base: the newest post when notifications started (older posts never count as unread); seen: newest post already announced.
 let DREC=[],dnT=null;
@@ -695,8 +706,29 @@ const ICON={
  target:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>',
  check:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
  layers:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>',
- bulb:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>'
+ bulb:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>',
+ flame:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>'
 };
+/* ---------- v71: iPhone Safari can erase saved progress ----------
+   Safari deletes a site's saved data after 7 days of using Safari without opening it; apps added to the Home Screen are
+   exempt. For someone on iPhone Safari who isn't signed in or syncing: a one-time card with Sign in and the Home Screen
+   steps. (A Home Screen app starts with empty storage, so signing in comes first.) */
+const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const BK_KEY='reviewer_backup_card';
+function bkShow(){if(!CONFIG.home||!IOS||STANDALONE||syncCode||!cloudOn())return false;try{if(localStorage.getItem(BK_KEY))return false}catch(e){return false}return state.correct+state.wrong+state.lookups>=5}
+function bkCard(){let el=$('bkcard');if(!bkShow()){if(el)el.hidden=true;return}
+ if(!el){el=document.createElement('section');el.id='bkcard';el.className='bkcard';el.setAttribute('aria-label','Back up your progress');$('hero').before(el)}
+ const ic='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>';
+ el.innerHTML='<span class="bki">'+ic+'</span><div><h3>Back up your progress</h3><p>On iPhone, Safari erases this site\'s saved progress if you don\'t open it for 7 days. Sign in to keep a copy online, on every device.</p>'+
+  (el.dataset.steps?'<ol><li><b>Sign in first</b>, so your progress comes along.</li><li>Tap <b>Share</b> at the bottom of Safari.</li><li>Tap <b>Add to Home Screen</b>.</li><li>Open the app from your Home Screen and sign in there too.</li></ol>':'')+
+  '<div class="bkr"><a class="btn sm primary" href="./?signin=1" style="text-decoration:none">Sign in with Google</a>'+(el.dataset.steps?'':'<button class="btn sm" onclick="$(\'bkcard\').dataset.steps=1;bkCard()">Add to Home Screen</button>')+'<button class="btn sm" onclick="bkDone()">Not now</button></div></div>';
+ el.hidden=false}
+function bkDone(){try{localStorage.setItem(BK_KEY,'1')}catch(e){}bkCard()}
+/* ---------- v71: daily goal and streak, across every course on this device (site/daily.js) ---------- */
+function dailyAdd(n){if(!n||!window.Daily||!CONFIG.home)return;try{const g=Daily.add(n);if(g)setTimeout(()=>{toast('Daily goal reached: '+g.goal+' questions'+(g.streak>1?' · '+g.streak+'-day streak':''));celebrate('section')},650)}catch(e){}}
+function dailyTile(tile){const d=window.Daily&&CONFIG.home?Daily.now():null;if(!d)return '';
+ return tile(ICON.flame,'Today',d.today+'<small>/'+d.goal+'</small>',d.met?(d.streak>1?d.streak+'-day streak':'Goal done today'):d.streak?d.streak+'-day streak · keep it going':'Daily goal: '+d.goal+' questions')}
 function mastered(){return BANK.filter(isM).length}
 function chProgress(ch){return progress('CH:'+ch);let a=BANK.filter(c=>chOf(c.section)===String(ch));return {done:a.filter(isM).length,total:a.length}}
 function nextSection(){if(!isX(state.section)&&!isCh(state.section)&&!completed(state.section))return state.section;return sectionKeys.find(k=>!completed(k))||sectionKeys[0]}
@@ -720,7 +752,7 @@ function editName(){
 }
 
 function drawDash(){
- drawGreeting();drawClassPanel();drawContribPanel();loadMine();const ex=examObj(),nt=nextTest(),when=nt?whenAt(nt.at):'';$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
+ drawGreeting();drawClassPanel();drawContribPanel();loadMine();bkCard();const ex=examObj(),nt=nextTest(),when=nt?whenAt(nt.at):'';$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
  document.title='Dashboard · '+CONFIG.title;
  const nMiss=BANK.filter(c=>isMissedC(c)&&!isM(c)).length,nStar=BANK.filter(isStar).length,nDue=state.prefs.srs?BANK.filter(isDue).length:0;
  $('weakgo').hidden=!(state.prefs.missed&&nMiss);$('weakgo').textContent='Practice missed only ('+nMiss+')';
@@ -738,7 +770,7 @@ function drawDash(){
  const tile=(ic,k,v,d)=>'<div class="kpi"><div class="k">'+ic+k+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div></div>';
  $('kpis').innerHTML=
   tile(ICON.target,'Accuracy',Math.round(100*state.correct/Math.max(1,att))+'<small>%</small>',state.correct+' right · '+state.wrong+' wrong')+
-  tile(ICON.check,'Answered',att+state.lookups,'questions so far')+
+  (dailyTile(tile)||tile(ICON.check,'Answered',att+state.lookups,'questions so far'))+
   tile(ICON.layers,'Sections done',secDone+'<small>/'+sectionKeys.length+'</small>',(sectionKeys.length-secDone)+' to go')+
   (MSETS.length&&pageOn('match')?tile(PG.match[1]?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG.match[1]+'</svg>':'','Drills',state.match.total?Math.round(100*state.match.right/state.match.total)+'<small>%</small>':'–',state.match.sets+' set'+(state.match.sets===1?'':'s')+' checked')
    :tile(ICON.bulb,'Hints used',state.hints,state.lookups+' slide checks'));
@@ -1065,6 +1097,7 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
   if(a==null||a===''||q.mt)return;   // skipped (matching items are not bank questions): no effect on mastery, Missed or class stats
   k.seen++;if(ok){state.correct++;masteryUp(k);delete k.back}else{k.wrong++;state.wrong++;masteryDown(k);relearn(k)}
   crowdAdd(q.cid,!ok);state.history.push({cid:q.cid,correct:ok,lookup:false,mode:'EXAM'})});
+ dailyAdd(ex.qs.filter((q,j)=>{const a=ex.ans[j];return !(a==null||a===''||q.mt)}).length);
  ex.right=right;ex.byCh=byCh;if(100*right/n>=(Object.assign({pass:60},CONFIG.grading||{})).pass)setTimeout(()=>celebrate('exam'),380);
  state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0,easy:ex.easy?1:0}).slice(-20);
  // A challenge keeps your first score; later tries are shared as retakes.
@@ -1488,6 +1521,10 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ ...(CONFIG.home?[{v:'34',date:'Oct 24, 2026',title:'Daily goal and live quiz',items:[
+  'A <b>daily goal</b> and <b>streak</b>: every answer in any course counts. Track it on the home page and in <b>Today</b> on your dashboard.',
+  '<b>Live quiz</b>: host a quiz for your study group from this course, and everyone joins on their phone with a code. Find it in the menu.',
+ ]}]:[]),
  {v:'33',date:'Oct 24, 2026',title:'Smarter practice',items:[
   'A question you miss now comes back after a few others, while the explanation is still fresh, instead of at the end of the section.',
   ...(BANK.some(c=>c.case)?['Problems with parts go <b>part by part</b>, and your earlier parts stay on the card as an answer key.']:[]),
@@ -1869,7 +1906,7 @@ function record(correct,lookup){
  state.feedback={at:Date.now(),correct,lookup,prev,hinted,correctLabel:target.letter+'. '+target.label,wrongExplain:own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':''};
  if(lookup)state.selected=null;
  if(!free){k.history.push({correct,lookup,kind:q.kind});if(k.history.length>5)k.history.splice(0,k.history.length-5)}
- state.history.push({cid:q.cid,correct,lookup,mode:state.section});
+ state.history.push({cid:q.cid,correct,lookup,mode:state.section});dailyAdd(1);
  if(state.history.length>600)state.history=state.history.slice(-600);
  state.log.push({sec:state.section,sel:state.selected,fb:state.feedback,q:{cid:q.cid,kind:q.kind,stem:q.stem,why:q.why===((byId[q.cid]||{}).why||'')?undefined:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))}});
  if(state.log.length>150)state.log=state.log.slice(-150);

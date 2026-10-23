@@ -4,10 +4,11 @@
 // saved copy waits up to 1.5 s for the network first, so someone coming back after a while gets the newest version when
 // the connection allows. Without a connection, the saved copy is used. Pictures show the saved copy first and refresh in
 // the background. Fonts are cached after first use; transes PDFs only once opened.
-const CACHE = 'reviewers-v13';
+const CACHE = 'reviewers-v14';
 const FRESH = 6 * 3600e3, WAIT = 1500;
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'dialog.js', 'live.js', 'ui.css', 'icons.svg', 'reminders-core.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html', 'update.js',
+  'daily.js', 'quiz.html',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
 // A saved copy remembers when it was saved (x-saved-at), so its age can be checked.
@@ -59,7 +60,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k !== CACHE) await caches.delete(k);
+    for (const k of await caches.keys()) if (k !== CACHE && k !== 'reviewer-meta') await caches.delete(k);   // reviewer-meta: daily.js's digest
     await self.clients.claim();
   })());
 });
@@ -135,13 +136,23 @@ self.addEventListener('fetch', e => {
 });
 
 // Push notifications (see push-client.js and PUSH_SETUP.md): {title, body, url, tag}.
+// A daily review reminder ({daily: true, ...}) is written here from this device's own saved progress (daily.js).
+try { importScripts('daily.js'); } catch (err) { /* offline on first install: daily pushes use the server's text */ }
+async function dailyNote(d) {
+  let digest = null;
+  try { const c = await caches.open('reviewer-meta'), r = await c.match(new URL('daily-digest.json', self.registration.scope).href); if (r) digest = await r.json(); } catch (err) { }
+  try { return self.Daily ? Object.assign({}, d, Daily.compose(digest, Object.assign({ base: self.registration.scope }, d))) : d; } catch (err) { return d; }
+}
 self.addEventListener('push', e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(d.title || "APMed '33 Reviewers", {
-    body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: d.tag || undefined,
-    data: { url: d.url || 'notifications.html' }
-  }));
+  e.waitUntil((async () => {
+    if (d.daily) d = await dailyNote(d);
+    await self.registration.showNotification(d.title || "APMed '33 Reviewers", {
+      body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: d.tag || undefined,
+      data: { url: d.url || 'notifications.html' }
+    });
+  })());
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();

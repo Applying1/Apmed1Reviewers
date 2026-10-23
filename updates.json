@@ -339,5 +339,13 @@
   "title": "Chem and PurCom question fixes",
   "text": "In Chemistry and Purposive Communication, the right answer is no longer the obviously longest choice: 99 questions got wrong choices that are just as specific. Bea's practice exams and the teacher's quizzes stay as written.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 41,
+  "date": "2026-10-24",
+  "type": "feature",
+  "title": "Daily goal, streak and live quiz",
+  "text": "Every answer in any course now counts toward a daily goal and streak, shown on the home page with the reviews due in each course. New: Live quiz. Host a quiz for your study group, and everyone joins on their phone with a code. On iPhone Safari, a one-time card shows how to keep your progress safe.",
+  "link": "./"
  }
 ]

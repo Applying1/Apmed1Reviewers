@@ -3,7 +3,7 @@
    The function hands out its public key (GET ?key) and sends new updates.json items to subscribed devices. */
 (function () {
   const P = {
-    cloud: null, key: null,
+    cloud: null, key: null, feats: null,
     init(cloud) { P.cloud = cloud || null; },
     fn() { return P.cloud ? P.cloud.url.replace(/\/+$/, '') + '/functions/v1/push' : '' },
     hdr() { const h = { 'Content-Type': 'application/json', apikey: P.cloud.key }; if (/^eyJ/.test(P.cloud.key)) h.Authorization = 'Bearer ' + P.cloud.key; return h },
@@ -15,11 +15,13 @@
       if (!P.cloud) throw new Error('no cloud');
       const r = await fetch(P.fn() + '?key=1', { headers: P.hdr() });
       if (!r.ok) throw new Error('not set up');
-      const j = await r.json(); if (!j.key) throw new Error('not set up'); return (P.key = j.key);
+      const j = await r.json(); if (!j.key) throw new Error('not set up'); P.feats = j.features || []; return (P.key = j.key);
     },
+    // what the deployed push function can do (e.g. 'daily'); [] for an older copy, null if it can't be reached
+    async features() { try { await P.getKey(); return P.feats || [] } catch (e) { return null } },
     b64(s) { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)) },
     async sub() { const r = await P.reg(); await navigator.serviceWorker.ready; return r.pushManager.getSubscription() },
-    prefs() { const o = Object.fromEntries(Object.keys(Notify.TYPES).map(k => [k, Notify.on(k)])), r = Notify.prefs().rem; if (window.Remind) o.rem = Remind.prefs(); else if (r) o.rem = r; return o },
+    prefs() { const o = Object.fromEntries(Object.keys(Notify.TYPES).map(k => [k, Notify.on(k)])), n = Notify.prefs(), r = n.rem; if (window.Remind) o.rem = Remind.prefs(); else if (r) o.rem = r; if (n.daily) o.daily = n.daily; return o },
     // If the server's push key changed, this device's old subscription can't receive anything: quietly make a new one
     // (same settings). Runs on the home, course and notifications pages; does nothing when the keys match.
     async heal() {
@@ -34,6 +36,7 @@
         if (n.endpoint !== old) { try { await P.rpc('push_unsubscribe', { p_endpoint: old }) } catch (e) { } }
       } catch (e) { }
     },
+    async testDaily() { const s = await P.sub(); if (!s) throw new Error('off'); if (window.Daily) await Daily.digest(); const r = await fetch(P.fn(), { method: 'POST', headers: P.hdr(), body: JSON.stringify({ testdaily: s.endpoint }) }); if (!r.ok) throw new Error(r.status) },
     async testRem() { const s = await P.sub(); if (!s) return; const r = await fetch(P.fn(), { method: 'POST', headers: P.hdr(), body: JSON.stringify({ testrem: s.endpoint }) }); if (!r.ok) throw new Error(r.status) },
     async turnOn() {
       const perm = await Notification.requestPermission();

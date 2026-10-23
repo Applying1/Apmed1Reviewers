@@ -120,6 +120,48 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .tmore{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;border:0;border-top:1px solid var(--line);background:none;padding:10px 0 8px;font:600 13.5px var(--sans);color:var(--accent);cursor:pointer}
 .tmore svg{transition:transform .2s}.tests.open .tmore svg{transform:rotate(180deg)}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:600;font-size:14px}
+/* Today: daily goal, streak, the week, and reviews due (daily.js) */
+.today{margin:0 0 18px;padding:14px 16px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.today[hidden]{display:none}
+.today h2{display:flex;align-items:center;gap:8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);margin:0 0 12px}
+.today h2 label{margin-left:auto;display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;color:var(--mute)}
+.today select{font:600 12.5px var(--sans);color:var(--text);background:var(--raised);border:1px solid var(--line2);border-radius:8px;padding:3px 6px}
+.tdy{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 18px;align-items:center}
+.strk{display:flex;align-items:center;gap:10px;padding-right:18px;border-right:1px solid var(--line)}
+.strk .fl{flex:none;width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:var(--raised);color:var(--faint);font-size:22px}
+.strk.lit .fl{background:color-mix(in oklab,#f97316 15%,var(--surface));color:#ea580c}
+.strk.cold .fl{color:#f97316}
+.strk b{display:block;font:700 26px/1 var(--serif);font-variant-numeric:tabular-nums}
+.strk span{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap}.strk span.risk{color:var(--bad);font-weight:600}
+.gl{min-width:0}
+.gl .gt{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;color:var(--mute);margin-bottom:6px}.gl .gt b{color:var(--text);font-variant-numeric:tabular-nums}
+.gl .gt .ok{color:var(--good);font-weight:600}
+.gl .track{height:8px}
+.wk{display:flex;gap:6px;margin-top:10px;max-width:300px}
+.wk i{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font:600 10.5px/1 var(--sans);font-style:normal;color:var(--faint)}
+.wk i::before{content:"";width:100%;max-width:26px;height:6px;border-radius:9px;background:var(--raised)}
+.wk i.some::before{background:color-mix(in oklab,var(--accent) 35%,var(--raised))}
+.wk i.met::before{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.wk i.now{color:var(--text)}
+.due{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line);font-size:13.5px;color:var(--mute)}
+.due a{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--text);text-decoration:none;font-weight:600;font-size:13px}
+.due a:hover{filter:brightness(.97)}.due a em{font-style:normal;color:var(--accent);font-variant-numeric:tabular-nums}
+.due .rm{margin-left:auto;color:var(--accent);font-weight:600;text-decoration:none;font-size:13px}
+@media (max-width:520px){.tdy{gap:12px 14px}.strk{flex-direction:column;align-items:flex-start;gap:6px;padding-right:14px}.strk b{font-size:22px}.strk .fl{width:38px;height:38px;font-size:19px}.gl .gt{flex-direction:column;gap:1px}.wk{max-width:none}.due .rm{margin-left:0}}
+/* Tools: live quiz and grade calculator */
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:0 0 18px}
+.tool{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow);min-width:0;transition:border-color .15s,transform .18s var(--ease)}
+.tool:hover{border-color:var(--accent-line);transform:translateY(-1px)}
+.tool .tic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-size:18px}
+.tool>span:last-child{min-width:0}.tool b{display:block;font-size:14.5px}.tool span span{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:520px){.tool span span{white-space:normal}}
+/* iPhone Safari: back up your progress (one time) */
+.bkcard{display:flex;gap:14px;align-items:flex-start;margin:0 0 18px;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--accent-line)}
+.bkcard[hidden]{display:none}
+.bkcard .bki{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-size:20px}
+.bkcard h3{margin:0;font-size:15.5px}.bkcard p{margin:4px 0 10px;font-size:14px;color:var(--mute)}
+.bkcard ol{margin:2px 0 12px;padding-left:20px;color:var(--mute);font-size:14px;line-height:1.55}.bkcard ol b{color:var(--text)}
+.bkcard .row{margin:0}.bkcard .row .btn{flex:none}
 /* Google sign-in */
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:14px;padding:11px 16px;border-radius:12px;border:1px solid var(--line2);background:#fff;color:#1f1f1f;font:600 15px/1.2 var(--sans)}
 .gbtn:hover{background:#f4f4f4}
@@ -172,8 +214,13 @@ html.introing body{overflow:hidden}
   <div class="acts"><a class="btn bell" id="bell" href="notifications.html" aria-label="Notifications" title="Notifications"><svg class="i" width="17" height="17" aria-hidden="true"><use href="icons.svg#i-bell"/></svg><span class="bdot" id="bdot" hidden></span></a><a class="btn" href="schedule.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>Timetable</a><button class="btn" id="syncbtn" onclick="openSync()" hidden>Sign in</button><button class="btn" id="theme" onclick="toggleTheme()">Theme</button></div>
  </div>
  <h1 id="hi">Pick a course</h1>
+ <div class="bkcard" id="bkcard" hidden></div>
  <a class="upnext" id="upnext" href="schedule.html" hidden></a>
  <section class="tests" id="tests" hidden aria-label="Tests coming up"></section>
+ <section class="today" id="today" hidden aria-label="Today"></section>
+ <nav class="tools" aria-label="Tools">
+  <a class="tool" href="quiz.html"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Live quiz</b><span>Quiz your study group, live: everyone joins on their phone with a code</span></span></a>
+ </nav>
  <div class="try" id="try" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <p class="note inst" id="install" hidden>Use this like an app, even offline. <button class="linkbtn" id="installbtn">Install app</button></p>
@@ -193,6 +240,7 @@ html.introing body{overflow:hidden}
 <script src="notify-core.js"></script>
 <script src="reminders-core.js"></script>
 <script src="push-client.js"></script>
+<script src="daily.js"></script>
 <script>Notify.load().then(f=>{const n=Notify.prefs().ddot===false?0:Notify.unread(f),d=document.getElementById('bdot');if(n){d.textContent=n>9?'9+':n;d.hidden=false;document.getElementById('bell').setAttribute('aria-label','Notifications, '+n+' new')}})</script>
 <script>
 // Links shared on Facebook/Messenger get ?fbclid=... added; drop it so the address stays clean when copied again.
@@ -223,6 +271,7 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
    '<span class="body"><span class="t">'+esc(c.title)+'</span>'+
    (c.exam?'<span class="tags">'+examTag(c.exam)+'</span>':'')+
    '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?(s.scope&&!(c.exam&&c.exam.name===s.scope)?esc(s.scope)+': ':'')+pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('');
+ window.COURSE_LIST=list;if(window.afterCourses)afterCourses(list);
 })();
 // Offer the APMed '33 colors once (until the person picks Try it or No thanks). Same setting as Personalize → Appearance → Colors.
 function setPal(p){const d=document.documentElement;try{if(p){d.dataset.palette=p;localStorage.setItem('reviewer_palette',p)}else{delete d.dataset.palette;localStorage.removeItem('reviewer_palette')}}catch(e){}}
@@ -346,6 +395,40 @@ function startSync(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=new Uint8Array
 function copyCode(){const c=getCode();(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(c):Promise.reject()).then(()=>drawSync('Copied.',true),()=>copyBox(c))}
 function stopSync(sure){if(sure!==true){ask('Your progress stays here, and the other device keeps its own.',{title:'Stop syncing this device?',ok:'Stop syncing',danger:1}).then(y=>{if(y)stopSync(true)});return}setCode('');try{localStorage.removeItem(ACC_KEY)}catch(e){}drawSyncBtn();drawSync()}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+<script>
+// ---- Today: daily goal, streak, this week and reviews due (daily.js). Shown once someone has studied on this device.
+const DOW=['S','M','T','W','T','F','S'],hourTxt=h=>h===12?'12 noon':(h%12||12)+(h<12?' AM':' PM');
+let FEATS=null;
+function shortName(id){const c=(window.COURSE_LIST||[]).find(x=>x.id===id);return c?c.title.replace(/^(Intro to|Introduction to) /,'').replace(/ in the Modern World$/,''):id}
+function drawToday(){const box=$('today');if(!window.Daily)return;const s=Daily.now(),due=Daily.due(),list=window.COURSE_LIST||[];
+ if(!s.active&&!list.some(c=>summary(c.storageKey))){box.hidden=true;return}
+ const total=due.reduce((a,c)=>a+c.n,0),pct=Math.min(100,Math.round(100*s.today/s.goal)),r=Daily.rem(),left=s.goal-s.today;
+ const remLink=r.on?'<a class="rm" href="notifications.html#settings">'+ic('alarm-clock')+' Daily reminder · '+hourTxt(r.hour)+'</a>':FEATS&&FEATS.includes('daily')?'<a class="rm" href="notifications.html#settings">'+ic('alarm-clock')+' Get a daily reminder</a>':'';
+ box.innerHTML='<h2>'+ic('flame')+' Today<label>Goal <select onchange="setGoal(+this.value)" aria-label="Daily goal">'+Daily.GOALS.map(n=>'<option value="'+n+'"'+(n===s.goal?' selected':'')+'>'+n+' questions</option>').join('')+'</select></label></h2>'+
+  '<div class="tdy"><div class="strk'+(s.met?' lit':s.streak?' cold':'')+'"><span class="fl">'+ic('flame')+'</span><div><b>'+s.streak+'</b><span>day streak</span>'+(s.atRisk?'<span class="risk">'+left+' more today keeps it</span>':s.best>s.streak?'<span>best '+s.best+'</span>':'')+'</div></div>'+
+  '<div class="gl"><div class="gt"><span><b>'+s.today+'</b> of '+s.goal+' questions today</span>'+(s.met?'<span class="ok">Goal done ✓</span>':'<span>'+left+' to go</span>')+'</div>'+
+   '<span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span>'+
+   '<div class="wk" aria-label="This week">'+s.week.map(d=>{const w=new Date(d.day+'T12:00');return '<i class="'+(d.met?'met':d.n?'some':'')+(d.today?' now':'')+'" title="'+esc(w.toLocaleDateString(undefined,{weekday:'long'})+': '+d.n+' answered')+'">'+DOW[w.getDay()]+'</i>'}).join('')+'</div></div></div>'+
+  (total||remLink?'<div class="due">'+(total?'<span>'+total+' review'+(total>1?'s':'')+' due:</span>'+due.map(c=>'<a href="reviewer.html?course='+encodeURIComponent(c.id)+'#due">'+esc(shortName(c.id))+' <em>'+c.n+'</em></a>').join(''):'<span>No reviews due right now.</span>')+remLink+'</div>':'');
+ box.hidden=false}
+function setGoal(n){Daily.setGoal(n);drawToday()}
+// ---- iPhone Safari: saved progress is erased after 7 days without a visit (Home Screen apps are exempt). One-time card.
+function drawBackup(){const b=$('bkcard'),list=window.COURSE_LIST||[];const ios=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ let off=true;try{off=!!localStorage.getItem('reviewer_backup_card')}catch(e){}
+ if(!ios||standalone||!CLOUD||getCode()||off||!list.some(c=>summary(c.storageKey))){b.hidden=true;return}
+ $('ios').hidden=true;
+ b.innerHTML='<span class="bki">'+ic('shield-check')+'</span><div><h3>Back up your progress</h3><p>On iPhone, Safari erases this site\'s saved progress if you don\'t open it for 7 days. Sign in to keep a copy online, on every device.</p>'+
+  (b.dataset.steps?'<ol><li><b>Sign in first</b>, so your progress comes along.</li><li>Tap <b>Share</b> '+ic('share')+' at the bottom of Safari.</li><li>Tap <b>Add to Home Screen</b>.</li><li>Open the app from your Home Screen and sign in there too.</li></ol>':'')+
+  '<div class="row"><button class="btn primary" onclick="signIn()">Sign in with Google</button>'+(b.dataset.steps?'':'<button class="btn" onclick="$(\'bkcard\').dataset.steps=1;drawBackup()">Add to Home Screen</button>')+'<button class="btn" onclick="bkNot()">Not now</button></div></div>';
+ b.hidden=false}
+function bkNot(){try{localStorage.setItem('reviewer_backup_card','1')}catch(e){}drawBackup();if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!standalone)$('ios').hidden=false}
+function afterCourses(){drawToday();drawBackup();if(CLOUD&&window.Push&&!FEATS)Push.features().then(f=>{FEATS=f||[];drawToday()})}
+if(window.COURSE_LIST)afterCourses();
+addEventListener('pageshow',e=>{if(e.persisted&&window.COURSE_LIST)drawToday()});   // back from a course: fresh numbers
+// Ask the browser to keep this site's data (no prompt in Chrome or Safari; Firefox would ask, so it's skipped there)
+if(navigator.storage&&navigator.storage.persist&&!/firefox/i.test(navigator.userAgent))navigator.storage.persisted().then(p=>{if(!p)return navigator.storage.persist()}).catch(()=>{});
+if(window.Daily)Daily.digest();
 </script>
 <script>
 // One-time welcome intro (once per device): the course pictures shuffle, gather, the logo pops out with sparkles,

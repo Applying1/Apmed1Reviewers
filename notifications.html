@@ -64,6 +64,7 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
 <script src="schedule-core.js"></script>
 <script src="reminders-core.js"></script>
 <script src="push-client.js"></script>
+<script src="daily.js"></script>
 <script>
 const $=id=>document.getElementById(id),esc=Notify.esc;
 const ic=(n,c)=>'<svg class="i'+(c?' '+c:'')+'" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
@@ -84,13 +85,28 @@ function drawSettings(){const p=Notify.prefs();
  $('settings').innerHTML=
   '<div class="sec"><h2>What you hear about</h2><p class="d">Turned-off types are hidden from Updates, the red dots and push notifications.</p>'+
   Object.entries(Notify.TYPES).map(([k,[t,d]])=>row(esc(t),esc(d),sw(p.types[k]!==false,"flip('types."+k+"')",t))).join('')+'</div>'+
+  '<div class="sec" id="dailysec"></div>'+
   '<div class="sec" id="remsec"></div>'+
   '<div class="sec"><h2>Inside a course</h2>'+
   row('Update pop-ups','A one-time pop-up when something new arrives for the course you have open.',sw(p.pop!==false,"flip('pop')",'Update pop-ups'))+
   row('New comment pop-ups','A pop-up when a classmate comments in the course you have open (never during a mock exam, never your own).',sw(p.dpop!==false,"flip('dpop')",'New comment pop-ups'))+
   row('Unread dots','Red dots on Discussion and Notifications for things you haven\'t opened yet.',sw(p.ddot!==false,"flip('ddot')",'Unread dots'))+'</div>'+
   '<div class="sec" id="pushsec"><h2>On this device</h2><p class="d">Push notifications reach you even when the site is closed.</p><div id="pushbody"><p class="pstat">Checking…</p></div></div>';
- drawRem();Push.draw($('pushbody'))}
+ drawDaily();drawRem();Push.draw($('pushbody'))}
+// ---------- daily review reminder ----------
+// The server sends one push a day at the hour picked here; this device's own saved progress turns it into the message.
+let FEATS;   // undefined = not checked yet, null = push not reachable, [] = older server copy without 'daily'
+function dailySet(ch){Daily.setRem(ch);drawDaily()}
+function goalSet(n){Daily.setGoal(n);drawDaily()}
+async function dailyTest(b){b.disabled=true;b.textContent='Sending…';try{await Push.testDaily();b.textContent='Sent. Check your notifications'}catch(e){b.textContent=e.message==='off'?'Turn on notifications below first':'Could not send';b.disabled=false}}
+function drawDaily(){const el=$('dailysec');if(!el)return;const d=Daily.rem(),st=Daily.now(),ready=Array.isArray(FEATS)&&FEATS.includes('daily');
+ if(FEATS===undefined)Push.features().then(f=>{FEATS=f;drawDaily()});
+ let h='<h2>Daily review</h2><p class="d">One notification a day with what is due for review in each course, your streak and your next test. Your phone writes it from the progress saved on it, so your answers never leave this device.</p>'+
+  row('Remind me every day',ready||FEATS===undefined?'At the time you pick, on devices where notifications are on (below).':FEATS===null?'Needs a connection to check.':'Coming soon. Your daily goal and streak already work.',sw(d.on&&ready,'dailySet({on:'+!d.on+'})','Daily review reminder',!ready));
+ if(d.on&&ready)h+='<div class="opt"><b>At</b><div class="chips">'+Daily.HOURS.map(([v,t])=>chip(d.hour===v,'dailySet({hour:'+v+'})',t)).join('')+'</div></div>'+
+   '<div class="opt"><button class="btn" onclick="dailyTest(this)">Send a test</button></div>';
+ h+='<div class="opt"><b>Daily goal</b><div class="chips">'+Daily.GOALS.map(n=>chip(st.goal===n,'goalSet('+n+')',n+' questions')).join('')+'</div><span>Answers in any course count. Meet it on days in a row to build your streak'+(st.streak?' (now '+st.streak+(st.streak===1?' day':' days')+')':'')+'.</span></div>';
+ el.innerHTML=h}
 // ---------- exam reminders ----------
 const chip=(on,fn,label)=>'<button aria-pressed="'+!!on+'" onclick="'+fn+'">'+esc(label)+'</button>';
 const hourTxt=h=>h===12?'12 noon':(h%12||12)+(h<12?' AM':' PM');
