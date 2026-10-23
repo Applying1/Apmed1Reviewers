@@ -115,6 +115,22 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .upnext b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .upnext .s{display:block;color:var(--mute);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .upnext .go{flex:none;color:var(--accent);font-size:13.5px;font-weight:600}
+/* Test countdown (exams, evals and quizzes from the timetable) */
+.tests{margin:0 0 18px;padding:14px 16px 6px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.tests[hidden]{display:none}
+.tests h2{display:flex;align-items:center;gap:8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);margin:0 0 6px}
+.tests h2 a{margin-left:auto;text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;color:var(--accent);text-decoration:none}
+.trow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);text-decoration:none;color:inherit}
+.trow:first-of-type{border-top:0}
+.trow .bar{flex:none;align-self:stretch;width:4px;border-radius:9px;background:oklch(.6 .13 var(--h))}
+.trow .w{flex:1;min-width:0}
+.trow b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow .s{display:block;color:var(--mute);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow .cd{flex:none;text-align:right;font-variant-numeric:tabular-nums}
+.trow .cd b{font:700 19px/1.1 var(--serif);color:var(--text)}
+.trow .cd span{display:block;font-size:11.5px;color:var(--faint);margin-top:2px}
+.trow.first .cd b{font-size:23px;color:var(--accent)}
+.trow.soon .cd b{color:#e11d48}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:600;font-size:14px}
 /* Google sign-in */
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:14px;padding:11px 16px;border-radius:12px;border:1px solid var(--line2);background:#fff;color:#1f1f1f;font:600 15px/1.2 var(--sans)}
@@ -147,6 +163,7 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
  </div>
  <h1 id="hi">Pick a course</h1>
  <a class="upnext" id="upnext" href="schedule.html" hidden></a>
+ <section class="tests" id="tests" hidden aria-label="Tests coming up"></section>
  <div class="try" id="try" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <p class="note inst" id="install" hidden>Use this like an app, even offline. <button class="linkbtn" id="installbtn">Install app</button></p>
@@ -164,6 +181,7 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
 <script src="schedule-core.js"></script>
 <script src="dialog.js"></script>
 <script src="notify-core.js"></script>
+<script src="reminders-core.js"></script>
 <script src="push-client.js"></script>
 <script>Notify.load().then(f=>{const n=Notify.prefs().ddot===false?0:Notify.unread(f),d=document.getElementById('bdot');if(n){d.textContent=n>9?'9+':n;d.hidden=false;document.getElementById('bell').setAttribute('aria-label','Notifications, '+n+' new')}})</script>
 <script>
@@ -222,6 +240,17 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  e.style.setProperty('--h',+c.subj.hue||260);
  e.innerHTML='<span class="bar"></span><span class="w"><span class="l'+(c.now?' live':'')+'">'+(c.now?'Now · until '+Sched.time(c.end):'Next class · '+Sched.when(c.date)+', '+Sched.time(c.start))+'</span><b>'+esc(c.subj.name)+(c.kind?' · '+esc(c.kind):'')+'</b><span class="s">'+esc(c.topic||c.teacher||'')+'</span></span><span class="go">Timetable →</span>';
  e.hidden=false}catch(err){}})();
+// Test countdown: the next exams, evals and quizzes on the timetable (next 14 days), ticking every second.
+(async function(){try{await Sched.load();const box=document.getElementById('tests');let list=[];
+ const pick=()=>{const now=new Date();list=Remind.list(3,now).filter(a=>a.from-now<14*864e5).slice(0,4)};
+ const left=ms=>{const s=Math.max(0,Math.floor(ms/1e3)),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),x=s%60,p=n=>String(n).padStart(2,'0');
+  return d>=1?d+'d '+h+'h '+p(m)+'m':h>=1?h+'h '+p(m)+'m '+p(x)+'s':m+'m '+p(x)+'s'};
+ const draw=()=>{pick();if(!list.length){box.hidden=true;return}
+  box.innerHTML='<h2>⏳ Tests coming up<a href="notifications.html#settings">Reminders →</a></h2>'+list.map((a,i)=>{const c=a.subj.course;
+   return '<a class="trow'+(i?'':' first')+'" style="--h:'+(+a.subj.hue||260)+'" href="'+(c?'reviewer.html?course='+encodeURIComponent(c):'schedule.html')+'"><span class="bar"></span><span class="w"><b>'+esc(a.subj.name)+'</b><span class="s">'+esc(a.label)+' · '+esc(Sched.when(a.date))+', '+esc(Sched.time(a.start))+'</span></span><span class="cd"><b data-at="'+(+a.from)+'"></b><span>'+(c?'Review now →':'Timetable →')+'</span></span></a>'}).join('');
+  box.hidden=false;tick()};
+ const tick=()=>{const now=Date.now();let gone=false;box.querySelectorAll('[data-at]').forEach(b=>{const ms=+b.dataset.at-now;if(ms<=0)gone=true;b.textContent=left(ms);b.closest('.trow').classList.toggle('soon',ms<864e5)});if(gone)draw()};
+ draw();setInterval(tick,1000)}catch(err){}})();
 // Install: Android/desktop Chrome offer a prompt; iPhone needs Share → Add to Home Screen.
 // The browser only offers the prompt while the app isn't installed, so after an uninstall the link comes back by itself.
 // Anything but a normal browser tab (standalone, minimal-ui, window controls overlay) is the installed app.
