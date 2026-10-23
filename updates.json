@@ -1,37 +1,309 @@
 [
- {"id": 1, "date": "2026-10-19", "type": "course", "course": "pharma", "title": "Pharmacology is up", "text": "Notes and full transes for the midterm topics, with drugs grouped by mechanism and summary tables. Questions come once we know the exam format.", "link": "reviewer.html?course=pharma"},
- {"id": 2, "date": "2026-10-19", "type": "course", "course": "nstp", "title": "NSTP 1 is up", "text": "The Bill of Rights: 197 questions, notes and the slides.", "link": "reviewer.html?course=nstp"},
- {"id": 3, "date": "2026-10-19", "type": "course", "course": "botany", "title": "General Botany is up", "text": "522 midterm questions in the teacher's style (scenarios and research methods), notes, charts and transes.", "link": "reviewer.html?course=botany"},
- {"id": 4, "date": "2026-10-20", "type": "schedule", "title": "Timetable: Pharma moved, NSTP midterm", "text": "Pharmacology moved to Thursday 1 PM (same topic). NSTP on Friday is the Midterm Exam.", "link": "schedule.html"},
- {"id": 5, "date": "2026-10-20", "type": "feature", "title": "Harder mock exams with a predicted grade", "text": "Mock exam results show Passed or Not passed and your transmuted grade (DMSF handbook). A Difficulty switch picks harder exam-style questions or the practice ones.", "link": ""},
- {"id": 6, "date": "2026-10-20", "type": "content", "course": "psych", "title": "Psych evals: exam-style questions and matching", "text": "All 191 Chapter 11–12 questions have a longer exam-style version, plus a matching type part. Preset: 30 MCQ + 30 matching on an answer sheet.", "link": "reviewer.html?course=psych"},
- {"id": 7, "date": "2026-10-21", "type": "feature", "title": "Practice again", "text": "After finishing a section or chapter, redo as many questions as you like. Your mastery never changes.", "link": ""},
- {"id": 8, "date": "2026-10-21", "type": "content", "course": "nstp", "title": "NSTP midterm: Leadership and Health", "text": "255 new questions on Leadership Training and Health Awareness, with notes and look-alike drills. The whole midterm coverage is in.", "link": "reviewer.html?course=nstp"},
- {"id": 9, "date": "2026-10-21", "type": "transes", "course": "nstp", "title": "NSTP midterm transes and slides", "text": "One transes PDF for the Bill of Rights, Leadership Training and Health Awareness, plus the slides of both new topics.", "link": "reviewer.html?course=nstp"},
- {"id": 10, "date": "2026-10-21", "type": "feature", "title": "Notifications", "text": "This page. Catch up on what's new, get a pop-up when a classmate comments in your course, and choose what you hear about in Settings.", "link": "notifications.html"},
- {"id": 11, "date": "2026-10-21", "type": "feature", "title": "Notifications on your phone", "text": "Get updates even when the site is closed: bell, Settings, then Turn on notifications.", "link": "notifications.html#settings"},
- {"id": 12, "date": "2026-10-21", "type": "feature", "course": "nstp", "title": "NSTP now has comments", "text": "Ask and answer under any NSTP question, or in the NSTP discussion, before Friday's midterm.", "link": "discuss.html?c=nstp"},
- {"id": 13, "date": "2026-10-21", "type": "schedule", "title": "Timetable: topics until the finals", "text": "Weeks 14–19 now show the planned topics from the class matrix, up to the prefinal and comprehensive exams. They're placeholders and may shift.", "link": "schedule.html"},
- {"id": 14, "date": "2026-10-21", "type": "content", "course": "botany", "title": "Botany finals: Flower, Fruits and Seeds", "text": "Lesson 5 is up: 210 questions in her style (scenarios and experiment design), notes, summary tables and a finals transes. Botany now opens on the Finals.", "link": "reviewer.html?course=botany"},
- {"id": 15, "date": "2026-10-22", "type": "content", "course": "pharma", "title": "Pharmacology finals: Antihypertensives", "text": "Lesson 6 is up: notes, a summary table of every antihypertensive class, and a finals transes (diuretics, sympatholytics, vasodilators, ACE inhibitors and ARBs, the treatment algorithm).", "link": "reviewer.html?course=pharma"},
- {"id": 16, "date": "2026-10-22", "type": "content", "course": "pharma", "title": "Pharmacology questions are up", "text": "564 questions in Dr. Orig's style (drug names from different classes, patient cases), 29 class-matching drills, and an Eval preset (13 MCQ + 2 VSA). Prefinals has 159 hypertension questions, including lots of \"what is the BP state?\" items for next week's eval.", "link": "reviewer.html?course=pharma"},
- {"id": 17, "date": "2026-10-22", "type": "content", "course": "pharma", "title": "Pharmacology evals (Tue, Oct 27)", "text": "Pharmacology now opens on \"Evals (antihypertensives)\". Mock exam → Eval · 13 MCQ + 2 VSA gives mostly drug questions, at most 2 BP-category items, and leaves out the two slides Dr. Orig skipped.", "link": "reviewer.html?course=pharma"},
- {"id": 18, "date": "2026-10-22", "type": "schedule", "course": "pharma", "title": "Timetable: Pharmacology evals Tuesday", "text": "Tuesday, Oct 27, 8:00 AM: Pharmacology evals on anti-hypertensive drugs, then the next lesson.", "link": "schedule.html"},
- {"id": 19, "date": "2026-10-22", "type": "content", "course": "pharma", "title": "Pharmacology: matched to the lecture", "text": "47 new questions from what Dr. Orig stressed in class (Lasix, the most potent loop, Jasmine's captopril cough, losartan + amlodipine), a \"What Dr. Orig stressed\" note, and the parts he didn't teach moved out of the evals.", "link": "reviewer.html?course=pharma"},
- {"id": 20, "date": "2026-10-22", "type": "feature", "title": "Comments for Botany and Pharmacology", "text": "Ask and answer under any Botany or Pharmacology question, or in each course's discussion. Pharmacology Lesson 6 also has its picture now.", "link": "discuss.html?c=pharma"},
- {"id": 21, "date": "2026-10-22", "type": "content", "course": "pharma", "title": "Pharmacology notes: mnemonics for every drug group", "text": "Each drug group in Notes now ends with a Mnemonic row: famous ones (OH DANG, hyperGLUC, the K+ STAyS, CAPTOPRIL) plus local ones (\"Alis ka, renin!\", \"120/80? Stage 1 na!\").", "link": "reviewer.html?course=pharma"},
- {"id": 22, "date": "2026-10-22", "type": "feature", "title": "Comments now appear instantly", "text": "New comments show up right away for everyone viewing the same discussion, and course pages get the pop-up and red dot at once instead of up to a minute later.", "link": "discuss.html?c=pharma"},
- {"id": 23, "date": "2026-10-23", "type": "content", "course": "purcom", "title": "PurCom finals: Nature of Research", "text": "68 questions for the research quiz (who said what, which characteristic a case shows, objective → question → hypothesis), notes, and a transes with Dr. Arcena's proposal tips for the prefinal defense and final paper.", "link": "reviewer.html?course=purcom"},
- {"id": 24, "date": "2026-10-23", "type": "course", "course": "mmw", "title": "Math in the Modern World is up", "text": "Finals Lesson 8, Linear Programming (graphical method): 93 problems with graphs and worked solutions, typed numeric answers, notes and a finals transes. The slides' examples are solved step by step.", "link": "reviewer.html?course=mmw"},
- {"id": 25, "date": "2026-10-23", "type": "content", "course": "mmw", "title": "Math: 20 full LP word problems", "text": "New chapter of complete word problems (bakery, feed mix, ward staffing, trucks…): read the story, set up the model, graph, test the corners and decide. Each shows the full solution and graph after you answer. Try the new \"Quiz · 2 word problems\" preset in Mock exam. 253 problems in total.", "link": "reviewer.html?course=mmw"},
- {"id": 26, "date": "2026-10-23", "type": "content", "course": "mmw", "title": "Math quiz practice: 1 given + 2 word problems", "text": "New section 8-7: 20 problems where the objective and constraints are given, solved completely with graphs. The Mock exam preset now matches the quiz: 1 given-model problem + 2 word problems, 30 minutes. Every practice question now shows its full model, so no more guessing what \"Slide example 2\" was. 344 problems in total.", "link": "reviewer.html?course=mmw"},
- {"id": 27, "date": "2026-10-23", "type": "feature", "title": "Exam reminders", "text": "Get a push notification before exams, evals and quizzes on the timetable. Pick when (up to a week before, or the morning of), what time, and which subjects in Notifications → Settings → Exam reminders. Default: the day before at 7 PM. Needs notifications turned on (iPhone: add the site to your Home Screen first).", "link": "notifications.html#settings"},
- {"id": 28, "date": "2026-10-23", "type": "schedule", "title": "Quizzes next week: PurCom and Math", "text": "PurCom quiz on Nature of Research (Wed, Oct 28, 4:00 PM) and Math quiz on Linear Programming (Fri, Oct 30, 7:00 AM) are on the timetable, with exam reminders. The home page now counts down to every test in the next two weeks.", "link": "schedule.html"},
- {"id": 29, "date": "2026-10-23", "type": "schedule", "title": "Oct 31 is a holiday", "text": "Saturday, Oct 31 is an institutional holiday: no classes, and the Chem Lab long quiz (Units 15 and 16) is cancelled. New date to follow. It is marked on the timetable.", "link": "schedule.html"},
- {"id": 30, "date": "2026-10-23", "type": "schedule", "title": "Long weekend: Oct 31 – Nov 3", "text": "Per DMSFI: Oct 31 institutional non-working day, Nov 1 All Saints' Day, Nov 2 All Souls' Day, Nov 3 Institutional Family Day. No Chem on Saturday (long quiz cancelled) and no Pharmacology on Tuesday, Nov 3. Marked on the timetable.", "link": "schedule.html"},
- {"id": 31, "date": "2026-10-23", "type": "schedule", "title": "Math now starts at 7:30 AM", "text": "Math in the Modern World on Fridays is now 7:30–10:00 AM (including next week's LP quiz). Also new on the timetable: tap Week on your phone to see the whole week at once.", "link": "schedule.html"},
- {"id": 32, "date": "2026-10-23", "type": "feature", "title": "Smoother site on phones", "text": "Courses now have a tab bar at the bottom on phones: Home, Practice, Notes, Mock exam and More (topics, discussion, notifications). Pages fade into each other, and the icons are now one matching set.", "link": "./"},
- {"id": 33, "date": "2026-10-23", "type": "content", "course": "mmw", "title": "Math: written LP quiz practice (no choices)", "text": "New sections 8-8 and 8-9: 40 problems answered by writing, like the real quiz: the objective function, the constraints (one per line), the corner points and the final answer. Each part is checked by meaning, so 2x + 2y ≤ 20 counts for x + y ≤ 10. Try Mock exam → Written quiz · 1 given + 2 word problems: every part is scored, like partial credit.", "link": "reviewer.html?course=mmw"},
- {"id": 34, "date": "2026-10-23", "type": "feature", "title": "New themes: Catppuccin, Tokyo Night, Rosé Pine", "text": "Three popular color themes, each with a light and a dark version. Pick one in any course: Personalize → Colors. It applies to every course and the home page on your device.", "link": "./"},
- {"id": 35, "date": "2026-10-23", "type": "feature", "title": "A fresher look", "text": "Shorter course headers on phones, answers that react when you check them, confetti when you master a section or pass a mock exam, a calmer dashboard, a loading preview on slow data, two courses per row on the home page, and easier-to-read helper text. Notifications now has a Back button to the page you came from.", "link": "./"}
+ {
+  "id": 1,
+  "date": "2026-10-19",
+  "type": "course",
+  "course": "pharma",
+  "title": "Pharmacology is up",
+  "text": "Notes and full transes for the midterm topics, with drugs grouped by mechanism and summary tables. Questions come once we know the exam format.",
+  "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 2,
+  "date": "2026-10-19",
+  "type": "course",
+  "course": "nstp",
+  "title": "NSTP 1 is up",
+  "text": "The Bill of Rights: 197 questions, notes and the slides.",
+  "link": "reviewer.html?course=nstp"
+ },
+ {
+  "id": 3,
+  "date": "2026-10-19",
+  "type": "course",
+  "course": "botany",
+  "title": "General Botany is up",
+  "text": "522 midterm questions in the teacher's style (scenarios and research methods), notes, charts and transes.",
+  "link": "reviewer.html?course=botany"
+ },
+ {
+  "id": 4,
+  "date": "2026-10-20",
+  "type": "schedule",
+  "title": "Timetable: Pharma moved, NSTP midterm",
+  "text": "Pharmacology moved to Thursday 1 PM (same topic). NSTP on Friday is the Midterm Exam.",
+  "link": "schedule.html"
+ },
+ {
+  "id": 5,
+  "date": "2026-10-20",
+  "type": "feature",
+  "title": "Harder mock exams with a predicted grade",
+  "text": "Mock exam results show Passed or Not passed and your transmuted grade (DMSF handbook). A Difficulty switch picks harder exam-style questions or the practice ones.",
+  "link": ""
+ },
+ {
+  "id": 6,
+  "date": "2026-10-20",
+  "type": "content",
+  "course": "psych",
+  "title": "Psych evals: exam-style questions and matching",
+  "text": "All 191 Chapter 11–12 questions have a longer exam-style version, plus a matching type part. Preset: 30 MCQ + 30 matching on an answer sheet.",
+  "link": "reviewer.html?course=psych"
+ },
+ {
+  "id": 7,
+  "date": "2026-10-21",
+  "type": "feature",
+  "title": "Practice again",
+  "text": "After finishing a section or chapter, redo as many questions as you like. Your mastery never changes.",
+  "link": ""
+ },
+ {
+  "id": 8,
+  "date": "2026-10-21",
+  "type": "content",
+  "course": "nstp",
+  "title": "NSTP midterm: Leadership and Health",
+  "text": "255 new questions on Leadership Training and Health Awareness, with notes and look-alike drills. The whole midterm coverage is in.",
+  "link": "reviewer.html?course=nstp"
+ },
+ {
+  "id": 9,
+  "date": "2026-10-21",
+  "type": "transes",
+  "course": "nstp",
+  "title": "NSTP midterm transes and slides",
+  "text": "One transes PDF for the Bill of Rights, Leadership Training and Health Awareness, plus the slides of both new topics.",
+  "link": "reviewer.html?course=nstp"
+ },
+ {
+  "id": 10,
+  "date": "2026-10-21",
+  "type": "feature",
+  "title": "Notifications",
+  "text": "This page. Catch up on what's new, get a pop-up when a classmate comments in your course, and choose what you hear about in Settings.",
+  "link": "notifications.html"
+ },
+ {
+  "id": 11,
+  "date": "2026-10-21",
+  "type": "feature",
+  "title": "Notifications on your phone",
+  "text": "Get updates even when the site is closed: bell, Settings, then Turn on notifications.",
+  "link": "notifications.html#settings"
+ },
+ {
+  "id": 12,
+  "date": "2026-10-21",
+  "type": "feature",
+  "course": "nstp",
+  "title": "NSTP now has comments",
+  "text": "Ask and answer under any NSTP question, or in the NSTP discussion, before Friday's midterm.",
+  "link": "discuss.html?c=nstp"
+ },
+ {
+  "id": 13,
+  "date": "2026-10-21",
+  "type": "schedule",
+  "title": "Timetable: topics until the finals",
+  "text": "Weeks 14–19 now show the planned topics from the class matrix, up to the prefinal and comprehensive exams. They're placeholders and may shift.",
+  "link": "schedule.html"
+ },
+ {
+  "id": 14,
+  "date": "2026-10-21",
+  "type": "content",
+  "course": "botany",
+  "title": "Botany finals: Flower, Fruits and Seeds",
+  "text": "Lesson 5 is up: 210 questions in her style (scenarios and experiment design), notes, summary tables and a finals transes. Botany now opens on the Finals.",
+  "link": "reviewer.html?course=botany"
+ },
+ {
+  "id": 15,
+  "date": "2026-10-22",
+  "type": "content",
+  "course": "pharma",
+  "title": "Pharmacology finals: Antihypertensives",
+  "text": "Lesson 6 is up: notes, a summary table of every antihypertensive class, and a finals transes (diuretics, sympatholytics, vasodilators, ACE inhibitors and ARBs, the treatment algorithm).",
+  "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 16,
+  "date": "2026-10-22",
+  "type": "content",
+  "course": "pharma",
+  "title": "Pharmacology questions are up",
+  "text": "564 questions in Dr. Orig's style (drug names from different classes, patient cases), 29 class-matching drills, and an Eval preset (13 MCQ + 2 VSA). Prefinals has 159 hypertension questions, including lots of \"what is the BP state?\" items for next week's eval.",
+  "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 17,
+  "date": "2026-10-22",
+  "type": "content",
+  "course": "pharma",
+  "title": "Pharmacology evals (Tue, Oct 27)",
+  "text": "Pharmacology now opens on \"Evals (antihypertensives)\". Mock exam → Eval · 13 MCQ + 2 VSA gives mostly drug questions, at most 2 BP-category items, and leaves out the two slides Dr. Orig skipped.",
+  "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 18,
+  "date": "2026-10-22",
+  "type": "schedule",
+  "course": "pharma",
+  "title": "Timetable: Pharmacology evals Tuesday",
+  "text": "Tuesday, Oct 27, 8:00 AM: Pharmacology evals on anti-hypertensive drugs, then the next lesson.",
+  "link": "schedule.html"
+ },
+ {
+  "id": 19,
+  "date": "2026-10-22",
+  "type": "content",
+  "course": "pharma",
+  "title": "Pharmacology: matched to the lecture",
+  "text": "47 new questions from what Dr. Orig stressed in class (Lasix, the most potent loop, Jasmine's captopril cough, losartan + amlodipine), a \"What Dr. Orig stressed\" note, and the parts he didn't teach moved out of the evals.",
+  "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 20,
+  "date": "2026-10-22",
+  "type": "feature",
+  "title": "Comments for Botany and Pharmacology",
+  "text": "Ask and answer under any Botany or Pharmacology question, or in each course's discussion. Pharmacology Lesson 6 also has its picture now.",
+  "link": "discuss.html?c=pharma"
+ },
+ {
+  "id": 21,
+  "date": "2026-10-22",
+  "type": "content",
+  "course": "pharma",
+  "title": "Pharmacology notes: mnemonics for every drug group",
+  "text": "Each drug group in Notes now ends with a Mnemonic row: famous ones (OH DANG, hyperGLUC, the K+ STAyS, CAPTOPRIL) plus local ones (\"Alis ka, renin!\", \"120/80? Stage 1 na!\").",
+  "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 22,
+  "date": "2026-10-22",
+  "type": "feature",
+  "title": "Comments now appear instantly",
+  "text": "New comments show up right away for everyone viewing the same discussion, and course pages get the pop-up and red dot at once instead of up to a minute later.",
+  "link": "discuss.html?c=pharma"
+ },
+ {
+  "id": 23,
+  "date": "2026-10-23",
+  "type": "content",
+  "course": "purcom",
+  "title": "PurCom finals: Nature of Research",
+  "text": "68 questions for the research quiz (who said what, which characteristic a case shows, objective → question → hypothesis), notes, and a transes with Dr. Arcena's proposal tips for the prefinal defense and final paper.",
+  "link": "reviewer.html?course=purcom"
+ },
+ {
+  "id": 24,
+  "date": "2026-10-23",
+  "type": "course",
+  "course": "mmw",
+  "title": "Math in the Modern World is up",
+  "text": "Finals Lesson 8, Linear Programming (graphical method): 93 problems with graphs and worked solutions, typed numeric answers, notes and a finals transes. The slides' examples are solved step by step.",
+  "link": "reviewer.html?course=mmw"
+ },
+ {
+  "id": 25,
+  "date": "2026-10-23",
+  "type": "content",
+  "course": "mmw",
+  "title": "Math: 20 full LP word problems",
+  "text": "New chapter of complete word problems (bakery, feed mix, ward staffing, trucks…): read the story, set up the model, graph, test the corners and decide. Each shows the full solution and graph after you answer. Try the new \"Quiz · 2 word problems\" preset in Mock exam. 253 problems in total.",
+  "link": "reviewer.html?course=mmw"
+ },
+ {
+  "id": 26,
+  "date": "2026-10-23",
+  "type": "content",
+  "course": "mmw",
+  "title": "Math quiz practice: 1 given + 2 word problems",
+  "text": "New section 8-7: 20 problems where the objective and constraints are given, solved completely with graphs. The Mock exam preset now matches the quiz: 1 given-model problem + 2 word problems, 30 minutes. Every practice question now shows its full model, so no more guessing what \"Slide example 2\" was. 344 problems in total.",
+  "link": "reviewer.html?course=mmw"
+ },
+ {
+  "id": 27,
+  "date": "2026-10-23",
+  "type": "feature",
+  "title": "Exam reminders",
+  "text": "Get a push notification before exams, evals and quizzes on the timetable. Pick when (up to a week before, or the morning of), what time, and which subjects in Notifications → Settings → Exam reminders. Default: the day before at 7 PM. Needs notifications turned on (iPhone: add the site to your Home Screen first).",
+  "link": "notifications.html#settings"
+ },
+ {
+  "id": 28,
+  "date": "2026-10-23",
+  "type": "schedule",
+  "title": "Quizzes next week: PurCom and Math",
+  "text": "PurCom quiz on Nature of Research (Wed, Oct 28, 4:00 PM) and Math quiz on Linear Programming (Fri, Oct 30, 7:00 AM) are on the timetable, with exam reminders. The home page now counts down to every test in the next two weeks.",
+  "link": "schedule.html"
+ },
+ {
+  "id": 29,
+  "date": "2026-10-23",
+  "type": "schedule",
+  "title": "Oct 31 is a holiday",
+  "text": "Saturday, Oct 31 is an institutional holiday: no classes, and the Chem Lab long quiz (Units 15 and 16) is cancelled. New date to follow. It is marked on the timetable.",
+  "link": "schedule.html"
+ },
+ {
+  "id": 30,
+  "date": "2026-10-23",
+  "type": "schedule",
+  "title": "Long weekend: Oct 31 – Nov 3",
+  "text": "Per DMSFI: Oct 31 institutional non-working day, Nov 1 All Saints' Day, Nov 2 All Souls' Day, Nov 3 Institutional Family Day. No Chem on Saturday (long quiz cancelled) and no Pharmacology on Tuesday, Nov 3. Marked on the timetable.",
+  "link": "schedule.html"
+ },
+ {
+  "id": 31,
+  "date": "2026-10-23",
+  "type": "schedule",
+  "title": "Math now starts at 7:30 AM",
+  "text": "Math in the Modern World on Fridays is now 7:30–10:00 AM (including next week's LP quiz). Also new on the timetable: tap Week on your phone to see the whole week at once.",
+  "link": "schedule.html"
+ },
+ {
+  "id": 32,
+  "date": "2026-10-23",
+  "type": "feature",
+  "title": "Smoother site on phones",
+  "text": "Courses now have a tab bar at the bottom on phones: Home, Practice, Notes, Mock exam and More (topics, discussion, notifications). Pages fade into each other, and the icons are now one matching set.",
+  "link": "./"
+ },
+ {
+  "id": 33,
+  "date": "2026-10-23",
+  "type": "content",
+  "course": "mmw",
+  "title": "Math: written LP quiz practice (no choices)",
+  "text": "New sections 8-8 and 8-9: 40 problems answered by writing, like the real quiz: the objective function, the constraints (one per line), the corner points and the final answer. Each part is checked by meaning, so 2x + 2y ≤ 20 counts for x + y ≤ 10. Try Mock exam → Written quiz · 1 given + 2 word problems: every part is scored, like partial credit.",
+  "link": "reviewer.html?course=mmw"
+ },
+ {
+  "id": 34,
+  "date": "2026-10-23",
+  "type": "feature",
+  "title": "New themes: Catppuccin, Tokyo Night, Rosé Pine",
+  "text": "Three popular color themes, each with a light and a dark version. Pick one in any course: Personalize → Colors. It applies to every course and the home page on your device.",
+  "link": "./"
+ },
+ {
+  "id": 35,
+  "date": "2026-10-23",
+  "type": "feature",
+  "title": "A fresher look",
+  "text": "Shorter course headers on phones, answers that react when you check them, confetti when you master a section or pass a mock exam, a calmer dashboard, a loading preview on slow data, two courses per row on the home page, and easier-to-read helper text. Notifications now has a Back button to the page you came from.",
+  "link": "./"
+ },
+ {
+  "id": 36,
+  "date": "2026-10-23",
+  "type": "feature",
+  "title": "Fairer answer checking",
+  "text": "Typed answers no longer accept a different term as a typo (like Section 5 for Section 4, or hypo- for hyper-), and real typos still count. Math written answers now read work like \"x = 6, y = 4, P = 460\" and labels like \"Prep: x + y ≤ 10\". Progress is stored more compactly, and if your device's storage ever fills up, you'll see a warning instead of losing answers.",
+  "link": "./"
+ }
 ]

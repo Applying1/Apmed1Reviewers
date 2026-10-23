@@ -149,7 +149,10 @@ function mathRender(){mathT=0;if(mathBusy||typeof renderMathInElement!=='functio
  setTimeout(()=>{mathBusy=false},0)}
 mathBoot();
 // Numeric answers: an item with "num" accepts any typed number within "tol" (default 1% or 0.005, whichever is bigger).
-function numIn(s){const m=String(s).replace(/[−–]/g,'-').replace(/(\d),(\d{3})\b/g,'$1$2').match(/-?\d*\.?\d+(?:e-?\d+)?/i);return m?parseFloat(m[0]):NaN}
+function numIn(s){s=String(s).replace(/[−–]/g,'-').replace(/(\d)[,\s](?=\d{3}(?!\d))/g,'$1');if(s.includes('='))s=s.slice(s.lastIndexOf('=')+1);
+ let m=s.match(/(-?)(\d+)\s+(\d+)\s*\/\s*(\d+)/);if(m&&+m[4])return (m[1]?-1:1)*(+m[2]+(+m[3])/(+m[4]));   // 1 1/2
+ m=s.match(/(-?\d*\.?\d+)\s*\/\s*(\d*\.?\d+)/);if(m&&+m[2])return (+m[1])/(+m[2]);                          // 2/3
+ m=s.match(/-?\d*\.?\d+(?:e-?\d+)?/i);return m?parseFloat(m[0]):NaN}
 function numOK(input,c){if(!c||c.num==null)return false;const v=numIn(input);if(isNaN(v))return false;const tol=c.tol!=null?c.tol:Math.max(.005,Math.abs(c.num)*.01);return Math.abs(v-c.num)<=tol+1e-12}
 function stepsHTML(c){return (c&&c.steps&&c.steps.length?'<ol class="steps">'+c.steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol>':'')+(c&&c.solfig&&MOLS[c.solfig]?'<figure class="qfig" role="img" aria-label="'+esc(c.solfiglabel||'Solution graph')+'"><span class="mol"'+molW(c.solfig)+'>'+MOLS[c.solfig]+'</span></figure>':'')}
   // matching drills can have more choices than the A–E answer sheet
@@ -175,6 +178,7 @@ function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
 ALL_ITEMS.forEach(c=>{if(!state.concepts[c.id])state.concepts[c.id]=blank()});
+trimState(state,false);
 state.prefs=Object.assign({},DEFAULT_PREFS,state.prefs);if(!GOALS.includes(state.prefs.target))state.prefs.target=DEFAULT_PREFS.target;
 state.match=Object.assign({sets:0,right:0,total:0,best:{}},state.match);
 state.log=state.log||[];state.complete=state.complete||[];state.history=state.history||[];
@@ -241,7 +245,27 @@ const openCh=new Set(isX(state.section)?[]:[secCh(state.section)]);
 let lastCardKey='';
 
 // The summary lets a courses home screen show progress without loading the whole reviewer.
-function save(){if(state.active&&!state.active.sig&&typeof byId!=='undefined'&&byId[state.active.cid])state.active.sig=qsig(byId[state.active.cid]);const ps=prefSig();if(ps!==prefSigLast){if(prefSigLast!==null)state.prefsAt=Date.now();prefSigLast=ps}try{localStorage.setItem(KEY,JSON.stringify(state));const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
+// v70: saved progress stays small (questions never answered aren't stored; logs are capped), and a full browser storage never
+// loses answers silently: old logs are trimmed (here, then in the other courses), and if it still doesn't fit, a warning stays up.
+const touched=k=>!!k&&!!(k.seen||k.right||k.wrong||k.lookups||k.hints||k.star||k.srs||k.lucky||k.back);
+function packState(){const c={};for(const id in state.concepts)if(touched(state.concepts[id]))c[id]=state.concepts[id];return JSON.stringify(Object.assign({},state,{concepts:c}))}
+function trimState(st,hard){const n=hard?40:150,h=hard?200:600,kh=hard?2:5;if(st.log&&st.log.length>n)st.log=st.log.slice(-n);if(st.history&&st.history.length>h)st.history=st.history.slice(-h);
+ for(const id in st.concepts||{}){const k=st.concepts[id];if(k&&k.history&&k.history.length>kh)k.history=k.history.slice(-kh)}if(hard&&st.exams&&st.exams.length>10)st.exams=st.exams.slice(-10);return st}
+// Frees room across the site: class stats caches (downloaded again when needed) and old logs of the other courses.
+function freeSpace(){let freed=0;try{const keys=[];for(let i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));
+ for(const k of keys){const v=localStorage.getItem(k)||'';if(/_class$/.test(k)){freed+=v.length;localStorage.removeItem(k);continue}
+  if(k===KEY||v.length<20000||v[0]!=='{')continue;let o;try{o=JSON.parse(v)}catch(e){continue}if(!o||!o.concepts||!Array.isArray(o.log))continue;
+  const c={};for(const id in o.concepts)if(touched(o.concepts[id]))c[id]=o.concepts[id];o.concepts=c;const out=JSON.stringify(trimState(o,true));if(out.length<v.length){localStorage.setItem(k,out);freed+=v.length-out.length}}}catch(e){}return freed}
+let STORE_FULL=false;
+function putState(){try{localStorage.setItem(KEY,packState());return true}catch(e){return false}}
+function storeWarn(){let w=$('storewarn');if(!STORE_FULL){if(w)w.remove();return}if(!w){w=document.createElement('div');w.id='storewarn';w.className='storewarn';w.setAttribute('role','alert');document.body.appendChild(w)}
+ w.innerHTML='<span><b>This device\'s storage is full.</b> New answers aren\'t being saved'+(cloudOn()?'; sign in or sync to keep a copy online':'')+'.</span><button class="btn sm" onclick="freeUp()">Free up space</button>'}
+function freeUp(){const f=freeSpace();save();toast(STORE_FULL?'Still full. Clear other sites\' data in your browser settings, or reset a course you no longer need.':'Freed '+Math.max(.1,f/524288).toFixed(1)+' MB. Your answers are saving again.');if(page==='prefs')drawPrefs()}
+function storageUse(){let all=0,mine=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),n=2*(k.length+(localStorage.getItem(k)||'').length);all+=n;if(k===KEY||k.startsWith(KEY+'_'))mine+=n}}catch(e){}return {all,mine}}
+const mbs=n=>(n/1048576).toFixed(n<1048576?2:1)+' MB';
+function save(){if(state.active&&!state.active.sig&&typeof byId!=='undefined'&&byId[state.active.cid])state.active.sig=qsig(byId[state.active.cid]);const ps=prefSig();if(ps!==prefSigLast){if(prefSigLast!==null)state.prefsAt=Date.now();prefSigLast=ps}
+ let ok=putState();if(!ok){trimState(state,true);ok=putState();if(!ok){freeSpace();ok=putState()}}if(ok===STORE_FULL){STORE_FULL=!ok;storeWarn()}
+ try{const main=bankItems(BANKS[0]),e=examObj();localStorage.setItem(KEY+'_summary',JSON.stringify({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''}))}catch(e){}if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function stableHash(s){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0}
 function shuffle(a,seed){let b=a.slice(),x=seed||1;for(let i=b.length-1;i>0;i--){x^=x<<13;x^=x>>>17;x^=x<<5;let j=(x>>>0)%(i+1);[b[i],b[j]]=[b[j],b[i]]}return b}
@@ -387,7 +411,7 @@ function cardHTML(){
   const nextIsLive=view+1>=liveIdx();
   return '<div class="review-note"><span>Earlier answer · '+(view+1)+' of '+secLog().length+(isX(s)?' in this '+(s==='ALL'?'shuffle':'review'):isCh(s)?' in this '+unitW:' in this section')+'</span><button class="link" onclick="goLive()">Back to current question</button></div>'+
    '<div class="qhead"><span class="kind">'+kindName(e.q.kind)+'</span><span class="mastery">'+flagBtn("flagQ('log')")+'</span></div>'+
-   caseHTML(e.q.cid)+'<p class="prompt">'+stemHTML(e.q.stem)+'</p>'+figHTML(e.q.cid)+(e.q.typed&&e.fb&&e.fb.typed!=null?typedHTML(e.fb,e.q):choicesHTML(e.q,e.sel,e.fb))+feedbackHTML(e.q,e.fb)+
+   caseHTML(e.q.cid)+'<p class="prompt">'+stemHTML(e.q.stem)+'</p>'+figHTML(e.q.cid)+(e.q.typed&&e.fb&&e.fb.typed!=null?typedHTML(e.fb,e.q):choicesHTML(e.q,e.sel,e.fb))+feedbackHTML(e.q.why!=null?e.q:Object.assign({},e.q,{why:(byId[e.q.cid]||{}).why||''}),e.fb)+
    '<div class="actions">'+backBtn()+'<span class="aux"></span><button class="btn primary" id="go" onclick="goForward()">'+(nextIsLive?'Return to current':'Forward')+' <kbd>→</kbd></button></div>';
  }
  // A matching set mixed into practice (Personalize → Mix matching into practice)
@@ -693,7 +717,7 @@ function drawDash(){
  else{const c=rec.filter(h=>h.correct).length,l=rec.filter(h=>h.lookup).length,w=rec.length-c-l;
   $('recent').innerHTML='<div class="recent-sum"><span><b>'+c+'</b>correct</span><span><b>'+w+'</b>wrong</span><span><b>'+l+'</b>slide checks</span><span><b>'+Math.round(100*c/rec.length)+'%</b>hit rate</span></div>'+
    '<div class="strip">'+rec.map(h=>{const st=h.correct?'c':h.lookup?'l':'w',lab=h.correct?'Correct':h.lookup?'Checked slides':'Wrong';
-    return '<i class="'+st+'" data-tip="<b>'+lab+'</b>'+esc(h.term)+' · '+esc(h.section)+'"></i>'}).join('')+'</div>'+
+    const c=byId[h.cid]||{};return '<i class="'+st+'" data-tip="<b>'+lab+'</b>'+esc(h.term||c.term||'')+' · '+esc(h.section||c.section||'')+'"></i>'}).join('')+'</div>'+
    '<div class="legend"><span><i style="background:var(--good)"></i>Correct</span><span><i style="background:var(--bad)"></i>Wrong</span><span><i style="background:var(--amber)"></i>Checked slides</span></div>'}
 
  $('heat').innerHTML=chapters.map(ch=>{const secs=sectionKeys.filter(k=>chOf(k)===ch);
@@ -1003,7 +1027,7 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
   byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;if(ok){right++;byCh[ch][0]++}
   if(a==null||a===''||q.mt)return;   // skipped (matching items are not bank questions): no effect on mastery, Missed or class stats
   k.seen++;if(ok)state.correct++;else{k.wrong++;state.wrong++;masteryDown(k)}
-  crowdAdd(q.cid,!ok);state.history.push({cid:q.cid,correct:ok,lookup:false,term:c.term,section:c.section,mode:'EXAM'})});
+  crowdAdd(q.cid,!ok);state.history.push({cid:q.cid,correct:ok,lookup:false,mode:'EXAM'})});
  ex.right=right;ex.byCh=byCh;if(100*right/n>=(Object.assign({pass:60},CONFIG.grading||{})).pass)setTimeout(()=>celebrate('exam'),380);
  state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0,easy:ex.easy?1:0}).slice(-20);
  // A challenge keeps your first score; later tries are shared as retakes.
@@ -1412,6 +1436,7 @@ function drawPrefs(){
   row('Your name','Used to greet you on the dashboard. Saved only in this browser.','<input class="txt" id="pname" maxlength="40" placeholder="Your name" aria-label="Your name" autocomplete="given-name" value="'+esc(state.name||'')+'" onchange="setName(this.value)">')+'</section>';
  h+='<section class="panel"><h2>Your data</h2>'+syncRowHTML(row)+
   (cloudOn()?row('Share anonymous answer stats','Sends only which '+ITEMS+' were answered right or wrong, with no name and no device ID, so the class can see its most missed '+ITEMS+'.',sw(state.prefs.crowd,"setPref('crowd',"+!state.prefs.crowd+")",'Share anonymous answer stats')):'')+
+  (()=>{const u=storageUse();return row('Storage on this device','This course uses '+mbs(u.mine)+'; all courses together '+mbs(u.all)+' of about 5 MB.'+(STORE_FULL?' <b>Full: new answers aren\'t being saved.</b>':''),'<button class="btn sm" onclick="freeUp()">Free up space</button>')})()+
   row('Export progress','Download a backup of your answers as a JSON file.','<button class="btn sm" onclick="exportProgress()">Export</button>')+
   row('Import progress','Load a file you exported, for example to move your answers from the file version to the website or to another browser. It replaces the progress saved here.','<button class="btn sm" onclick="importProgress()">Import</button>')+
   row('Reset progress','Erase every saved answer in this browser. This can\'t be undone.','<button class="btn sm danger" onclick="resetAll()">Reset</button>')+'</section>';
@@ -1579,7 +1604,7 @@ function closeCharts(){$('charts').hidden=true}
 
 /* ---------- tooltip ---------- */
 (function(){const tip=$('tip');let cur=null;
- function show(el,x,y){cur=el;tip.innerHTML=el.dataset.tip;tip.classList.add('on');place(x,y)}
+ function show(el,x,y){cur=el;tip.innerHTML=esc(el.dataset.tip).replace(/&lt;(\/?)b&gt;/g,'<$1b>');tip.classList.add('on');place(x,y)}
  function place(x,y){const r=tip.getBoundingClientRect();let L=Math.min(Math.max(8,x-r.width/2),innerWidth-r.width-8),T=y-r.height-12;if(T<8)T=y+18;tip.style.left=L+'px';tip.style.top=T+'px'}
  function hide(){cur=null;tip.classList.remove('on')}
  document.addEventListener('pointerover',e=>{const el=e.target.closest('[data-tip]');if(el)show(el,e.clientX,e.clientY);else if(cur)hide()});
@@ -1643,15 +1668,21 @@ function wrIneq(line){const s=wrClean(line),m=s.match(/^(.*?)(<=|>=|<|>|=)(.*)$/
 function wrSame(u,e){const big=[0,1,3].reduce((b,i)=>Math.abs(e[i])>Math.abs(e[b])?i:b,0);if(!e[big]||!u[big])return false;const l=u[big]/e[big];
  if(![0,1,3].every(i=>Math.abs(u[i]-l*e[i])<=1e-6*Math.max(1,Math.abs(u[i]))))return false;return u[2]===(l>0?e[2]:({'<=':'>=','>=':'<=','=':'='})[e[2]])}
 const wrNonneg=u=>u[3]===0&&((u[0]>0&&!u[1]&&u[2]==='>=')||(!u[0]&&u[1]>0&&u[2]==='>=')||(u[0]<0&&!u[1]&&u[2]==='<=')||(!u[0]&&u[1]<0&&u[2]==='<='));
+// v70: what students write around the math: a label ("Prep: …"), units ("10 hours"), a note in parentheses ("(oven)")
+function wrStrip(s){return String(s).replace(/^\s*[a-z][a-z0-9 '’-]{0,30}:\s*/i,'').replace(/\(([^()]*)\)/g,(m,x)=>/\d|(?:^|[^a-z])[xy](?![a-z])/i.test(x)?m:' ').replace(/\b(?![xy]\b)[a-z][a-z'’]+\b/gi,' ')}
+// "2 <= x <= 8" is two constraints, and so is "x+y<=10 2x+y<=16" typed on one line
+function wrSplit(p){if((p.match(/<=|>=|<|>|=/g)||[]).length<2)return [p];
+ const m=p.match(/^\s*(-?[\d.\/]+)\s*(<=|>=|<|>)\s*(.+?)\s*(<=|>=|<|>)\s*(-?[\d.\/]+)\s*$/);if(m)return [m[1]+m[2]+m[3],m[3]+m[4]+m[5]];
+ const q=p.replace(/(\d)\s+(?=[-+]?\s*\d*\.?\d*\s*[xy])/gi,'$1\n').split('\n');return q.length>1?q:[p]}
 function wrLines(s){return wrClean(s).replace(/\bx\s*,\s*y\s*>=\s*0/gi,'x>=0;y>=0').replace(/\band\b/gi,';').split(/[\n;]+/)
- .flatMap(p=>(p.match(/<=|>=|<|>|=/g)||[]).length>1?p.split(','):[p]).map(p=>p.trim()).filter(Boolean)}
+ .flatMap(p=>(p.match(/<=|>=|<|>|=/g)||[]).length>1?p.split(','):[p]).map(p=>wrStrip(p).trim()).filter(Boolean).flatMap(wrSplit).map(p=>p.trim()).filter(Boolean)}
 function wrPts(s){const out=[],re=/\(\s*([^(),;]+?)\s*[,;]\s*([^(),;]+?)\s*\)/g;let m;s=wrClean(s);while((m=re.exec(s)))out.push([wrNum(m[1]),wrNum(m[2])]);return out.filter(p=>!isNaN(p[0])&&!isNaN(p[1]))}
 const wrNear=(a,b)=>Math.abs(a-b)<=Math.max(.011,Math.abs(b)*.002),wrSamePt=(p,q)=>wrNear(p[0],q[0])&&wrNear(p[1],q[1]);
 const wrFmt=v=>Math.abs(v-Math.round(v))<1e-9?String(Math.round(v)):String(Math.round(v*100)/100);
 const wrLi=(ok,t)=>'<li class="'+(ok?'y':'n')+'">'+(ok?'✓ ':'✗ ')+t+'</li>';
 function wrCheck(input,wr){const s=String(input||''),L=[];let ok=false;
  if(wr.t==='obj'){const t=wrClean(s),sense=/max/i.test(t)?'max':/min/i.test(t)?'min':'';
-  const ex=t.includes('=')?t.slice(t.lastIndexOf('=')+1):t.replace(/^\s*(maximi[sz]e|minimi[sz]e|max|min)\s*[a-wz]?\s*:?/i,''),e=wrLin(ex);
+  const ex=t.includes('=')?t.slice(t.lastIndexOf('=')+1):t.replace(/^\s*(maximi[sz]e|minimi[sz]e|max|min)\s*[a-wz]?\s*:?/i,''),e=wrLin(wrStrip(ex).replace(/:/g,' '));
   const sOK=sense===wr.sense,cOK=!!e&&wrNear(e.x,wr.c[0])&&wrNear(e.y,wr.c[1])&&Math.abs(e.k)<1e-9;ok=sOK&&cOK;
   L.push(wrLi(sOK,sense?(sOK?'Correctly '+(sense==='max'?'maximized':'minimized'):'This one should be '+(wr.sense==='max'?'maximized':'minimized')):'Say whether to maximize or minimize'));
   L.push(wrLi(cOK,e?(cOK?'Coefficients match':'Coefficients don\'t match (got '+wrFmt(e.x)+'x + '+wrFmt(e.y)+'y)'):'Couldn\'t read the expression, e.g. P = 50x + 40y'))}
@@ -1664,7 +1695,10 @@ function wrCheck(input,wr){const s=String(input||''),L=[];let ok=false;
   const found=exp.filter(e=>uniq.some(p=>wrSamePt(p,e))).length,extra=uniq.filter(p=>!exp.some(e=>wrSamePt(p,e)));ok=found===exp.length&&!extra.length&&uniq.length>0;
   if(!uniq.length)L.push(wrLi(false,'Write points like (6, 4)'));else{L.push(wrLi(found===exp.length,'Found '+found+' of '+exp.length+' corner points'));
    if(extra.length)L.push(wrLi(false,'Not corners: '+extra.map(p=>'('+wrFmt(p[0])+', '+wrFmt(p[1])+')').join(', ')))}}
- else if(wr.t==='opt'){const pts=wrPts(s),rest=wrClean(s).replace(/\([^)]*\)/g,' ').replace(/(\d),(?=\d{3}(?!\d))/g,'$1'),m=rest.match(/-?\d*\.?\d+(?:\/\d*\.?\d+)?/),v=m?wrNum(m[0]):NaN;
+ else if(wr.t==='opt'){const c=wrClean(s).replace(/(\d),(?=\d{3}(?!\d))/g,'$1'),pts=wrPts(c),mx=c.match(/\bx\s*=\s*(-?\d*\.?\d+(?:\/\d+)?)/i),my=c.match(/\by\s*=\s*(-?\d*\.?\d+(?:\/\d+)?)/i);
+  if(!pts.length&&mx&&my)pts.push([wrNum(mx[1]),wrNum(my[1])]);
+  // the value: after the last "=" (so "P = 50(6) + 40(4) = 460" reads 460), else the first number that isn't part of the point
+  const rest=c.replace(/\([^)]*\)/g,' ').replace(/\b[xy]\s*=\s*-?\d*\.?\d+(?:\/\d+)?/gi,' '),eq=rest.lastIndexOf('='),m=(eq>=0?rest.slice(eq+1):rest).match(/-?\d*\.?\d+(?:\/\d*\.?\d+)?/)||rest.match(/-?\d*\.?\d+(?:\/\d*\.?\d+)?/),v=m?wrNum(m[0]):NaN;
   const vOK=!isNaN(v)&&Math.abs(v-wr.v)<=Math.max(.005,Math.abs(wr.v)*.005),pOK=!pts.length||!wr.pt||wrSamePt(pts[0],wr.pt);ok=vOK&&pOK;
   L.push(wrLi(vOK,isNaN(v)?'Give the value, e.g. P = 460':vOK?'Value is right':'Value isn\'t the '+(wr.sense==='min'?'minimum':'maximum')));
   if(pts.length)L.push(wrLi(pOK,pOK?'Point is right':'Wrong point'));else if(wr.pt)L.push('<li class="tip">Also say where: at ('+wrFmt(wr.pt[0])+', '+wrFmt(wr.pt[1])+').</li>')}
@@ -1692,9 +1726,39 @@ function canType(q){if(!q)return false;if(isWr(byId[q.cid]))return true;if(q.cho
  if(c.q?q.kind!=='recall':q.kind==='definition')return false;return ans.length<=40&&ans.split(/\s+/).length<=5&&!/[,;]| to | and /.test(ans)&&!/^(as|in|by|for|to|of|on|at|with|from|through)\b/i.test(ans)&&(ans.match(/\d+/g)||[]).length<=1}
 function normAns(s){return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\(.*?\)/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\b(the|a|an)\b/g,' ').replace(/\s+/g,' ').trim()}
 function lev(a,b){let p=Array.from({length:b.length+1},(_,j)=>j);for(let i=1;i<=a.length;i++){const c=[i];for(let j=1;j<=b.length;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[b.length]}
-// Accepts small typos (none for very short answers) and either side of "A / B" or "A or B".
-function typedOK(input,answer){const t=normAns(input);if(!t)return false;
- return [answer].concat(String(answer).split(/\s*\/\s*|\s+or\s+/)).some(v=>{const a=normAns(v);if(!a)return false;return lev(t,a)<=(a.length<=4?0:a.length<=8?1:2)})}
+// v70: typed answers. Small slips still count (a letter dropped, doubled, swapped or wrong), but a different real term never
+// does: numbers and Roman numerals must match (Article 3 = Article III, but not Section 4 = Section 5), a word that is itself a
+// term of this course is not a typo of another one, and neither are opposite prefixes (hyper/hypo, in/ex, un-…).
+// Either side of "A / B" or "A or B" is accepted, as before.
+let LEXICON=null;
+const normNum=s=>normAns(String(s).replace(/(\d)[,\s](?=\d{3}(?!\d))/g,'$1')).replace(/([a-z])(?=\d)/g,'$1 ').replace(/(\d)(?=[a-z])/g,'$1 ');
+function lexicon(){if(LEXICON)return LEXICON;const W=new Set(),add=t=>{if(t==null||isMol(t))return;normNum(String(t).replace(/\$[^$]*\$/g,' ')).split(' ').forEach(w=>{if(w)W.add(w)})};
+ for(const c of ALL_ITEMS){['q','a','why','hint','term','definition','scenario','xq','cstem'].forEach(f=>add(c[f]));(c.d||[]).forEach(add);(c.dh||[]).forEach(add);(c.alt||[]).forEach(add)}
+ (NOTES_DATA||[]).forEach(n=>(n[1]||[]).forEach(g=>{add(g[0]);add(g[1])}));MSETS.forEach(m=>{m.options.forEach(add);m.items.forEach(x=>add(x[0]))});
+ MIXUP.forEach(g=>g.members.forEach(m=>{add(m.name);(m.cues||[]).forEach(add)}));return LEXICON=W}
+const ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x|xi|xii|xiii|xiv|xv|xvi|xvii|xviii|xix|xx)$/;
+function romanVal(w){const V={i:1,v:5,x:10};let n=0;for(let k=0;k<w.length;k++){const v=V[w[k]];n+=k+1<w.length&&V[w[k+1]]>v?-v:v}return n}
+const numTok=w=>/^\d+$/.test(w)?String(+w):ROMAN.test(w)?String(romanVal(w)):/\d/.test(w)?w:null;
+const numToks=ws=>ws.map(numTok).filter(x=>x!=null).join(' ');
+function pluralEq(x,y){if(x===y)return true;for(const [a,b] of [[x,y],[y,x]])if(a===b+'s'||a===b+'es'||b.endsWith('y')&&a===b.slice(0,-1)+'ies'||b.endsWith('um')&&a===b.slice(0,-2)+'a'||b.endsWith('us')&&a===b.slice(0,-2)+'i')return true;return false}
+const NEG=['un','non','in','im','il','ir','dis','de','mis','an','a','anti','counter'];
+const PREF=[['hyper','hypo'],['inter','intra'],['endo','exo'],['ana','cata'],['af','ef'],['ab','ad'],['pre','post'],['sub','supra'],['sub','super'],['macro','micro'],['brady','tachy'],['hetero','homo'],['mono','poly'],['uni','multi'],['pro','anti'],['in','ex'],['im','ex'],['poly','oligo']];
+function contrast(x,y){for(const n of NEG)if(x===n+y||y===n+x||x.startsWith(n)&&pluralEq(x.slice(n.length),y)||y.startsWith(n)&&pluralEq(y.slice(n.length),x))return true;
+ for(const [p,q] of PREF)for(const [a,b] of [[x,y],[y,x]])if(a.startsWith(p)&&b.startsWith(q)&&lev(a.slice(p.length),b.slice(q.length))<=1)return true;return false}
+// edit distance where two swapped neighboring letters count as one slip
+function dlev(a,b){const d=[];for(let i=0;i<=a.length;i++){d[i]=[i];for(let j=1;j<=b.length;j++)d[i][j]=i?0:j}
+ for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++){d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1)}
+ return d[a.length][b.length]}
+function typedOK(input,answer){const t=normNum(input);if(!t)return false;
+ const vs=[answer].concat(String(answer).split(/\s*\/\s*|\s+or\s+/));if(vs.some(v=>normNum(v)===t))return true;
+ const tw=t.split(' '),lex=lexicon();
+ return vs.some(v=>{const a=normNum(v);if(!a)return false;const aw=a.split(' '),budget=a.length<=4?0:a.length<=8?1:2;
+  if(numToks(tw)!==numToks(aw))return false;
+  if(tw.length===aw.length){let cost=0;for(let k=0;k<tw.length;k++){const x=tw[k],y=aw[k];if(x===y||pluralEq(x,y)||numTok(x)!=null&&numTok(x)===numTok(y))continue;
+    if(lex.has(x)||contrast(x,y))return false;cost+=dlev(x,y);if(cost>budget)return false}return true}
+  // a word more or less: only a small slip, and never a meaningful word added or dropped
+  if(dlev(t,a)>budget)return false;const ts=new Set(tw),as=new Set(aw),extra=tw.filter(w=>!as.has(w)).concat(aw.filter(w=>!ts.has(w)));
+  return !extra.some(w=>/^(not|no|non|un|anti)$/.test(w)||w.length>1&&lex.has(w)&&!(ts.has(w)?aw:tw).some(z=>pluralEq(w,z)||dlev(w,z)<=1))})}
 function typedHTML(fb,q){q=q||state.active;const wc=q&&byId[q.cid];
  if(isWr(wc)){if(!fb)return wrBox(wc,'typed','',' onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey||'+(wc.wr.t==='cons'||wc.wr.t==='pts'?'false':'true')+')){event.preventDefault();submitTyped()}"');
   return '<div class="typein done wr '+(fb.correct?'ok':'bad')+'"><span class="yl">You wrote</span><b class="wrout">'+esc(fb.typed||'')+'</b>'+(fb.override?'<span class="ov">counted as right</span>':'')+(fb.wrnote||'')+'</div>'}
@@ -1727,11 +1791,11 @@ function record(correct,lookup){
  const own=choice&&!choice.correct&&choice.owner?byId[choice.owner]:null;
  state.feedback={at:Date.now(),correct,lookup,prev,correctLabel:target.letter+'. '+target.label,wrongExplain:own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':''};
  if(lookup)state.selected=null;
- if(!free)k.history.push({correct,lookup,kind:q.kind});
- state.history.push({cid:q.cid,correct,lookup,term:byId[q.cid].term,section:byId[q.cid].section,mode:state.section});
- if(state.history.length>2000)state.history=state.history.slice(-2000);
- state.log.push({sec:state.section,sel:state.selected,fb:state.feedback,q:{cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))}});
- if(state.log.length>400)state.log=state.log.slice(-400);
+ if(!free){k.history.push({correct,lookup,kind:q.kind});if(k.history.length>5)k.history.splice(0,k.history.length-5)}
+ state.history.push({cid:q.cid,correct,lookup,mode:state.section});
+ if(state.history.length>600)state.history=state.history.slice(-600);
+ state.log.push({sec:state.section,sel:state.selected,fb:state.feedback,q:{cid:q.cid,kind:q.kind,stem:q.stem,why:q.why===((byId[q.cid]||{}).why||'')?undefined:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))}});
+ if(state.log.length>150)state.log=state.log.slice(-150);
  save();draw();
  requestAnimationFrame(()=>{const f=document.querySelector('#card .fb'),r=f?.getBoundingClientRect();if(r&&r.bottom>innerHeight)f.scrollIntoView({block:'nearest',behavior:reduceMotion?'auto':'smooth'})});
 }
