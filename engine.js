@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='73',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='74',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -182,7 +182,7 @@ const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:false};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -442,7 +442,9 @@ function feedbackHTML(q,fb,live){
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'<span data-dn="'+esc(discKey(q.cid))+'">'+dnDot(dnUnread(discKey(q.cid)))+'</span></a></p>';
  if(live)out+=aiHTML(q,fb);
- const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' comes back in a few questions.':fb.hinted?'Right, with a hint. It counts toward mastery once you get it without one.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
+ const note=fb.correct?(fb.lucky?(fb.sure==='unsure'?'You weren\'t sure, so this '+ITEM+' comes back in a few questions.':'Marked as a lucky guess, so this '+ITEM+' comes back in a few questions.')
+  :fb.sure==='sure'?'Counts toward mastering this '+ITEM+'.':fb.hinted?'Right, with a hint. It counts toward mastery once you get it without one.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
+  :fb.sure==='sure'&&!fb.lookup?'You were sure of this one. Confident mistakes are the easiest to fix once you see why, so it comes back in a couple of questions.'
   :'This '+ITEM+' comes back in a few questions, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
  const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
  return out;
@@ -568,6 +570,7 @@ function cardHTML(){
   (fb?feedbackHTML(q,fb,true):'')+
   '<div class="actions">'+backBtn()+'<span class="aux">'+(fb?'':(q.usedHint||!q.hint?'':'<button class="link" onclick="hint()">Show hint</button>')+'<button class="link" onclick="looked()" title="Counts as a review, not a correct recall">I checked my slides</button>')+'</span>'+
   (fb?'<button class="btn primary" id="go" onclick="next()">'+(nextPart(q.cid)?'Next part':'Next question')+' <kbd>Enter</kbd></button>'
+     :sureOn(q)?'<button class="btn" id="go2" onclick="submit(\'unsure\')" '+(state.selected?'':'disabled')+'>Not sure</button><button class="btn primary" id="go" onclick="submit(\'sure\')" '+(state.selected?'':'disabled')+'>Sure <kbd>Enter</kbd></button>'
      :'<button class="btn primary" id="go" onclick="'+(q.typed?'submitTyped()':'submit()')+'" '+(q.typed||state.selected?'':'disabled')+'>Check answer <kbd>Enter</kbd></button>')+'</div>';
 }
 
@@ -900,8 +903,8 @@ function drawDash(){
   return '<div class="heat-row"><div class="h"><b>'+ch+'</b>'+esc(CH_NAMES[ch])+'</div><div class="cells">'+secs.map(k=>{const p=progress(k),v=Math.round(100*p.done/p.total);
    return '<button class="cell'+(v>=55?' hi':'')+(k===state.section?' cur':'')+'" style="--p:'+v+'%" onclick="selectSection(\''+k+'\')" aria-label="'+esc(k+' '+SECTION_NAMES[k])+', '+v+' percent mastered" data-tip="<b>'+esc(k+' '+SECTION_NAMES[k])+'</b>'+p.done+' of '+p.total+' mastered ('+v+'%)">'+k+'</button>'}).join('')+'</div></div>'}).join('');
 
- const weak=BANK.map(c=>({c,k:state.concepts[c.id]})).filter(x=>x.k.wrong>0&&x.k.right<T()).sort((a,b)=>(b.k.wrong-b.k.right)-(a.k.wrong-a.k.right)||b.k.wrong-a.k.wrong).slice(0,8);
- $('weak').innerHTML=weak.length?weak.map(({c,k})=>'<li><button onclick="selectSection(\''+c.section+'\')"><span class="t">'+esc(c.term)+'<span>'+c.section+' · '+esc(SECTION_NAMES[c.section])+'</span></span><span class="w">'+k.wrong+' wrong</span>'+pips(Math.min(k.right,T()))+'</button></li>').join(''):'<li class="empty">Nothing flagged yet. '+Items+' you miss will be listed here so you can go back to them.</li>';
+ const weak=BANK.map(c=>({c,k:state.concepts[c.id]})).filter(x=>x.k.wrong>0&&x.k.right<T()).sort((a,b)=>(!!b.k.sure-!!a.k.sure)||(b.k.wrong-b.k.right)-(a.k.wrong-a.k.right)||b.k.wrong-a.k.wrong).slice(0,8);
+ $('weak').innerHTML=weak.length?weak.map(({c,k})=>'<li><button onclick="selectSection(\''+c.section+'\')"><span class="t">'+esc(c.term)+'<span>'+c.section+' · '+esc(SECTION_NAMES[c.section])+'</span></span><span class="w">'+(k.sure?'<b class="surew" title="You were sure, but it was wrong">Sure</b> ':'')+k.wrong+' wrong</span>'+pips(Math.min(k.right,T()))+'</button></li>').join(''):'<li class="empty">Nothing flagged yet. '+Items+' you miss will be listed here so you can go back to them.</li>';
 }
 
 /* ---------- notes ---------- */
@@ -950,9 +953,53 @@ function drawNotesBody(){
    return '<article class="ncard"><h3>'+hl(g.title)+'</h3><dl class="nrows">'+rows.map(([a,b])=>'<div class="nrow" onclick="this.classList.toggle(\'show\');syncReveal()"><dt>'+hl(a)+'</dt><dd>'+hl(b)+'</dd></div>').join('')+'</dl></article>'}).join('');
   const more=other.length?'<p class="nmore"><button class="link" onclick="notesOtherW=!notesOtherW;drawNotesBody()">'+(notesOtherW?'Hide the '+other.length+' from other '+unitsW:'Show '+other.length+' more from other '+unitsW)+'</button></p>':'';
   if(!cards&&!more)return '';
-  return '<section class="nsec"><div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+esc(CH_NAMES[n.ch]||'')+'</h2>'+(state.prefs.selftest?'<button class="link reveal" onclick="revealSec(this)">Reveal all</button>':'')+(chapters.includes(n.ch)?'<button class="link" onclick="selectSection(\'CH:'+n.ch+'\')">Quiz the entire '+unitW+' →</button>':'')+'</div><div class="ngrid">'+cards+'</div>'+more+'</section>'}).join('');
+  if(blurtCh===n.ch&&state.prefs.blurt)return blurtHTML(n);
+  return '<section class="nsec"><div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+esc(CH_NAMES[n.ch]||'')+'</h2>'+(state.prefs.blurt&&!q?'<button class="link" onclick="startBlurt(\''+esc(n.ch)+'\')" title="Write what you remember, then check it against these notes">Blurt'+((state.blurt||{})[n.ch]?' <span class="bscore">'+state.blurt[n.ch].got+'/'+state.blurt[n.ch].total+'</span>':'')+'</button>':'')+(state.prefs.selftest?'<button class="link reveal" onclick="revealSec(this)">Reveal all</button>':'')+(chapters.includes(n.ch)?'<button class="link" onclick="selectSection(\'CH:'+n.ch+'\')">Quiz the entire '+unitW+' →</button>':'')+'</div><div class="ngrid">'+cards+'</div>'+more+'</section>'}).join('');
  body.innerHTML=out||'<p class="empty">No notes match “'+esc(notesQ)+'”.</p>';
 }
+/* v74 Blurt (Personalize, off by default): write everything you remember about a chapter with its notes hidden, then
+   check. Each note row's term is a key point; it's ticked when its main words appear in what you wrote (small typos ok),
+   and you can tick or untick by hand. The last score per chapter is kept (state.blurt). */
+let blurtCh=null,blurtText='',blurtRes=null,blurtTopic='all';
+// The notes cards of a chapter that are switched on; Blurt can cover all of them or one card (a big lesson has 100+ points).
+const BTIP=/^\s*(mnemonics?|memory tip|tip)\s*$/i;   // study tips in the notes are not key points to recall
+const blurtGroups=ch=>{const n=NOTES_PARSED.find(x=>x.ch===ch);return n?n.groups.filter(g=>secOn(g.sec)&&g.rows.some(([a])=>String(a).trim())):[]};
+function startBlurt(ch,keep){if(!keep||blurtCh!==ch)blurtTopic=blurtGroups(ch).length>4?'0':'all';blurtCh=ch;blurtText='';blurtRes=null;drawNotesBody();const n=document.querySelector('.blurt');if(n)n.scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'});setTimeout(()=>{const t=$('blurtin');if(t)t.focus()},60)}
+function setBlurtTopic(v){const t=$('blurtin');if(t)blurtText=t.value;blurtTopic=v;drawNotesBody()}
+function endBlurt(){if(blurtRes&&blurtCh){const gs=blurtGroups(blurtCh);state.blurt=state.blurt||{};state.blurt[blurtCh]={at:Date.now(),got:blurtRes.filter(x=>x.ok).length,total:blurtRes.length,topic:blurtTopic==='all'?'':(gs[+blurtTopic]||{}).title||''};save()}blurtCh=null;blurtRes=null;blurtText='';drawNotesBody()}
+const BSTOP=new Set('the and for are was but its not has had can may via per with from that this they their than then into also only each have been were when what which whom whose your about between other these those such more most less very used uses using called after before over under like same both either'.split(' '));
+function blurtWords(t){return String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\$[^$]*\$/g,' ').replace(/\(.*?\)/g,' ').split(/[^a-z0-9]+/).filter(Boolean)}
+function blurtLev(a,b){const p=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let prev=p[0];p[0]=i;for(let j=1;j<=b.length;j++){const t=p[j];p[j]=Math.min(p[j]+1,p[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=t}}return p[b.length]}
+// A key point counts as remembered when enough of its content words (the note's text after the dash, or the term when
+// there is none) appear in what was written: half of a short point, about a third of a long one. Word forms (cough /
+// coughs) and one-letter typos in longer words are accepted.
+function blurtHit(term,def,said){const pick=t=>[...new Set(blurtWords(t).filter(w=>w.length>=3&&!BSTOP.has(w)&&!/^\d+$/.test(w)))];let key=pick(def||'');if(!key.length)key=pick(term);if(!key.length)return false;
+ const has=w=>said.has(w)||[...said].some(x=>(w.length>=5&&x.length>=5&&(x.startsWith(w.slice(0,Math.max(5,w.length-2)))||w.startsWith(x.slice(0,Math.max(5,x.length-2)))))||(w.length>=6&&Math.abs(x.length-w.length)<=1&&x[0]===w[0]&&blurtLev(x,w)<=1));
+ const n=key.filter(has).length;return key.length<=4?n>=Math.ceil(key.length/2):n>=Math.max(2,Math.ceil(key.length*.35))}
+function checkBlurt(){const t=$('blurtin');blurtText=t?t.value:blurtText;if(blurtText.trim().length<3){if(t)t.focus();return}
+ const said=new Set(blurtWords(blurtText)),gs=blurtGroups(blurtCh);if(!gs.length)return;
+ blurtRes=[];gs.filter((g,i)=>blurtTopic==='all'||String(i)===blurtTopic).forEach(g=>g.rows.forEach(([a,b])=>{if(String(a).trim()&&!BTIP.test(a))blurtRes.push({g:g.title,a,b,ok:blurtHit(a,b,said)})}));
+ drawNotesBody();const el=document.querySelector('.blurt');if(el)el.scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
+function blurtTick(i){if(!blurtRes||!blurtRes[i])return;blurtRes[i].ok=!blurtRes[i].ok;const open=!!document.querySelector('.blurt .bgot[open]');drawNotesBody();const d=document.querySelector('.blurt .bgot');if(d&&open)d.open=true}
+function blurtHTML(n){const gs=blurtGroups(n.ch),topic=blurtTopic==='all'?'':(gs[+blurtTopic]||{}).title||'';
+ const head='<div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+'Blurt</h2></div>';
+ if(!blurtRes){const npts=g=>g.rows.filter(([a])=>String(a).trim()&&!BTIP.test(a)).length,tot=gs.reduce((s,g)=>s+npts(g),0);
+  return '<section class="nsec blurt">'+head+
+  '<label class="bpick"><span>Topic</span><select onchange="setBlurtTopic(this.value)">'+gs.map((g,i)=>'<option value="'+i+'"'+(blurtTopic===String(i)?' selected':'')+'>'+esc(g.title)+' ('+npts(g)+')</option>').join('')+
+   '<option value="all"'+(blurtTopic==='all'?' selected':'')+'>The whole '+esc(unitW)+' ('+tot+' points)</option></select></label>'+
+  '<p class="btip">Write everything you remember about '+(topic?'<b>'+esc(topic)+'</b>':'this '+esc(unitW))+': terms, definitions, lists, examples. No peeking, and spelling doesn\'t matter.</p>'+
+  '<textarea id="blurtin" class="blurtin" rows="8" placeholder="Start anywhere…" aria-label="What you remember" oninput="blurtText=this.value">'+esc(blurtText)+'</textarea>'+
+  '<div class="bact"><button class="btn" onclick="endBlurt()">Cancel</button><button class="btn primary" onclick="checkBlurt()">Check what I remembered</button></div></section>'}
+ const got=blurtRes.filter(x=>x.ok).length,tot=blurtRes.length,pct=tot?Math.round(100*got/tot):0;
+ const all=blurtRes.map((x,i)=>Object.assign({i},x)),miss=all.filter(x=>!x.ok),hit=all.filter(x=>x.ok);
+ const li=x=>'<li class="'+(x.ok?'ok':'no')+'"><button class="bt" onclick="blurtTick('+x.i+')" aria-pressed="'+x.ok+'" aria-label="'+(x.ok?'Untick ':'I did write ')+esc(x.a)+'">'+(x.ok?'✓':'')+'</button><div><b>'+esc(x.a)+'</b>'+(x.ok||!x.b?'':'<span>'+esc(x.b)+'</span>')+'</div></li>';
+ // missed points grouped under their notes card (the card name once, not on every row)
+ const byG=[];miss.forEach(x=>{let g=byG.find(y=>y.t===x.g);if(!g)byG.push(g={t:x.g,xs:[]});g.xs.push(x)});
+ return '<section class="nsec blurt">'+head+(topic?'<p class="btopic">'+esc(topic)+'</p>':'')+'<p class="bsum"><b class="num">'+got+' of '+tot+'</b> key points ('+pct+'%). '+(pct>=80?'Excellent recall.':pct>=50?'A solid start: read the ones you missed, then blurt again tomorrow.':'Read the missed ones below, then try again later. Each try makes them stick.')+' Tap a box to tick one the checker missed.</p>'+
+  (miss.length?'<h3 class="bh">Missed ('+miss.length+')</h3>'+byG.map(g=>(byG.length>1||!topic?'<h4 class="bg">'+esc(g.t)+'</h4>':'')+'<ul class="blist">'+g.xs.map(li).join('')+'</ul>').join(''):'')+
+  (hit.length?'<details class="bgot"><summary>Remembered ('+hit.length+')</summary><ul class="blist">'+hit.map(li).join('')+'</ul></details>':'')+
+  '<details class="bmine"><summary>What you wrote</summary><p>'+esc(blurtText)+'</p></details>'+
+  '<div class="bact"><button class="btn" onclick="startBlurt(\''+esc(n.ch)+'\',true)">Try again</button><button class="btn primary" onclick="endBlurt()">Done</button></div></section>'}
 function toggleSelfTest(){state.prefs.selftest=!state.prefs.selftest;save();drawNotes()}
 function revealSec(btn){const rows=[...btn.closest('.nsec').querySelectorAll('.nrow')],all=rows.every(r=>r.classList.contains('show'));rows.forEach(r=>r.classList.toggle('show',!all));syncReveal()}
 function syncReveal(){document.querySelectorAll('#nbody .nsec').forEach(sec=>{const b=sec.querySelector('.reveal');if(b)b.textContent=[...sec.querySelectorAll('.nrow')].every(r=>r.classList.contains('show'))?'Hide all':'Reveal all'})}
@@ -1203,7 +1250,7 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
   byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;if(ok){right++;byCh[ch][0]++}
   if(a==null||a===''||q.mt)return;   // skipped (matching items are not bank questions): no effect on mastery, Missed or class stats
   k.seen++;if(ok){state.correct++;masteryUp(k);delete k.back}else{k.wrong++;state.wrong++;masteryDown(k);relearn(k)}
-  crowdAdd(q.cid,!ok);state.history.push({cid:q.cid,correct:ok,lookup:false,mode:'EXAM'})});
+  crowdAdd(q.cid,!ok,!ok&&!q.ident?(q.choices.find(x=>x.letter===a)||{}).label:'');state.history.push({cid:q.cid,correct:ok,lookup:false,mode:'EXAM'})});
  dailyAdd(ex.qs.filter((q,j)=>{const a=ex.ans[j];return !(a==null||a===''||q.mt)}).length);
  ex.right=right;ex.byCh=byCh;if(100*right/n>=(Object.assign({pass:60},CONFIG.grading||{})).pass)setTimeout(()=>celebrate('exam'),380);
  state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0,easy:ex.easy?1:0}).slice(-20);
@@ -1225,7 +1272,7 @@ function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*
   (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">'+(ex.chal?'Done':'New exam')+'</button></div>'+
   (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.ident?null:q.choices.find(c=>c.letter===a);
    return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+(q.mt?exKind(q):esc(byId[q.cid].section))+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div>'+caseHTML(q.cid)+'<p class="exq">'+esc(q.stem)+'</p>'+figHTML(q.cid)+(q.wr&&a?wrCheck(a,byId[q.cid].wr).html:'')+
-    '<p class="exa bad"'+(q.wr?' style="white-space:pre-line"':'')+'><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?(q.wr?ansHTML(ok.label):esc(ok.label)):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+stepsHTML(byId[q.cid])+'</article>'}).join('')+'</div>':'')}
+    '<p class="exa bad"'+(q.wr?' style="white-space:pre-line"':'')+'><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?(q.wr?ansHTML(ok.label):esc(ok.label)):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+(mine&&!mine.correct&&whyNot(q.cid,mine.label)?'<p class="exwhy"><b>Why not your choice:</b> '+esc(whyNot(q.cid,mine.label))+'</p>':'')+stepsHTML(byId[q.cid])+'</article>'}).join('')+'</div>':'')}
 function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
 function newExam(){state.exam=null;save();draw();window.scrollTo(0,0)}
 function examKey(e){const ex=state.exam;if(!ex||ex.done||ex.sheet)return false;const k=e.key;
@@ -1505,8 +1552,10 @@ function sendReport(){const n=($('cfnote').value||'').trim();if(n.length<3)retur
  const c=cfCtx||{};cfSend('report',{qid:c.qid,section:c.section,q:c.q,key:c.key,note:n},$('cfsend'))}
 function copyReport(){const c=cfCtx||{},n=(($('cfnote')||{}).value||'').trim();closeContrib();
  copyText(c.text+' — My note: '+n,'Copied. Paste it in your group chat'+(n?'.':' and say what looks wrong.'))}
-// Anonymous answers go out in small batches: {q: question id, m: 1 if missed}. Only built-in banks count.
-function crowdAdd(cid,missed){if(!cloudOn()||!state.prefs.crowd||!BUILTIN.has(cid))return;crowdQ.push({q:cid,m:missed?1:0});clearTimeout(crowdT);
+// Anonymous answers go out in small batches: {q: question id, m: 1 if missed, c: the wrong choice picked (v74, for the
+// question check in tools/item_report.py: which wrong choices nobody picks, or more people pick than the answer)}.
+// Only built-in banks count.
+function crowdAdd(cid,missed,pick){if(!cloudOn()||!state.prefs.crowd||!BUILTIN.has(cid))return;const it={q:cid,m:missed?1:0};if(missed&&pick)it.c=String(pick).slice(0,120);crowdQ.push(it);clearTimeout(crowdT);
  if(crowdQ.length>=10)crowdFlush();else crowdT=setTimeout(crowdFlush,20000)}
 function crowdFlush(keep){if(!crowdQ.length)return;const items=crowdQ.splice(0,100);rpc('record_answers',{p_course:KEY,p_items:items},keep).catch(()=>{if(!keep&&crowdQ.length<300)crowdQ=items.concat(crowdQ)})}
 
@@ -1591,6 +1640,8 @@ function drawPrefs(){
  h+='<section class="panel"><h2>Study tools</h2>'+
   row('Cross out choices','Rule out answers while you think: right-click a choice, tap its ×, or press Shift + its letter.',sw(state.prefs.crossout,"setPref('crossout',"+!state.prefs.crossout+")",'Cross out choices'))+
   row('Lucky guess button','After a correct answer, undo the mastery point if you were only guessing, so the '+ITEM+' stays in your queue.',sw(state.prefs.lucky,"setPref('lucky',"+!state.prefs.lucky+")",'Lucky guess button'))+
+  row('How sure are you?','Answer with <b>Sure</b> or <b>Not sure</b> instead of Check answer. A right guess comes back like a lucky guess; a wrong answer you were sure of comes back sooner and is marked in Needs work. Confident mistakes are the ones you fix best once you see the answer.',sw(state.prefs.sure,"setPref('sure',"+!state.prefs.sure+")",'How sure are you'))+
+  (NOTES_PARSED.length?row('Blurt','On the Notes page: write everything you remember about a '+unitW+' with the notes hidden, then check it against the notes. Recalling from a blank page is the strongest kind of practice.',sw(state.prefs.blurt,"setPref('blurt',"+!state.prefs.blurt+")",'Blurt')):'')+
   row('Star '+ITEMS,'Flag tricky '+ITEMS+' with the star or the S key, then review them together, even after they are mastered.',sw(state.prefs.stars,"setPref('stars',"+!state.prefs.stars+")",'Star '+ITEMS))+
   row('Missed '+ITEMS+' drill','A sidebar list and a dashboard button that drill only the '+ITEMS+' you got wrong or checked in your slides, until they are mastered.',sw(state.prefs.missed,"setPref('missed',"+!state.prefs.missed+")",'Missed '+ITEMS+' drill'))+
   row('Spaced review','Mastered '+ITEMS+' come back as Due for review after 1, 3, 7, 14 and 30 days (sooner when a test is coming up), so they stick until the exam. Missing one sends it back to practice.',sw(state.prefs.srs,"setPref('srs',"+!state.prefs.srs+")",'Spaced review'))+
@@ -1629,6 +1680,11 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'35',date:'Oct 24, 2026',title:'Learn from your wrong answers',items:[
+  ...(FULL_BANK.some(c=>c.dw)?['<b>Why not your choice</b>: after a wrong answer, a line says why the choice you picked is wrong (also in the mock exam review).']:[]),
+  'Optional, in Personalize: <b>How sure are you?</b> Answer with Sure or Not sure. Wrong answers you were sure of come back sooner and go first in Needs work.',
+  ...(NOTES_PARSED.length?['Optional, in Personalize: <b>Blurt</b> on the Notes page. Write all you remember about a '+unitW+', then see which key points you missed.']:[]),
+ ]},
  ...(CONFIG.home?[{v:'34',date:'Oct 24, 2026',title:'Daily goal, last look and live quiz',items:[
   '<b>Last look</b>: the night before a test, one page with the '+ITEMS+' you missed most and their answers. Hide the answers to test yourself, or print it. In the menu, and on your dashboard when a test is near.',
   'A <b>daily goal</b> and <b>streak</b>: every answer in any course counts. Track it on the home page and in <b>Today</b> on your dashboard.',
@@ -1820,7 +1876,7 @@ function answer(l){if(view!=null||state.pmatch||state.feedback||!state.active||s
  if(state.active.struck?.includes(l)){state.active.struck=state.active.struck.filter(x=>x!==l);save();$('card').innerHTML=cardHTML();return}
  save();
  document.querySelectorAll('#card .choice').forEach(b=>{let on=b.dataset.l===l;b.classList.toggle('sel',on)});
- const g=$('go');if(g)g.disabled=false}
+ const g=$('go');if(g)g.disabled=false;const g2=$('go2');if(g2)g2.disabled=false}
 // Cross out a choice you have ruled out (right-click, the × button, or Shift + letter).
 function strike(l){if(view!=null||state.pmatch||state.feedback||!state.active||state.active.typed||!state.prefs.crossout)return;const s=state.active.struck||[];
  state.active.struck=s.includes(l)?s.filter(x=>x!==l):s.concat(l);if(state.selected===l)state.selected=null;save();$('card').innerHTML=cardHTML()}
@@ -1834,7 +1890,14 @@ function starBtn(cid){if(!state.prefs.stars)return '';const on=!!state.concepts[
 function toggleStar(){if(view!=null||state.pmatch||!state.active||!state.prefs.stars)return;const k=state.concepts[state.active.cid];k.star=!k.star;save();draw()}
 function hint(){if(view!=null||state.pmatch||state.feedback||!state.active||!state.active.hint)return;if(!state.active.usedHint){state.active.usedHint=true;state.hints++;state.concepts[state.active.cid].hints++}save();draw()}
 function looked(){if(view!=null||state.pmatch||state.feedback||!state.active)return;record(false,true)}
-function submit(){if(view!=null||state.pmatch||!state.selected||state.feedback)return;record(state.active.choices.find(x=>x.letter===state.selected).correct,false)}
+function submit(conf){if(view!=null||state.pmatch||!state.selected||state.feedback)return;const ok=state.active.choices.find(x=>x.letter===state.selected).correct;
+ record(ok,false,sureOn(state.active)?conf||'sure':null);
+ if(state.feedback&&state.feedback.sure==='unsure'&&ok)luckyGuess()}
+/* v74 "How sure are you?" (Personalize): Sure / Not sure replace Check answer on multiple-choice practice questions.
+   Right but not sure = a lucky guess (comes back). Wrong but sure = comes back after 2-3 questions instead of 4-6, and is
+   counted (k.sure) so the dashboard's Needs work list puts it first: confident errors are corrected best right after
+   feedback (the hypercorrection effect). */
+const sureOn=q=>!!state.prefs.sure&&!!q&&!q.typed&&!state.pmatch;
 // Reaching the recall goal schedules the first review in a day; each on-time correct review moves it further out.
 function masteryUp(k){const before=k.right,now=Date.now();k.right++;
  if(before<T()&&k.right>=T())k.srs={lvl:0,due:now+srsGap(0)};
@@ -1996,9 +2059,9 @@ function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct|
  const h=state.history[state.history.length-1];if(h&&h.cid===state.active.cid)h.correct=true;const kh=k.history[k.history.length-1];if(kh)kh.correct=true;
  const last=state.log[state.log.length-1];if(last)last.fb=fb;save();draw()}
 
-function record(correct,lookup){
+function record(correct,lookup,conf){
  const q=state.active,k=state.concepts[q.cid],choice=q.choices.find(x=>x.letter===state.selected),target=q.choices.find(x=>x.correct);
- k.seen++;crowdAdd(q.cid,!correct);if(state.section==='CLASS'){state.classDone=state.classDone||[];if(!state.classDone.includes(q.cid))state.classDone.push(q.cid)}
+ k.seen++;crowdAdd(q.cid,!correct,!correct&&!lookup&&choice&&!q.typed?choice.label:'');if(state.section==='CLASS'){state.classDone=state.classDone||[];if(!state.classDone.includes(q.cid))state.classDone.push(q.cid)}
  if(state.section==='CRAM'){state.cramDone=state.cramDone||[];if(!state.cramDone.includes(q.cid))state.cramDone.push(q.cid)}
  if(onPass(state.section)){const P=state.pass;if(!P.done.includes(q.cid))P.done.push(q.cid);if(!correct&&!P.miss.includes(q.cid))P.miss.push(q.cid)}
  if(state.section==='STAR'){state.starDone=state.starDone||[];if(!state.starDone.includes(q.cid))state.starDone.push(q.cid)}
@@ -2011,8 +2074,9 @@ function record(correct,lookup){
  if(!free)if(correct){if(!hinted)masteryUp(k);state.correct++;delete k.back}else{if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}masteryDown(k);relearn(k)}
  if(!lookup)buzz(correct);
  if(correct&&!free&&c0&&!wasSec&&secAll.every(isM))setTimeout(()=>celebrate(!wasCh&&chAll.every(isM)?'lesson':'section'),280);
- const own=choice&&!choice.correct&&choice.owner?byId[choice.owner]:null;
- state.feedback={at:Date.now(),correct,lookup,prev,hinted,correctLabel:target.letter+'. '+target.label,wrongExplain:own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':''};
+ const own=choice&&!choice.correct&&choice.owner?byId[choice.owner]:null,dw=choice&&!choice.correct?whyNot(q.cid,choice.label):'';
+ state.feedback={at:Date.now(),correct,lookup,prev,hinted,correctLabel:target.letter+'. '+target.label,wrongExplain:dw||(own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':'')};
+ if(conf){state.feedback.sure=conf;if(!correct&&!lookup&&conf==='sure'&&!free){k.sure=(k.sure||0)+1;k.back=(state.qn||0)+2+Math.floor(Math.random()*2)}}
  if(lookup)state.selected=null;
  if(!free){k.history.push({correct,lookup,kind:q.kind});if(k.history.length>5)k.history.splice(0,k.history.length-5)}
  state.history.push({cid:q.cid,correct,lookup,mode:state.section});dailyAdd(1);
@@ -2022,6 +2086,8 @@ function record(correct,lookup){
  save();draw();
  requestAnimationFrame(()=>{const f=document.querySelector('#card .fb'),r=f?.getBoundingClientRect();if(r&&r.bottom>innerHeight)f.scrollIntoView({block:'nearest',behavior:reduceMotion?'auto':'smooth'})});
 }
+// v74: authored items may carry dw = {wrong choice: why it's wrong}, shown as "Why not your choice" in practice and the exam review.
+function whyNot(cid,label){const c=byId[cid];return c&&c.dw&&c.dw[label]||''}
 function next(){if(!state.feedback)return;state.feedback=null;state.active=null;state.selected=null;maybeMix();if(completed(state.section)&&!state.complete.includes(state.section))state.complete.push(state.section);save();draw();scrollToCard()}
 function goSection(sec){if(sec===state.section)return;state.section=sec;state.pmatch=null;state.pass=null;state.active=null;state.feedback=null;state.selected=null;view=null;if(!isX(sec))openCh.add(secCh(sec));if(sec==='STAR'&&completed('STAR'))state.starDone=[];if(sec==='CLASS'&&completed('CLASS'))state.classDone=[];if(sec==='CRAM'&&completed('CRAM'))state.cramDone=[];if(sec==='DUE')state.dueDone=[];save();draw();window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'})}
 function selectSection(sec){toggleNav(false);if(page!=='study'){page='study';state.page=page;if(sec===state.section){save();draw();window.scrollTo(0,0);return}}goSection(sec)}

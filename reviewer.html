@@ -468,6 +468,33 @@ h1{font-size:clamp(24px,2.8vw,31px)}
 .selftest .nrow:not(.show) dd{color:transparent;background:var(--raised);border-radius:6px;user-select:none}
 .selftest .nrow:not(.show) dd mark{background:none;color:transparent}
 .selftest .nrow:not(.show):hover dd{background:var(--hover)}
+.nhead .link+.link{margin-left:0}
+.bscore{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;margin-left:2px}
+.blurt{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;box-shadow:var(--shadow)}
+.blurt .btip,.blurt .bsum{margin:0 0 12px;color:var(--mute);font-size:14.5px;line-height:1.5}
+.blurt .bsum b{color:var(--text);font-size:17px}
+.blurtin{display:block;width:100%;box-sizing:border-box;min-height:180px;resize:vertical;font:15px/1.55 var(--sans);color:var(--text);background:var(--raised);border:1px solid var(--line2);border-radius:var(--r-md);padding:12px 14px}
+.blurtin:focus{outline:2px solid var(--accent);outline-offset:1px}
+.bact{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:14px}
+.blurt .bh{font:600 14px/1.3 var(--sans);margin:16px 0 6px;color:var(--mute)}
+.blurt .pill{white-space:nowrap}
+.bpick{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:14px;color:var(--mute)}
+.bpick select{flex:1;min-width:0;font:inherit;color:var(--text);background:var(--raised);border:1px solid var(--line2);border-radius:var(--r-sm);padding:8px 10px}
+.blurt .btopic{margin:-6px 0 8px;font-weight:600}
+.blurt .bg{font:600 12.5px/1.3 var(--sans);color:var(--faint);margin:12px 0 6px;text-transform:none}
+.bgot{margin-top:14px}.bgot summary{cursor:pointer;font:600 14px/1.3 var(--sans);color:var(--mute)}.bgot .blist{margin-top:8px}
+.blist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.blist li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:var(--r-md);border:1px solid var(--line)}
+.blist li.no{background:var(--bad-bg);border-color:var(--bad-line)}
+.blist li div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.blist li span{font-size:14px;color:var(--text)}
+.blist li small{font-size:12px;color:var(--faint)}
+.blist .bt{flex:none;width:22px;height:22px;margin-top:1px;border-radius:6px;border:1.5px solid var(--line2);background:var(--surface);color:var(--good);font:700 14px/1 var(--sans);cursor:pointer;display:grid;place-items:center;padding:0}
+.blist li.ok .bt{border-color:var(--good);background:var(--good-bg)}
+.bmine{margin-top:14px;font-size:14px;color:var(--mute)}
+.bmine summary{cursor:pointer}
+.bmine p{white-space:pre-wrap;margin:8px 0 0}
+.weak .w .surew{font-size:11px;font-weight:700;color:var(--bad);border:1px solid var(--bad-line);border-radius:99px;padding:0 6px;margin-right:4px}
 .ntip{color:var(--faint);font-size:12.5px;margin:-6px 0 16px}
 mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;border-radius:3px;padding:0 1px}
 /* Matching */
@@ -855,7 +882,7 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
 /* v69 (3) milestone confetti (section or lesson mastered, mock exam passed) */
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
 .confetti i{position:absolute;top:-24px;border-radius:2px;animation:confall 1.3s cubic-bezier(.25,.6,.4,1) forwards}
-@keyframes confall{0%{transform:translate(0,0) rotate(0);opacity:1}85%{opacity:1}100%{transform:translate(var(--dx),105vh) rotate(var(--r));opacity:0}}
+@keyframes confall{0%{transform:translate(0,0) rotate(0);opacity:1}85%{opacity:1}100%{transform:translate(var(--dx),105vh) rotate(var(--r-md));opacity:0}}
 .done-card.cel h2,.exres.cel .grade{animation:fbpop .55s cubic-bezier(.2,.7,.2,1) .15s}
 /* v69 (6) dashboard: one card, not a card inside a card */
 .hero .next{background:none;border:0;box-shadow:none;border-radius:0;padding:4px 0 4px 28px;border-left:1px solid var(--line);max-width:320px}
