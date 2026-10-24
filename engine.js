@@ -473,26 +473,53 @@ function aiCheck(){if(AI_READY===true||!CONFIG.home||!cloudOn()||!/^https?:$/.te
  if(c&&c.ok&&Date.now()-c.at<6e5){AI_READY=true;return}
  fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{headers:{apikey:CLOUD.key},cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{AI_READY=!!j.ok;
   if(AI_READY){try{sessionStorage.setItem('reviewer_ai',JSON.stringify({ok:true,at:Date.now()}))}catch(e){}if(state.feedback)draw()}}).catch(()=>{})}
-function aiHTML(q,fb){aiCheck();if(!q||!q.cid||!fb)return '';const k=aiK(q,fb),sv=AISAVED[k],x=AIX[k]&&!AIX[k].busy&&!AIX[k].err?AIX[k]:sv?{text:sv.text,saved:1}:AIX[k];if(!x&&(!AI_READY||!FILE_IDS.has(String(q.cid))))return '';
- if(!x)return '<p><button class="link aibtn" onclick="aiExplain(\''+esc(String(q.cid))+'\')">'+SPARK+'Explain it differently</button></p>';
- if(x.busy)return '<div class="aibox busy"><p class="note">'+SPARK+'Writing a simpler explanation…</p></div>';
- if(x.err)return '<div class="aibox"><p class="note">'+x.err+'</p></div>';
- return '<div class="aibox"><div class="aih">'+SPARK+'Explained differently</div><p>'+esc(x.text).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<i>$1</i>').replace(/^\s*[-•]\s+/gm,'• ').replace(/\n+/g,'<br>')+'</p><p class="note">Written by AI from this question, so it can be wrong. Check your transes'+(x.saved?' · saved on this device':x.cached?' · already written, didn\'t use a try':x.left!=null?' · '+x.left+' left today':'')+'.</p></div>'}
+const aiFmt=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<i>$1</i>').replace(/^\s*[-•]\s+/gm,'• ').replace(/\n+/g,'<br>');
+function aiHTML(q,fb){aiCheck();if(!q||!q.cid||!fb)return '';const k=aiK(q,fb),sv=AISAVED[k],x=AIX[k]&&!AIX[k].busy&&!AIX[k].err?AIX[k]:sv?{text:sv.text,saved:1}:AIX[k],on=AI_READY&&FILE_IDS.has(String(q.cid));if(!x&&!on)return '';
+ let h;
+ if(!x)h='<p><button class="link aibtn" onclick="aiExplain(\''+esc(String(q.cid))+'\')">'+SPARK+'Explain it differently</button></p>';
+ else if(x.busy)h='<div class="aibox busy"><p class="note">'+SPARK+'Writing a simpler explanation…</p></div>';
+ else if(x.err)h='<div class="aibox"><p class="note">'+x.err+'</p></div>';
+ else h='<div class="aibox"><div class="aih">'+SPARK+'Explained differently</div><p>'+aiFmt(x.text)+'</p><p class="note">Written by AI from this question, so it can be wrong. Check your transes'+(x.saved?' · saved on this device':x.cached?' · already written, didn\'t use a try':x.left!=null?' · '+x.left+' left today':'')+'.</p></div>';
+ return h+(on?aiFollowHTML(k):'')}
+/* v72: follow-up questions. Under the explanation, the student can ask about this question in their own words (up to 3
+   per question). Same daily tries as explanations; never cached (each question is the student's own). */
+const AIF={};   // AIF[question id|picked choice] = {turns: [{q, a}], busy, err, draft, left}
+function aiFollowHTML(k){const f=AIF[k]||{turns:[]};
+ let h='<div class="aifu">'+f.turns.map(t=>'<p class="aiq"><b>You asked:</b> '+esc(t.q)+'</p><p class="aia">'+aiFmt(t.a)+'</p>').join('');
+ if(f.busy)h+='<p class="note aiwait">'+SPARK+'Thinking about your question…</p>';
+ if(f.err)h+='<p class="note">'+f.err+'</p>';
+ if(f.turns.length>=3)h+='<p class="note">For more, ask your classmates in <b>Discuss this question</b>.</p>';
+ else if(!f.busy)h+='<div class="aiask"><input id="aiask" maxlength="300" autocomplete="off" aria-label="Ask a follow-up about this question" placeholder="'+(f.turns.length?'Ask another follow-up…':'Still confused? Ask about this question…')+'" value="'+esc(f.draft||'')+'" oninput="aiDraft(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aiAsk()}"><button class="btn sm" onclick="aiAsk()">Ask</button></div>';
+ if(f.turns.length&&f.left!=null&&!f.busy)h+='<p class="note">Written by AI, so it can be wrong · '+f.left+' left today.</p>';
+ return h+'</div>'}
+function aiDraft(v){const q=state.active,fb=state.feedback;if(!q||!fb)return;const k=aiK(q,fb);(AIF[k]||(AIF[k]={turns:[]})).draft=v}
+// one request to the explain function, as the signed-in student (an expired sign-in is refreshed once and retried)
+async function aiPost(payload){const tok=typeof Auth!=='undefined'?(Auth.cloud=CLOUD,await Auth.token()):'';if(!tok)return {signin:1};
+ const go=t=>fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+t},body:JSON.stringify(payload)});
+ let r=await go(tok);
+ if(r.status===401){try{const s=JSON.parse(localStorage.getItem('reviewer_session'));if(s){s.exp=0;localStorage.setItem('reviewer_session',JSON.stringify(s))}}catch(e){}
+  const t2=await Auth.token();if(t2)r=await go(t2)}
+ return {r,j:await r.json().catch(()=>({}))}}
+function aiErr(o,what){const j=o.j||{},det=s=>' <span class="aidet">('+esc(String(s).slice(0,160))+(o.r?' · '+o.r.status:'')+')</span>';
+ if(o.signin)return 'Sign in with Google to use AI '+what+'. <a href="./?signin=1">Sign in</a>';
+ return j.error==='limit'?'You\'ve used today\'s '+(j.perDay||30)+' AI tries. More tomorrow.':j.error==='busy'?'Lots of classmates are using this right now. Try again in a bit.'
+  :j.error==='sign in'?'Your sign-in has expired. Sign in again to use AI '+what+'. <a href="./?signin=1">Sign in</a>'+(j.detail?det(j.detail):'')
+  :'Couldn\'t get an answer just now. Try again in a bit.'+det(j.detail||j.error||j.message||j.msg||'no reason given')}
+function aiBase(q,fb){const ch=!fb.correct&&!q.typed&&state.selected?q.choices.find(x=>x.letter===state.selected):null;return {course:courseId(),qid:String(q.cid),picked:ch?ch.label:'',wrong:!fb.correct}}
 async function aiExplain(cid){const q=state.active,fb=state.feedback;if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);if(AIX[k]&&AIX[k].busy)return;
- const tok=typeof Auth!=='undefined'?(Auth.cloud=CLOUD,await Auth.token()):'';
- if(!tok){AIX[k]={err:'Sign in with Google to use AI explanations. <a href="./?signin=1">Sign in</a>'};draw();return}
- const ch=!fb.correct&&!q.typed&&state.selected?q.choices.find(x=>x.letter===state.selected):null;
  AIX[k]={busy:1};draw();
- const ask=t=>fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+t},
-   body:JSON.stringify({course:courseId(),qid:String(cid),picked:ch?ch.label:'',wrong:!fb.correct})});
- try{let r=await ask(tok);
-  // an old or expired sign-in: get a fresh one once and try again
-  if(r.status===401){try{const s=JSON.parse(localStorage.getItem('reviewer_session'));if(s){s.exp=0;localStorage.setItem('reviewer_session',JSON.stringify(s))}}catch(e){}
-   const t2=await Auth.token();if(t2)r=await ask(t2)}
-  const j=await r.json().catch(()=>({}));
-  if(r.ok&&j.text)aiSave(k,j.text);AIX[k]=r.ok&&j.text?{text:j.text,left:j.left,cached:j.cached}:{err:j.error==='limit'?'You\'ve used today\'s '+(j.perDay||10)+' AI explanations. More tomorrow.':j.error==='busy'?'Lots of classmates are using this right now. Try again in a bit.':j.error==='sign in'?'Your sign-in has expired. Sign in again to use AI explanations. <a href="./?signin=1">Sign in</a>'+(j.detail?' <span class="aidet">('+esc(String(j.detail).slice(0,160))+')</span>':''):'Couldn\'t get an explanation just now. Try again in a bit.'+' <span class="aidet">('+esc(String(j.detail||j.error||j.message||j.msg||'no reason given').slice(0,160))+' · '+r.status+')</span>'}}
+ try{const o=await aiPost(aiBase(q,fb));
+  if(o.r&&o.r.ok&&o.j.text){aiSave(k,o.j.text);AIX[k]={text:o.j.text,left:o.j.left,cached:o.j.cached}}else AIX[k]={err:aiErr(o,'explanations')}}
  catch(e){AIX[k]={err:'No connection. Try again when you\'re online.'}}
  if(state.active&&String(state.active.cid)===String(cid))draw()}
+async function aiAsk(){const q=state.active,fb=state.feedback;if(!q||!fb)return;const k=aiK(q,fb),f=AIF[k]||(AIF[k]={turns:[]});if(f.busy||f.turns.length>=3)return;
+ const el=$('aiask'),text=((el&&el.value)||f.draft||'').trim();if(text.length<3){if(el)el.focus();return}
+ const sv=AISAVED[k],ex=(AIX[k]&&AIX[k].text)||(sv&&sv.text)||'';
+ f.draft=text;f.busy=1;f.err='';draw();
+ try{const o=await aiPost(Object.assign(aiBase(q,fb),{ask:text,prior:f.turns.slice(-2),explained:ex}));
+  if(o.r&&o.r.ok&&o.j.text){f.turns.push({q:text,a:o.j.text});f.draft='';f.left=o.j.left}else f.err=aiErr(o,'follow-ups')}
+ catch(e){f.err='No connection. Try again when you\'re online.'}
+ f.busy=0;if(state.active&&String(state.active.cid)===String(q.cid)){draw();setTimeout(()=>{const i=$('aiask');if(i&&f.turns.length<3)i.focus({preventScroll:true})},60)}}
 function backBtn(){return '<button class="btn back" onclick="goBack()" '+(canBack()?'':'disabled')+' title="Previous answered question (←)">'+LEFT+'Back</button>'}
 
 function cardHTML(){
