@@ -459,11 +459,13 @@ function aiPick(q,fb){const ch=!fb.correct&&!q.typed&&state.selected?q.choices.f
 function aiK(q,fb){return String(q.cid)+'|'+(fb.correct?'':aiPick(q,fb))}
 function aiSave(k,text){AISAVED[k]={text,at:Date.now()};const ks=Object.keys(AISAVED);if(ks.length>300)ks.sort((a,b)=>AISAVED[a].at-AISAVED[b].at).slice(0,ks.length-300).forEach(x=>delete AISAVED[x]);try{localStorage.setItem(AI_SAVE,JSON.stringify(AISAVED))}catch(e){}}
 const SPARK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4l1.8 4.7L17.5 10.5l-4.7 1.8L11 17l-1.8-4.7L4.5 10.5l4.7-1.8z"/><path d="M19 3v4M21 5h-4M18 17v3M19.5 18.5h-3"/></svg>';
-function aiCheck(){if(AI_READY!==null||!CONFIG.home||!cloudOn()||!/^https?:$/.test(location.protocol))return;AI_READY=false;
+// Only a "ready" answer is remembered (10 min); "not ready" or no connection is asked again a minute later.
+let aiNext=0;
+function aiCheck(){if(AI_READY===true||!CONFIG.home||!cloudOn()||!/^https?:$/.test(location.protocol)||Date.now()<aiNext)return;aiNext=Date.now()+60000;
  let c=null;try{c=JSON.parse(sessionStorage.getItem('reviewer_ai'))}catch(e){}
- if(c&&Date.now()-c.at<6e5){AI_READY=!!c.ok;return}
- fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{headers:{apikey:CLOUD.key}}).then(r=>r.ok?r.json():{}).then(j=>{AI_READY=!!j.ok;
-  try{sessionStorage.setItem('reviewer_ai',JSON.stringify({ok:AI_READY,at:Date.now()}))}catch(e){}if(AI_READY&&state.feedback)draw()}).catch(()=>{})}
+ if(c&&c.ok&&Date.now()-c.at<6e5){AI_READY=true;return}
+ fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{headers:{apikey:CLOUD.key},cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{AI_READY=!!j.ok;
+  if(AI_READY){try{sessionStorage.setItem('reviewer_ai',JSON.stringify({ok:true,at:Date.now()}))}catch(e){}if(state.feedback)draw()}}).catch(()=>{})}
 function aiHTML(q,fb){aiCheck();if(!q||!q.cid||!fb)return '';const k=aiK(q,fb),sv=AISAVED[k],x=AIX[k]&&!AIX[k].busy&&!AIX[k].err?AIX[k]:sv?{text:sv.text,saved:1}:AIX[k];if(!x&&(!AI_READY||!FILE_IDS.has(String(q.cid))))return '';
  if(!x)return '<p><button class="link aibtn" onclick="aiExplain(\''+esc(String(q.cid))+'\')">'+SPARK+'Explain it differently</button></p>';
  if(x.busy)return '<div class="aibox busy"><p class="note">'+SPARK+'Writing a simpler explanation…</p></div>';
