@@ -380,5 +380,14 @@
   "title": "Chem finals: lecture quiz reviewer",
   "text": "New in General Chemistry: Topic 12, aromatic compounds (benzene, naming, EAS reactions, directing effects, phenols) and Topic 13, alcohols, amines, ethers and thiols. 387 questions with notes, matching sets and charts, built from the slides, the Oct 24 lecture and the board. Studying for is now set to the Lecture quiz; the Finals exam covers the same topics so far. Aldehydes and ketones will be added once their slides and video lecture are out. The transes PDF was also cleaned up: the empty template pages and placeholder boxes are gone.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 46,
+  "date": "2026-10-25",
+  "type": "course",
+  "course": "chem",
+  "title": "Chem: written quiz practice",
+  "text": "Her quizzes are written, so the Chem reviewer now practices that: tricky true or false, type the IUPAC name (every number counts), draw structures and predict products on paper then check yourself, and short essays with key points. Try the Mock quiz (written) preset: 30 items in her quiz order, timed at 60 minutes.",
+  "link": "reviewer.html?course=chem"
  }
 ]

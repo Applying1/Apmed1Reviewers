@@ -469,6 +469,21 @@ h1{font-size:clamp(24px,2.8vw,31px)}
 .selftest .nrow:not(.show) dd mark{background:none;color:transparent}
 .selftest .nrow:not(.show):hover dd{background:var(--hover)}
 .nhead .link+.link{margin-left:0}
+.selfans{margin-top:12px;border:1px solid var(--accent-line);background:var(--accent-soft);border-radius:var(--r-md);padding:12px 14px}
+.selfans .sah{font:700 12px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+.selfans .sah+.saa,.selfans .saa{margin:0 0 6px;white-space:pre-line;color:var(--text);font-size:15px;line-height:1.55}
+.selfans .qfig{margin:8px 0;background:var(--surface)}
+.selfans .sapts{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:4px}
+.selfans .sapts li{font-size:14px;color:var(--mute);padding-left:22px;position:relative}
+.selfans .sapts li::before{content:'○';position:absolute;left:4px;color:var(--faint)}
+.selfans .sapts li.ok{color:var(--text)}
+.selfans .sapts li.ok::before{content:'✓';color:var(--good);font-weight:700}
+.selfans .sanote{margin:8px 0 0;font-size:13px;color:var(--faint)}
+.exchk .exc{border-top:1px solid var(--line);padding:14px 0 6px}
+.exchk .exc:first-of-type{border-top:0}
+.exchk h2 small{font:600 12px var(--sans);color:var(--bad);margin-left:6px}
+.exmk{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+.exmk .btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .blurtbtn{color:var(--accent);border-color:var(--accent)}
 .nhead .bbtn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:5px 11px;border-radius:999px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600;cursor:pointer}
 .nhead .bbtn:hover{background:var(--accent);color:#fff}

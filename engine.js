@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='75',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='76',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -437,15 +437,17 @@ function feedbackHTML(q,fb,live){
  let cls=fb.correct?'good':fb.lookup?'look':'bad';
  let head=fb.correct?'Correct':fb.lookup?'Marked for review':'Not quite';
  let out='<div class="fb '+cls+'"><h3>'+FBICON[cls]+head+'</h3>';
- if(!fb.correct)out+='<p><b>Answer:</b> '+ansHTML(fb.correctLabel)+'</p>';
+ if(!fb.correct&&!fb.self)out+='<p><b>Answer:</b> '+ansHTML(fb.correctLabel)+'</p>';
  if(q.why)out+='<p>'+esc(q.why)+'</p>';out+=stepsHTML(q.cid&&byId[q.cid]);
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'<span data-dn="'+esc(discKey(q.cid))+'">'+dnDot(dnUnread(discKey(q.cid)))+'</span></a></p>';
- if(live)out+=aiHTML(q,fb);
+ if(live&&!fb.self)out+=aiHTML(q,fb);
  const note=fb.correct?(fb.lucky?(fb.sure==='unsure'?'You weren\'t sure, so this '+ITEM+' comes back in a few questions.':'Marked as a lucky guess, so this '+ITEM+' comes back in a few questions.')
   :fb.sure==='sure'?'Counts toward mastering this '+ITEM+'.':fb.hinted?'Right, with a hint. It counts toward mastery once you get it without one.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
+  :fb.self&&!fb.lookup?'This '+ITEM+' comes back in a few questions. Look the answer over before moving on.'
   :fb.sure==='sure'&&!fb.lookup?'You were sure of this one. Confident mistakes are the easiest to fix once you see why, so it comes back in a couple of questions.'
+  :fb.typed!=null&&!fb.lookup?'This '+ITEM+' comes back in a few questions.'+(live?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'')
   :'This '+ITEM+' comes back in a few questions, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
  const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
  return out;
@@ -533,7 +535,7 @@ function cardHTML(){
   const nextIsLive=view+1>=liveIdx();
   return '<div class="review-note"><span>Earlier answer · '+(view+1)+' of '+secLog().length+(isX(s)?' in this '+(s==='ALL'?'shuffle':'review'):isCh(s)?' in this '+unitW:' in this section')+'</span><button class="link" onclick="goLive()">Back to current question</button></div>'+
    '<div class="qhead"><span class="kind">'+kindName(e.q.kind)+'</span><span class="mastery">'+flagBtn("flagQ('log')")+'</span></div>'+
-   caseHTML(e.q.cid)+'<p class="prompt">'+stemHTML(e.q.stem)+'</p>'+figHTML(e.q.cid)+(e.q.typed&&e.fb&&e.fb.typed!=null?typedHTML(e.fb,e.q):choicesHTML(e.q,e.sel,e.fb))+feedbackHTML(e.q.why!=null?e.q:Object.assign({},e.q,{why:(byId[e.q.cid]||{}).why||''}),e.fb)+
+   caseHTML(e.q.cid)+'<p class="prompt">'+stemHTML(e.q.stem)+'</p>'+figHTML(e.q.cid)+(e.fb&&e.fb.self?selfHTML(e.q,e.fb):e.q.typed&&e.fb&&e.fb.typed!=null?typedHTML(e.fb,e.q):choicesHTML(e.q,e.sel,e.fb))+feedbackHTML(e.q.why!=null?e.q:Object.assign({},e.q,{why:(byId[e.q.cid]||{}).why||''}),e.fb)+
    '<div class="actions">'+backBtn()+'<span class="aux"></span><button class="btn primary" id="go" onclick="goForward()">'+(nextIsLive?'Return to current':'Forward')+' <kbd>→</kbd></button></div>';
  }
  // A matching set mixed into practice (Personalize → Mix matching into practice)
@@ -565,12 +567,13 @@ function cardHTML(){
  }
  // Current question
  const q=state.active,st=state.concepts[q.cid],fb=state.feedback,mixed=isX(s)||isCh(s);
- return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(isWr(byId[q.cid])?'Written answer':q.typed?'Type the answer':kindName(q.kind))+srcTag(q.cid)+'</span><span class="mastery">'+flagBtn("flagQ('live')")+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
-  caseHTML(q.cid)+casePrev(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+(q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
+ return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(isSelf(byId[q.cid])?'Written · check it yourself':isWr(byId[q.cid])?'Written answer':q.typed?'Type the answer':kindName(q.kind))+srcTag(q.cid)+'</span><span class="mastery">'+flagBtn("flagQ('live')")+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
+  caseHTML(q.cid)+casePrev(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+(isSelf(byId[q.cid])?selfHTML(q,fb):q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
   (q.usedHint&&!fb?'<div class="hint"><b>Hint</b>'+esc(q.hint)+'</div>':'')+
   (fb?feedbackHTML(q,fb,true):'')+
   '<div class="actions">'+backBtn()+'<span class="aux">'+(fb?'':(q.usedHint||!q.hint?'':'<button class="link" onclick="hint()">Show hint</button>')+'<button class="link" onclick="looked()" title="Counts as a review, not a correct recall">I checked my slides</button>')+'</span>'+
   (fb?'<button class="btn primary" id="go" onclick="next()">'+(nextPart(q.cid)?'Next part':'Next question')+' <kbd>Enter</kbd></button>'
+     :isSelf(byId[q.cid])?(q.shown?'<button class="btn" id="go2" onclick="selfMark(false)">Missed it</button><button class="btn primary" id="go" onclick="selfMark(true)">Got it <kbd>Enter</kbd></button>':'<button class="btn primary" id="go" onclick="selfShow()">Show answer <kbd>Enter</kbd></button>')
      :sureOn(q)?'<button class="btn" id="go2" onclick="submit(\'unsure\')" '+(state.selected?'':'disabled')+'>Not sure</button><button class="btn primary" id="go" onclick="submit(\'sure\')" '+(state.selected?'':'disabled')+'>Sure <kbd>Enter</kbd></button>'
      :'<button class="btn primary" id="go" onclick="'+(q.typed?'submitTyped()':'submit()')+'" '+(q.typed||state.selected?'':'disabled')+'>Check answer <kbd>Enter</kbd></button>')+'</div>';
 }
@@ -1104,11 +1107,11 @@ function mixKey(e){if(!MX)return false;const k=e.key;
 const EX_COUNTS=[20,30,50];let exTick=null;
 const swHTML=(on,fn,label)=>'<button class="tgl" role="switch" aria-checked="'+on+'" aria-label="'+esc(label)+'" onclick="'+fn+'"><span class="sw"></span></button>';
 // One exam question, frozen when the exam starts. ident = typed answer instead of choices.
-function exQ(q,vsa){const o={cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))};if(vsa||isIdent(byId[q.cid])||isWr(byId[q.cid]))o.ident=1;if(isWr(byId[q.cid]))o.wr=1;if(vsa)o.vsa=1;return o}
+function exQ(q,vsa){const o={cid:q.cid,kind:q.kind,stem:q.stem,why:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))};if(vsa||isIdent(byId[q.cid])||isWr(byId[q.cid]))o.ident=1;if(isWr(byId[q.cid]))o.wr=1;if(isSelf(byId[q.cid])){o.self=1;delete o.ident}if(vsa)o.vsa=1;return o}
 // Can this item be asked as VSA (type the answer)? Short single answers only, and the stem must not lean on the choices.
-function vsaOK(c){if(isIdent(c)||(c&&c.num!=null))return true;if(!c.q||!c.a)return false;const a=c.a;if(a.length>32||a.split(/\s+/).length>4||/[,;]| and | or |\d.*\d/.test(a))return false;
+function vsaOK(c){if(isSelf(c))return false;if(isIdent(c)||(c&&c.num!=null))return true;if(!c.q||!c.a)return false;const a=c.a;if(a.length>32||a.split(/\s+/).length>4||/[,;]| and | or |\d.*\d/.test(a))return false;
  if(isMol(a)||/\bNOT\b|which of these|which (is|are) (correct|true|an? |the )|which statement|which pair|following/i.test(c.q))return false;return true}
-function exOK(q,a){if(a==null||a==='')return false;if(q.wr){const c=byId[q.cid];return !!c&&wrCheck(a,c.wr).ok}if(q.ident){const t=(q.choices.find(x=>x.correct)||{}).label||'';return typedOK(a,t)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(a,x))||numOK(a,byId[q.cid])}return q.choices.some(x=>x.correct&&x.letter===a)}
+function exOK(q,a){if(q.self)return !!((state.exam||{}).marks||{})[q.cid];if(a==null||a==='')return false;if(q.wr){const c=byId[q.cid];return !!c&&wrCheck(a,c.wr).ok}if(q.ident){const t=(q.choices.find(x=>x.correct)||{}).label||'';return ansOK(a,byId[q.cid],t)}return q.choices.some(x=>x.correct&&x.letter===a)}
 const PER_ITEM=CONFIG.examMinutesPerItem||1;
 const exMinutes=(st,n)=>typeof st.timer==='number'?st.timer:st.timer?Math.round(n*PER_ITEM):0;
 const EX_PRESETS=CONFIG.examPresets||[{label:'Paperless · 30 items, split per '+unitW,count:30,split:true,format:'paperless',vsa:0}];
@@ -1206,8 +1209,9 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
  if(ex.sheet){$('extitle').textContent=n+' '+ITEMS;$('exbody').innerHTML=sheetHTML(ex);return}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
-  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(q.wr?'Written answer'+(byId[q.cid].part?' · part '+byId[q.cid].part+' of '+byId[q.cid].parts:''):ex.paperless?(q.vsa?'VSA · type your answer':q.mt?'Matching type':'Multiple choice'):exKind(q)+srcTag(q.cid))+'</span></div>'+caseHTML(q.cid)+caseMine(ex,ex.i)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+(q.mt?'<p class="mgi">Options may be used more than once.</p>':'')+figHTML(q.cid)+
-  (q.wr?wrBox(byId[q.cid],'extyped',ex.ans[ex.i],' oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"'):q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+(q.vsa?'Type the term':'Type your answer')+'" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
+  '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(q.self?'Written · you check it at the end':q.wr?'Written answer'+(byId[q.cid].part?' · part '+byId[q.cid].part+' of '+byId[q.cid].parts:''):ex.paperless?(q.vsa?'VSA · type your answer':q.mt?'Matching type':'Multiple choice'):exKind(q)+srcTag(q.cid))+'</span></div>'+caseHTML(q.cid)+caseMine(ex,ex.i)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+(q.mt?'<p class="mgi">Options may be used more than once.</p>':'')+figHTML(q.cid)+
+  (q.self?'<div class="typein wr"><textarea id="extyped" class="typed wrin" rows="4" placeholder="Write your answer, or work on paper and tap Done on paper" aria-label="Your answer" oninput="exType(this.value)">'+esc(ex.ans[ex.i]&&ex.ans[ex.i]!==ONPAPER?ex.ans[ex.i]:'')+'</textarea><p class="pqid"><button class="link" onclick="exPaper()">'+(ex.ans[ex.i]===ONPAPER?'✓ Done on paper':'Done on paper')+'</button> · You\'ll compare it with the answer on the results page.</p></div>'
+  :q.wr?wrBox(byId[q.cid],'extyped',ex.ans[ex.i],' oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"'):q.ident?'<div class="typein"><input id="extyped" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+(q.vsa?'Type the term':'Type your answer')+'" aria-label="Your answer" value="'+esc(ex.ans[ex.i]||'')+'" oninput="exType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(ex.i<n-1?'exGo(1)':'finishExam()')+'}"></div>'
    :'<div class="choices'+(molq(q)?' ichoices':'')+'">'+q.choices.map(x=>'<button class="choice '+(ex.ans[ex.i]===x.letter?'sel':'')+'" onclick="exAnswer(\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+labelHTML(x.label)+'</span></button>').join('')+'</div>')+
   '<div class="actions"><button class="btn back" onclick="exGo(-1)" '+(ex.i?'':'disabled')+'>'+LEFT+'Back</button><span class="aux"><button class="link" onclick="finishExam()">Finish exam</button> · <button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button></span>'+
   '<button class="btn primary" onclick="'+(ex.i<n-1?'exGo(1)':'finishExam()')+'">'+(ex.i<n-1?'Next':'Finish')+' <kbd>Enter</kbd></button></div></section>'+
@@ -1215,9 +1219,9 @@ function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered
 // Answer sheet format: read on the test paper, shade on the sheet. Shading updates only the sheet, so the paper keeps its place.
 function sheetHTML(ex){const n=ex.qs.length,done=Object.keys(ex.ans).length;
  const paper=ex.qs.map((q,j)=>(q.mt&&(!j||ex.qs[j-1].grp!==q.grp)?mgrpHTML(q):'')+'<section class="card pq" id="pq'+j+'" onclick="sheetFocus('+j+')"><div class="pqh"><b>'+(j+1)+'.</b><span class="kind">'+exKind(q)+'</span></div>'+caseHTML(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
-  (q.ident?'<p class="pqid">Write your answer on the answer sheet.</p>':q.mt?'':'<ol class="pch'+(molq(q)?' ich':'')+'">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+labelHTML(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
+  (q.ident||q.self?'<p class="pqid">Write your answer on the answer sheet.</p>':q.mt?'':'<ol class="pch'+(molq(q)?' ich':'')+'">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+labelHTML(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
  const rows=ex.qs.map((q,j)=>'<div class="brow" id="br'+j+'"><button class="bn" onclick="sheetGo('+j+')" aria-label="Go to question '+(j+1)+'">'+(j+1)+'</button>'+
-  (q.ident?'<input class="txt bt" value="'+esc(ex.ans[j]||'')+'" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer to question '+(j+1)+'" oninput="sheetType('+j+',this.value)">'
+  (q.ident||q.self?'<input class="txt bt" value="'+esc(ex.ans[j]||'')+'" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer to question '+(j+1)+'" oninput="sheetType('+j+',this.value)">'
    :q.choices.map(x=>'<button class="bub'+(ex.ans[j]===x.letter?' on':'')+'" data-l="'+x.letter+'" onclick="sheetPick('+j+',\''+x.letter+'\')" aria-pressed="'+(ex.ans[j]===x.letter)+'" aria-label="Question '+(j+1)+', '+x.letter+'">'+x.letter+'</button>').join(''))+'</div>').join('');
  return '<div class="sheetwrap"><div class="paper"><p class="lede" style="margin:0 0 14px">Read the questions here and shade your answers on the answer sheet. Tap a question to find its row; tap a shaded bubble again to erase it.</p>'+paper+'</div>'+
   '<aside class="sheet" id="sheet" aria-label="Answer sheet"><button class="sheethead" onclick="$(\'sheet\').classList.toggle(\'open\')"><b>Answer sheet</b><span id="shct">'+done+' of '+n+' shaded</span></button><div class="bubbles">'+rows+'</div>'+
@@ -1255,7 +1259,7 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
  clearInterval(exTick);ex.done=true;ex.end=Math.min(Date.now(),ex.limit?ex.start+ex.limit:Infinity);ex.timeUp=!!timeUp;let right=0;const byCh={};
  ex.qs.forEach((q,j)=>{const c=byId[q.cid],k=state.concepts[q.cid],a=ex.ans[j],ok=exOK(q,a),ch=q.mt?q.ch:chOf(c.section);
   byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;if(ok){right++;byCh[ch][0]++}
-  if(a==null||a===''||q.mt)return;   // skipped (matching items are not bank questions): no effect on mastery, Missed or class stats
+  if(a==null||a===''||q.mt||q.self)return;   // written answers count when marked (exMark); skipped (matching items are not bank questions): no effect on mastery, Missed or class stats
   k.seen++;if(ok){state.correct++;masteryUp(k);delete k.back}else{k.wrong++;state.wrong++;masteryDown(k);relearn(k)}
   crowdAdd(q.cid,!ok,!ok&&!q.ident?(q.choices.find(x=>x.letter===a)||{}).label:'');state.history.push({cid:q.cid,correct:ok,lookup:false,mode:'EXAM'})});
  dailyAdd(ex.qs.filter((q,j)=>{const a=ex.ans[j];return !(a==null||a===''||q.mt)}).length);
@@ -1272,9 +1276,14 @@ function gradeHTML(r,n){const g=transmute(r,n),ok=100*r/n>=GRADING.pass,need=Mat
  return '<div class="grade'+(ok?'':' fail')+'"><div class="verdict">'+(ok?'Passed':'Not passed')+'</div><div class="gnum"><span class="num">'+fmtG(g)+'</span><small>predicted grade</small></div>'+
   '<p class="gsub">Passing is '+GRADING.pass+'% = '+GRADING.passGrade+' ('+need+' of '+n+' right). '+(ok?(r>need?'You cleared it by '+(r-need)+'.':'Right on the line!'):'You needed '+(need-r)+' more right.')+'</p></div>'}
 function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*ex.right/n);$('extitle').textContent='Results';
- const wrong=ex.qs.map((q,j)=>({q,j,a:ex.ans[j]})).filter(x=>!exOK(x.q,x.a));
+ const wrong=ex.qs.map((q,j)=>({q,j,a:ex.ans[j]})).filter(x=>!x.q.self&&!exOK(x.q,x.a));
+ const selfs=ex.qs.map((q,j)=>({q,j,a:ex.ans[j]})).filter(x=>x.q.self),marks=ex.marks||{},pend=selfs.filter(x=>!(x.q.cid in marks)).length;
+ const chk=selfs.length?'<section class="panel exchk" style="margin-top:12px"><h2>Check your written answers'+(pend?' <small>'+pend+' left</small>':'')+'</h2><p class="lede">Compare each one with the answer and mark it. Your score updates as you go.</p>'+selfs.map(({q,j,a})=>{const c=byId[q.cid],m=marks[q.cid];
+  return '<article class="exc"><div class="qhead"><span class="kind">Question '+(j+1)+'</span></div><p class="exq">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+
+   (a&&a!==ONPAPER?'<div class="typein done"><span class="yl">You wrote</span><b class="wrout">'+esc(a)+'</b></div>':'<p class="pqid">'+(a===ONPAPER?'You answered on paper.':'Not answered.')+'</p>')+selfAnsHTML(c,a===ONPAPER?'':a)+
+   '<div class="exmk"><button class="btn'+(m===0?' on':'')+'" onclick="exMark(\''+esc(q.cid)+'\',0)" aria-pressed="'+(m===0)+'">I missed it</button><button class="btn'+(m===1?' on':'')+'" onclick="exMark(\''+esc(q.cid)+'\',1)" aria-pressed="'+(m===1)+'">I got it</button></div></article>'}).join('')+'</section>':'';
  $('exbody').innerHTML='<section class="card hero exres"><div>'+(ex.chal?'<div class="eyebrow">'+esc(ex.chal.label)+(ex.retake?' · retake':'')+'</div>':'')+gradeHTML(ex.right,n)+'<div class="big num">'+pct+'%<small>'+ex.right+' of '+n+' right</small></div>'+(ex.chal&&ex.chal.by&&ex.chal.sc?'<p class="chalbeat">'+(ex.right>ex.chal.sc?'🎉 You beat <b>'+esc(ex.chal.by)+'</b>\'s '+ex.chal.sc+' of '+n+'!':ex.right===ex.chal.sc?'🤝 Tied with <b>'+esc(ex.chal.by)+'</b> at '+ex.chal.sc+' of '+n+(ex.chal.tm&&ex.end-ex.start<ex.chal.tm?', and you were faster!':'.'):'<b>'+esc(ex.chal.by)+'</b>\'s '+ex.chal.sc+' of '+n+' stays on top. Review your mistakes and try again!')+'</p>':'')+'<p class="sub">Time: '+clock(ex.end-ex.start)+(ex.timeUp?' (time ran out)':'')+' · '+(wrong.length?wrong.length+' to review':'no mistakes')+'</p>'+(ex.chal?'<div class="sqrow" role="img" aria-label="Green: right, red: wrong, white: skipped">'+squares(ex)+'</div>':'')+'</div></section>'+
-  '<section class="panel" style="margin-top:12px"><h2>By '+unitW+'</h2><div class="bars">'+Object.entries(ex.byCh).map(([ch,[r,t]])=>'<div class="bar-row"><span class="n"><span>'+esc(ch)+'</span>'+esc(CH_NAMES[ch]||'')+'</span><span class="p">'+r+' of '+t+'</span><span class="track"><span class="fill" style="display:block;width:'+(100*r/t)+'%"></span></span></div>').join('')+'</div></section>'+
+  chk+'<section class="panel" style="margin-top:12px"><h2>By '+unitW+'</h2><div class="bars">'+Object.entries(ex.byCh).map(([ch,[r,t]])=>'<div class="bar-row"><span class="n"><span>'+esc(ch)+'</span>'+esc(CH_NAMES[ch]||'')+'</span><span class="p">'+r+' of '+t+'</span><span class="track"><span class="fill" style="display:block;width:'+(100*r/t)+'%"></span></span></div>').join('')+'</div></section>'+
   '<div class="exacts">'+(ex.chal?'<button class="btn primary" onclick="copyChalScore()">Copy my score</button><button class="btn" onclick="copyChalLink(state.exam.chal)">Copy challenge link</button>':'')+(wrong.length?'<button class="btn'+(ex.chal?'':' primary')+'" onclick="toggleExReview()">'+(ex.review?'Hide my mistakes':'Review my mistakes ('+wrong.length+')')+'</button>':'')+
   (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">'+(ex.chal?'Done':'New exam')+'</button></div>'+
   (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.ident?null:q.choices.find(c=>c.letter===a);
@@ -1687,6 +1696,10 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ ...(FULL_BANK.some(c=>c.type==='self')?[{v:'36',date:'Oct 25, 2026',title:'Written quiz practice',items:[
+  'For written quizzes: <b>type the name</b> of a structure (checked strictly: every number counts), and <b>draw, predict products or explain</b> on paper, then show the answer and mark yourself.',
+  'A <b>Mock quiz (written)</b> preset: true or false, identification and naming, drawing and reactions, then an essay. Written answers are checked on the results page.',
+ ]}]:[]),
  {v:'35',date:'Oct 24, 2026',title:'Learn from your wrong answers',items:[
   ...(FULL_BANK.some(c=>c.dw)?['<b>Why not your choice</b>: after a wrong answer, a line says why the choice you picked is wrong (also in the mock exam review).']:[]),
   'Optional, in Personalize: <b>How sure are you?</b> Answer with Sure or Not sure. Wrong answers you were sure of come back sooner and go first in Needs work.',
@@ -1904,7 +1917,7 @@ function submit(conf){if(view!=null||state.pmatch||!state.selected||state.feedba
    Right but not sure = a lucky guess (comes back). Wrong but sure = comes back after 2-3 questions instead of 4-6, and is
    counted (k.sure) so the dashboard's Needs work list puts it first: confident errors are corrected best right after
    feedback (the hypercorrection effect). */
-const sureOn=q=>!!state.prefs.sure&&!!q&&!q.typed&&!state.pmatch;
+const sureOn=q=>!!state.prefs.sure&&!!q&&!q.typed&&!state.pmatch&&!isSelf(byId[q.cid]);
 // Reaching the recall goal schedules the first review in a day; each on-time correct review moves it further out.
 function masteryUp(k){const before=k.right,now=Date.now();k.right++;
  if(before<T()&&k.right>=T())k.srs={lvl:0,due:now+srsGap(0)};
@@ -2013,7 +2026,38 @@ function buzz(ok){if(reduceMotion||!navigator.vibrate)return;try{navigator.vibra
 // Short recall answers only; definitions and long answers keep their choices.
 // Identification items ("type":"id") are always typed, in practice and in the mock exam; "alt" lists other accepted answers.
 const isIdent=c=>!!c&&c.type==='id';
-function canType(q){if(!q)return false;if(isWr(byId[q.cid]))return true;if(q.choices.some(x=>isMol(x.label)))return false;if(isIdent(byId[q.cid]))return true;if(!state.prefs.typeMode)return false;if(byId[q.cid]&&byId[q.cid].num!=null)return true;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
+const isSelf=c=>!!c&&c.type==='self';
+/* ---------- v76 written practice (chemistry-style quizzes) ----------
+   Names (item.nm): typed names are checked strictly. Case, spaces and the kind of dash don't matter, but every number
+   (locant), comma and hyphen must match; a one-letter slip is forgiven only in a long name whose numbers are all right.
+   Self-checked items (type 'self'): draw, predict or explain on paper or in the box, show the model answer (item.a, the
+   structures in item.afig, the key points in item.pts), then mark it yourself. In a mock exam they're checked on the
+   results page, and the score updates as they're marked. */
+const nmNorm=s=>String(s||'').toLowerCase().replace(/[‐‑‒–—−]/g,'-').replace(/\s+/g,'').replace(/\.$/,'');
+function nameOK(input,answers){const t=nmNorm(input);if(!t)return false;const lt=x=>x.replace(/[^a-z]/g,''),nl=x=>x.replace(/[a-z]/g,'');
+ return answers.some(a=>{const n=nmNorm(a);return t===n||(nl(t)===nl(n)&&lt(n).length>=8&&dlev(lt(t),lt(n))<=1)})}
+function ansOK(val,c,label){if(c&&c.nm)return nameOK(val,[label].concat(c.alt||[]));return typedOK(val,label)||((c||{}).alt||[]).some(x=>typedOK(val,x))||numOK(val,c)}
+const ONPAPER='(on paper)';
+function afigHTML(c){const ks=[].concat(c&&c.afig||[]);if(!ks.length)return '';
+ return '<figure class="qfig'+(ks.length>1?' two':'')+'" role="img" aria-label="Answer structures">'+ks.map((k,i)=>(i?'<span class="figsep">'+esc(c.afigsep||'+')+'</span>':'')+'<span class="mol"'+molW(k)+'>'+(MOLS[k]||'')+'</span>').join('')+'</figure>'}
+function ptsHits(c,mine){const pts=c&&c.pts||[];if(!pts.length)return null;const said=new Set(blurtWords(mine||''));return pts.map(p=>({p,ok:!!mine&&blurtHit(p,'',said)}))}
+function selfAnsHTML(c,mine){const hits=ptsHits(c,mine);
+ return '<div class="selfans"><div class="sah">Answer</div>'+(c.a?'<p class="saa">'+esc(c.a)+'</p>':'')+afigHTML(c)+
+  (hits?'<div class="sah">Key points</div><ul class="sapts">'+hits.map(h=>'<li class="'+(h.ok?'ok':'')+'">'+esc(h.p)+'</li>').join('')+'</ul>'+(mine?'<p class="sanote">'+hits.filter(h=>h.ok).length+' of '+hits.length+' key points spotted in what you wrote. That is only a rough check, so judge it yourself.</p>':''):'')+'</div>'}
+function selfHTML(q,fb){const c=byId[q.cid],mine=fb?fb.mine:q.mine;
+ if(!fb&&!q.shown)return '<div class="typein wr"><textarea id="selfin" class="typed wrin" rows="3" placeholder="'+(c&&c.pts?'Write your answer here':'Work it out on paper (or type it here)')+', then show the answer." aria-label="Your answer" oninput="state.active.mine=this.value">'+esc(q.mine||'')+'</textarea></div>';
+ return (mine?'<div class="typein done"><span class="yl">You wrote</span><b class="wrout">'+esc(mine)+'</b></div>':'')+selfAnsHTML(c,mine)}
+function selfShow(){const q=state.active;if(view!=null||!q||state.feedback)return;const el=$('selfin');if(el)q.mine=el.value;q.shown=true;save();draw()}
+function selfMark(ok){const q=state.active;if(view!=null||!q||state.feedback||!q.shown)return;state.selected=ok?q.choices[0].letter:null;record(ok,false);
+ state.feedback.self=1;state.feedback.mine=q.mine||'';const l=state.log[state.log.length-1];if(l)l.fb=state.feedback;save();draw()}
+function exPaper(){const ex=state.exam;if(!ex||ex.done)return;ex.ans[ex.i]=ONPAPER;save();drawExam()}
+// Marking a written answer on the results page: counts once for mastery and class stats; changing your mind only moves mastery.
+function exMark(cid,ok){const ex=state.exam;if(!ex||!ex.done)return;ex.marks=ex.marks||{};const v=ok?1:0,prev=ex.marks[cid];if(prev===v)return;ex.marks[cid]=v;
+ const k=state.concepts[cid];if(k){if(prev==null){k.seen++;if(ok)state.correct++;else{k.wrong++;state.wrong++}crowdAdd(cid,!ok,'');state.history.push({cid,correct:!!ok,lookup:false,mode:'EXAM'})}
+  if(ok){masteryUp(k);delete k.back}else{masteryDown(k);relearn(k)}}
+ let right=0;const byCh={};ex.qs.forEach((q,j)=>{const ch=q.mt?q.ch:chOf(byId[q.cid].section),y=exOK(q,ex.ans[j]);byCh[ch]=byCh[ch]||[0,0];byCh[ch][1]++;if(y){right++;byCh[ch][0]++}});
+ ex.right=right;ex.byCh=byCh;const last=(state.exams||[])[(state.exams||[]).length-1];if(last&&last.total===ex.qs.length&&!ex.chal)last.right=right;save();drawExam()}
+function canType(q){if(!q||isSelf(byId[q.cid]))return false;if(isWr(byId[q.cid]))return true;if(q.choices.some(x=>isMol(x.label)))return false;if(isIdent(byId[q.cid]))return true;if(!state.prefs.typeMode)return false;if(byId[q.cid]&&byId[q.cid].num!=null)return true;const c=byId[q.cid],ans=(q.choices.find(x=>x.correct)||{}).label||'';
  if(c.q?q.kind!=='recall':q.kind==='definition')return false;return ans.length<=40&&ans.split(/\s+/).length<=5&&!/[,;]| to | and /.test(ans)&&!/^(as|in|by|for|to|of|on|at|with|from|through)\b/i.test(ans)&&(ans.match(/\d+/g)||[]).length<=1}
 function normAns(s){return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\(.*?\)/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\b(the|a|an)\b/g,' ').replace(/\s+/g,' ').trim()}
 function lev(a,b){let p=Array.from({length:b.length+1},(_,j)=>j);for(let i=1;i<=a.length;i++){const c=[i];for(let j=1;j<=b.length;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[b.length]}
@@ -2056,7 +2100,7 @@ function typedHTML(fb,q){q=q||state.active;const wc=q&&byId[q.cid];
  if(!fb)return '<div class="typein"><input id="typed" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer, then press Enter" aria-label="Your answer" onkeydown="if(event.key===\'Enter\'){event.preventDefault();submitTyped()}"></div>';
  return '<div class="typein done '+(fb.correct?'ok':'bad')+'"><span class="yl">You typed</span><b>'+esc(fb.typed||'')+'</b>'+(fb.override?'<span class="ov">counted as right</span>':'')+'</div>'}
 function submitTyped(){const q=state.active;if(view!=null||state.pmatch||state.feedback||!q||!q.typed)return;const el=$('typed'),val=(el&&el.value||'').trim();if(!val){if(el)el.focus();return}
- const wrc=byId[q.cid],wres=isWr(wrc)?wrCheck(val,wrc.wr):null,target=q.choices.find(x=>x.correct),ok=wres?wres.ok:(typedOK(val,target.label)||((byId[q.cid]||{}).alt||[]).some(x=>typedOK(val,x))||numOK(val,byId[q.cid]));state.selected=ok?target.letter:null;record(ok,false);
+ const wrc=byId[q.cid],wres=isWr(wrc)?wrCheck(val,wrc.wr):null,target=q.choices.find(x=>x.correct),ok=wres?wres.ok:ansOK(val,byId[q.cid],target.label);state.selected=ok?target.letter:null;record(ok,false);
  state.feedback.typed=val;state.feedback.correctLabel=target.label;if(wres)state.feedback.wrnote=wres.html;const last=state.log[state.log.length-1];if(last)last.fb=state.feedback;save();draw()}
 // A typed answer marked wrong that was really right (a spelling the checker did not accept).
 function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct||!fb.typed||!state.active)return;
