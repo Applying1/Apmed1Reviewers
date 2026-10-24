@@ -38,4 +38,17 @@
   const ask = () => { try { if (navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ type: 'changes?', since }); } catch (e) { } };
   if (document.readyState === 'complete') ask(); else addEventListener('load', ask);
   setTimeout(ask, 4000);
+  // While the page stays open: when you come back to it (at most every 5 minutes) and every 15 minutes, have the worker
+  // download this page's own files again and compare. A change shows the banner.
+  let last = Date.now();
+  function check(force) {
+    if (shown || !navigator.serviceWorker.controller || (!force && Date.now() - last < 5 * 60e3)) return;
+    last = Date.now();
+    let paths = [location.pathname + location.search];
+    try { paths = paths.concat(performance.getEntriesByType('resource').map(r => new URL(r.name)).filter(u => u.origin === location.origin && /\.(js|json|css|html)$/.test(u.pathname)).map(u => u.pathname)); } catch (e) { }
+    try { navigator.serviceWorker.controller.postMessage({ type: 'check', paths: [...new Set(paths)] }); } catch (e) { }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(false) });
+  setInterval(() => { if (document.visibilityState === 'visible') check(true) }, 15 * 60e3);
+  setTimeout(() => check(true), 20000);   // once shortly after opening, past GitHub's few-minute lag
 })();

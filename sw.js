@@ -40,7 +40,29 @@ const CHANGED = new Map();
 async function tell(url) {
   for (const w of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) w.postMessage({ type: 'updated', url });
 }
+// An open page asks now and then ({type:'check', paths}) whether its own files changed: each saved copy is compared with
+// a fresh download (a unique address, so GitHub's servers can't answer with the copy they still hold for a few minutes
+// after an update). A change is saved and the page is told, which shows the "Update ready" banner.
+async function check(paths) {
+  const c = await caches.open(CACHE);
+  for (const p of paths.slice(0, 12)) {
+    try {
+      const u = new URL(p, self.registration.scope);
+      if (u.origin !== location.origin) continue;
+      const key = keyFor(u.href, false), old = await c.match(key);
+      if (!old) continue;
+      // "changed since this version?" (its ETag): unchanged files answer 304 with no body, so a check costs almost nothing
+      const et = old.headers.get('etag'), res = await fetch(u.href + (u.search ? '&' : '?') + '_=' + Date.now(), { cache: 'no-store', headers: et ? { 'If-None-Match': et } : {} });
+      if (res.status === 304 || !res.ok) continue;
+      const fresh = await stamp(res);
+      const changed = (await old.text()) !== (await fresh.clone().text());
+      await c.put(key, fresh);
+      if (changed) { CHANGED.set(u.href, Date.now()); await tell(u.href); }
+    } catch (err) { /* offline: next time */ }
+  }
+}
 self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'check' && Array.isArray(e.data.paths)) { e.waitUntil(check(e.data.paths)); return; }
   if (!e.data || e.data.type !== 'changes?' || !e.source) return;
   const since = +e.data.since || 0;      // when that page started loading: older changes are already in it
   for (const [url, at] of CHANGED) if (at > since && Date.now() - at < 120000) e.source.postMessage({ type: 'updated', url });
