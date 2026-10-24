@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='71',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='72',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -280,10 +280,15 @@ function flushSave(){if(!saveQ)return;saveQ=false;
  let ok=putState();if(!ok){trimState(state,true);ok=putState();if(!ok){freeSpace();ok=putState()}}if(ok===STORE_FULL){STORE_FULL=!ok;storeWarn()}
  // v71: on the website the summary also names the course and when its mastered questions come due, so the home page and
  // the daily review reminder (daily.js) can count reviews without opening the course
- try{const main=bankItems(BANKS[0]),e=examObj(),id=courseId(),due=[];
-  if(id&&state.prefs.srs)for(const c of main){const k=state.concepts[c.id];if(k&&k.srs&&isM(c))due.push(k.srs.due)}
-  localStorage.setItem(KEY+'_summary',JSON.stringify(Object.assign({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:''},id?{id,title:CONFIG.title,due:due.sort((a,b)=>a-b).slice(0,400)}:{})))}catch(e){}
+ try{localStorage.setItem(KEY+'_summary',JSON.stringify(summaryObj()))}catch(e){}
  if(window.Daily)Daily.digestSoon()}
+// v72: the summary also keeps mastered/total per section (secs) and which exam the person is studying for (pick, seen), so
+// the home page can show the right percent after the course's exam changes, without opening the course. It travels with
+// the synced progress too, so a newly signed-in device shows every course's progress on the home page at once.
+function summaryObj(){const main=bankItems(BANKS[0]),e=examObj(),id=courseId(),due=[],secs={};
+ for(const c of BANKS[0].items){if(c.retired||!(state.prefs.extras||!c.extra)||!secOn(c.section))continue;const s=secs[c.section]||(secs[c.section]=[0,0]);s[1]++;if(isM(c))s[0]++}
+ if(id&&state.prefs.srs)for(const c of main){const k=state.concepts[c.id];if(k&&k.srs&&isM(c))due.push(k.srs.due)}
+ return Object.assign({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:'',secs,pick:state.prefs.scope||'',seen:state.prefs.scopeSeen||''},id?{id,title:CONFIG.title,due:due.sort((a,b)=>a-b).slice(0,400)}:{})}
 addEventListener('pagehide',flushSave);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSave()});
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function stableHash(s){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0}
@@ -1438,7 +1443,8 @@ function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=new Uint8Array(1
 // Also the settings (newest change wins) and the question on screen (the device used last decides).
 function prefSig(){return JSON.stringify([state.prefs,state.exSetup||null])}
 function syncPayload(){const c={};for(const id in state.concepts){const k=state.concepts[id];if(k.seen||k.star||k.lookups||k.srs)c[id]=[k.seen||0,k.right||0,k.wrong||0,k.lookups||0,k.hints||0,k.star?1:0,k.srs?k.srs.lvl:0,k.srs?k.srs.due:0,k.lucky||0]}
- return {v:2,at:Date.now(),c,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,
+ let sum=null;try{sum=summaryObj()}catch(e){}
+ return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,
   prefs:state.prefs,exSetup:state.exSetup||null,prefsAt:state.prefsAt||0,
   cur:state.pmatch?null:{at:state.curAt||0,section:state.section,active:state.active,feedback:state.feedback,selected:state.selected,pass:state.pass||null,starDone:state.starDone||[],dueDone:state.dueDone||[],classDone:state.classDone||[]}}}
 function unpack(r){const c={};for(const id in r.c||{}){const x=r.c[id];c[id]={seen:x[0],right:x[1],wrong:x[2],lookups:x[3],hints:x[4],star:!!x[5],srs:x[7]?{lvl:x[6],due:x[7]}:null,lucky:x[8]||0,history:[]}}return Object.assign({},r,{concepts:c})}
@@ -1466,7 +1472,7 @@ function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r)
 function syncNow(){if(!cloudOn()||!syncCode||syncBusy)return Promise.resolve();syncBusy=true;clearTimeout(syncT);syncT=null;
  return rpc('sync_get',{p_code:syncCode,p_course:KEY}).then(rows=>{const row=Array.isArray(rows)?rows[0]:rows,m=row&&row.data?mergeRemote(row.data):{};
    if(m.changed){syncHold=true;save();syncHold=false}
-   const data=syncPayload(),sig=JSON.stringify(Object.assign({},data,{at:0})),done=()=>{syncInfo={at:Date.now(),err:''};try{localStorage.setItem(KEY+'_synced',syncInfo.at)}catch(e){}
+   const data=syncPayload(),sig=JSON.stringify(Object.assign({},data,{at:0,sum:data.sum&&Object.assign({},data.sum,{at:0})})),done=()=>{syncInfo={at:Date.now(),err:''};try{localStorage.setItem(KEY+'_synced',syncInfo.at)}catch(e){}
     if(m.reload){location.reload();return}
     if(m.changed){refreshBank();draw()}else if(page==='prefs')drawPrefs()};
    if(sig===lastPutSig&&!m.changed)return done();   // nothing new on either side: skip the upload

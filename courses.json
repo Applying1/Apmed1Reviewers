@@ -21,6 +21,13 @@
    "name": "Prefinals",
    "date": ""
   },
+  "activeExam": "prefinal",
+  "exams": [
+   {
+    "id": "prefinal",
+    "name": "Prefinals"
+   }
+  ],
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
    "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
@@ -49,6 +56,39 @@
    "name": "Evals",
    "date": "2026-11-04"
   },
+  "activeExam": "evals",
+  "exams": [
+   {
+    "id": "midterm",
+    "name": "Midterms",
+    "chapters": [
+     "6",
+     "7",
+     "8",
+     "9",
+     "10"
+    ]
+   },
+   {
+    "id": "evals",
+    "name": "Evals",
+    "chapters": [
+     "11",
+     "12"
+    ]
+   },
+   {
+    "id": "finals",
+    "name": "Finals",
+    "chapters": [
+     "11",
+     "12",
+     "13",
+     "14",
+     "15"
+    ]
+   }
+  ],
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
    "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
@@ -74,6 +114,25 @@
    "name": "Research quiz",
    "date": ""
   },
+  "activeExam": "research",
+  "exams": [
+   {
+    "id": "research",
+    "name": "Research quiz",
+    "chapters": [
+     "4"
+    ]
+   },
+   {
+    "id": "midterm",
+    "name": "Midterm",
+    "chapters": [
+     "1",
+     "2",
+     "3"
+    ]
+   }
+  ],
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
    "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
@@ -108,6 +167,36 @@
    "name": "Prefinals",
    "date": "2026-11-28"
   },
+  "activeExam": "prefinal",
+  "exams": [
+   {
+    "id": "prefinal",
+    "name": "Prefinals"
+   },
+   {
+    "id": "lec",
+    "name": "Lecture midterm",
+    "chapters": [
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6"
+    ]
+   },
+   {
+    "id": "lab",
+    "name": "Lab midterm",
+    "chapters": [
+     "7",
+     "8",
+     "9",
+     "10",
+     "11"
+    ]
+   }
+  ],
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
    "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
@@ -135,6 +224,54 @@
    "name": "Evals (antihypertensives)",
    "date": "2026-10-27"
   },
+  "activeExam": "evals",
+  "exams": [
+   {
+    "id": "evals",
+    "name": "Evals (antihypertensives)",
+    "sections": [
+     "6-1",
+     "6-2",
+     "6-3",
+     "6-4",
+     "6-5"
+    ]
+   },
+   {
+    "id": "prefinal",
+    "name": "Prefinals",
+    "sections": [
+     "6-1",
+     "6-2",
+     "6-3",
+     "6-4",
+     "6-5"
+    ]
+   },
+   {
+    "id": "midterm",
+    "name": "Midterm",
+    "chapters": [
+     "1",
+     "2",
+     "3",
+     "4",
+     "5"
+    ]
+   },
+   {
+    "id": "compre",
+    "name": "Comprehensive",
+    "chapters": [
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6"
+    ]
+   }
+  ],
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
    "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
@@ -159,6 +296,13 @@
    "name": "Prefinals",
    "date": ""
   },
+  "activeExam": "prefinal",
+  "exams": [
+   {
+    "id": "prefinal",
+    "name": "Prefinals"
+   }
+  ],
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
    "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
@@ -185,6 +329,26 @@
    "name": "Finals",
    "date": ""
   },
+  "activeExam": "finals",
+  "exams": [
+   {
+    "id": "midterm",
+    "name": "Midterm",
+    "chapters": [
+     "1",
+     "2",
+     "3",
+     "4"
+    ]
+   },
+   {
+    "id": "finals",
+    "name": "Finals",
+    "chapters": [
+     "5"
+    ]
+   }
+  ],
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
    "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
@@ -207,6 +371,16 @@
    "name": "Finals",
    "date": ""
   },
+  "activeExam": "finals",
+  "exams": [
+   {
+    "id": "finals",
+    "name": "Finals",
+    "chapters": [
+     "8"
+    ]
+   }
+  ],
   "cloud": {
    "url": "https://olvjhdxmdrtuktfxgjsu.supabase.co",
    "key": "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"

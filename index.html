@@ -253,6 +253,21 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 function examTag(e){if(!e)return '';let w='';if(e.date){const t=new Date();t.setHours(0,0,0,0);const n=Math.round((new Date(e.date+'T00:00')-t)/864e5);w=n<0?'':n===0?' · today':n===1?' · tomorrow':' · in '+n+' days'}return '<span class="tag exam">'+esc(e.name)+w+'</span>'}
 function ago(t){const d=Math.floor((Date.now()-t)/864e5);return d<=0?'today':d===1?'yesterday':d+' days ago'}
 function summary(key){try{return JSON.parse(localStorage.getItem(key+'_summary'))}catch(e){return null}}
+// The percent for the exam the course is on now. A course saves mastered/total per section (secs); when the teacher's
+// exam changes (say Midterm -> Research quiz), everyone moves to it, just like inside the course (pick/seen = what the
+// person picked and for which exam). Older summaries without secs show their saved percent.
+function progressOf(c,s){if(!s)return {pct:0,scope:''};if(!s.secs||!c.exams)return {pct:s.t?Math.round(100*s.m/s.t):0,scope:s.scope};
+ const pick=s.seen===c.activeExam?s.pick:c.activeExam,ex=pick==='all'?null:c.exams.find(e=>e.id===pick)||c.exams.find(e=>e.id===c.activeExam)||c.exams[0];
+ const inS=sec=>!ex||!ex.chapters&&!ex.sections||(ex.chapters||[]).map(String).includes(sec.split('-')[0])||(ex.sections||[]).includes(sec);
+ let m=0,t=0;for(const sec in s.secs)if(inS(sec)){m+=s.secs[sec][0];t+=s.secs[sec][1]}
+ return {pct:t?Math.round(100*m/t):0,scope:ex?ex.name:'All'}}
+// Signed in or syncing: each course's synced progress carries its summary, so a new device (or one behind another
+// device) shows up-to-date progress here without opening every course. Only newer summaries replace the ones here.
+async function pullSummaries(list){let n=0;
+ await Promise.all(list.filter(c=>!c.soon&&!c.notesOnly).map(c=>rpc('sync_get',{p_code:getCode(),p_course:c.storageKey}).then(rows=>{
+  const row=Array.isArray(rows)?rows[0]:rows,sm=row&&row.data&&row.data.sum,loc=summary(c.storageKey);
+  if(sm&&sm.at>((loc&&loc.at)||0)){try{localStorage.setItem(c.storageKey+'_summary',JSON.stringify(sm));n++}catch(e){}}}).catch(()=>{})));
+ if(n){drawCourses();if(window.afterCourses)afterCourses();if(window.Daily)Daily.digestSoon()}}
 function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.endsWith('_summary'))continue;const v=JSON.parse(localStorage.getItem(k));if(v&&v.name)return v.name}}catch(e){}return ''}
 (async function(){
  const n=name();if(n)document.getElementById('hi').textContent='Hi, '+n+'. Pick a course';
@@ -264,16 +279,18 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
  if(CLOUD){drawSyncBtn();finishSignIn().then(done=>{const q=new URLSearchParams(location.search);if(done)return;
   if(q.has('signin')){history.replaceState(null,'',location.pathname);signIn()}else if(q.has('sync')){history.replaceState(null,'',location.pathname);openSync()}else setTimeout(spotlight,700)})}
  const art=c=>'<span class="art">'+(c.image?'<img src="'+esc(c.thumb||c.image)+'" alt="" loading="lazy" decoding="async" width="480" height="360">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>';
- document.getElementById('list').innerHTML=list.map(c=>{
+ window.drawCourses=()=>{document.getElementById('list').innerHTML=list.map(c=>{
   if(c.soon)return '<div class="course soon" aria-disabled="true">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag soon">Not available yet</span></span></span></div>';
   if(c.notesOnly)return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag exam">Notes &amp; transes</span><span class="tag soon">Questions coming soon</span></span></span></a>';
-  const s=summary(c.storageKey),pct=s&&s.t?Math.round(100*s.m/s.t):0;
+  const s=summary(c.storageKey),pr=progressOf(c,s),pct=pr.pct;
   return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+
    '<span class="art">'+(c.image?'<img src="'+esc(c.thumb||c.image)+'" alt="" loading="lazy" decoding="async" width="480" height="360">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>'+
    '<span class="body"><span class="t">'+esc(c.title)+'</span>'+
    (c.exam?'<span class="tags">'+examTag(c.exam)+'</span>':'')+
-   '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?(s.scope&&!(c.exam&&c.exam.name===s.scope)?esc(s.scope)+': ':'')+pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('');
+   '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?(pr.scope&&!(c.exam&&c.exam.name===pr.scope)?esc(pr.scope)+': ':'')+pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('')};
+ drawCourses();
  window.COURSE_LIST=list;if(window.afterCourses)afterCourses(list);
+ if(CLOUD&&getCode())pullSummaries(list);
 })();
 // Offer the APMed '33 colors once (until the person picks Try it or No thanks). Same setting as Personalize → Appearance → Colors.
 function setPal(p){const d=document.documentElement;try{if(p){d.dataset.palette=p;localStorage.setItem('reviewer_palette',p)}else{delete d.dataset.palette;localStorage.removeItem('reviewer_palette')}}catch(e){}}
@@ -428,7 +445,11 @@ function drawBackup(){const b=$('bkcard'),list=window.COURSE_LIST||[];const ios=
 function bkNot(){try{localStorage.setItem('reviewer_backup_card','1')}catch(e){}drawBackup();if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!standalone)$('ios').hidden=false}
 function afterCourses(){drawToday();drawBackup();if(CLOUD&&window.Push&&!FEATS)Push.features().then(f=>{FEATS=f||[];drawToday()})}
 if(window.COURSE_LIST)afterCourses();
-addEventListener('pageshow',e=>{if(e.persisted&&window.COURSE_LIST)drawToday()});   // back from a course: fresh numbers
+// back from a course, or back to this tab: fresh numbers (and newer synced progress, at most once a minute)
+let pulledAt=Date.now();
+function refreshHome(){if(!window.COURSE_LIST)return;if(window.drawCourses)drawCourses();drawToday();if(CLOUD&&getCode()&&Date.now()-pulledAt>60000){pulledAt=Date.now();pullSummaries(COURSE_LIST)}}
+addEventListener('pageshow',e=>{if(e.persisted)refreshHome()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshHome()});
 // Ask the browser to keep this site's data (no prompt in Chrome or Safari; Firefox would ask, so it's skipped there)
 if(navigator.storage&&navigator.storage.persist&&!/firefox/i.test(navigator.userAgent))navigator.storage.persisted().then(p=>{if(!p)return navigator.storage.persist()}).catch(()=>{});
 if(window.Daily)Daily.digest();

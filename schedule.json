@@ -128,31 +128,31 @@
    "teacher": "Prof. Cherry Agustin"
   },
   {
-   "id": "chem-lab-1",
+   "id": "chem-lec-1",
    "day": "Sat",
    "start": "07:30",
    "end": "10:30",
    "subject": "chem",
-   "kind": "Lab",
-   "teacher": "Profs. Ranay and Orbita"
+   "kind": "Lecture",
+   "teacher": "Prof. L. Ranay"
   },
   {
-   "id": "chem-lab-2",
+   "id": "chem-lec-2",
    "day": "Sat",
    "start": "10:30",
    "end": "13:30",
    "subject": "chem",
-   "kind": "Lab",
-   "teacher": "Profs. Ranay and Orbita"
+   "kind": "Lecture",
+   "teacher": "Prof. L. Ranay"
   },
   {
-   "id": "chem-lec",
+   "id": "chem-lab",
    "day": "Sat",
    "start": "13:30",
    "end": "16:30",
    "subject": "chem",
-   "kind": "Lecture",
-   "teacher": "Prof. L. Ranay"
+   "kind": "Lab",
+   "teacher": "Profs. Ranay and Orbita"
   }
  ],
  "weeks": {
@@ -166,9 +166,9 @@
     "mmw": "Linear Programming",
     "nstp": "Midterm Exam",
     "pe": "MIDTERM PERFORMANCE - Group 5 starts",
-    "chem-lab-1": "Hydrocarbons II: benzene and aromatics",
-    "chem-lab-2": "Alcohols, ethers and thiols",
-    "chem-lec": "Activity 9: Gel electrophoresis"
+    "chem-lec-1": "Hydrocarbons II: benzene and aromatics",
+    "chem-lec-2": "Alcohols, ethers and thiols",
+    "chem-lab": "Activity 9: Gel electrophoresis"
    },
    "cancel": [
     "pharma",
@@ -220,18 +220,18 @@
     "mmw": "Quiz: Linear Programming (graphical method) · Graphical Method (Geometric Approach)",
     "nstp": "Chapter 8: Entrepreneurship",
     "pe": "Background of TABATA · TABATA Workout 1",
-    "chem-lab-1": "Long quiz: Units 15 and 16",
-    "chem-lab-2": "Unit 16: Proteins",
-    "chem-lec": "Activity 10: Enzymes"
+    "chem-lec-1": "Long quiz: Units 15 and 16",
+    "chem-lec-2": "Unit 16: Proteins",
+    "chem-lab": "Activity 10: Enzymes"
    },
    "notes": [
     "Saturday, Oct 31 is an institutional non-working day: no classes, and the Chem Lab long quiz (Units 15 and 16) is cancelled. New date to follow.",
     "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
    ],
    "cancel": [
-    "chem-lab-1",
-    "chem-lab-2",
-    "chem-lec"
+    "chem-lec-1",
+    "chem-lec-2",
+    "chem-lab"
    ]
   },
   "15": {
@@ -244,9 +244,9 @@
     "mmw": "Graphical Method (Geometric Approach)",
     "nstp": "Ch. 9: Recreation, Physical Fitness & Wellness · Ch. 10: The Social Menace of Drug Addiction",
     "pe": "TABATA Workout 2",
-    "chem-lab-1": "Unit 17: Lipids",
-    "chem-lab-2": "Unit 18: Carbohydrates",
-    "chem-lec": "Activity 11: Qualitative analysis of carbohydrates"
+    "chem-lec-1": "Unit 17: Lipids",
+    "chem-lec-2": "Unit 18: Carbohydrates",
+    "chem-lab": "Activity 11: Qualitative analysis of carbohydrates"
    },
    "notes": [
     "Holidays: All Saints' Day (Sun, Nov 1), All Souls' Day (Mon, Nov 2) and Institutional Family Day (Tue, Nov 3). No Pharmacology class on Tuesday.",
@@ -266,9 +266,9 @@
     "mmw": "Simplex Method (Algebraic Approach)",
     "nstp": "Ch. 11: Campus Safety & Security · Ch. 12: Global Warming, DRRM Awareness",
     "pe": "TABATA Workout 2",
-    "chem-lab-1": "Long quiz: Units 17 and 18",
-    "chem-lab-2": "Unit 19: Nucleic Acids",
-    "chem-lec": "Activity 12: RNA Vaccine"
+    "chem-lec-1": "Long quiz: Units 17 and 18",
+    "chem-lec-2": "Unit 19: Nucleic Acids",
+    "chem-lab": "Activity 12: RNA Vaccine"
    },
    "notes": [
     "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
@@ -284,9 +284,9 @@
     "mmw": "Simplex Method (Algebraic Approach)",
     "nstp": "Chapter 13: Volunteerism",
     "pe": "Basic Exercise Program",
-    "chem-lab-1": "Long quiz: Unit 19",
-    "chem-lab-2": "Exam review for laboratory",
-    "chem-lec": "Exam review for lecture"
+    "chem-lec-1": "Long quiz: Unit 19",
+    "chem-lec-2": "Exam review for laboratory",
+    "chem-lab": "Exam review for lecture"
    },
    "notes": [
     "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
@@ -302,9 +302,9 @@
     "mmw": "Prefinal Exam",
     "nstp": "Prefinal Exam",
     "pe": "Prefinal Exam",
-    "chem-lab-1": "Prefinal Exam",
-    "chem-lab-2": "Prefinal Exam",
-    "chem-lec": "Prefinal Exam"
+    "chem-lec-1": "Prefinal Exam",
+    "chem-lec-2": "Prefinal Exam",
+    "chem-lab": "Prefinal Exam"
    },
    "notes": [
     "Prefinal exam week (from the class matrix; check the official exam schedule)."
@@ -320,9 +320,9 @@
     "mmw": "Comprehensive Exam",
     "nstp": "Comprehensive Exam",
     "pe": "Comprehensive Exam",
-    "chem-lab-1": "Comprehensive Exam",
-    "chem-lab-2": "Comprehensive Exam",
-    "chem-lec": "Comprehensive Exam"
+    "chem-lec-1": "Comprehensive Exam",
+    "chem-lec-2": "Comprehensive Exam",
+    "chem-lab": "Comprehensive Exam"
    },
    "notes": [
     "Monday, Nov 30: Bonifacio Day.",
