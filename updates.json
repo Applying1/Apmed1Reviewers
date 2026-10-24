@@ -371,5 +371,14 @@
   "title": "Why not your choice, plus two new study tools",
   "text": "Pharmacology lesson 6: after a wrong answer, a line now says why the choice you picked is wrong (also in the mock exam review). New: Blurt on the Notes page (write all you remember about a topic, then see what you missed), and, optional in Personalize, How sure are you? (answer Sure or Not sure; confident mistakes come back sooner). Some questions in every course were reworded so the answer can't be guessed from a repeated word.",
   "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 45,
+  "date": "2026-10-24",
+  "type": "course",
+  "course": "chem",
+  "title": "Chem finals: lecture quiz reviewer",
+  "text": "New in General Chemistry: Topic 12, aromatic compounds (benzene, naming, EAS reactions, directing effects, phenols) and Topic 13, alcohols, amines, ethers and thiols. 387 questions with notes, matching sets and charts, built from the slides, the Oct 24 lecture and the board. Studying for is now set to the Lecture quiz; the Finals exam covers the same topics so far. Aldehydes and ketones will be added once their slides and video lecture are out. The transes PDF was also cleaned up: the empty template pages and placeholder boxes are gone.",
+  "link": "reviewer.html?course=chem"
  }
 ]

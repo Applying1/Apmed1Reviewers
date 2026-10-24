@@ -141,10 +141,10 @@
  {
   "id": "chem",
   "title": "General Chemistry",
-  "scope": "Lecture and lab midterms",
+  "scope": "Finals: lecture quiz and finals exam",
   "unit": "Topic",
   "itemWord": "question",
-  "count": 935,
+  "count": 1322,
   "storageKey": "study_reviewer_chem_midterm_2026_v1",
   "image": "courses/chem/topic-1-card.webp",
   "extras": [
@@ -164,14 +164,26 @@
    "courses/chem/topic-11-card.webp"
   ],
   "exam": {
-   "name": "Prefinals",
-   "date": "2026-11-28"
+   "name": "Lecture quiz",
+   "date": ""
   },
-  "activeExam": "prefinal",
+  "activeExam": "lecquiz",
   "exams": [
    {
+    "id": "lecquiz",
+    "name": "Lecture quiz",
+    "chapters": [
+     "12",
+     "13"
+    ]
+   },
+   {
     "id": "prefinal",
-    "name": "Prefinals"
+    "name": "Finals exam",
+    "chapters": [
+     "12",
+     "13"
+    ]
    },
    {
     "id": "lec",
