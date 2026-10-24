@@ -39,7 +39,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .body .t{font:600 18px/1.3 var(--serif)}
 .body .s{color:var(--mute);font-size:13.5px}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.tag{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--raised);color:var(--mute)}
+.tag{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--raised);color:var(--mute);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tag.exam{background:var(--accent-soft);color:var(--accent)}
 /* Courses without a reviewer yet: shown, but not clickable */
 .course.soon{cursor:default}
@@ -250,7 +250,8 @@ if(/[?&](fbclid|utm_[a-z]+|gclid)=/.test(location.search))history.replaceState(n
 const ic=(n,c)=>'<svg class="i'+(c?' '+c:'')+'" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // The course's next test, e.g. "Midterm · in 4 days" (from courses.json, set by activeExam).
-function examTag(e){if(!e)return '';let w='';if(e.date){const t=new Date();t.setHours(0,0,0,0);const n=Math.round((new Date(e.date+'T00:00')-t)/864e5);w=n<0?'':n===0?' · today':n===1?' · tomorrow':' · in '+n+' days'}return '<span class="tag exam">'+esc(e.name)+w+'</span>'}
+function examTag(e){if(!e)return '';let w='';if(e.date){const t=new Date();t.setHours(0,0,0,0);const n=Math.round((new Date(e.date+'T00:00')-t)/864e5);w=n<0?'':n===0?' · today':n===1?' · tomorrow':' · in '+n+' days'}const short=e.name.replace(/\s*\([^)]*\)\s*$/,'');   // "Evals (antihypertensives)" -> "Evals": one line on the card
+ return '<span class="tag exam" title="'+esc(e.name+w)+'">'+esc(short)+w+'</span>'}
 function ago(t){const d=Math.floor((Date.now()-t)/864e5);return d<=0?'today':d===1?'yesterday':d+' days ago'}
 function summary(key){try{return JSON.parse(localStorage.getItem(key+'_summary'))}catch(e){return null}}
 // The percent for the exam the course is on now. A course saves mastered/total per section (secs); when the teacher's
