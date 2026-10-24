@@ -439,11 +439,39 @@ function feedbackHTML(q,fb,live){
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'<span data-dn="'+esc(discKey(q.cid))+'">'+dnDot(dnUnread(discKey(q.cid)))+'</span></a></p>';
+ if(live)out+=aiHTML(q,fb);
  const note=fb.correct?(fb.lucky?'Marked as a lucky guess, so this '+ITEM+' comes back in a few questions.':fb.hinted?'Right, with a hint. It counts toward mastery once you get it without one.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
   :'This '+ITEM+' comes back in a few questions, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
  const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
  return out;
 }
+/* ---------- v72: "Explain it differently" (Claude Haiku through the explain Edge Function, see AI_SETUP.md) ----------
+   For signed-in classmates on the website, under the feedback of the question on screen. The function only explains the
+   reviewer's own questions (it reads them from the course file), 10 a day per person; repeats are served from a cache.
+   The button appears once the function answers that it's set up. */
+let AI_READY=null;const AIX={};   // AIX[question id] = {busy} | {text, left} | {err}
+const SPARK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4l1.8 4.7L17.5 10.5l-4.7 1.8L11 17l-1.8-4.7L4.5 10.5l4.7-1.8z"/><path d="M19 3v4M21 5h-4M18 17v3M19.5 18.5h-3"/></svg>';
+function aiCheck(){if(AI_READY!==null||!CONFIG.home||!cloudOn()||!/^https?:$/.test(location.protocol))return;AI_READY=false;
+ let c=null;try{c=JSON.parse(sessionStorage.getItem('reviewer_ai'))}catch(e){}
+ if(c&&Date.now()-c.at<6e5){AI_READY=!!c.ok;return}
+ fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{headers:{apikey:CLOUD.key}}).then(r=>r.ok?r.json():{}).then(j=>{AI_READY=!!j.ok;
+  try{sessionStorage.setItem('reviewer_ai',JSON.stringify({ok:AI_READY,at:Date.now()}))}catch(e){}if(AI_READY&&state.feedback)draw()}).catch(()=>{})}
+function aiHTML(q,fb){aiCheck();if(!AI_READY||!q||!q.cid)return '';const x=AIX[q.cid];
+ if(!x)return '<p><button class="link aibtn" onclick="aiExplain(\''+esc(String(q.cid))+'\')">'+SPARK+'Explain it differently</button></p>';
+ if(x.busy)return '<div class="aibox busy"><p class="note">'+SPARK+'Writing a simpler explanation…</p></div>';
+ if(x.err)return '<div class="aibox"><p class="note">'+x.err+'</p></div>';
+ return '<div class="aibox"><div class="aih">'+SPARK+'Explained differently</div><p>'+esc(x.text).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<i>$1</i>').replace(/^\s*[-•]\s+/gm,'• ').replace(/\n+/g,'<br>')+'</p><p class="note">Written by AI from this question, so it can be wrong. Check your transes'+(x.left!=null?' · '+x.left+' left today':'')+'.</p></div>'}
+async function aiExplain(cid){const q=state.active,fb=state.feedback;if(!q||!fb||String(q.cid)!==String(cid)||AIX[cid]&&AIX[cid].busy)return;
+ const tok=typeof Auth!=='undefined'?(Auth.cloud=CLOUD,await Auth.token()):'';
+ if(!tok){AIX[cid]={err:'Sign in with Google to use AI explanations. <a href="./?signin=1">Sign in</a>'};draw();return}
+ const ch=!fb.correct&&!q.typed&&state.selected?q.choices.find(x=>x.letter===state.selected):null;
+ AIX[cid]={busy:1};draw();
+ try{const r=await fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+tok},
+   body:JSON.stringify({course:courseId(),qid:String(cid),picked:ch?ch.label:'',wrong:!fb.correct})});
+  const j=await r.json().catch(()=>({}));
+  AIX[cid]=r.ok&&j.text?{text:j.text,left:j.left}:{err:j.error==='limit'?'You\'ve used today\'s '+(j.perDay||10)+' AI explanations. More tomorrow.':j.error==='busy'?'Lots of classmates are using this right now. Try again in a bit.':j.error==='sign in'?'Sign in again to use AI explanations. <a href="./?signin=1">Sign in</a>':'Couldn\'t get an explanation just now. Try again in a bit.'}}
+ catch(e){AIX[cid]={err:'No connection. Try again when you\'re online.'}}
+ if(state.active&&String(state.active.cid)===String(cid))draw()}
 function backBtn(){return '<button class="btn back" onclick="goBack()" '+(canBack()?'':'disabled')+' title="Previous answered question (←)">'+LEFT+'Back</button>'}
 
 function cardHTML(){

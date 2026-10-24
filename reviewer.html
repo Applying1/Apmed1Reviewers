@@ -877,6 +877,14 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
  body.tabs .dnpop:not(.up){bottom:calc(var(--tbh) + 12px)}
  .app.nav-open~.tabbar,body.tabs .app.nav-open .tabbar{display:none}
 }
+/* v72: "Explain it differently" (AI) */
+.aibtn{display:inline-flex;align-items:center;gap:6px}
+.aibox{margin:12px 0 4px;padding:12px 14px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent-line)}
+.aibox .aih{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.aibox p{margin:0 0 6px}.aibox p.note{margin:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.aibox.busy p.note svg{animation:aispin 1.2s linear infinite}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.aibox.busy p.note svg{animation:none}}
 /* v71: exam-eve "last look" sheet */
 .llwrap{position:fixed;inset:0;z-index:60;overflow-y:auto;background:var(--bg);-webkit-overflow-scrolling:touch}
 .llwrap[hidden]{display:none}body.llopen{overflow:hidden}
@@ -1054,6 +1062,7 @@ c. Euphrates</pre>
  const nc=document.createElement('script');nc.src='notify-core.js';nc.async=false;document.body.appendChild(nc);
  const pc=document.createElement('script');pc.src='push-client.js';pc.async=false;pc.onload=()=>{if(d.config.cloud&&window.Push){Push.init(d.config.cloud);setTimeout(()=>Push.heal(),3000)}};document.body.appendChild(pc);
  const dy=document.createElement('script');dy.src='daily.js';dy.async=false;document.body.appendChild(dy);
+ const au=document.createElement('script');au.src='auth.js';au.async=false;document.body.appendChild(au);
  const up=document.createElement('script');up.src='update.js';document.body.appendChild(up);
  const s=document.createElement('script');s.src='engine.js';s.async=false;s.onload=s.onerror=()=>{document.getElementById('app').classList.remove('booting');const k=document.getElementById('skel');if(k)k.remove()};document.body.appendChild(s);
 })();
