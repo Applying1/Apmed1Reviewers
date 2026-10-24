@@ -62,6 +62,9 @@
     const s = stats(o); o.best = s.best; put(o); D.digestSoon();
     return was < o.goal && o.days[k] >= o.goal ? s : null;
   };
+  // hide the streak and goal everywhere (home card, course tile, goal pop-up); answers still count for the reminder
+  D.hidden = () => !!D.data().hide;
+  D.setHidden = v => { const o = D.data(); if (v) o.hide = true; else delete o.hide; put(o) };
   D.setGoal = n => { const o = D.data(); if (GOALS.includes(n)) o.goal = n; put(o); D.digestSoon(); return stats(o) };
   // course summaries on this device that know their id (written by the engine since v71)
   D.courses = () => {

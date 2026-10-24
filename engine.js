@@ -752,8 +752,8 @@ function drawLastLook(){const el=$('lastlook');if(!el)return;const {src,list}=ll
   '</div>'}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('llopen'))closeLastLook()});
 /* ---------- v71: daily goal and streak, across every course on this device (site/daily.js) ---------- */
-function dailyAdd(n){if(!n||!window.Daily||!CONFIG.home)return;try{const g=Daily.add(n);if(g)setTimeout(()=>{toast('Daily goal reached: '+g.goal+' questions'+(g.streak>1?' · '+g.streak+'-day streak':''));celebrate('section')},650)}catch(e){}}
-function dailyTile(tile){const d=window.Daily&&CONFIG.home?Daily.now():null;if(!d)return '';
+function dailyAdd(n){if(!n||!window.Daily||!CONFIG.home)return;try{const g=Daily.add(n);if(g&&!(Daily.hidden&&Daily.hidden()))setTimeout(()=>{toast('Daily goal reached: '+g.goal+' questions'+(g.streak>1?' · '+g.streak+'-day streak':''));celebrate('section')},650)}catch(e){}}
+function dailyTile(tile){const d=window.Daily&&CONFIG.home&&!(Daily.hidden&&Daily.hidden())?Daily.now():null;if(!d)return '';
  return tile(ICON.flame,'Today',d.today+'<small>/'+d.goal+'</small>',d.met?(d.streak>1?d.streak+'-day streak':'Goal done today'):d.streak?d.streak+'-day streak · keep it going':'Daily goal: '+d.goal+' questions')}
 function mastered(){return BANK.filter(isM).length}
 function chProgress(ch){return progress('CH:'+ch);let a=BANK.filter(c=>chOf(c.section)===String(ch));return {done:a.filter(isM).length,total:a.length}}

@@ -125,6 +125,8 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .today[hidden]{display:none}
 .today h2{display:flex;align-items:center;gap:8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);margin:0 0 12px}
 .today h2 label{margin-left:auto;display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;color:var(--mute)}
+.thide{flex:none;width:26px;height:26px;margin-left:2px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:var(--faint);font-size:13px;text-transform:none}
+.thide:hover{background:var(--raised);color:var(--text)}
 .today select{font:600 12.5px var(--sans);color:var(--text);background:var(--raised);border:1px solid var(--line2);border-radius:8px;padding:3px 6px}
 .tdy{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 18px;align-items:center}
 .strk{display:flex;align-items:center;gap:10px;padding-right:18px;border-right:1px solid var(--line)}
@@ -402,10 +404,10 @@ const DOW=['S','M','T','W','T','F','S'],hourTxt=h=>h===12?'12 noon':(h%12||12)+(
 let FEATS=null;
 function shortName(id){const c=(window.COURSE_LIST||[]).find(x=>x.id===id);return c?c.title.replace(/^(Intro to|Introduction to) /,'').replace(/ in the Modern World$/,''):id}
 function drawToday(){const box=$('today');if(!window.Daily)return;const s=Daily.now(),due=Daily.due(),list=window.COURSE_LIST||[];
- if(!s.active&&!list.some(c=>summary(c.storageKey))){box.hidden=true;return}
+ if(Daily.hidden()||!s.active&&!list.some(c=>summary(c.storageKey))){box.hidden=true;return}
  const total=due.reduce((a,c)=>a+c.n,0),pct=Math.min(100,Math.round(100*s.today/s.goal)),r=Daily.rem(),left=s.goal-s.today;
  const remLink=r.on?'<a class="rm" href="notifications.html#settings">'+ic('alarm-clock')+' Daily reminder · '+hourTxt(r.hour)+'</a>':FEATS&&FEATS.includes('daily')?'<a class="rm" href="notifications.html#settings">'+ic('alarm-clock')+' Get a daily reminder</a>':'';
- box.innerHTML='<h2>'+ic('flame')+' Today<label>Goal <select onchange="setGoal(+this.value)" aria-label="Daily goal">'+Daily.GOALS.map(n=>'<option value="'+n+'"'+(n===s.goal?' selected':'')+'>'+n+' questions</option>').join('')+'</select></label></h2>'+
+ box.innerHTML='<h2>'+ic('flame')+' Today<label>Goal <select onchange="setGoal(+this.value)" aria-label="Daily goal">'+Daily.GOALS.map(n=>'<option value="'+n+'"'+(n===s.goal?' selected':'')+'>'+n+' questions</option>').join('')+'</select></label><button class="thide" onclick="hideToday()" aria-label="Hide the streak and daily goal" title="Hide">'+ic('x')+'</button></h2>'+
   '<div class="tdy"><div class="strk'+(s.met?' lit':s.streak?' cold':'')+'"><span class="fl">'+ic('flame')+'</span><div><b>'+s.streak+'</b><span>day streak</span>'+(s.atRisk?'<span class="risk">'+left+' more today keeps it</span>':s.best>s.streak?'<span>best '+s.best+'</span>':'')+'</div></div>'+
   '<div class="gl"><div class="gt"><span><b>'+s.today+'</b> of '+s.goal+' questions today</span>'+(s.met?'<span class="ok">Goal done ✓</span>':'<span>'+left+' to go</span>')+'</div>'+
    '<span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span>'+
@@ -413,6 +415,7 @@ function drawToday(){const box=$('today');if(!window.Daily)return;const s=Daily.
   (total||remLink?'<div class="due">'+(total?'<span>'+total+' review'+(total>1?'s':'')+' due:</span>'+due.map(c=>'<a href="reviewer.html?course='+encodeURIComponent(c.id)+'#due">'+esc(shortName(c.id))+' <em>'+c.n+'</em></a>').join(''):'<span>No reviews due right now.</span>')+remLink+'</div>':'');
  box.hidden=false}
 function setGoal(n){Daily.setGoal(n);drawToday()}
+function hideToday(){ask('You can bring it back any time in Notifications → Settings → Daily review.',{title:'Hide the streak and daily goal?',ok:'Hide'}).then(y=>{if(y){Daily.setHidden(true);drawToday()}})}
 // ---- iPhone Safari: saved progress is erased after 7 days without a visit (Home Screen apps are exempt). One-time card.
 function drawBackup(){const b=$('bkcard'),list=window.COURSE_LIST||[];const ios=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
  let off=true;try{off=!!localStorage.getItem('reviewer_backup_card')}catch(e){}

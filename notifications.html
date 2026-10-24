@@ -105,7 +105,8 @@ function drawDaily(){const el=$('dailysec');if(!el)return;const d=Daily.rem(),st
   row('Remind me every day',ready||FEATS===undefined?'At the time you pick, on devices where notifications are on (below).':FEATS===null?'Needs a connection to check.':'Coming soon. Your daily goal and streak already work.',sw(d.on&&ready,'dailySet({on:'+!d.on+'})','Daily review reminder',!ready));
  if(d.on&&ready)h+='<div class="opt"><b>At</b><div class="chips">'+Daily.HOURS.map(([v,t])=>chip(d.hour===v,'dailySet({hour:'+v+'})',t)).join('')+'</div></div>'+
    '<div class="opt"><button class="btn" onclick="dailyTest(this)">Send a test</button></div>';
- h+='<div class="opt"><b>Daily goal</b><div class="chips">'+Daily.GOALS.map(n=>chip(st.goal===n,'goalSet('+n+')',n+' questions')).join('')+'</div><span>Answers in any course count. Meet it on days in a row to build your streak'+(st.streak?' (now '+st.streak+(st.streak===1?' day':' days')+')':'')+'.</span></div>';
+ h+=row('Show my streak and daily goal','The Today card on the home page and the Today tile in courses.',sw(!Daily.hidden(),'Daily.setHidden('+!Daily.hidden()+');drawDaily()','Show streak and daily goal'));
+ if(!Daily.hidden())h+='<div class="opt"><b>Daily goal</b><div class="chips">'+Daily.GOALS.map(n=>chip(st.goal===n,'goalSet('+n+')',n+' questions')).join('')+'</div><span>Answers in any course count. Meet it on days in a row to build your streak'+(st.streak?' (now '+st.streak+(st.streak===1?' day':' days')+')':'')+'.</span></div>';
  el.innerHTML=h}
 // ---------- exam reminders ----------
 const chip=(on,fn,label)=>'<button aria-pressed="'+!!on+'" onclick="'+fn+'">'+esc(label)+'</button>';
