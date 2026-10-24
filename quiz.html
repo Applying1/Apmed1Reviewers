@@ -91,7 +91,8 @@ select.in{font-size:15px;appearance:auto}
 .pod i{display:grid;place-items:center;width:100%;border-radius:12px 12px 0 0;font:800 30px/1 var(--serif);font-style:normal;color:#fff}
 .pod .p1 i{height:130px;background:#e3a21a}.pod .p2 i{height:95px;background:#94a3b8}.pod .p3 i{height:70px;background:#c4743f}
 .pod .p1{order:2}.pod .p2{order:1}.pod .p3{order:3}
-@media (max-width:620px){.two{grid-template-columns:1fr}.ch{grid-template-columns:1fr}.opt{min-height:56px}h1{font-size:26px}}
+main,#app,.card{min-width:0}.card,.stem,.opt,.lob .how{overflow-wrap:anywhere}
+@media (max-width:620px){.lob{padding:22px 14px}.lob .eb{letter-spacing:.3px;line-height:1.5}.two{grid-template-columns:1fr}.ch{grid-template-columns:1fr}.opt{min-height:56px}h1{font-size:26px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
 <main id="main">
@@ -223,9 +224,9 @@ function hRank(){return Object.entries(H.players).sort((a,b)=>b[1].score-a[1].sc
 function hEnd(){clearTimeout(hTimer);H.phase='end';const rank=hRank();H.lastEnd={t:'end',n:H.qs.length,board:rank.map(([pid,p])=>[pid,p.name,p.score,p.right])};Bus.send(H.lastEnd);hSave();hDraw()}
 function hDraw(){const a=$('app');$('main').classList.toggle('wide',H.phase!=='lobby');const np=Object.keys(H.players).length;
  if(H.phase==='lobby'){const link=location.origin+location.pathname.replace(/[^/]*$/,'')+'quiz.html?join='+H.code+(LOCAL?'&bus=local':'');
-  a.innerHTML='<section class="card lob"><div class="eb">'+esc(H.title)+' · '+H.qs.length+' questions · '+H.cfg.dur+' s each</div>'+
+  a.innerHTML='<section class="card lob"><div class="eb">'+esc(H.title)+'<br>'+H.qs.length+' questions · '+H.cfg.dur+'-second timer</div>'+
    '<div class="bigcode" aria-label="Code '+esc(H.code.split('').join(' '))+'">'+esc(H.code)+'</div>'+
-   '<p class="how">Join at <b>'+esc(location.host+location.pathname.replace(/[^/]*$/,''))+'quiz.html</b> with this code, or open the link.</p>'+
+   '<p class="how">On the reviewer site, tap <b>Live quiz</b> and type this code. Or send them the invite link.</p>'+
    '<div class="row" style="justify-content:center"><button class="btn" onclick="hCopy(\''+esc(link)+'\',this)">'+ic('copy')+' Copy invite link</button>'+(navigator.share?'<button class="btn" onclick="navigator.share({title:\'Live quiz\',text:\'Join my '+esc(H.title).replace(/'/g,'')+' quiz with code '+H.code+'\',url:\''+esc(link)+'\'}).catch(()=>{})">'+ic('share')+' Share</button>':'')+'</div>'+
    '<div class="ppl" id="ppl">'+(np?Object.values(H.players).map(p=>'<span>'+ic('user')+esc(p.name)+'</span>').join(''):'<span class="none">Waiting for players to join…</span>')+'</div>'+
    '<button class="btn primary big" onclick="hStart()"'+(np?'':' disabled')+'>'+ic('play')+' Start'+(np?' · '+np+' player'+(np>1?'s':''):'')+'</button>'+
