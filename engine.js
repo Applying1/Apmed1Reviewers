@@ -451,23 +451,29 @@ function feedbackHTML(q,fb,live){
    For signed-in classmates on the website, under the feedback of the question on screen. The function only explains the
    reviewer's own questions (it reads them from the course file), 10 a day per person; repeats are served from a cache.
    The button appears once the function answers that it's set up. */
-let AI_READY=null;const AIX={};   // AIX[question id] = {busy} | {text, left} | {err}
+let AI_READY=null;const AIX={};   // AIX[question id|picked choice] = {busy} | {text, left} | {err}
+// Explanations you got are kept on this device (KEY_ai, newest 300) and show again by themselves when the same question
+// comes back with the same answer picked, so nobody taps (or spends) twice. The server also keeps one copy for everyone.
+const AI_SAVE=KEY+'_ai';let AISAVED={};try{AISAVED=JSON.parse(localStorage.getItem(AI_SAVE))||{}}catch(e){}
+function aiPick(q,fb){const ch=!fb.correct&&!q.typed&&state.selected?q.choices.find(x=>x.letter===state.selected):null;return ch?ch.label:''}
+function aiK(q,fb){return String(q.cid)+'|'+(fb.correct?'':aiPick(q,fb))}
+function aiSave(k,text){AISAVED[k]={text,at:Date.now()};const ks=Object.keys(AISAVED);if(ks.length>300)ks.sort((a,b)=>AISAVED[a].at-AISAVED[b].at).slice(0,ks.length-300).forEach(x=>delete AISAVED[x]);try{localStorage.setItem(AI_SAVE,JSON.stringify(AISAVED))}catch(e){}}
 const SPARK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4l1.8 4.7L17.5 10.5l-4.7 1.8L11 17l-1.8-4.7L4.5 10.5l4.7-1.8z"/><path d="M19 3v4M21 5h-4M18 17v3M19.5 18.5h-3"/></svg>';
 function aiCheck(){if(AI_READY!==null||!CONFIG.home||!cloudOn()||!/^https?:$/.test(location.protocol))return;AI_READY=false;
  let c=null;try{c=JSON.parse(sessionStorage.getItem('reviewer_ai'))}catch(e){}
  if(c&&Date.now()-c.at<6e5){AI_READY=!!c.ok;return}
  fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{headers:{apikey:CLOUD.key}}).then(r=>r.ok?r.json():{}).then(j=>{AI_READY=!!j.ok;
   try{sessionStorage.setItem('reviewer_ai',JSON.stringify({ok:AI_READY,at:Date.now()}))}catch(e){}if(AI_READY&&state.feedback)draw()}).catch(()=>{})}
-function aiHTML(q,fb){aiCheck();if(!AI_READY||!q||!q.cid||!FILE_IDS.has(String(q.cid)))return '';const x=AIX[q.cid];
+function aiHTML(q,fb){aiCheck();if(!q||!q.cid||!fb)return '';const k=aiK(q,fb),sv=AISAVED[k],x=AIX[k]&&!AIX[k].busy&&!AIX[k].err?AIX[k]:sv?{text:sv.text,saved:1}:AIX[k];if(!x&&(!AI_READY||!FILE_IDS.has(String(q.cid))))return '';
  if(!x)return '<p><button class="link aibtn" onclick="aiExplain(\''+esc(String(q.cid))+'\')">'+SPARK+'Explain it differently</button></p>';
  if(x.busy)return '<div class="aibox busy"><p class="note">'+SPARK+'Writing a simpler explanation…</p></div>';
  if(x.err)return '<div class="aibox"><p class="note">'+x.err+'</p></div>';
- return '<div class="aibox"><div class="aih">'+SPARK+'Explained differently</div><p>'+esc(x.text).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<i>$1</i>').replace(/^\s*[-•]\s+/gm,'• ').replace(/\n+/g,'<br>')+'</p><p class="note">Written by AI from this question, so it can be wrong. Check your transes'+(x.left!=null?' · '+x.left+' left today':'')+'.</p></div>'}
-async function aiExplain(cid){const q=state.active,fb=state.feedback;if(!q||!fb||String(q.cid)!==String(cid)||AIX[cid]&&AIX[cid].busy)return;
+ return '<div class="aibox"><div class="aih">'+SPARK+'Explained differently</div><p>'+esc(x.text).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<i>$1</i>').replace(/^\s*[-•]\s+/gm,'• ').replace(/\n+/g,'<br>')+'</p><p class="note">Written by AI from this question, so it can be wrong. Check your transes'+(x.saved?' · saved on this device':x.cached?' · already written, didn\'t use a try':x.left!=null?' · '+x.left+' left today':'')+'.</p></div>'}
+async function aiExplain(cid){const q=state.active,fb=state.feedback;if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);if(AIX[k]&&AIX[k].busy)return;
  const tok=typeof Auth!=='undefined'?(Auth.cloud=CLOUD,await Auth.token()):'';
- if(!tok){AIX[cid]={err:'Sign in with Google to use AI explanations. <a href="./?signin=1">Sign in</a>'};draw();return}
+ if(!tok){AIX[k]={err:'Sign in with Google to use AI explanations. <a href="./?signin=1">Sign in</a>'};draw();return}
  const ch=!fb.correct&&!q.typed&&state.selected?q.choices.find(x=>x.letter===state.selected):null;
- AIX[cid]={busy:1};draw();
+ AIX[k]={busy:1};draw();
  const ask=t=>fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+t},
    body:JSON.stringify({course:courseId(),qid:String(cid),picked:ch?ch.label:'',wrong:!fb.correct})});
  try{let r=await ask(tok);
@@ -475,8 +481,8 @@ async function aiExplain(cid){const q=state.active,fb=state.feedback;if(!q||!fb|
   if(r.status===401){try{const s=JSON.parse(localStorage.getItem('reviewer_session'));if(s){s.exp=0;localStorage.setItem('reviewer_session',JSON.stringify(s))}}catch(e){}
    const t2=await Auth.token();if(t2)r=await ask(t2)}
   const j=await r.json().catch(()=>({}));
-  AIX[cid]=r.ok&&j.text?{text:j.text,left:j.left}:{err:j.error==='limit'?'You\'ve used today\'s '+(j.perDay||10)+' AI explanations. More tomorrow.':j.error==='busy'?'Lots of classmates are using this right now. Try again in a bit.':j.error==='sign in'?'Your sign-in has expired. Sign in again to use AI explanations. <a href="./?signin=1">Sign in</a>'+(j.detail?' <span class="aidet">('+esc(String(j.detail).slice(0,160))+')</span>':''):'Couldn\'t get an explanation just now. Try again in a bit.'+' <span class="aidet">('+esc(String(j.detail||j.error||j.message||j.msg||'no reason given').slice(0,160))+' · '+r.status+')</span>'}}
- catch(e){AIX[cid]={err:'No connection. Try again when you\'re online.'}}
+  if(r.ok&&j.text)aiSave(k,j.text);AIX[k]=r.ok&&j.text?{text:j.text,left:j.left,cached:j.cached}:{err:j.error==='limit'?'You\'ve used today\'s '+(j.perDay||10)+' AI explanations. More tomorrow.':j.error==='busy'?'Lots of classmates are using this right now. Try again in a bit.':j.error==='sign in'?'Your sign-in has expired. Sign in again to use AI explanations. <a href="./?signin=1">Sign in</a>'+(j.detail?' <span class="aidet">('+esc(String(j.detail).slice(0,160))+')</span>':''):'Couldn\'t get an explanation just now. Try again in a bit.'+' <span class="aidet">('+esc(String(j.detail||j.error||j.message||j.msg||'no reason given').slice(0,160))+' · '+r.status+')</span>'}}
+ catch(e){AIX[k]={err:'No connection. Try again when you\'re online.'}}
  if(state.active&&String(state.active.cid)===String(cid))draw()}
 function backBtn(){return '<button class="btn back" onclick="goBack()" '+(canBack()?'':'disabled')+' title="Previous answered question (←)">'+LEFT+'Back</button>'}
 
