@@ -456,7 +456,7 @@ async function getUpdate(b){if(b){b.disabled=true;b.textContent='Updating…'}fl
  location.reload()}
 /* ---------- v72: "Explain it differently" (Claude Haiku through the explain Edge Function, see AI_SETUP.md) ----------
    For signed-in classmates on the website, under the feedback of the question on screen. The function only explains the
-   reviewer's own questions (it reads them from the course file), 10 a day per person; repeats are served from a cache.
+   reviewer's own questions (it reads them from the course file), 30 a day per person; repeats are served from a cache.
    The button appears once the function answers that it's set up. */
 let AI_READY=null;const AIX={};   // AIX[question id|picked choice] = {busy} | {text, left} | {err}
 // Explanations you got are kept on this device (KEY_ai, newest 300) and show again by themselves when the same question
