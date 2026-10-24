@@ -355,5 +355,13 @@
   "title": "Last look before a test",
   "text": "The night before a test, open Last look in any course: one page with the questions you missed most and their answers. Hide the answers to test yourself, or print it.",
   "link": "./"
+ },
+ {
+  "id": 43,
+  "date": "2026-10-24",
+  "type": "feature",
+  "title": "Explain it differently, and a daily review reminder",
+  "text": "Sign in, answer a question, and tap Explain it differently under the feedback for a simpler explanation based on our notes, including exactly why your choice was wrong (10 a day; AI can be wrong, so check your transes). New in Notifications, Settings: a daily review reminder with what is due in each course.",
+  "link": "./"
  }
 ]
