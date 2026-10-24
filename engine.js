@@ -447,6 +447,13 @@ function feedbackHTML(q,fb,live){
  const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
  return out;
 }
+/* v72: "Check for updates" (Personalize, next to the version). Installed apps on iPad/iPhone have no pull-to-refresh:
+   this drops the offline copy of the site's code and pages (never progress, which lives in localStorage), updates the
+   offline worker, and reloads with the newest version. */
+async function getUpdate(b){if(b){b.disabled=true;b.textContent='Updating…'}flushSave();
+ try{const r=await navigator.serviceWorker.getRegistration();if(r)await r.update().catch(()=>{})}catch(e){}
+ try{for(const k of await caches.keys())if(k!=='reviewer-meta')await caches.delete(k)}catch(e){}
+ location.reload()}
 /* ---------- v72: "Explain it differently" (Claude Haiku through the explain Edge Function, see AI_SETUP.md) ----------
    For signed-in classmates on the website, under the feedback of the question on screen. The function only explains the
    reviewer's own questions (it reads them from the course file), 10 a day per person; repeats are served from a cache.
@@ -1588,7 +1595,7 @@ function drawPrefs(){
  // Tabs: All, or one section at a time (remembered on this device).
  const parts=h.split('<section class="panel">').filter(Boolean).map(x=>'<section class="panel">'+x),names=parts.map(x=>(x.match(/<h2>(.*?)<\/h2>/)||[])[1]||'');
  let tab='all';try{tab=localStorage.getItem('reviewer_prefs_tab')||'all'}catch(e){}if(!names.includes(tab))tab='all';
- $('prefs').innerHTML=parts.filter((_,i)=>tab==='all'||names[i]===tab).join('')+'<p class="appver">App version '+APP_VERSION+' · '+APP_DATE+'</p>';
+ $('prefs').innerHTML=parts.filter((_,i)=>tab==='all'||names[i]===tab).join('')+'<p class="appver">App version '+APP_VERSION+' · '+APP_DATE+((CONFIG.home&&'serviceWorker' in navigator)?' · <button class="link" onclick="getUpdate(this)">Check for updates</button>':'')+'</p>';
  let t=$('ptabs');if(!t){t=document.createElement('div');t.id='ptabs';t.className='fchips ptabs';t.setAttribute('role','tablist');$('prefs').before(t)}
  t.innerHTML=['all'].concat(names).map(n=>'<button class="fchip'+(n===tab?' on':'')+'" role="tab" aria-selected="'+(n===tab)+'" onclick="setPrefTab(\''+esc(n).replace(/'/g,'&#39;')+'\')">'+(n==='all'?'All':esc(n.replace(/ and you$/,'')))+'</button>').join('')}
 function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e){}drawPrefs();window.scrollTo(0,0)}
