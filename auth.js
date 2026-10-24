@@ -11,7 +11,8 @@ const Auth = {
   saveSession(h) {
     this.set(this.SES, { access: h.access_token, refresh: h.refresh_token, exp: Date.now() + (+h.expires_in || 3600) * 1000 - 60000 });
   },
-  headers(tok) { return { 'Content-Type': 'application/json', apikey: this.cloud.key, Authorization: 'Bearer ' + (tok || this.cloud.key) }; },
+  // a publishable key (sb_publishable_…) is not a login token: send it only as apikey, never as Authorization
+  headers(tok) { const h = { 'Content-Type': 'application/json', apikey: this.cloud.key }; if (tok || /^eyJ/.test(this.cloud.key)) h.Authorization = 'Bearer ' + (tok || this.cloud.key); return h; },
   // Back from Google (#access_token=...): keep the session, link this device's sync code, remember name and photo.
   async finish() {
     const h = Object.fromEntries(new URLSearchParams(location.hash.slice(1)));

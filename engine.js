@@ -466,10 +466,14 @@ async function aiExplain(cid){const q=state.active,fb=state.feedback;if(!q||!fb|
  if(!tok){AIX[cid]={err:'Sign in with Google to use AI explanations. <a href="./?signin=1">Sign in</a>'};draw();return}
  const ch=!fb.correct&&!q.typed&&state.selected?q.choices.find(x=>x.letter===state.selected):null;
  AIX[cid]={busy:1};draw();
- try{const r=await fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+tok},
+ const ask=t=>fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+t},
    body:JSON.stringify({course:courseId(),qid:String(cid),picked:ch?ch.label:'',wrong:!fb.correct})});
+ try{let r=await ask(tok);
+  // an old or expired sign-in: get a fresh one once and try again
+  if(r.status===401){try{const s=JSON.parse(localStorage.getItem('reviewer_session'));if(s){s.exp=0;localStorage.setItem('reviewer_session',JSON.stringify(s))}}catch(e){}
+   const t2=await Auth.token();if(t2)r=await ask(t2)}
   const j=await r.json().catch(()=>({}));
-  AIX[cid]=r.ok&&j.text?{text:j.text,left:j.left}:{err:j.error==='limit'?'You\'ve used today\'s '+(j.perDay||10)+' AI explanations. More tomorrow.':j.error==='busy'?'Lots of classmates are using this right now. Try again in a bit.':j.error==='sign in'?'Sign in again to use AI explanations. <a href="./?signin=1">Sign in</a>':'Couldn\'t get an explanation just now. Try again in a bit.'+(j.detail?' <span class="aidet">('+esc(String(j.detail).slice(0,160))+')</span>':'')}}
+  AIX[cid]=r.ok&&j.text?{text:j.text,left:j.left}:{err:j.error==='limit'?'You\'ve used today\'s '+(j.perDay||10)+' AI explanations. More tomorrow.':j.error==='busy'?'Lots of classmates are using this right now. Try again in a bit.':j.error==='sign in'?'Your sign-in has expired. Sign in again to use AI explanations. <a href="./?signin=1">Sign in</a>'+(j.detail?' <span class="aidet">('+esc(String(j.detail).slice(0,160))+')</span>':''):'Couldn\'t get an explanation just now. Try again in a bit.'+(j.detail?' <span class="aidet">('+esc(String(j.detail).slice(0,160))+')</span>':'')}}
  catch(e){AIX[cid]={err:'No connection. Try again when you\'re online.'}}
  if(state.active&&String(state.active.cid)===String(cid))draw()}
 function backBtn(){return '<button class="btn back" onclick="goBack()" '+(canBack()?'':'disabled')+' title="Previous answered question (←)">'+LEFT+'Back</button>'}
