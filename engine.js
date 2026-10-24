@@ -86,6 +86,8 @@ function setText(items){let t='',top=null;
 /* ---------- class questions: suggestions a moderator approved (see "class contributions" further down) ----------
    Cached under "<storageKey>_contrib" as {at, items, gone} and refreshed from the cloud. They join the Main bank in their
    section as kind "class". Ones the moderator later took out stay in "gone" (retired: known, but never asked again). */
+// v72: the questions in the course file itself (what the AI explain function can look up): not class questions or your own sets
+const FILE_IDS=new Set(FULL_BANK.map(c=>String(c.id)).concat((typeof VARIANTS!=='undefined'?VARIANTS:[]).flatMap(v=>(v.items||[]).map(c=>String(c.id)))));
 const CONTRIB_KEY=CONFIG.storageKey+'_contrib';let CONTRIB={at:0,items:[],gone:[]};
 try{CONTRIB=Object.assign(CONTRIB,JSON.parse(localStorage.getItem(CONTRIB_KEY)))}catch(e){}
 // Wrong choices a class question gets: the course's usual number (3 for A–D).
@@ -456,7 +458,7 @@ function aiCheck(){if(AI_READY!==null||!CONFIG.home||!cloudOn()||!/^https?:$/.te
  if(c&&Date.now()-c.at<6e5){AI_READY=!!c.ok;return}
  fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{headers:{apikey:CLOUD.key}}).then(r=>r.ok?r.json():{}).then(j=>{AI_READY=!!j.ok;
   try{sessionStorage.setItem('reviewer_ai',JSON.stringify({ok:AI_READY,at:Date.now()}))}catch(e){}if(AI_READY&&state.feedback)draw()}).catch(()=>{})}
-function aiHTML(q,fb){aiCheck();if(!AI_READY||!q||!q.cid)return '';const x=AIX[q.cid];
+function aiHTML(q,fb){aiCheck();if(!AI_READY||!q||!q.cid||!FILE_IDS.has(String(q.cid)))return '';const x=AIX[q.cid];
  if(!x)return '<p><button class="link aibtn" onclick="aiExplain(\''+esc(String(q.cid))+'\')">'+SPARK+'Explain it differently</button></p>';
  if(x.busy)return '<div class="aibox busy"><p class="note">'+SPARK+'Writing a simpler explanation…</p></div>';
  if(x.err)return '<div class="aibox"><p class="note">'+x.err+'</p></div>';
@@ -473,7 +475,7 @@ async function aiExplain(cid){const q=state.active,fb=state.feedback;if(!q||!fb|
   if(r.status===401){try{const s=JSON.parse(localStorage.getItem('reviewer_session'));if(s){s.exp=0;localStorage.setItem('reviewer_session',JSON.stringify(s))}}catch(e){}
    const t2=await Auth.token();if(t2)r=await ask(t2)}
   const j=await r.json().catch(()=>({}));
-  AIX[cid]=r.ok&&j.text?{text:j.text,left:j.left}:{err:j.error==='limit'?'You\'ve used today\'s '+(j.perDay||10)+' AI explanations. More tomorrow.':j.error==='busy'?'Lots of classmates are using this right now. Try again in a bit.':j.error==='sign in'?'Your sign-in has expired. Sign in again to use AI explanations. <a href="./?signin=1">Sign in</a>'+(j.detail?' <span class="aidet">('+esc(String(j.detail).slice(0,160))+')</span>':''):'Couldn\'t get an explanation just now. Try again in a bit.'+(j.detail?' <span class="aidet">('+esc(String(j.detail).slice(0,160))+')</span>':'')}}
+  AIX[cid]=r.ok&&j.text?{text:j.text,left:j.left}:{err:j.error==='limit'?'You\'ve used today\'s '+(j.perDay||10)+' AI explanations. More tomorrow.':j.error==='busy'?'Lots of classmates are using this right now. Try again in a bit.':j.error==='sign in'?'Your sign-in has expired. Sign in again to use AI explanations. <a href="./?signin=1">Sign in</a>'+(j.detail?' <span class="aidet">('+esc(String(j.detail).slice(0,160))+')</span>':''):'Couldn\'t get an explanation just now. Try again in a bit.'+' <span class="aidet">('+esc(String(j.detail||j.error||j.message||j.msg||'no reason given').slice(0,160))+' · '+r.status+')</span>'}}
  catch(e){AIX[cid]={err:'No connection. Try again when you\'re online.'}}
  if(state.active&&String(state.active.cid)===String(cid))draw()}
 function backBtn(){return '<button class="btn back" onclick="goBack()" '+(canBack()?'':'disabled')+' title="Previous answered question (←)">'+LEFT+'Back</button>'}
