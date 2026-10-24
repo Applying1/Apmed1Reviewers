@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='74',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='75',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -182,13 +182,14 @@ const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:false};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
 ALL_ITEMS.forEach(c=>{if(!state.concepts[c.id])state.concepts[c.id]=blank()});
 trimState(state,false);
-state.prefs=Object.assign({},DEFAULT_PREFS,state.prefs);if(!GOALS.includes(state.prefs.target))state.prefs.target=DEFAULT_PREFS.target;
+state.prefs=Object.assign({},DEFAULT_PREFS,state.prefs);if(!state.prefs.blurtV75){state.prefs.blurt=true;state.prefs.blurtV75=1}   // v75: Blurt on by default (v74 saved it off for everyone)
+if(!GOALS.includes(state.prefs.target))state.prefs.target=DEFAULT_PREFS.target;
 state.match=Object.assign({sets:0,right:0,total:0,best:{}},state.match);
 state.log=state.log||[];state.complete=state.complete||[];state.history=state.history||[];
 delete state.set;delete state.unlocked;
@@ -932,7 +933,7 @@ const DOCS=(CONFIG.docs||[]).filter(d=>d&&d.file);
 function docView(d,u){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.home||!id||!/^https?:$/.test(location.protocol)||!/^courses\/[\w-]+\/[\w.-]+\.pdf$/i.test(d.file))return u;return 'transes.html?f='+encodeURIComponent(d.file)+'&t='+encodeURIComponent(d.title||'Full transes')+'&c='+encodeURIComponent(id)}
 function docURL(d){if(/^https?:/i.test(d.file)||/^https?:$/.test(location.protocol))return d.file;try{return new URL(d.file,CONFIG.shareUrl).href}catch(e){return ''}}
 function drawNotes(){
- $('nChartBtn').hidden=!chartsOn();
+ $('nChartBtn').hidden=!chartsOn();$('nBlurtBtn').hidden=!state.prefs.blurt||!NOTES_PARSED.some(n=>noteScope(n.ch)&&/^\d/.test(n.ch));
  $('ndocs').innerHTML=DOCS.map(d=>{const u=docURL(d);return u?'<a class="btn sm docbtn" href="'+esc(docView(d,u))+'"'+(docView(d,u)===u?' target="_blank" rel="noopener" title="Opens in a new tab"':'')+'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>'+esc(d.title||'Full transes')+'</a>':''}).join('');
  document.title='Notes · '+CONFIG.title;
  $('nchips').innerHTML=chChips(NOTES_PARSED.filter(n=>noteScope(n.ch)).map(n=>n.ch),notesCh,'setNotesCh');
@@ -954,12 +955,17 @@ function drawNotesBody(){
   const more=other.length?'<p class="nmore"><button class="link" onclick="notesOtherW=!notesOtherW;drawNotesBody()">'+(notesOtherW?'Hide the '+other.length+' from other '+unitsW:'Show '+other.length+' more from other '+unitsW)+'</button></p>':'';
   if(!cards&&!more)return '';
   if(blurtCh===n.ch&&state.prefs.blurt)return blurtHTML(n);
-  return '<section class="nsec"><div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+esc(CH_NAMES[n.ch]||'')+'</h2>'+(state.prefs.blurt&&!q?'<button class="link" onclick="startBlurt(\''+esc(n.ch)+'\')" title="Write what you remember, then check it against these notes">Blurt'+((state.blurt||{})[n.ch]?' <span class="bscore">'+state.blurt[n.ch].got+'/'+state.blurt[n.ch].total+'</span>':'')+'</button>':'')+(state.prefs.selftest?'<button class="link reveal" onclick="revealSec(this)">Reveal all</button>':'')+(chapters.includes(n.ch)?'<button class="link" onclick="selectSection(\'CH:'+n.ch+'\')">Quiz the entire '+unitW+' →</button>':'')+'</div><div class="ngrid">'+cards+'</div>'+more+'</section>'}).join('');
+  return '<section class="nsec"><div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+esc(CH_NAMES[n.ch]||'')+'</h2>'+(state.prefs.blurt&&!q?'<button class="bbtn" onclick="startBlurt(\''+esc(n.ch)+'\')" title="Write what you remember, then check it against these notes">'+BLURT_IC+'Blurt this '+esc(unitW)+((state.blurt||{})[n.ch]?' <span class="bscore">'+state.blurt[n.ch].got+'/'+state.blurt[n.ch].total+'</span>':'')+'</button>':'')+(state.prefs.selftest?'<button class="link reveal" onclick="revealSec(this)">Reveal all</button>':'')+(chapters.includes(n.ch)?'<button class="link" onclick="selectSection(\'CH:'+n.ch+'\')">Quiz the entire '+unitW+' →</button>':'')+'</div><div class="ngrid">'+cards+'</div>'+more+'</section>'}).join('');
  body.innerHTML=out||'<p class="empty">No notes match “'+esc(notesQ)+'”.</p>';
 }
 /* v74 Blurt (Personalize, off by default): write everything you remember about a chapter with its notes hidden, then
    check. Each note row's term is a key point; it's ticked when its main words appear in what you wrote (small typos ok),
    and you can tick or untick by hand. The last score per chapter is kept (state.blurt). */
+const BLURT_IC='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+// Notes toolbar button: the chapter on screen, else the one being practiced, else the first one with notes.
+function blurtFromBar(){const ok=ch=>NOTES_PARSED.some(n=>n.ch===ch&&noteScope(n.ch)),cur=isX(state.section)?null:secCh(state.section);
+ const ch=notesCh!=='all'&&ok(notesCh)?notesCh:cur&&ok(cur)?cur:(NOTES_PARSED.find(n=>noteScope(n.ch)&&/^\d/.test(n.ch))||{}).ch;if(!ch)return;
+ if(notesCh!=='all')notesCh=ch;drawNotes();startBlurt(ch)}
 let blurtCh=null,blurtText='',blurtRes=null,blurtTopic='all';
 // The notes cards of a chapter that are switched on; Blurt can cover all of them or one card (a big lesson has 100+ points).
 const BTIP=/^\s*(mnemonics?|memory tip|tip)\s*$/i;   // study tips in the notes are not key points to recall
@@ -985,6 +991,7 @@ function blurtHTML(n){const gs=blurtGroups(n.ch),topic=blurtTopic==='all'?'':(gs
  const head='<div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+'Blurt</h2></div>';
  if(!blurtRes){const npts=g=>g.rows.filter(([a])=>String(a).trim()&&!BTIP.test(a)).length,tot=gs.reduce((s,g)=>s+npts(g),0);
   return '<section class="nsec blurt">'+head+
+  (state.blurt&&state.blurt[n.ch]?'':'<p class="bintro">'+BLURT_IC+'<span><b>How it works:</b> without looking at your notes, write all you can remember. The reviewer then shows which key points you missed.</span></p>')+
   '<label class="bpick"><span>Topic</span><select onchange="setBlurtTopic(this.value)">'+gs.map((g,i)=>'<option value="'+i+'"'+(blurtTopic===String(i)?' selected':'')+'>'+esc(g.title)+' ('+npts(g)+')</option>').join('')+
    '<option value="all"'+(blurtTopic==='all'?' selected':'')+'>The whole '+esc(unitW)+' ('+tot+' points)</option></select></label>'+
   '<p class="btip">Write everything you remember about '+(topic?'<b>'+esc(topic)+'</b>':'this '+esc(unitW))+': terms, definitions, lists, examples. No peeking, and spelling doesn\'t matter.</p>'+
@@ -1584,7 +1591,7 @@ function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r)
  if((r.exams||[]).length>(state.exams||[]).length){state.exams=r.exams;changed=true}
  for(const k in r.chalLog||{})if(!(state.chalLog||{})[k]){state.chalLog=state.chalLog||{};state.chalLog[k]=r.chalLog[k];changed=true}
  if(r.name&&!state.name){state.name=r.name;changed=true}
- if(r.prefs&&(r.prefsAt||0)>(state.prefsAt||0)){state.prefs=Object.assign({},DEFAULT_PREFS,r.prefs);if(r.exSetup)state.exSetup=r.exSetup;state.prefsAt=r.prefsAt;prefSigLast=prefSig();refreshBank();changed=true}
+ if(r.prefs&&(r.prefsAt||0)>(state.prefsAt||0)){state.prefs=Object.assign({},DEFAULT_PREFS,r.prefs);if(!state.prefs.blurtV75){state.prefs.blurt=true;state.prefs.blurtV75=1}if(r.exSetup)state.exSetup=r.exSetup;state.prefsAt=r.prefsAt;prefSigLast=prefSig();refreshBank();changed=true}
  // Continue on the question the other device showed last, unless you are in the middle of answering one here.
  const C=r.cur,typing=$('typed')&&$('typed').value.trim();
  if(C&&(C.at||0)>(state.curAt||0)&&!(state.selected&&!state.feedback)&&!typing&&!state.pmatch&&validSection(C.section)&&(!C.active||byId[C.active.cid])){
@@ -1683,7 +1690,7 @@ const CHANGELOG=[
  {v:'35',date:'Oct 24, 2026',title:'Learn from your wrong answers',items:[
   ...(FULL_BANK.some(c=>c.dw)?['<b>Why not your choice</b>: after a wrong answer, a line says why the choice you picked is wrong (also in the mock exam review).']:[]),
   'Optional, in Personalize: <b>How sure are you?</b> Answer with Sure or Not sure. Wrong answers you were sure of come back sooner and go first in Needs work.',
-  ...(NOTES_PARSED.length?['Optional, in Personalize: <b>Blurt</b> on the Notes page. Write all you remember about a '+unitW+', then see which key points you missed.']:[]),
+  ...(NOTES_PARSED.length?['<b>Blurt</b> on the Notes page (turn it off in Personalize). Write all you remember about a '+unitW+', then see which key points you missed.']:[]),
  ]},
  ...(CONFIG.home?[{v:'34',date:'Oct 24, 2026',title:'Daily goal, last look and live quiz',items:[
   '<b>Last look</b>: the night before a test, one page with the '+ITEMS+' you missed most and their answers. Hide the answers to test yourself, or print it. In the menu, and on your dashboard when a test is near.',
