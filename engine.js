@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='81',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='82',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -296,7 +296,8 @@ addEventListener('pagehide',flushSave);document.addEventListener('visibilitychan
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function stableHash(s){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0}
 function shuffle(a,seed){let b=a.slice(),x=seed||1;for(let i=b.length-1;i>0;i--){x^=x<<13;x^=x>>>17;x^=x<<5;let j=(x>>>0)%(i+1);[b[i],b[j]]=[b[j],b[i]]}return b}
-const rnd=()=>((Math.random()*4294967296)>>>0)||1;
+// RNG: a seeded source while a class challenge builds its exam, so everyone with the link gets the same questions (v82)
+let RNG=null;const rnd=()=>RNG?RNG():((Math.random()*4294967296)>>>0)||1;
 // Random order: a new seed every time, so answer letters can't be memorized. In order: stable per attempt.
 const seedFor=(c,tag)=>state.prefs.order==='random'?rnd():stableHash(c.id+tag+state.concepts[c.id].seen);
 // v70: the questions of a section and its progress are worked out once per change of your progress, not again for every
@@ -1118,7 +1119,8 @@ const PER_ITEM=CONFIG.examMinutesPerItem||1;
 const exMinutes=(st,n)=>typeof st.timer==='number'?st.timer:st.timer?Math.round(n*PER_ITEM):0;
 const EX_PRESETS=CONFIG.examPresets||[{label:'Paperless · 30 items, split per '+unitW,count:30,split:true,format:'paperless',vsa:0}];
 function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters.slice(),timer:true});if(st.vsa==null)st.vsa=0;st.chs=st.chs.filter(c=>chapters.includes(c));if(!st.chs.length)st.chs=chapters.slice();return st}
-function exPool(){const st=exSetup(),qs=st.quota&&st.quota.flatMap(q=>q[0]);return BANK.filter(c=>st.chs.includes(chOf(c.section))&&(!st.secs||st.secs.includes(c.section))&&(!qs||qs.includes(c.section)))}
+function exPoolOf(items,st){const qs=st.quota&&st.quota.flatMap(q=>q[0]);return items.filter(c=>st.chs.includes(chOf(c.section))&&(!st.secs||st.secs.includes(c.section))&&(!qs||qs.includes(c.section)))}
+function exPool(){return exPoolOf(BANK,exSetup())}
 function exLeft(){const ex=state.exam;return ex.limit?ex.start+ex.limit-Date.now():Infinity}
 function clock(ms){const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
 function drawExam(){const ex=state.exam,C=CHAL||ex&&ex.chal,run=!CHAL&&!!ex&&!ex.done;if(typeof drawTabbar==='function')drawTabbar();$('examView').classList.toggle('running',run);if(run)requestAnimationFrame(()=>{const t=$('examView').querySelector('.top');if(t)$('examView').style.setProperty('--exhead',t.offsetHeight+'px')});$('main').classList.toggle('wide',!CHAL&&!!ex&&!!ex.sheet&&!ex.done);document.title=(C?'Class challenge':'Mock exam')+' · '+CONFIG.title;$('excrumb').textContent=C?'Class challenge':'Mock exam';
@@ -1149,7 +1151,7 @@ function drawExamSetup(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,po
  const row=(t,d,ctl)=>'<div class="prow"><div class="pl"><b>'+t+'</b><span>'+d+'</span></div><div class="ctl">'+ctl+'</div></div>',srow=(t,d,ctl)=>row(t,d,ctl).replace('class="prow"','class="prow stack"');
  const counts=EX_COUNTS.filter(c=>c<pool.length).map(c=>[c,String(c)]).concat([[9999,'All '+pool.length],['c','Custom']]);
  const curCount=st.customCount?'c':st.count>=pool.length?9999:EX_COUNTS.includes(st.count)?st.count:'c',per=exSplit(n-Math.min(st.match||0,matchAvail(),n));
- const vsaMax=Math.min(n,pool.filter(vsaOK).length),preset=EX_PRESETS.findIndex(p=>p.count===st.count&&!!p.split===!!st.split&&(p.format||'one')===(st.format||'one')&&(p.vsa||0)===(st.vsa||0)&&(p.match||0)===(st.match||0)&&(p.secs||[]).join()===(st.secs||[]).join()&&JSON.stringify(p.quota||null)===JSON.stringify(st.quota||null)&&JSON.stringify(p.cases||null)===JSON.stringify(st.cases||null)&&(p.keepChs||(p.chs?st.chs.join()===chapters.filter(c=>p.chs.includes(c)).join():st.chs.length===chapters.length)));
+ const vsaMax=Math.min(n,pool.filter(vsaOK).length),preset=exPresetIdx(st);
  const mAv=matchAvail(),mN=Math.min(st.match||0,mAv,n);
  const past=(state.exams||[]).slice(-5).reverse();
  $('exbody').innerHTML='<p class="lede">A practice run with no hints and no answers until the end. Afterwards you get your score by '+unitW+' and can review every mistake. Wrong answers are added to your Missed '+ITEMS+'; questions you skip are not counted against you.</p>'+
@@ -1190,7 +1192,10 @@ function capPick(picked,pool){const caps=Object.assign({},CONFIG.examCaps,(CONFI
  for(const c of picked){if(capped(c)&&(cnt[c.cap]=(cnt[c.cap]||0)+1)>caps[c.cap])drop.push(c);else out.push(c)}
  const spare=shuffle(pool.filter(c=>!picked.includes(c)&&!capped(c)),rnd());
  drop.forEach(d=>{let i=spare.findIndex(c=>chOf(c.section)===chOf(d.section));if(i<0)i=0;if(spare.length)out.push(spare.splice(i,1)[0])});return out}
-function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;
+// which preset the setup matches (-1: none)
+function exPresetIdx(st){return EX_PRESETS.findIndex(p=>p.count===st.count&&!!p.split===!!st.split&&(p.format||'one')===(st.format||'one')&&(p.vsa||0)===(st.vsa||0)&&(p.match||0)===(st.match||0)&&(p.secs||[]).join()===(st.secs||[]).join()&&JSON.stringify(p.quota||null)===JSON.stringify(st.quota||null)&&JSON.stringify(p.cases||null)===JSON.stringify(st.cases||null)&&(p.keepChs||(p.chs?st.chs.join()===chapters.filter(c=>p.chs.includes(c)).join():st.chs.length===chapters.length)))}
+// the items of a mock exam: matching sets, the picked items, and the VSA ones (typed, at the end). Class challenges reuse it with a seeded RNG.
+function exPick(st,pool,n){
  const mq=buildMatch(Math.min(st.match||0,matchAvail(),n)),nm=n-mq.length;
  let picked=st.split&&st.chs.length>1?exSplit(nm).flatMap(([ch,k])=>shuffle(pool.filter(c=>chOf(c.section)===ch),rnd()).slice(0,k)):shuffle(pool,rnd()).slice(0,nm);
  if(st.cases){const used=new Set();picked=st.cases.flatMap(([ss,k])=>{const ids=shuffle([...new Set(pool.filter(c=>c.case&&ss.includes(c.section)).map(c=>c.case))],rnd()).filter(id=>!used.has(id)).slice(0,k);ids.forEach(i=>used.add(i));
@@ -1199,8 +1204,10 @@ function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.l
  picked=capPick(picked,pool);
  // VSA: take them from across the picked units and move them to the end, like the real test
  const want=Math.min(st.vsa||0,picked.length),vs=[];if(want){const ok=picked.filter(vsaOK),byU={};ok.forEach(c=>(byU[chOf(c.section)]=byU[chOf(c.section)]||[]).push(c));
-  const us=Object.keys(byU);let k=0;while(vs.length<want&&us.some(u=>byU[u].length)){const u=us[k++%us.length];if(byU[u].length)vs.push(byU[u].splice(Math.floor(Math.random()*byU[u].length),1)[0])}
+  const us=Object.keys(byU);let k=0;while(vs.length<want&&us.some(u=>byU[u].length)){const u=us[k++%us.length];if(byU[u].length)vs.push(byU[u].splice(rnd()%byU[u].length,1)[0])}
   if(vs.length<want){const more=shuffle(pool.filter(c=>vsaOK(c)&&!picked.includes(c)),rnd()).slice(0,want-vs.length);vs.push(...more);picked=picked.filter(c=>!vs.includes(c)).slice(0,nm-vs.length)}else picked=picked.filter(c=>!vs.includes(c))}
+ return {mq,picked,vs}}
+function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;const {mq,picked,vs}=exPick(st,pool,n);
  const easy=st.level==='easy'&&hasLevels();HARD=!easy;LONG=!easy;INEX=true;
  const qsBuilt=picked.map(c=>exQ(makeQuestion(c))).concat(mq,vs.map(c=>exQ(makeQuestion(c),true)));HARD=LONG=INEX=false;
  state.exam={qs:qsBuilt,easy:easy?1:0,
@@ -1325,7 +1332,7 @@ function drawMatchSets(){
 const CH_COUNTS=[10,15,20];let chalOpen=false,chalSeed='',chalN=15;
 const LINK_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>';
 function readChallenge(){const h=location.hash.replace(/^#/,'');if(!/^challenge=/.test(h))return null;const p=new URLSearchParams(h),list=k=>(p.get(k)||'').split(',').filter(Boolean);
- const c={by:(p.get('by')||'').slice(0,40),sc:Math.max(0,Math.min(100,+p.get('sc')||0)),tm:Math.max(0,+p.get('tm')||0),seed:(p.get('challenge')||'').slice(0,24),chs:list('ch'),n:Math.max(1,Math.min(100,+p.get('n')||15)),t:p.get('t')==='1'||+p.get('m')>0,m:Math.max(0,Math.min(300,Math.round(+p.get('m'))||0)),bank:p.get('bank')||'main',o:list('o'),x:p.get('x')!=='0',v:p.get('v')||''};
+ const c={by:(p.get('by')||'').slice(0,40),sc:Math.max(0,Math.min(100,+p.get('sc')||0)),tm:Math.max(0,+p.get('tm')||0),seed:(p.get('challenge')||'').slice(0,24),chs:list('ch'),n:Math.max(1,Math.min(100,+p.get('n')||15)),t:p.get('t')==='1'||+p.get('m')>0,m:Math.max(0,Math.min(300,Math.round(+p.get('m'))||0)),bank:p.get('bank')||'main',o:list('o'),x:p.get('x')!=='0',v:p.get('v')||'',pr:/^\d+$/.test(p.get('p')||'')?+p.get('p'):null};
  return c.seed?c:null}
 // Opening a challenge link: show its intro, or simply resume it if it is the one in progress.
 function takeLink(){const c=readChallenge();if(!c)return false;const ex=state.exam;
@@ -1338,7 +1345,7 @@ function chalRaw(c){const b=BANKS.find(x=>x.id===c.bank);if(!b)return null;
 function chalPool(c){const raw=chalRaw(c);if(!raw)return null;const sk=CONFIG.challengeSkip||{},caps=sk.caps||[],secs=sk.sections||[];
  const f=raw.filter(it=>!caps.includes(it.cap)&&!secs.includes(it.section));return c.v&&c.v!==poolSig(f)&&c.v===poolSig(raw)?raw:f}
 const poolSig=pool=>stableHash(pool.map(c=>c.id).join('|')).toString(36).slice(0,5);
-const chalKey=c=>[c.seed,c.bank,c.chs.join('.'),c.n,c.o.join('.'),c.x?1:0].join('/');
+const chalKey=c=>[c.seed,c.bank,c.chs.join('.'),c.n,c.o.join('.'),c.x?1:0].join('/')+(c.pr!=null?'/p'+c.pr:'');
 function chalLabel(c){const m=c.seed.match(/^(\d{4})(\d{2})(\d{2})(.*)$/);if(!m)return 'Class challenge';
  return 'Class challenge · '+new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString(undefined,{month:'short',day:'numeric'})+(m[4]?' ('+m[4].toUpperCase()+')':'')}
 function chsText(chs){const all=Object.keys(COURSE_CH);if(chs.length>1&&chs.length===all.length&&all.every(c=>chs.includes(c)))return 'all '+unitsW;
@@ -1346,10 +1353,12 @@ function chsText(chs){const all=Object.keys(COURSE_CH);if(chs.length>1&&chs.leng
 // Links point at the website. A file opened from the device uses CONFIG.shareUrl (the same course online) if set.
 function shareBase(){if(/^https?:$/.test(location.protocol)){const c=new URLSearchParams(location.search).get('course');return location.origin+location.pathname+(c?'?course='+encodeURIComponent(c):'')}return CONFIG.shareUrl||''}
 function chalLink(c){const b=shareBase();if(!b)return '';
- return b+'#challenge='+encodeURIComponent(c.seed)+'&ch='+c.chs.join(',')+'&n='+c.n+(c.m?'&m='+c.m:c.t?'&t=1':'')+(c.bank!=='main'?'&bank='+encodeURIComponent(c.bank):'')+(c.o.length?'&o='+c.o.join(','):'')+(c.x?'':'&x=0')+'&v='+c.v}
+ return b+'#challenge='+encodeURIComponent(c.seed)+'&ch='+c.chs.join(',')+'&n='+c.n+(c.m?'&m='+c.m:c.t?'&t=1':'')+(c.bank!=='main'?'&bank='+encodeURIComponent(c.bank):'')+(c.o.length?'&o='+c.o.join(','):'')+(c.x?'':'&x=0')+(c.pr!=null?'&p='+c.pr:'')+'&v='+c.v}
 const todaySeed=()=>{const d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
 // Today's link is the same for anyone who picks the same topics and length; "Different questions" adds a letter.
-function chalDraft(){const st=exSetup(),c={seed:chalSeed.startsWith(todaySeed())?chalSeed:todaySeed(),chs:st.chs.slice(),n:chalN,t:!!st.timer,m:typeof st.timer==='number'?st.timer:0,bank:state.bank,o:Object.keys(OPT).filter(optOn),x:!!state.prefs.extras,v:''};
+function chalDraft(){const st=exSetup(),c={seed:chalSeed.startsWith(todaySeed())?chalSeed:todaySeed(),chs:st.chs.slice(),n:chalN,t:!!st.timer,m:typeof st.timer==='number'?st.timer:0,bank:state.bank,o:Object.keys(OPT).filter(optOn),x:!!state.prefs.extras,v:'',pr:null};
+ // v82: with a preset picked on the exam page (main bank), the challenge follows that preset's rules and length
+ const pi=state.bank==='main'?exPresetIdx(st):-1;if(pi>=0){c.pr=pi;c.n=EX_PRESETS[pi].count}
  const pool=chalPool(c)||[];c.n=Math.min(c.n,pool.length);c.v=poolSig(pool);return c}
 function toggleChal(){chalOpen=!chalOpen;drawExam()}
 function setChalN(v){chalN=v;drawExam()}
@@ -1357,7 +1366,7 @@ function newChalSeed(){const m=chalDraft().seed.match(/^\d{8}([a-y]?)$/);chalSee
 function chalBoxHTML(){const c=chalDraft(),P=(chalPool(c)||[]).length,link=chalLink(c),ub=bankObj().user;
  const opts=CH_COUNTS.filter(x=>x<P).map(x=>[x,String(x)]);if(P<=CH_COUNTS[CH_COUNTS.length-1])opts.push([P,'All '+P]);
  return '<div class="chalbox"><p class="chalnote" style="margin:0 0 12px">Everyone who opens the link gets the same '+ITEMS+' in the same order, from the '+unitsW+' picked above'+(c.t?', with the timer':'')+'. Finish, copy your score and compare in your group chat.</p>'+
-  (link?'<div class="chalrow"><span>Questions</span>'+segHTML('setChalN',opts,c.n,'Challenge length')+'</div>'+
+  (link?(c.pr!=null?'<div class="chalrow"><span>Rules</span><span class="chalrules">Same as Take exam with <b>'+esc(EX_PRESETS[c.pr].label)+'</b> ('+c.n+' '+ITEMS+')</span></div>':'<div class="chalrow"><span>Questions</span>'+segHTML('setChalN',opts,c.n,'Challenge length')+'</div>')+
    '<div class="chalbar"><input class="txt chalurl" readonly value="'+esc(link)+'" onclick="this.select()" aria-label="Challenge link"><button class="btn sm" onclick="copyChalLink(chalDraft())">Copy link</button><button class="btn sm primary" onclick="startChallenge(chalDraft())">Take it now</button></div>'+
    '<p class="chalfoot">'+esc(chalLabel(c))+' · <button class="link" onclick="newChalSeed()">Different questions</button></p>'+
    (ub?'<p class="chalwarn">This uses your own set “'+esc(bankObj().name)+'”. Classmates need it too: Export it in Personalize and send them the file.</p>':'')
@@ -1374,10 +1383,17 @@ function drawChalIntro(){const c=CHAL,b=BANKS.find(x=>x.id===c.bank),pool=b?chal
   (busy?'<p class="chalwarn">Starting replaces the '+(ex.chal?'challenge':'mock exam')+' you have in progress.</p>':'')+
   '<div class="exacts"><button class="btn primary" onclick="startChallenge(CHAL)">Start challenge</button><button class="btn" onclick="dismissChallenge()">Not now</button></div>')}
 function dismissChallenge(){CHAL=null;clearHash();draw();window.scrollTo(0,0)}
-function startChallenge(c){const pool=chalPool(c)||[],n=Math.min(c.n,pool.length);if(!n)return;const fx={seed:c.seed,items:pool};
- HARD=true;const chQs=shuffle(pool,stableHash('order|'+c.seed)).slice(0,n).map(it=>exQ(makeQuestion(it,fx)));HARD=false;
+function startChallenge(c){const pool=chalPool(c)||[];let n=Math.min(c.n,pool.length);if(!n)return;const fx={seed:c.seed,items:pool};
+ // v82: &p=<preset> builds the exam exactly like Take exam with that preset (quota, caps, VSA at the end), seeded by the link.
+ // Links without it keep the old pick (a seeded shuffle of the whole pool).
+ const P=c.pr!=null&&c.bank==='main'?EX_PRESETS[c.pr]:null;let picked,vs=[];
+ if(P){const st={count:c.n,chs:c.chs.filter(ch=>chapters.includes(ch)),secs:P.secs||null,quota:P.quota||null,cases:P.cases||null,split:!!P.split,format:P.format,vsa:P.vsa||0,match:0,timer:true};if(!st.chs.length)st.chs=chapters.slice();
+  const ep=exPoolOf(pool,st);n=Math.min(c.n,ep.length);if(!n)return;let i=0;RNG=()=>(stableHash('pick|'+c.seed+'|'+(i++))>>>0)||1;
+  const keep=state.exSetup;state.exSetup=st;try{({picked,vs}=exPick(st,ep,n))}finally{state.exSetup=keep;RNG=null}}
+ else picked=shuffle(pool,stableHash('order|'+c.seed)).slice(0,n);
+ HARD=true;LONG=!!P;const chQs=picked.map(it=>exQ(makeQuestion(it,fx))).concat(vs.map(it=>exQ(makeQuestion(it,fx),true)));HARD=LONG=false;
  state.exam={qs:chQs,
-  ans:{},i:0,start:Date.now(),limit:(c.m?c.m:c.t?n:0)*60000,done:false,sheet:exSetup().format==='sheet'||undefined,chal:Object.assign({},c,{key:chalKey(c),label:chalLabel(c)})};
+  ans:{},i:0,start:Date.now(),limit:(c.m?c.m:c.t?n:0)*60000,done:false,sheet:(P?P.format:exSetup().format)==='sheet'||undefined,paperless:P&&P.format==='paperless'||undefined,chal:Object.assign({},c,{key:chalKey(c),label:chalLabel(c)})};
  CHAL=null;chalOpen=false;clearHash();page='exam';state.page='exam';save();draw();window.scrollTo(0,0)}
 const squares=ex=>ex.qs.map((q,j)=>ex.ans[j]==null||ex.ans[j]===''?'⬜':exOK(q,ex.ans[j])?'🟩':'🟥').join('');
 function copyChalScore(){const ex=state.exam,C=ex&&ex.chal;if(!C)return;const n=ex.qs.length,link=chalLink(C);
