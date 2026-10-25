@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='82',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='83',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -226,7 +226,8 @@ const examAll=e=>!e.chapters&&!e.sections;
 // A set's own topic groups (not course chapters) are always in scope.
 const inScopeCh=ch=>{const e=examObj();ch=String(ch);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).some(x=>chOf(x)===ch)};
 const inScope=sec=>{const e=examObj(),ch=chOf(sec);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).includes(sec)};
-const bankItems=b=>b.items.filter(c=>!c.retired&&(state.prefs.extras||!c.extra)&&secOn(c.section)&&inScope(c.section));
+// xo: exam-only items (e.g. Pharma's VSAs): never in practice, only filling a mock exam's VSA slots (v83)
+const bankItems=b=>b.items.filter(c=>!c.retired&&!c.xo&&(state.prefs.extras||!c.extra)&&secOn(c.section)&&inScope(c.section));
 function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(s==='CLASS'&&classOn())||(s==='CRAM'&&cramOn())||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
 function refreshBank(){PV++;const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
  sectionKeys=ALL_SECTIONS.filter(k=>BANK.some(c=>c.section===k));
@@ -1195,19 +1196,22 @@ function capPick(picked,pool){const caps=Object.assign({},CONFIG.examCaps,(CONFI
 // which preset the setup matches (-1: none)
 function exPresetIdx(st){return EX_PRESETS.findIndex(p=>p.count===st.count&&!!p.split===!!st.split&&(p.format||'one')===(st.format||'one')&&(p.vsa||0)===(st.vsa||0)&&(p.match||0)===(st.match||0)&&(p.secs||[]).join()===(st.secs||[]).join()&&JSON.stringify(p.quota||null)===JSON.stringify(st.quota||null)&&JSON.stringify(p.cases||null)===JSON.stringify(st.cases||null)&&(p.keepChs||(p.chs?st.chs.join()===chapters.filter(c=>p.chs.includes(c)).join():st.chs.length===chapters.length)))}
 // the items of a mock exam: matching sets, the picked items, and the VSA ones (typed, at the end). Class challenges reuse it with a seeded RNG.
-function exPick(st,pool,n){
+function exPick(st,pool,n,xo){
+ // CONFIG.vsaOwn (v83): VSA slots are filled only from identification items (written to be typed; xo = exam-only ones), which never take a choice slot
+ const own=!!CONFIG.vsaOwn,ids=own?(xo&&xo.length?xo:pool).filter(isIdent):[];if(own)pool=pool.filter(c=>!isIdent(c));
  const mq=buildMatch(Math.min(st.match||0,matchAvail(),n)),nm=n-mq.length;
  let picked=st.split&&st.chs.length>1?exSplit(nm).flatMap(([ch,k])=>shuffle(pool.filter(c=>chOf(c.section)===ch),rnd()).slice(0,k)):shuffle(pool,rnd()).slice(0,nm);
  if(st.cases){const used=new Set();picked=st.cases.flatMap(([ss,k])=>{const ids=shuffle([...new Set(pool.filter(c=>c.case&&ss.includes(c.section)).map(c=>c.case))],rnd()).filter(id=>!used.has(id)).slice(0,k);ids.forEach(i=>used.add(i));
   return ids.flatMap(id=>pool.filter(c=>c.case===id).sort((a,b)=>(a.part||0)-(b.part||0)))})}
  else if(st.quota)picked=st.quota.flatMap(([ss,k])=>shuffle(pool.filter(c=>ss.includes(c.section)),rnd()).slice(0,k)).slice(0,nm);
  picked=capPick(picked,pool);
+ if(own){const want=Math.min(st.vsa||0,ids.length,nm),vs=shuffle(ids,rnd()).slice(0,want);return {mq,picked:picked.slice(0,nm-vs.length),vs}}
  // VSA: take them from across the picked units and move them to the end, like the real test
  const want=Math.min(st.vsa||0,picked.length),vs=[];if(want){const ok=picked.filter(vsaOK),byU={};ok.forEach(c=>(byU[chOf(c.section)]=byU[chOf(c.section)]||[]).push(c));
   const us=Object.keys(byU);let k=0;while(vs.length<want&&us.some(u=>byU[u].length)){const u=us[k++%us.length];if(byU[u].length)vs.push(byU[u].splice(rnd()%byU[u].length,1)[0])}
   if(vs.length<want){const more=shuffle(pool.filter(c=>vsaOK(c)&&!picked.includes(c)),rnd()).slice(0,want-vs.length);vs.push(...more);picked=picked.filter(c=>!vs.includes(c)).slice(0,nm-vs.length)}else picked=picked.filter(c=>!vs.includes(c))}
  return {mq,picked,vs}}
-function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;const {mq,picked,vs}=exPick(st,pool,n);
+function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;const {mq,picked,vs}=exPick(st,pool,n,exPoolOf(bankObj().items.filter(c=>c.xo&&!c.retired),st));
  const easy=st.level==='easy'&&hasLevels();HARD=!easy;LONG=!easy;INEX=true;
  const qsBuilt=picked.map(c=>exQ(makeQuestion(c))).concat(mq,vs.map(c=>exQ(makeQuestion(c),true)));HARD=LONG=INEX=false;
  state.exam={qs:qsBuilt,easy:easy?1:0,
@@ -1339,7 +1343,7 @@ function takeLink(){const c=readChallenge();if(!c)return false;const ex=state.ex
  if(ex&&!ex.done&&ex.chal&&ex.chal.key===chalKey(c)){CHAL=null;clearHash()}else CHAL=c;page='exam';return true}
 function clearHash(){if(/^#challenge=/.test(location.hash))try{history.replaceState(history.state,'',location.pathname+location.search)}catch(e){location.hash=''}}
 function chalRaw(c){const b=BANKS.find(x=>x.id===c.bank);if(!b)return null;
- return b.items.filter(it=>(!c.chs.length||c.chs.includes(chOf(it.section)))&&(c.x||!it.extra)&&(!OPT[it.section]||c.o.includes(it.section)))}
+ return b.items.filter(it=>!it.xo&&(!c.chs.length||c.chs.includes(chOf(it.section)))&&(c.x||!it.extra)&&(!OPT[it.section]||c.o.includes(it.section)))}
 // v81: CONFIG.challengeSkip {caps, sections} keeps items out of challenges (Pharma: no true/false, nothing he didn't teach).
 // A link made before that (its pool check matches the unfiltered pool) keeps its old questions, so everyone still gets the same set.
 function chalPool(c){const raw=chalRaw(c);if(!raw)return null;const sk=CONFIG.challengeSkip||{},caps=sk.caps||[],secs=sk.sections||[];
@@ -1389,7 +1393,7 @@ function startChallenge(c){const pool=chalPool(c)||[];let n=Math.min(c.n,pool.le
  const P=c.pr!=null&&c.bank==='main'?EX_PRESETS[c.pr]:null;let picked,vs=[];
  if(P){const st={count:c.n,chs:c.chs.filter(ch=>chapters.includes(ch)),secs:P.secs||null,quota:P.quota||null,cases:P.cases||null,split:!!P.split,format:P.format,vsa:P.vsa||0,match:0,timer:true};if(!st.chs.length)st.chs=chapters.slice();
   const ep=exPoolOf(pool,st);n=Math.min(c.n,ep.length);if(!n)return;let i=0;RNG=()=>(stableHash('pick|'+c.seed+'|'+(i++))>>>0)||1;
-  const keep=state.exSetup;state.exSetup=st;try{({picked,vs}=exPick(st,ep,n))}finally{state.exSetup=keep;RNG=null}}
+  const keep=state.exSetup;state.exSetup=st;try{({picked,vs}=exPick(st,ep,n,exPoolOf(BANKS[0].items.filter(c=>c.xo),st)))}finally{state.exSetup=keep;RNG=null}}
  else picked=shuffle(pool,stableHash('order|'+c.seed)).slice(0,n);
  HARD=true;LONG=!!P;const chQs=picked.map(it=>exQ(makeQuestion(it,fx))).concat(vs.map(it=>exQ(makeQuestion(it,fx),true)));HARD=LONG=false;
  state.exam={qs:chQs,
