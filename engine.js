@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='76',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='77',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -596,7 +596,7 @@ function chChips(keys,cur,fn){if(keys.length<2)return '';const isN=k=>/^\d/.test
  const b=(k,t,tip,cls)=>'<button class="fchip'+(cls||'')+(k===cur?' on':'')+'" aria-pressed="'+(k===cur)+'"'+(tip?' title="'+tip+'" aria-label="'+tip+'"':'')+' onclick="'+fn+'(\''+k+'\')">'+t+'</button>';
  return b('all','All')+keys.filter(k=>!isN(k)).map(k=>b(k,esc(String(CH_NAMES[k]||k).split(':')[0]),esc(CH_NAMES[k]||''))).join('')+
   (compact?'<span class="chiplbl">'+esc(UNIT)+'</span>'+nums.map(k=>b(k,esc(k),esc(UNIT+' '+k+' · '+(CH_NAMES[k]||'')),' num')).join('')
-   :nums.map(k=>b(k,esc(UNIT)+' '+esc(k)+' · '+esc(CH_NAMES[k]||''))).join(''))}
+   :nums.map(k=>b(k,esc(UNIT)+' '+esc(k)+'<span class="chn"> · '+esc(CH_NAMES[k]||'')+'</span>',esc(UNIT+' '+k+' · '+(CH_NAMES[k]||'')),' named')).join(''))}
 // A run of underscores in a question is a blank to fill in: draw it as one solid line.
 function stemHTML(s){return esc(s).replace(/_{2,}/g,'<span class="blank" role="img" aria-label="blank"></span>')}
 function navHTML(){if(NOTES_ONLY)return '';
@@ -1841,10 +1841,12 @@ function openNews(){toggleNav(false);const last=newsLast(),box=$('news').querySe
 function closeNews(){$('news').hidden=true;ovClosed('news')}
 
 /* ---------- reference charts ---------- */
+// v77: a chart may name its chapters (ch); it's shown only when one of them is in the test you're studying for.
+const chartList=()=>{const L=CHART_DATA.filter(c=>!c.ch||[].concat(c.ch).some(inScopeCh));return L.length?L:CHART_DATA};
 function chartsOn(){return CHART_DATA.length>0&&state.prefs.charts}
-function drawCharts(){$('chtabs').hidden=CHART_DATA.length<2;
- $('chtabs').innerHTML=CHART_DATA.map((c,i)=>'<button role="tab" aria-selected="'+(i===chartTab)+'" class="'+(i===chartTab?'on':'')+'" onclick="chartTab='+i+';drawCharts()">'+esc(c.title)+'</button>').join('');
- $('chbody').innerHTML=CHART_DATA[chartTab].html;$('chh').textContent=CHART_DATA.length<2?CHART_DATA[0].title:'Charts'}
+function drawCharts(){const CL=chartList();if(chartTab>=CL.length)chartTab=0;$('chtabs').hidden=CL.length<2;
+ $('chtabs').innerHTML=CL.map((c,i)=>'<button role="tab" aria-selected="'+(i===chartTab)+'" class="'+(i===chartTab?'on':'')+'" onclick="chartTab='+i+';drawCharts()">'+esc(c.title)+'</button>').join('');
+ $('chbody').innerHTML=CL[chartTab].html;$('chh').textContent=CL.length<2?CL[0].title:'Charts'}
 function openCharts(){if(!CHART_DATA.length)return;drawCharts();cwApply();$('charts').hidden=false;ovOpen('charts',closeCharts);if(!(CW&&CW.on))$('charts').querySelector('.close').focus({preventScroll:true})}
 /* Floating charts: drag the title bar to move, the corner to resize; the page underneath stays usable.
    Position, size and floating on/off are remembered on this device (shared by all courses). */
@@ -1852,7 +1854,7 @@ const CWKEY='reviewer_chartwin';let CW=null;try{CW=JSON.parse(localStorage.getIt
 function cwSave(){try{localStorage.setItem(CWKEY,JSON.stringify(CW))}catch(e){}}
 function cwDefault(){const m=innerWidth<640,w=m?innerWidth-16:Math.min(560,innerWidth-32),h=Math.min(m?280:380,innerHeight-130);const L=($('main')||document.body).getBoundingClientRect().left;return {x:m?8:Math.max(16,Math.min(L+24,innerWidth-w-20)),y:m?84:innerHeight-h-20,w,h}}
 // Keep the title bar reachable: at least 120px of the window stays on screen sideways, and the bar never leaves the top/bottom.
-function cwClamp(){CW.w=Math.max(240,Math.min(CW.w,innerWidth-8));CW.h=Math.max(150,Math.min(CW.h,innerHeight-8));CW.x=Math.max(120-CW.w,Math.min(CW.x,innerWidth-120));CW.y=Math.max(0,Math.min(CW.y,innerHeight-48))}
+function cwClamp(){CW.w=Math.max(240,Math.min(CW.w,innerWidth-8));CW.h=Math.max(150,Math.min(CW.h,innerHeight-8));CW.x=innerWidth<640?Math.max(4,Math.min(CW.x,innerWidth-CW.w-4)):Math.max(120-CW.w,Math.min(CW.x,innerWidth-120));CW.y=Math.max(0,Math.min(CW.y,innerHeight-48))}
 function cwApply(){const b=$('charts').querySelector('.chartbox'),on=!!(CW&&CW.on),p=$('chpin');$('charts').classList.toggle('floating',on);
  p.textContent=on?'Dock':'Float';p.setAttribute('aria-pressed',on);p.title=on?'Back to a normal pop-up':'Float: move and resize the chart, and keep answering underneath';
  if(!on){b.style.left=b.style.top=b.style.width=b.style.height='';return}cwClamp();b.style.left=CW.x+'px';b.style.top=CW.y+'px';b.style.width=CW.w+'px';b.style.height=CW.h+'px'}

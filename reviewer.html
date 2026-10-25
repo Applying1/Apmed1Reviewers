@@ -434,6 +434,8 @@ h1{font-size:clamp(24px,2.8vw,31px)}
 .lede{color:var(--mute);margin:10px 0 0;max-width:68ch}
 .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:20px 0 18px}
 .fchips{display:flex;flex-wrap:wrap;gap:6px}
+.fchip.named{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:620px){.fchip.named .chn{display:none}}
 .fchip{border:1px solid var(--line2);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:500;color:var(--mute);transition:background .15s,color .15s,border-color .15s}
 .fchip:hover{color:var(--text)}
 .fchip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
