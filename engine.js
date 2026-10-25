@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='80',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='81',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1331,8 +1331,12 @@ function readChallenge(){const h=location.hash.replace(/^#/,'');if(!/^challenge=
 function takeLink(){const c=readChallenge();if(!c)return false;const ex=state.exam;
  if(ex&&!ex.done&&ex.chal&&ex.chal.key===chalKey(c)){CHAL=null;clearHash()}else CHAL=c;page='exam';return true}
 function clearHash(){if(/^#challenge=/.test(location.hash))try{history.replaceState(history.state,'',location.pathname+location.search)}catch(e){location.hash=''}}
-function chalPool(c){const b=BANKS.find(x=>x.id===c.bank);if(!b)return null;
+function chalRaw(c){const b=BANKS.find(x=>x.id===c.bank);if(!b)return null;
  return b.items.filter(it=>(!c.chs.length||c.chs.includes(chOf(it.section)))&&(c.x||!it.extra)&&(!OPT[it.section]||c.o.includes(it.section)))}
+// v81: CONFIG.challengeSkip {caps, sections} keeps items out of challenges (Pharma: no true/false, nothing he didn't teach).
+// A link made before that (its pool check matches the unfiltered pool) keeps its old questions, so everyone still gets the same set.
+function chalPool(c){const raw=chalRaw(c);if(!raw)return null;const sk=CONFIG.challengeSkip||{},caps=sk.caps||[],secs=sk.sections||[];
+ const f=raw.filter(it=>!caps.includes(it.cap)&&!secs.includes(it.section));return c.v&&c.v!==poolSig(f)&&c.v===poolSig(raw)?raw:f}
 const poolSig=pool=>stableHash(pool.map(c=>c.id).join('|')).toString(36).slice(0,5);
 const chalKey=c=>[c.seed,c.bank,c.chs.join('.'),c.n,c.o.join('.'),c.x?1:0].join('/');
 function chalLabel(c){const m=c.seed.match(/^(\d{4})(\d{2})(\d{2})(.*)$/);if(!m)return 'Class challenge';
