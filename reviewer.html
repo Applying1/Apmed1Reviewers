@@ -833,6 +833,9 @@ body.notesonly .side>.label,body.notesonly #nav{display:none}
 /* Charts can float: a movable, resizable window you can keep open while answering */
 .chhead .chfloat{margin-left:auto}
 .chhead .chfloat+.close{margin-left:0}
+.chhead .chfloat{order:1}.chhead .close{order:2}
+#chtabs{order:3;flex:1 0 100%;display:flex;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scrollbar-width:thin;min-width:0}
+#chtabs button{flex:none;white-space:nowrap}
 .chgrip{display:none}
 #charts.floating{background:none;pointer-events:none;padding:0;display:block}
 #charts.floating .chartbox{pointer-events:auto;position:fixed;margin:0;max-width:none;max-height:none;display:flex;flex-direction:column;overflow:hidden;padding:0;box-shadow:0 16px 48px #0008,0 0 0 1px var(--line2)}
