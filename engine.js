@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='83',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='84',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -216,6 +216,8 @@ const bankObj=()=>BANKS.find(b=>b.id===state.bank)||BANKS[0];
 const OPT=CONFIG.optionalSections||{};
 const optOn=k=>state.prefs.opt&&k in state.prefs.opt?!!state.prefs.opt[k]:!!(OPT[k]&&OPT[k].on);
 const secOn=k=>!k||!OPT[k]||optOn(k);
+// exam:true (v84): hidden from practice unless switched on, but the mock exam and class challenges always use it (Pharma's Eval Cases)
+const optExam=k=>!!(OPT[k]&&OPT[k].exam);
 /* Exam scope: CONFIG.exams = [{id, name, chapters?, sections?, date?}], CONFIG.activeExam = the next test.
    An exam without chapters or sections covers everything. Students can switch in the sidebar ("All <units>" too);
    when the author changes activeExam (say Midterm → Finals), everyone is moved to it once. */
@@ -1121,7 +1123,9 @@ const exMinutes=(st,n)=>typeof st.timer==='number'?st.timer:st.timer?Math.round(
 const EX_PRESETS=CONFIG.examPresets||[{label:'Paperless · 30 items, split per '+unitW,count:30,split:true,format:'paperless',vsa:0}];
 function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters.slice(),timer:true});if(st.vsa==null)st.vsa=0;st.chs=st.chs.filter(c=>chapters.includes(c));if(!st.chs.length)st.chs=chapters.slice();return st}
 function exPoolOf(items,st){const qs=st.quota&&st.quota.flatMap(q=>q[0]);return items.filter(c=>st.chs.includes(chOf(c.section))&&(!st.secs||st.secs.includes(c.section))&&(!qs||qs.includes(c.section)))}
-function exPool(){return exPoolOf(BANK,exSetup())}
+function exItems(){const b=bankObj();if(b.user)return BANK;const have=new Set(BANK.map(c=>c.id));
+ return BANK.concat(b.items.filter(c=>!have.has(c.id)&&!c.retired&&!c.xo&&optExam(c.section)&&inScope(c.section)&&(state.prefs.extras||!c.extra)))}
+function exPool(){return exPoolOf(exItems(),exSetup())}
 function exLeft(){const ex=state.exam;return ex.limit?ex.start+ex.limit-Date.now():Infinity}
 function clock(ms){const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
 function drawExam(){const ex=state.exam,C=CHAL||ex&&ex.chal,run=!CHAL&&!!ex&&!ex.done;if(typeof drawTabbar==='function')drawTabbar();$('examView').classList.toggle('running',run);if(run)requestAnimationFrame(()=>{const t=$('examView').querySelector('.top');if(t)$('examView').style.setProperty('--exhead',t.offsetHeight+'px')});$('main').classList.toggle('wide',!CHAL&&!!ex&&!!ex.sheet&&!ex.done);document.title=(C?'Class challenge':'Mock exam')+' · '+CONFIG.title;$('excrumb').textContent=C?'Class challenge':'Mock exam';
@@ -1343,7 +1347,7 @@ function takeLink(){const c=readChallenge();if(!c)return false;const ex=state.ex
  if(ex&&!ex.done&&ex.chal&&ex.chal.key===chalKey(c)){CHAL=null;clearHash()}else CHAL=c;page='exam';return true}
 function clearHash(){if(/^#challenge=/.test(location.hash))try{history.replaceState(history.state,'',location.pathname+location.search)}catch(e){location.hash=''}}
 function chalRaw(c){const b=BANKS.find(x=>x.id===c.bank);if(!b)return null;
- return b.items.filter(it=>!it.xo&&(!c.chs.length||c.chs.includes(chOf(it.section)))&&(c.x||!it.extra)&&(!OPT[it.section]||c.o.includes(it.section)))}
+ return b.items.filter(it=>!it.xo&&(!c.chs.length||c.chs.includes(chOf(it.section)))&&(c.x||!it.extra)&&(!OPT[it.section]||optExam(it.section)||c.o.includes(it.section)))}
 // v81: CONFIG.challengeSkip {caps, sections} keeps items out of challenges (Pharma: no true/false, nothing he didn't teach).
 // A link made before that (its pool check matches the unfiltered pool) keeps its old questions, so everyone still gets the same set.
 function chalPool(c){const raw=chalRaw(c);if(!raw)return null;const sk=CONFIG.challengeSkip||{},caps=sk.caps||[],secs=sk.sections||[];
