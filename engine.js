@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='86',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='87',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -292,7 +292,7 @@ function flushSave(){if(!saveQ)return;saveQ=false;
 // the home page can show the right percent after the course's exam changes, without opening the course. It travels with
 // the synced progress too, so a newly signed-in device shows every course's progress on the home page at once.
 function summaryObj(){const main=bankItems(BANKS[0]),e=examObj(),id=courseId(),due=[],secs={};
- for(const c of BANKS[0].items){if(c.retired||!(state.prefs.extras||!c.extra)||!secOn(c.section))continue;const s=secs[c.section]||(secs[c.section]=[0,0]);s[1]++;if(isM(c))s[0]++}
+ for(const c of BANKS[0].items){if(c.retired||c.xo||!(state.prefs.extras||!c.extra)||!secOn(c.section))continue;const s=secs[c.section]||(secs[c.section]=[0,0]);s[1]++;if(isM(c))s[0]++}
  if(id&&state.prefs.srs)for(const c of main){const k=state.concepts[c.id];if(k&&k.srs&&isM(c))due.push(k.srs.due)}
  return Object.assign({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:'',secs,pick:state.prefs.scope||'',seen:state.prefs.scopeSeen||''},id?{id,title:CONFIG.title,due:due.sort((a,b)=>a-b).slice(0,400)}:{})}
 addEventListener('pagehide',flushSave);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSave()});
