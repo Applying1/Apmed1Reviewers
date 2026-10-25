@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='77',APP_DATE='Oct 24, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='78',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -602,7 +602,7 @@ function stemHTML(s){return esc(s).replace(/_{2,}/g,'<span class="blank" role="i
 function navHTML(){if(NOTES_ONLY)return '';
  const study=page==='study',ap=progress('ALL'),aOn=state.section==='ALL'&&study;
  return '<button class="sec mixed '+(aOn?'on':'')+'" '+(aOn?'aria-current="page" ':'')+'onclick="selectSection(\'ALL\')"><span class="no">'+SHUFFLE+'</span><span class="nm">All '+unitsW+', shuffled</span><span class="ct">'+ap.done+'/'+ap.total+'</span></button>'+focusNav(study)+chapters.map(ch=>{const secs=sectionKeys.filter(k=>chOf(k)===ch),cp=chProgress(ch),wOn=state.section==='CH:'+ch&&study;
-  return '<details class="ch" '+(openCh.has(ch)?'open':'')+' ontoggle="chToggle(this,\''+ch+'\')"><summary>'+CHEV+'<span class="nm">'+ch+' · '+esc(CH_NAMES[ch])+'</span><span class="ct">'+secs.filter(completed).length+'/'+secs.length+'</span><span class="mini"><i style="width:'+(100*cp.done/cp.total)+'%"></i></span></summary><div class="secs">'+
+  return '<details class="ch'+(secs.some(x=>x.length>4)?' wide':'')+'" '+(openCh.has(ch)?'open':'')+' ontoggle="chToggle(this,\''+ch+'\')"><summary>'+CHEV+'<span class="nm">'+ch+' · '+esc(CH_NAMES[ch])+'</span><span class="ct">'+secs.filter(completed).length+'/'+secs.length+'</span><span class="mini"><i style="width:'+(100*cp.done/cp.total)+'%"></i></span></summary><div class="secs">'+
   '<button class="sec whole '+(wOn?'on ':'')+(cp.done===cp.total?'done':'')+'" '+(wOn?'aria-current="page" ':'')+'onclick="selectSection(\'CH:'+ch+'\')" title="Every '+ITEM+' in this '+unitW+', mixed into one quiz"><span class="no">'+LAYERS_SM+'</span><span class="nm">Entire '+unitW+'</span><span class="ct">'+(cp.done===cp.total?'✓':cp.done+'/'+cp.total)+'</span></button>'+
   secs.map(sec=>{let p=progress(sec),done=p.done===p.total,on=sec===state.section&&study;return '<button class="sec '+(on?'on ':'')+(done?'done':'')+'" '+(on?'aria-current="page" ':'')+'onclick="selectSection(\''+sec+'\')"><span class="no">'+sec+'</span><span class="nm">'+esc(SECTION_NAMES[sec])+'</span><span class="ct">'+(done?'✓':p.done+'/'+p.total)+'</span></button>'}).join('')+'</div></details>'}).join('');
 }
