@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='85',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='86',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1240,7 +1240,7 @@ function sheetHTML(ex){const n=ex.qs.length,done=Object.keys(ex.ans).length;
   (q.ident||q.self?'<p class="pqid">Write your answer on the answer sheet.</p>':q.mt?'':'<ol class="pch'+(molq(q)?' ich':'')+'">'+q.choices.map(x=>'<li><b>'+x.letter+'.</b>'+labelHTML(x.label)+'</li>').join('')+'</ol>')+'</section>').join('');
  const rows=ex.qs.map((q,j)=>'<div class="brow" id="br'+j+'"><button class="bn" onclick="sheetGo('+j+')" aria-label="Go to question '+(j+1)+'">'+(j+1)+'</button>'+
   (q.ident||q.self?'<input class="txt bt" value="'+esc(ex.ans[j]||'')+'" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer to question '+(j+1)+'" oninput="sheetType('+j+',this.value)">'
-   :q.choices.map(x=>'<button class="bub'+(ex.ans[j]===x.letter?' on':'')+'" data-l="'+x.letter+'" onclick="sheetPick('+j+',\''+x.letter+'\')" aria-pressed="'+(ex.ans[j]===x.letter)+'" aria-label="Question '+(j+1)+', '+x.letter+'">'+x.letter+'</button>').join(''))+'</div>').join('');
+   :[...LETTERS].slice(0,Math.max(5,q.choices.length)).map(l=>'<button class="bub'+(ex.ans[j]===l?' on':'')+'" data-l="'+l+'" onclick="sheetPick('+j+',\''+l+'\')" aria-pressed="'+(ex.ans[j]===l)+'" aria-label="Question '+(j+1)+', '+l+'">'+l+'</button>').join(''))+'</div>').join('');
  return '<div class="sheetwrap"><div class="paper"><p class="lede" style="margin:0 0 14px">Read the questions here and shade your answers on the answer sheet. Tap a question to find its row; tap a shaded bubble again to erase it.</p>'+paper+'</div>'+
   '<aside class="sheet" id="sheet" aria-label="Answer sheet"><button class="sheethead" onclick="$(\'sheet\').classList.toggle(\'open\')"><b>Answer sheet</b><span id="shct">'+done+' of '+n+' shaded</span></button><div class="bubbles">'+rows+'</div>'+
   '<div class="sheetacts"><button class="link danger" onclick="discardExam()">Discard</button><button class="btn primary" onclick="finishExam()">Submit</button></div></aside></div>'}
@@ -1306,7 +1306,7 @@ function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*
   (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">'+(ex.chal?'Done':'New exam')+'</button></div>'+
   (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.ident?null:q.choices.find(c=>c.letter===a);
    return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+(q.mt?exKind(q):esc(byId[q.cid].section))+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div>'+caseHTML(q.cid)+'<p class="exq">'+esc(q.stem)+'</p>'+figHTML(q.cid)+(q.wr&&a?wrCheck(a,byId[q.cid].wr).html:'')+
-    '<p class="exa bad"'+(q.wr?' style="white-space:pre-line"':'')+'><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?(q.wr?ansHTML(ok.label):esc(ok.label)):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+(mine&&!mine.correct&&whyNot(q.cid,mine.label)?'<p class="exwhy"><b>Why not your choice:</b> '+esc(whyNot(q.cid,mine.label))+'</p>':'')+stepsHTML(byId[q.cid])+'</article>'}).join('')+'</div>':'')}
+    '<p class="exa bad"'+(q.wr?' style="white-space:pre-line"':'')+'><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):a?esc(a)+' (not one of the choices)':'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?(q.wr?ansHTML(ok.label):esc(ok.label)):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+(mine&&!mine.correct&&whyNot(q.cid,mine.label)?'<p class="exwhy"><b>Why not your choice:</b> '+esc(whyNot(q.cid,mine.label))+'</p>':'')+stepsHTML(byId[q.cid])+'</article>'}).join('')+'</div>':'')}
 function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
 function newExam(){state.exam=null;save();draw();window.scrollTo(0,0)}
 function examKey(e){const ex=state.exam;if(!ex||ex.done||ex.sheet)return false;const k=e.key;
@@ -1795,7 +1795,7 @@ const CHANGELOG=[
  ...(CHART_DATA.length?[{v:'17',date:'Oct 17, 2026',title:'Floating charts',items:['<b>Charts → Float:</b> the chart becomes a window you can drag anywhere (by its top bar) and resize (from the corner), and you can keep answering underneath, even during a mock exam. It remembers where you left it. <b>Dock</b> puts it back.']}]:[]),
  ...(DOCS.length?[{v:'16',date:'Oct 17, 2026',title:'Full transes',items:['<b>Notes → Full transes</b> opens the complete transes (PDF) in a new tab, to read or download.']}]:[]),
  {v:'15',date:'Oct 17, 2026',title:'Answer sheet exams',items:[
-  '<b>Mock exam → Format → Answer sheet:</b> like the real exam. The whole test paper is on one page and you shade A–D on a separate answer sheet (beside the paper on a computer, a slide-up drawer on a phone). Tap a question to find its row; tap a shaded bubble again to erase it.']},
+  '<b>Mock exam → Format → Answer sheet:</b> like the real exam. The whole test paper is on one page and you shade A–E on a separate answer sheet (every row has A–E, like a printed sheet) (beside the paper on a computer, a slide-up drawer on a phone). Tap a question to find its row; tap a shaded bubble again to erase it.']},
  ...(cloudOn()?[{v:'14',date:'Oct 16, 2026',title:'Smoother sync',items:[
   'Sync now runs when you switch back to the tab or app, so there is no need to reload.',
   'Your devices continue on the <b>same question</b>: whichever you used last decides.',
