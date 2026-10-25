@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='79',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='80',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1185,7 +1185,8 @@ function setExFormat(v){const st=exSetup();st.format=v;if(v==='paperless')st.mat
 function setExMin(v){exSetup().timer=Math.max(1,Math.min(300,Math.round(+v)||1));save();drawExam()}
 // Some question types (e.g. BP categories) fill a lot of the bank but come out only once or twice in the real test:
 // CONFIG.examCaps {group: max} limits items with cap:group per mock exam; the freed slots go to other items of the same unit.
-function capPick(picked,pool){const caps=CONFIG.examCaps||{};if(!Object.keys(caps).length)return picked;const capped=c=>c.cap&&caps[c.cap]!=null,cnt={},out=[],drop=[];
+// CONFIG.examCapsFormat {format: {group: max}} overrides it for one format (v80: no true/false in Pharma's paperless evals).
+function capPick(picked,pool){const caps=Object.assign({},CONFIG.examCaps,(CONFIG.examCapsFormat||{})[exSetup().format||'one']);if(!Object.keys(caps).length)return picked;const capped=c=>c.cap&&caps[c.cap]!=null,cnt={},out=[],drop=[];
  for(const c of picked){if(capped(c)&&(cnt[c.cap]=(cnt[c.cap]||0)+1)>caps[c.cap])drop.push(c);else out.push(c)}
  const spare=shuffle(pool.filter(c=>!picked.includes(c)&&!capped(c)),rnd());
  drop.forEach(d=>{let i=spare.findIndex(c=>chOf(c.section)===chOf(d.section));if(i<0)i=0;if(spare.length)out.push(spare.splice(i,1)[0])});return out}
