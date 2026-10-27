@@ -398,5 +398,13 @@
   "title": "Pharma: Eval mock exam for Tuesday",
   "text": "The Eval mock exam now feels like his paperless evals: 7 new patient cases (work out the problem, then pick the drug or the next step), 6 lesson questions and 2 VSAs you type at the end, with no true or false. The cases and VSAs only appear in the mock exam (and class challenges made from it). To also practice the cases, turn on Personalize → Include Eval Cases in practice.",
   "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 48,
+  "date": "2026-10-27",
+  "type": "feature",
+  "title": "New address: apmed33.online + pink theme",
+  "text": "The site now lives at apmed33.online. If you're signed in with Google, your progress comes with you. Your streak, daily goal and notification settings now sync between devices too. New Sakura pink theme in Personalize → Appearance → Colors.",
+  "link": "index.html"
  }
 ]

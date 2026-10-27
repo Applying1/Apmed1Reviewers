@@ -291,7 +291,7 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
    '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?(pr.scope&&!(c.exam&&c.exam.name===pr.scope)?esc(pr.scope)+': ':'')+pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('')};
  drawCourses();
  window.COURSE_LIST=list;if(window.afterCourses)afterCourses(list);
- if(CLOUD&&getCode())pullSummaries(list);
+ if(CLOUD&&getCode()){pullSummaries(list);if(window.Daily&&Daily.sync)Daily.sync(rpc,getCode()).then(c=>{if(c&&window.drawToday)drawToday()})}
 })();
 // Offer the APMed '33 colors once (until the person picks Try it or No thanks). Same setting as Personalize → Appearance → Colors.
 function setPal(p){const d=document.documentElement;try{if(p){d.dataset.palette=p;localStorage.setItem('reviewer_palette',p)}else{delete d.dataset.palette;localStorage.removeItem('reviewer_palette')}}catch(e){}}

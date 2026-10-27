@@ -80,6 +80,33 @@
     return caches.open(META).then(c => c.put(new URL(DIGEST, location.href).href, new Response(body, { headers: { 'Content-Type': 'application/json' } }))).then(() => true).catch(() => false);
   };
   D.digestSoon = () => { clearTimeout(D.t); D.t = setTimeout(D.digest, 1200) };
+  // Site-wide settings sync (same sync code as the courses, row "_site"): streak days, goal, hidden, best,
+  // notification settings and read state. Themes and colors stay per device. A setting changed here since the
+  // last sync wins over the server copy; answers per day merge by taking the larger count.
+  const SS = 'reviewer_site_sync', NK = 'reviewer_notify', RK = 'reviewer_notify_read';
+  const jget = k => { try { return JSON.parse(localStorage.getItem(k)) } catch (e) { return null } };
+  const setSig = () => { const o = D.data(); return JSON.stringify([o.goal, !!o.hide, jget(NK)]) };
+  D.sync = (rpc, code) => {
+    if (!code || D.syncing) return Promise.resolve(false); D.syncing = true;
+    const last = jget(SS) || {}, mineAt = last.sig && setSig() !== last.sig ? Date.now() : (last.at || 0);   // first sync on a device: the account's settings win
+    return rpc('sync_get', { p_code: code, p_course: '_site' }).then(rows => {
+      const row = Array.isArray(rows) ? rows[0] : rows, r = (row && row.data) || {}, o = D.data(), before = JSON.stringify(o);
+      for (const k in r.days || {}) if ((r.days[k] || 0) > (o.days[k] || 0)) o.days[k] = r.days[k];
+      o.best = Math.max(o.best || 0, r.best || 0);
+      let at = r.at ? mineAt : (mineAt || Date.now());   // nothing on the server yet: this device's settings start it
+      if ((r.at || 0) > mineAt) {
+        at = r.at; if (GOALS.includes(r.goal)) o.goal = r.goal; if (r.hide) o.hide = true; else delete o.hide;
+        if (r.notify) { try { localStorage.setItem(NK, JSON.stringify(r.notify)) } catch (e) { } g.Notify && Notify.pushSync && Notify.pushSync() }
+      }
+      const rd = jget(RK) || {}; if ((r.read || 0) > (rd.last || 0)) { rd.last = r.read; try { localStorage.setItem(RK, JSON.stringify(rd)) } catch (e) { } }
+      const changed = JSON.stringify(o) !== before; if (changed) { put(o); D.digestSoon() }
+      const out = { v: 1, at, days: o.days, goal: o.goal, hide: !!o.hide, best: o.best || 0, notify: jget(NK), read: (jget(RK) || {}).last || 0 };
+      return rpc('sync_put', { p_code: code, p_course: '_site', p_data: out }).then(() => {
+        try { localStorage.setItem(SS, JSON.stringify({ sig: setSig(), at })) } catch (e) { }
+        return changed || (r.at || 0) > mineAt;
+      });
+    }).catch(() => false).finally(() => { D.syncing = false });
+  };
   // daily review reminder settings travel with the push subscription: Notify prefs .daily = {on, hour}
   D.HOURS = [[7, '7 AM'], [12, '12 noon'], [17, '5 PM'], [19, '7 PM'], [21, '9 PM']];
   D.rem = () => { const p = g.Notify ? Notify.prefs() : {}; return Object.assign({ on: false, hour: 19 }, p.daily || {}) };
