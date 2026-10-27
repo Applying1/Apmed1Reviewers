@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='88',APP_DATE='Oct 27, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='89',APP_DATE='Oct 27, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -641,7 +641,7 @@ function drawStudy(){
  if(state.active&&state.active.typed&&!state.feedback&&view==null&&!state.pmatch){const i=$('typed');if(i)i.focus({preventScroll:true})}
 
  const att=state.correct+state.wrong;
- $('stats').innerHTML='<span><b>'+state.correct+'</b>correct</span><span><b>'+state.wrong+'</b>wrong</span><span><b>'+Math.round(100*state.correct/Math.max(1,att))+'%</b>accuracy</span><span><b>'+sectionKeys.filter(completed).length+'/'+sectionKeys.length+'</b>sections done</span><span class="keys">A–'+LETTERS[NCHOICE-1]+' choose'+(state.prefs.crossout?' · Shift+letter cross out':'')+(state.prefs.stars?' · S star':'')+(state.prefs.flag?' · F flag':'')+' · Enter continue · ← → browse</span>';
+ $('stats').innerHTML='<span><b>'+state.correct+'</b>correct</span><span><b>'+state.wrong+'</b>wrong</span><span><b>'+Math.round(100*state.correct/Math.max(1,att))+'%</b>accuracy</span><span><b>'+sectionKeys.filter(completed).length+'/'+sectionKeys.length+'</b>sections done</span><span class="keys">A–'+LETTERS[NCHOICE-1]+' or 1–'+NCHOICE+' choose'+(state.prefs.crossout?' · Shift+letter cross out':'')+(state.prefs.stars?' · S star':'')+(state.prefs.flag?' · F flag':'')+' · Enter continue · ← → browse</span>';
 
  $('ccount').textContent=p.done+'/'+items.length;$('cword').textContent=Items;
  $('concepts').querySelector('summary').childNodes[2].textContent='in this '+(s==='ALL'?'shuffle':all?'review':ch?unitW:'section');
@@ -1310,7 +1310,7 @@ function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*
 function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
 function newExam(){state.exam=null;save();draw();window.scrollTo(0,0)}
 function examKey(e){const ex=state.exam;if(!ex||ex.done||ex.sheet)return false;const k=e.key;
- if(/^[a-e]$/i.test(k)){if(ex.qs[ex.i].ident)return false;const l=k.toUpperCase();if(ex.qs[ex.i].choices.some(c=>c.letter===l)){exAnswer(l);return true}return false}
+ if(/^[a-e1-5]$/i.test(k)){if(ex.qs[ex.i].ident||ex.qs[ex.i].self)return false;const l=/^[1-5]$/.test(k)?LETTERS[+k-1]:k.toUpperCase();if(ex.qs[ex.i].choices.some(c=>c.letter===l)){exAnswer(l);return true}return false}
  if(k==='ArrowLeft'){exGo(-1);return true}
  if(k==='ArrowRight'||(k==='Enter'&&e.target.tagName!=='BUTTON')){if(ex.i<ex.qs.length-1)exGo(1);else finishExam();return true}
  return false}
@@ -2226,10 +2226,10 @@ document.addEventListener('keydown',e=>{
  if(k==='ArrowLeft'){if(canBack()){goBack();e.preventDefault()}return}
  if(k==='ArrowRight'){if(view!=null){goForward();e.preventDefault()}return}
  const live=view==null&&!state.pmatch&&state.active;
- if(e.shiftKey&&/^[a-e]$/i.test(k)&&live&&!state.feedback&&state.prefs.crossout){const l=k.toUpperCase();if(state.active.choices.some(c=>c.letter===l)){strike(l);e.preventDefault()}return}
+ if(e.shiftKey&&(/^[a-e]$/i.test(k)||/^Digit[1-5]$/.test(e.code))&&live&&!state.feedback&&state.prefs.crossout){const l=/^Digit[1-5]$/.test(e.code)?LETTERS[+e.code.slice(-1)-1]:k.toUpperCase();if(state.active.choices.some(c=>c.letter===l)){strike(l);e.preventDefault()}return}
  if((k==='f'||k==='F')&&state.prefs.flag&&(view!=null||live)){flagQ(view!=null?'log':'live');e.preventDefault();return}
  if((k==='s'||k==='S')&&live&&state.prefs.stars){toggleStar();e.preventDefault();return}
- if(/^[a-e]$/i.test(k)&&view==null&&!state.pmatch&&state.active&&!state.feedback){const l=k.toUpperCase();if(state.active.choices.some(c=>c.letter===l)){answer(l);e.preventDefault()}return}
+ if(/^[a-e1-5]$/i.test(k)&&view==null&&!state.pmatch&&state.active&&!state.feedback){const l=/^[1-5]$/.test(k)?LETTERS[+k-1]:k.toUpperCase();if(state.active.choices.some(c=>c.letter===l)){answer(l);e.preventDefault()}return}
  if((k==='h'||k==='H')&&view==null&&!state.pmatch&&state.active&&!state.feedback)hint();
 });
 takeLink();
