@@ -8,7 +8,7 @@ const CACHE = 'reviewers-v14';
 const FRESH = 6 * 3600e3, WAIT = 1500;
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'dialog.js', 'live.js', 'ui.css', 'icons.svg', 'reminders-core.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html', 'update.js',
-  'daily.js', 'quiz.html',
+  'daily.js', 'move.js', 'quiz.html',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
 // A saved copy remembers when it was saved (x-saved-at), so its age can be checked.

@@ -224,6 +224,7 @@ html.introing body{overflow:hidden}
   <a class="tool" href="quiz.html"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Live quiz</b><span>Quiz your study group, live: everyone joins on their phone with a code</span></span></a>
  </nav>
  <div class="try" id="try" hidden></div>
+ <div class="try" id="move" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <p class="note inst" id="install" hidden>Use this like an app, even offline. <button class="linkbtn" id="installbtn">Install app</button></p>
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
@@ -243,6 +244,18 @@ html.introing body{overflow:hidden}
 <script src="reminders-core.js"></script>
 <script src="push-client.js"></script>
 <script src="daily.js"></script>
+<script src="move.js"></script>
+<script>
+// Progress from the old address: one tap opens a page there that sends it back here (move.js).
+(function(){const b=document.getElementById('move'),show=h=>{b.innerHTML=h;b.hidden=false};
+ Move.take().then(r=>{
+  if(r&&r.n){sessionStorage.setItem('reviewer_moved_msg',r.n);location.reload();return}
+  const msg=sessionStorage.getItem('reviewer_moved_msg');
+  if(msg){sessionStorage.removeItem('reviewer_moved_msg');show('<p><b>Your progress is here.</b> Everything from the old address was added to this device.</p><span class="row"><button class="btn primary" onclick="this.parentNode.parentNode.hidden=true">Done</button></span>');return}
+  if(r&&r.none){show('<p><b>Nothing to bring over.</b> This browser had no saved progress on the old address. If you studied on another phone or browser, open this site there and tap the button again.</p><span class="row"><button class="btn" onclick="Move.dismiss();this.parentNode.parentNode.hidden=true">OK</button></span>');return}
+  if(r&&r.error){show('<p><b>That did not work.</b> Your progress on the old address is still safe. Try again, or sign in with Google to sync it.</p><span class="row"><button class="btn primary" onclick="Move.go()">Try again</button></span>');return}
+  if(Move.show())show('<p><b>Used the old site (applying1.github.io)?</b> Bring your progress over to this address in one tap.</p><span class="row"><button class="btn primary" onclick="Move.go()">Bring it over</button><button class="btn" onclick="Move.dismiss();this.parentNode.parentNode.hidden=true">Not needed</button></span>')})})();
+</script>
 <script>Notify.load().then(f=>{const n=Notify.prefs().ddot===false?0:Notify.unread(f),d=document.getElementById('bdot');if(n){d.textContent=n>9?'9+':n;d.hidden=false;document.getElementById('bell').setAttribute('aria-label','Notifications, '+n+' new')}})</script>
 <script>
 // Links shared on Facebook/Messenger get ?fbclid=... added; drop it so the address stays clean when copied again.
