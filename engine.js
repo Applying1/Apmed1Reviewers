@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='87',APP_DATE='Oct 25, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='88',APP_DATE='Oct 27, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1916,7 +1916,7 @@ function closeCharts(){$('charts').hidden=true;ovClosed('charts')}
 /* ---------- theme ---------- */
 function curTheme(){return document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}
 // Colors picker: a chip per palette with its swatch (page, accent, second accent)
-const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']]];
+const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']]];
 function palHTML(cur){return '<span class="pals" role="radiogroup" aria-label="Colors">'+PALS.map(([v,t,c])=>'<button role="radio" aria-checked="'+(v===cur)+'" class="'+(v===cur?'on':'')+'" onclick="setPalette(\''+v+'\')"><i style="background:linear-gradient(135deg,'+c[0]+' 0 50%,'+c[1]+' 50% 75%,'+c[2]+' 75%)"></i>'+t+'</button>').join('')+'</span>'}
 function replayIntro(){try{localStorage.removeItem('reviewer_intro_v1')}catch(e){}location.href=CONFIG.home||'./'}
 function setPalette(p){if(p==='classic'){delete document.documentElement.dataset.palette;try{localStorage.removeItem('reviewer_palette')}catch(e){}}else{document.documentElement.dataset.palette=p;try{localStorage.setItem('reviewer_palette',p)}catch(e){}}if(page==='prefs')drawPrefs()}
