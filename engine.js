@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='93',APP_DATE='Oct 28, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='94',APP_DATE='Oct 28, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -182,7 +182,7 @@ const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true,missTags:true};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -445,6 +445,7 @@ function feedbackHTML(q,fb,live,ai){   // ai: the AI box also shows on an earlie
  if(!fb.correct&&!fb.self)out+='<p><b>Answer:</b> '+ansHTML(fb.correctLabel)+'</p>';
  if(q.why)out+='<p>'+esc(q.why)+'</p>';out+=stepsHTML(q.cid&&byId[q.cid]);
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
+ if(live)out+=missRowHTML(q,fb);
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'<span data-dn="'+esc(discKey(q.cid))+'">'+dnDot(dnUnread(discKey(q.cid)))+'</span></a></p>';
  if((live||ai)&&!fb.self)out+=aiHTML(q,fb);
@@ -877,7 +878,7 @@ function editName(){
 }
 
 function drawDash(){
- drawGreeting();drawClassPanel();drawContribPanel();loadMine();bkCard();const ex=examObj(),nt=nextTest(),when=nt?whenAt(nt.at):'';$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
+ drawGreeting();drawClassPanel();drawMissPanel();drawContribPanel();loadMine();bkCard();const ex=examObj(),nt=nextTest(),when=nt?whenAt(nt.at):'';$('dashcrumb').textContent='Dashboard'+(ex?' · '+ex.name:'');
  document.title='Dashboard · '+CONFIG.title;
  const nMiss=BANK.filter(c=>isMissedC(c)&&!isM(c)).length,nStar=BANK.filter(isStar).length,nDue=state.prefs.srs?BANK.filter(isDue).length:0;
  $('weakgo').hidden=!(state.prefs.missed&&nMiss);$('weakgo').textContent='Practice missed only ('+nMiss+')';
@@ -919,7 +920,7 @@ function drawDash(){
    return '<button class="cell'+(v>=55?' hi':'')+(k===state.section?' cur':'')+'" style="--p:'+v+'%" onclick="selectSection(\''+k+'\')" aria-label="'+esc(k+' '+SECTION_NAMES[k])+', '+v+' percent mastered" data-tip="<b>'+esc(k+' '+SECTION_NAMES[k])+'</b>'+p.done+' of '+p.total+' mastered ('+v+'%)">'+k+'</button>'}).join('')+'</div></div>'}).join('');
 
  const weak=BANK.map(c=>({c,k:state.concepts[c.id]})).filter(x=>x.k.wrong>0&&x.k.right<T()).sort((a,b)=>(!!b.k.sure-!!a.k.sure)||(b.k.wrong-b.k.right)-(a.k.wrong-a.k.right)||b.k.wrong-a.k.wrong).slice(0,8);
- $('weak').innerHTML=weak.length?weak.map(({c,k})=>'<li><button onclick="selectSection(\''+c.section+'\')"><span class="t">'+esc(c.term)+'<span>'+c.section+' · '+esc(SECTION_NAMES[c.section])+'</span></span><span class="w">'+(k.sure?'<b class="surew" title="You were sure, but it was wrong">Sure</b> ':'')+k.wrong+' wrong</span>'+pips(Math.min(k.right,T()))+'</button></li>').join(''):'<li class="empty">Nothing flagged yet. '+Items+' you miss will be listed here so you can go back to them.</li>';
+ $('weak').innerHTML=weak.length?weak.map(({c,k})=>'<li><button onclick="selectSection(\''+c.section+'\')"><span class="t">'+esc(c.term)+'<span>'+c.section+' · '+esc(SECTION_NAMES[c.section])+'</span></span><span class="w">'+(k.sure?'<b class="surew" title="You were sure, but it was wrong">Sure</b> ':'')+missBadge(c.id)+k.wrong+' wrong</span>'+pips(Math.min(k.right,T()))+'</button></li>').join(''):'<li class="empty">Nothing flagged yet. '+Items+' you miss will be listed here so you can go back to them.</li>';
 }
 
 /* ---------- notes ---------- */
@@ -1121,7 +1122,9 @@ function mixIds(n){const norm=x=>String(x||'').toLowerCase(),pool=inSection('ALL
   for(let k=0;k<2;k++)for(const l of lists){const c=l[k];if(c&&!used.has(c.id)){used.add(c.id);out.push(c.id)}}}
  return out.slice(0,n)}
 function mixGoHTML(){const k=mixIds(20).length;return k<4?'':'<div class="mixgo"><p>Want questions on these? A short round that switches between the look-alikes, so you have to tell them apart. It does not change your mastery.</p><button class="btn" onclick="mixStart()">Practice mixed look-alikes ('+k+')</button></div>'}
-function mixStart(){const ids=mixIds(20);if(ids.length<4)return;
+function mixStart(){const ids=mixIds(20);if(ids.length<4)return;freeRound(ids)}
+// a short round of these questions, in this order; it doesn't change mastery
+function freeRound(ids){
  state.section='ALL';state.pmatch=null;state.pass={sec:'ALL',done:[],miss:[],free:1,ids,order:ids.slice(),right:0};state.complete=state.complete.filter(x=>x!=='ALL');freeOpen=false;
  state.active=null;state.feedback=null;state.selected=null;view=null;page='study';state.page='study';save();draw();window.scrollTo(0,0)}
 function mixKey(e){if(!MX)return false;const k=e.key;
@@ -1635,7 +1638,7 @@ function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=new Uint8Array(1
 function prefSig(){return JSON.stringify([state.prefs,state.exSetup||null])}
 function syncPayload(){const c={};for(const id in state.concepts){const k=state.concepts[id];if(k.seen||k.star||k.lookups||k.srs)c[id]=[k.seen||0,k.right||0,k.wrong||0,k.lookups||0,k.hints||0,k.star?1:0,k.srs?k.srs.lvl:0,k.srs?k.srs.due:0,k.lucky||0]}
  let sum=null;try{sum=summaryObj()}catch(e){}
- return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,
+ return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},miss:state.missLog||[],name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,
   prefs:state.prefs,exSetup:state.exSetup||null,prefsAt:state.prefsAt||0,
   cur:state.pmatch?null:{at:state.curAt||0,section:state.section,active:state.active,feedback:state.feedback,selected:state.selected,pass:state.pass||null,starDone:state.starDone||[],dueDone:state.dueDone||[],classDone:state.classDone||[]}}}
 function unpack(r){const c={};for(const id in r.c||{}){const x=r.c[id];c[id]={seen:x[0],right:x[1],wrong:x[2],lookups:x[3],hints:x[4],star:!!x[5],srs:x[7]?{lvl:x[6],due:x[7]}:null,lucky:x[8]||0,history:[]}}return Object.assign({},r,{concepts:c})}
@@ -1650,6 +1653,9 @@ function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r)
  if((r.exams||[]).length>(state.exams||[]).length){state.exams=r.exams;changed=true}
  for(const k in r.chalLog||{})if(!(state.chalLog||{})[k]){state.chalLog=state.chalLog||{};state.chalLog[k]=r.chalLog[k];changed=true}
  if(r.name&&!state.name){state.name=r.name;changed=true}
+ // "Why did I miss it?" taps: one entry per answer (question + time); both devices' entries are kept
+ if(Array.isArray(r.miss)&&r.miss.length){const seen=new Set((state.missLog||[]).map(e=>e[0]+'|'+e[2])),add=r.miss.filter(e=>Array.isArray(e)&&e.length>=3&&!seen.has(e[0]+'|'+e[2]));
+  if(add.length){state.missLog=(state.missLog||[]).concat(add).sort((a,b)=>a[2]-b[2]).slice(-MISS_MAX);changed=true}}
  if(r.prefs&&(r.prefsAt||0)>(state.prefsAt||0)){state.prefs=Object.assign({},DEFAULT_PREFS,r.prefs);if(!state.prefs.blurtV75){state.prefs.blurt=true;state.prefs.blurtV75=1}if(r.exSetup)state.exSetup=r.exSetup;state.prefsAt=r.prefsAt;prefSigLast=prefSig();refreshBank();changed=true}
  // Continue on the question the other device showed last, unless you are in the middle of answering one here.
  const C=r.cur,typing=$('typed')&&$('typed').value.trim();
@@ -1708,6 +1714,7 @@ function drawPrefs(){
   row('Cross out choices','Rule out answers while you think: right-click a choice, tap its ×, or press Shift + its letter.',sw(state.prefs.crossout,"setPref('crossout',"+!state.prefs.crossout+")",'Cross out choices'))+
   row('Lucky guess button','After a correct answer, undo the mastery point if you were only guessing, so the '+ITEM+' stays in your queue.',sw(state.prefs.lucky,"setPref('lucky',"+!state.prefs.lucky+")",'Lucky guess button'))+
   row('How sure are you?','Answer with <b>Sure</b> or <b>Not sure</b> instead of Check answer. A right guess comes back like a lucky guess; a wrong answer you were sure of comes back sooner and is marked in Needs work. Confident mistakes are the ones you fix best once you see the answer.',sw(state.prefs.sure,"setPref('sure',"+!state.prefs.sure+")",'How sure are you'))+
+  row('Why did I miss it?','After a wrong answer, tap why: didn&#39;t know, mixed it up, misread or careless. The dashboard shows what trips you up most and lets you practice your mix-ups.',sw(missOn(),"setPref('missTags',"+!missOn()+")",'Why did I miss it'))+
   (NOTES_PARSED.length?row('Blurt','On the Notes page: write everything you remember about a '+unitW+' with the notes hidden, then check it against the notes. Recalling from a blank page is the strongest kind of practice.',sw(state.prefs.blurt,"setPref('blurt',"+!state.prefs.blurt+")",'Blurt')):'')+
   row('Star '+ITEMS,'Flag tricky '+ITEMS+' with the star or the S key, then review them together, even after they are mastered.',sw(state.prefs.stars,"setPref('stars',"+!state.prefs.stars+")",'Star '+ITEMS))+
   row('Missed '+ITEMS+' drill','A sidebar list and a dashboard button that drill only the '+ITEMS+' you got wrong or checked in your slides, until they are mastered.',sw(state.prefs.missed,"setPref('missed',"+!state.prefs.missed+")",'Missed '+ITEMS+' drill'))+
@@ -1747,6 +1754,10 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'94',date:'Oct 28, 2026',title:'Why did I miss it?',items:[
+  'After a wrong answer, tap <b>why</b> you missed it: <b>Didn&#39;t know</b>, <b>Mixed it up</b>, <b>Misread</b> or <b>Careless</b>. One tap, and you can skip it.',
+  'The dashboard then shows <b>Why you miss</b>: what trips you up most, a tip for it, and your mix-ups side by side with a <b>Practice your mix-ups</b> round. Turn it off in Personalize.',
+  '<b>Explain it differently</b> now builds on the same &quot;Why not your choice&quot; line you see, so the AI and the notes agree.']},
  {v:'93',date:'Oct 28, 2026',title:'Daily crossword',items:[
   'New on the home page: a <b>Daily crossword</b>. Every day there is one short puzzle mixing the courses with the nearest evals (until Nov 4: Psychology and Botany, with a tag on each clue). Tap a square and type; <b>Hints</b> can check or reveal letters. Your streak counts the days you solve it.']},
  {v:'92',date:'Oct 28, 2026',title:'Tidier color picker',items:[
@@ -2200,6 +2211,47 @@ function record(correct,lookup,conf){
  save();draw();
  requestAnimationFrame(()=>{const f=document.querySelector('#card .fb'),r=f?.getBoundingClientRect();if(r&&r.bottom>innerHeight)f.scrollIntoView({block:'nearest',behavior:reduceMotion?'auto':'smooth'})});
 }
+/* ---------- v94: "Why did I miss it?" (Personalize: missTags, on by default) ----------
+   After a wrong answer in practice, one optional tap says why: didn't know, mixed it up (with the choice picked),
+   misread, careless. state.missLog = [[question id, tag, answer time, picked label]], the last MISS_MAX, synced and merged
+   per answer. The dashboard's "Why you miss" panel sums the last 40 with a tip for the most common reason, lists the
+   mix-ups and practices both sides of each (a free round: mastery doesn't change). */
+const MISS_TAGS=[['d','Didn\'t know'],['m','Mixed it up'],['r','Misread'],['c','Careless']],MISS_MAX=150;
+const missOn=()=>state.prefs.missTags!==false;
+function missRowHTML(q,fb){if(!missOn()||fb.correct||fb.lookup||fb.self||!q.cid||!fb.at)return '';
+ return '<div class="misstag" role="group" aria-label="Why did you miss it?"><span>Why did you miss it?</span>'+MISS_TAGS.map(([t,l])=>'<button class="mt'+(fb.tag===t?' on':'')+'" aria-pressed="'+(fb.tag===t)+'" onclick="missTag(\''+t+'\')">'+l+'</button>').join('')+'</div>'}
+// one tag per answer: another tap changes it, the same tap clears it
+function missTag(t){const fb=state.feedback;if(view!=null||!fb||fb.correct||fb.lookup||!state.active||!fb.at)return;
+ const cid=state.active.cid,log=state.missLog||(state.missLog=[]),i=log.findIndex(e=>e[0]===cid&&e[2]===fb.at);
+ if(fb.tag===t){fb.tag='';if(i>=0)log.splice(i,1)}
+ else{fb.tag=t;const ch=state.selected&&(state.active.choices||[]).find(x=>x.letter===state.selected),e=[cid,t,fb.at,t==='m'&&ch&&!ch.correct?String(ch.label):''];
+  if(i>=0)log[i]=e;else log.push(e);if(log.length>MISS_MAX)log.splice(0,log.length-MISS_MAX)}
+ save();draw()}
+const ansOf=c=>String(c&&(c.q?c.a:c.term)||'');
+// the mix-ups, newest first: [{cid, a: the right answer, b: what was picked, other: the question whose answer that is}]
+function mixups(){const out=[],seen=new Set(),byAns=new Map();BANK.forEach(c=>{const k=ansOf(c).toLowerCase();if(k&&!byAns.has(k))byAns.set(k,c.id)});
+ // shown by name: a long answer (a definition) shows its term; a picked definition shows the term it belongs to
+ const short=(c,t)=>t.length>40&&c&&c.term?c.term:t.length>60?t.slice(0,57)+'…':t;
+ for(const e of (state.missLog||[]).slice().reverse()){if(e[1]!=='m'||!byId[e[0]])continue;const c=byId[e[0]],b=e[3]||'',o=byAns.get(b.toLowerCase()),other=o&&o!==e[0]?o:null;
+  const as=short(c,ansOf(c)),bs=b?short(other&&byId[other],b):'',key=(as+'|'+bs).toLowerCase();if(seen.has(key))continue;seen.add(key);
+  out.push({cid:e[0],a:as,b:bs,other})}
+ return out}
+function mixupIds(){const ids=[];for(const m of mixups())for(const id of [m.cid,m.other])if(id&&!ids.includes(id)&&ids.length<20)ids.push(id);return ids}
+function mixupStart(){const ids=mixupIds();if(ids.length)freeRound(shuffle(ids,rnd()))}
+function missBadge(cid){if(!missOn())return '';const e=(state.missLog||[]).filter(x=>x[0]===cid).pop();return e?'<b class="mtw">'+esc(MISS_TAGS.find(t=>t[0]===e[1])[1])+'</b> ':''}
+function drawMissPanel(){const el=$('missPanel');if(!el)return;const last=(state.missLog||[]).filter(e=>byId[e[0]]).slice(-40);
+ el.hidden=!missOn()||last.length<3;if(el.hidden)return;
+ const n={d:0,m:0,r:0,c:0};last.forEach(e=>{if(e[1]in n)n[e[1]]++});const top=MISS_TAGS.map(t=>t[0]).sort((a,b)=>n[b]-n[a])[0];
+ const TIP={d:'Most of your misses are things you hadn\'t learned yet. Read the notes for those sections first, then practice them.',
+  m:'Most of your misses are mix-ups. Practice them side by side below, and look for the one detail that tells each pair apart.',
+  r:'Most of your misses come from misreading. Read the whole question before the choices, and watch for NOT, EXCEPT and the exact term asked.',
+  c:'Most of your misses are slips. Slow down a little: cross out the choices you rule out, or turn on "How sure are you?" in Personalize.'};
+ const mx=mixups(),ids=mixupIds();
+ el.innerHTML='<h2>Why you miss<em>last '+last.length+' tagged</em></h2><p class="desc">From your "Why did you miss it?" taps after wrong answers.</p><div class="bars">'+
+  MISS_TAGS.map(([t,l])=>{const p=Math.round(100*n[t]/last.length);return '<div class="bar-row"><span class="n">'+l+'</span><span class="p">'+n[t]+' · '+p+'%</span><span class="track"><span class="fill" style="display:block;width:'+p+'%"></span></span></div>'}).join('')+'</div>'+
+  '<p class="desc misstip">'+TIP[top]+'</p>'+
+  (mx.some(m=>m.b)?'<h3 class="csub">Your mix-ups</h3><ul class="mixups">'+mx.filter(m=>m.b).slice(0,6).map(m=>'<li><b>'+labelHTML(m.a)+'</b><span>not</span><b>'+labelHTML(m.b)+'</b></li>').join('')+'</ul>':'')+
+  (ids.length?'<button class="btn sm" onclick="mixupStart()" title="A short round of these and the questions they got mixed up with. It does not change your mastery.">Practice your mix-ups ('+ids.length+')</button>':'')}
 // v74: authored items may carry dw = {wrong choice: why it's wrong}, shown as "Why not your choice" in practice and the exam review.
 function whyNot(cid,label){const c=byId[cid];return c&&c.dw&&c.dw[label]||''}
 function next(){if(!state.feedback)return;state.feedback=null;state.active=null;state.selected=null;maybeMix();if(completed(state.section)&&!state.complete.includes(state.section))state.complete.push(state.section);save();draw();scrollToCard()}

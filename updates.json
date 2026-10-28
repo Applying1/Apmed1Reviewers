@@ -537,5 +537,13 @@
   "title": "Botany evals on Wednesday",
   "text": "General Botany has its evals on Wed, Nov 4 (Flower, Fruits and Seeds; Plant Kingdom), the same day as the Psychology evals. The timetable and reminders are updated.",
   "link": "schedule.html"
+ },
+ {
+  "id": 65,
+  "date": "2026-10-28",
+  "type": "feature",
+  "title": "Why did I miss it?",
+  "text": "After a wrong answer, tap why you missed it: didn't know, mixed it up, misread or careless. Your dashboard then shows what trips you up most and lets you practice your mix-ups. Explain it differently now uses the same why-not lines you see.",
+  "link": "index.html"
  }
 ]

@@ -800,7 +800,13 @@ body.notesonly .side>.label,body.notesonly #nav{display:none}
 .homelink{display:inline-flex;align-items:center;gap:3px;margin:-4px 0 12px 4px;padding:3px 8px 3px 4px;border-radius:7px;font-size:12.5px;font-weight:500;color:var(--faint);text-decoration:none;transition:color .15s,background .15s}
 .homelink:hover,.homelink:focus-visible{color:var(--text);background:var(--raised)}
 /* Class stats panel (dashboard) */
-#classPanel{margin-top:14px}
+#classPanel,#missPanel{margin-top:14px}
+.misstag{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0 4px}.misstag>span{font-size:13px;color:var(--mute);margin-right:2px}
+.misstag .mt{border:1px solid var(--line2);background:var(--surface);color:var(--text);border-radius:99px;padding:4px 11px;font:500 13px/1.4 inherit;cursor:pointer}
+.misstag .mt:hover{border-color:var(--accent)}.misstag .mt.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mtw{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:0 6px;margin-right:4px}
+.misstip{margin:12px 0 0}.mixups{list-style:none;padding:0;margin:6px 0 12px;display:grid;gap:6px}
+.mixups li{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:14px}.mixups li>span{color:var(--faint);font-size:12px}
 .csub{font-size:13px;font-weight:600;margin:18px 0 10px;color:var(--mute)}
 .cbar{padding:5px 8px;margin:0 -8px;width:calc(100% + 16px);border-radius:9px;cursor:pointer;font:inherit;color:inherit}
 .cbar:hover{background:var(--raised)}
@@ -1030,6 +1036,7 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
    </div>
    <section class="panel"><h2>Section map<em>click a section to practice it</em></h2><p class="desc">Darker cells mean more of that section is mastered.</p><div class="heat" id="heat"></div><div class="scale"><span>0%</span><i></i><span>100% mastered</span></div></section>
    <section class="panel" id="classPanel" hidden></section>
+   <section class="panel" id="missPanel" hidden></section>
   </div>
   <!-- Practice -->
   <div class="view" id="studyView" hidden>
