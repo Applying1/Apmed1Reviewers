@@ -1,11 +1,11 @@
 /* Sound effects for the live quiz, made in the browser with Web Audio (no audio files).
-   Sfx.music('lobby'|'q'|null)  looping background music     Sfx.countdown(msLeft) / Sfx.stopCount()  ticks that speed up
+   Sfx.music('lobby'|'q'|null, force, volume)  looping background music (players use a lower volume)     Sfx.countdown(msLeft) / Sfx.stopCount()  ticks that speed up
    Sfx.join() Sfx.go() Sfx.tap() Sfx.reveal() Sfx.correct() Sfx.wrong() Sfx.drumroll() Sfx.fanfare() Sfx.over()
    Sfx.muted() / Sfx.toggle()   remembered on this device. Nothing plays before the first tap (browsers block that);
    on an iPhone the silent switch mutes it, which is what people expect. */
 window.Sfx=(function(){
  const KEY='reviewer_quiz_mute';
- let ctx=null,master=null,mute=false,song=null,songName=null,timer=null,step=0,nextT=0,ticks=[];
+ let ctx=null,master=null,mute=false,song=null,songName=null,vol=1,timer=null,step=0,nextT=0,ticks=[];
  try{mute=localStorage.getItem(KEY)==='1'}catch(e){}
  const mtof=m=>440*Math.pow(2,(m-69)/12);
  function boot(){if(ctx)return ctx;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
@@ -22,12 +22,12 @@ window.Sfx=(function(){
  const SONGS={
   lobby:{bpm:116,mel:[60,64,67,72,67,64,67,64,62,65,69,74,69,65,69,65],bass:[48,0,0,0,48,0,0,0,50,0,0,0,50,0,0,0],wave:'triangle',g:.075},
   q:{bpm:136,mel:[57,60,64,69,64,60,64,60,55,59,62,67,62,59,62,59],bass:[45,0,45,0,45,0,45,0,43,0,43,0,43,0,43,0],wave:'square',g:.04}};
- function music(name,force){songName=name||null;if(!name){clearInterval(timer);timer=null;song=null;return}
+ function music(name,force,v){songName=name||null;if(v!=null)vol=v;if(!name){clearInterval(timer);timer=null;song=null;return}
   if(!boot())return;if(song===SONGS[name]&&timer&&!force)return;clearInterval(timer);song=SONGS[name];step=0;nextT=ctx.currentTime+.08;
-  const run=()=>{if(!ctx||ctx.state!=='running')return;const sd=60/song.bpm/2;
+  const run=()=>{if(!ctx||ctx.state!=='running')return;const sd=60/song.bpm/2;if(nextT<ctx.currentTime)nextT=ctx.currentTime+.05;
    while(nextT<ctx.currentTime+.4){const i=step%16,m=song.mel[i],b=song.bass[i];
-    if(m)tone(mtof(m),nextT,sd*1.6,song.wave,song.g);if(b)tone(mtof(b),nextT,sd*1.8,'sine',.13);
-    if(i%4===2)noise(nextT,.04,.025,6000,.5);nextT+=sd;step++}};
+    if(m)tone(mtof(m),nextT,sd*1.6,song.wave,song.g*vol);if(b)tone(mtof(b),nextT,sd*1.8,'sine',.13*vol);
+    if(i%4===2)noise(nextT,.04,.025*vol,6000,.5);nextT+=sd;step++}};
   timer=setInterval(run,100);run()}
  function stopCount(){ticks.forEach(clearTimeout);ticks=[]}
  // one tick a second for the last 5 seconds, then two a second for the last 3, higher each time

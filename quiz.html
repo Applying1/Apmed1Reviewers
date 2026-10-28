@@ -156,7 +156,7 @@ function topics(d){const c=d.config||{},chs=c.chapters||{},secs=c.sections||{},u
  return opts}
 
 /* =================================================================== start page */
-function start(){P=null;H=null;
+function start(){Sfx.music(null);Sfx.stopCount();P=null;H=null;
  const pre=Q.get('join'),list=COURSES.filter(c=>!c.soon&&!c.notesOnly),cid=Q.get('course');
  $('main').classList.remove('wide');
  $('app').innerHTML='<h1>'+ic('zap')+'Live quiz</h1><p class="lede">One person hosts on a laptop or a shared screen. Everyone else joins on their phone with the code. Fastest right answers score the most. Nothing is saved.</p>'+
@@ -227,7 +227,7 @@ function hEnd(){clearTimeout(hTimer);H.phase='end';const rank=hRank();H.lastEnd=
  Sfx.music(null);Sfx.stopCount();Sfx.drumroll(1700);$('main').classList.add('wide');$('app').innerHTML='<h1 style="justify-content:center">'+ic('trophy')+'And the winner is…</h1>';
  setTimeout(()=>{if(H&&H.phase==='end'){hDraw();Sfx.fanfare()}},1800)}
 function hDraw(){const a=$('app');$('main').classList.toggle('wide',H.phase!=='lobby');const np=Object.keys(H.players).length;
- if(H.phase==='lobby'){Sfx.music('lobby');const link=location.origin+location.pathname.replace(/[^/]*$/,'')+'quiz.html?join='+H.code+(LOCAL?'&bus=local':'');
+ if(H.phase==='lobby'){Sfx.music('lobby',false,1);const link=location.origin+location.pathname.replace(/[^/]*$/,'')+'quiz.html?join='+H.code+(LOCAL?'&bus=local':'');
   a.innerHTML='<section class="card lob"><div class="eb">'+esc(H.title)+'<br>'+H.qs.length+' questions · '+H.cfg.dur+'-second timer</div>'+
    '<div class="bigcode" aria-label="Code '+esc(H.code.split('').join(' '))+'">'+esc(H.code)+'</div>'+
    '<p class="how">On the reviewer site, tap <b>Live quiz</b> and type this code. Or send them the invite link.</p>'+
@@ -235,7 +235,7 @@ function hDraw(){const a=$('app');$('main').classList.toggle('wide',H.phase!=='l
    '<div class="ppl" id="ppl">'+(np?Object.values(H.players).map(p=>'<span>'+ic('user')+esc(p.name)+'</span>').join(''):'<span class="none">Waiting for players to join…</span>')+'</div>'+
    '<button class="btn primary big" onclick="hStart()"'+(np?'':' disabled')+'>'+ic('play')+' Start'+(np?' · '+np+' player'+(np>1?'s':''):'')+'</button>'+
    '<p class="note"><button class="btn" style="padding:6px 12px;font-size:13.5px" onclick="hQuit()">Cancel</button></p></section>';return}
- if(H.phase==='q'){Sfx.music('q');Sfx.countdown(H.cfg.dur*1000-(Date.now()-H.qStart));const q=H.qs[H.i];
+ if(H.phase==='q'){Sfx.music('q',false,1);Sfx.countdown(H.cfg.dur*1000-(Date.now()-H.qStart));const q=H.qs[H.i];
   a.innerHTML='<div class="qhead"><span>Question '+(H.i+1)+' of '+H.qs.length+'</span><span class="sp"></span><span class="cnt" id="acount"></span></div>'+
    '<div class="timer"><i id="tbar"></i></div><p class="stem">'+esc(q.stem)+'</p>'+
    '<div class="ch'+(q.choices.length<3?' one':'')+'">'+q.choices.map((c,k)=>'<div class="opt c'+k+'"><span class="l">'+LETTERS[k]+'</span><span>'+esc(c)+'</span></div>').join('')+'</div>'+
@@ -273,13 +273,13 @@ function join(){const code=($('jc').value||'').toUpperCase(),name=cleanName($('j
  clearTimeout(P.t);P.t=setTimeout(()=>{if(P&&P.phase==='joining'){$('jb').disabled=false;$('jb').textContent='Try again';m.textContent='No quiz with that code is open. Check the code, and ask the host to keep the quiz page open.'}},6000);
  keepAwake()}
 function pOn(m){if(!P||!m||typeof m!=='object')return;
- if(m.t==='lobby'){const me=(m.players||[]).some(x=>x[0]===P.pid);if(!me)return;P.title=m.title;P.n=m.n;P.count=(m.players||[]).length;if(P.phase==='joining'||P.phase==='lobby'&&m.phase==='lobby'){if(P.phase==='joining')Sfx.join();P.phase='lobby';pDraw()}}
+ if(m.t==='lobby'){const me=(m.players||[]).some(x=>x[0]===P.pid);if(!me)return;P.title=m.title;P.n=m.n;P.count=(m.players||[]).length;if(P.phase==='joining'||P.phase==='lobby'&&m.phase==='lobby'){if(P.phase==='joining')Sfx.join();P.phase='lobby';Sfx.music('lobby',false,.55);pDraw()}}
  else if(m.t==='q'){if(P.phase==='joining')P.phase='lobby';if(P.q&&P.q.i===m.i&&P.phase==='q')return;
-  P.phase='q';P.q={i:m.i,n:m.n,stem:String(m.stem||''),choices:(m.choices||[]).map(String).slice(0,4),dur:+m.dur||20000,left:+m.left||0,at:Date.now(),math:!!m.math};P.pick=null;P.sent=false;pDraw();Sfx.go();Sfx.countdown(P.q.left)}
+  P.phase='q';P.q={i:m.i,n:m.n,stem:String(m.stem||''),choices:(m.choices||[]).map(String).slice(0,4),dur:+m.dur||20000,left:+m.left||0,at:Date.now(),math:!!m.math};P.pick=null;P.sent=false;pDraw();Sfx.go();Sfx.music('q',false,.55);Sfx.countdown(P.q.left)}
  else if(m.t==='got'){if(P.phase==='q'&&P.q&&m.i===P.q.i&&(m.pids||[]).includes(P.pid)){P.sent=true;clearTimeout(resend);const s=$('sent');if(s)s.textContent='Answer received ✓'}}
  else if(m.t==='reveal'){if(P.phase==='joining')return;const r=(m.res||{})[P.pid];if(!r)return;
-  P.phase='reveal';P.rv=m;P.score=r[1];clearTimeout(resend);Sfx.stopCount();if(r[3]===1)Sfx.correct();else Sfx.wrong();pDraw();if(navigator.vibrate)try{navigator.vibrate(r[3]===1?40:[40,60,40])}catch(e){}}
- else if(m.t==='end'){if(P.phase==='joining')return;P.phase='end';P.end=m;clearTimeout(resend);Sfx.stopCount();if(!(m.closed&&!(m.board||[]).length)){const w=(m.board||[]).findIndex(x=>x[0]===P.pid);if(w===0)Sfx.fanfare();else Sfx.over()}try{sessionStorage.removeItem('quiz_player')}catch(e){}pDraw()}}
+  P.phase='reveal';P.rv=m;P.score=r[1];clearTimeout(resend);Sfx.stopCount();Sfx.music(null);if(r[3]===1)Sfx.correct();else Sfx.wrong();pDraw();if(navigator.vibrate)try{navigator.vibrate(r[3]===1?40:[40,60,40])}catch(e){}}
+ else if(m.t==='end'){if(P.phase==='joining')return;P.phase='end';P.end=m;clearTimeout(resend);Sfx.stopCount();Sfx.music(null);if(!(m.closed&&!(m.board||[]).length)){const w=(m.board||[]).findIndex(x=>x[0]===P.pid);if(w===0)Sfx.fanfare();else Sfx.over()}try{sessionStorage.removeItem('quiz_player')}catch(e){}pDraw()}}
 function pick(k){if(!P||P.phase!=='q'||P.pick!=null)return;P.pick=k;Sfx.stopCount();Sfx.tap();const send=()=>Bus.send({t:'ans',pid:P.pid,i:P.q.i,c:k});send();
  let tries=0;clearTimeout(resend);const again=()=>{resend=setTimeout(()=>{if(P&&P.phase==='q'&&!P.sent&&tries++<3){send();again()}},1500)};again();pDraw()}
 function pDraw(){const a=$('app');$('main').classList.remove('wide');
