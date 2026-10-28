@@ -155,6 +155,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:0 0 18px}
 .tool{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow);min-width:0;transition:border-color .15s,transform .18s var(--ease)}
 .tool:hover{border-color:var(--accent-line);transform:translateY(-1px)}
+.tool[hidden]{display:none}
 .tool .new{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:700 10.5px/1.6 var(--sans);letter-spacing:.04em;text-transform:uppercase;vertical-align:2px}
 .tool .done{color:var(--good);font-weight:600}
 .tool .tic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-size:18px}
@@ -229,6 +230,7 @@ html.introing body{overflow:hidden}
  <nav class="tools" aria-label="Tools">
   <a class="tool" href="quiz.html"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Live quiz</b><span>Quiz your study group, live: everyone joins on their phone with a code</span></span></a>
  <a class="tool" id="cwtool" href="crossword.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crossword"/></svg></span><span><b>Daily crossword</b><span id="cwsub">A short puzzle on your next eval</span></span></a>
+ <a class="tool" id="atttool" href="attendance.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span><span><b>My attendance</b><span id="attsub">From the class tracker</span></span></a>
  </nav>
  <div class="try" id="try" hidden></div>
  <div class="try" id="move" hidden></div>
@@ -247,6 +249,7 @@ html.introing body{overflow:hidden}
  <div id="spotbody"></div>
 </div></div>
 <script src="schedule-core.js"></script>
+<script src="auth.js"></script>
 <script src="dialog.js"></script>
 <script src="notify-core.js"></script>
 <script src="reminders-core.js"></script>
@@ -353,6 +356,10 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  // a warm-up on the topic, from the day before until class starts (only where the timetable links the topic to the course's questions)
  const crs=c.subj&&c.subj.course,hrs=(c.from-new Date())/36e5;
  if(crs&&c.preview&&!c.now&&hrs>0&&hrs<=40){const p=document.getElementById('prevq');p.href='reviewer.html?course='+encodeURIComponent(crs)+'#preview='+encodeURIComponent(c.preview);p.textContent='Warm up: 5 questions on '+(c.topic||'the next topic').replace(/ \(.*$/,'').slice(0,60);p.hidden=false}}catch(err){}})();
+// My attendance tile: only for signed-in students whose account is linked to the class tracker (att_mine)
+(async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c||!Auth.ses())return;Auth.cloud=c.cloud;
+ const a=await Auth.rpc('att_mine',{},true);if(!a||!a.linked)return;
+ $('attsub').textContent=(a.pct?a.pct+' · ':'')+(a.present??0)+' present · '+(a.absent??0)+' absent'+(a.excused?' · '+a.excused+' excused':'');$('atttool').hidden=false}catch(e){}})();
 // Daily crossword tile: today's courses (nearest test first), "New" until the puzzle page is opened once
 (async function(){try{
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());

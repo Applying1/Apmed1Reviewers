@@ -1,0 +1,80 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My attendance · APMed '33</title>
+<meta name="description" content="Your own attendance from the class tracker.">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script><script>(function(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const f=()=>{if(document.body)m.content=getComputedStyle(document.body).backgroundColor},g=()=>{f();setTimeout(f,350)};addEventListener('DOMContentLoaded',f);new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',g)})()</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:760px;margin:0 auto;padding:22px 20px 48px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18px 0 4px}
+.sub{margin:0;color:var(--mute);font-size:14px}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+.kpi .k{font-size:12.5px;color:var(--mute);font-weight:600}
+.kpi .v{font:600 26px/1.2 var(--serif);margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi.main{border-color:var(--accent-line);background:var(--accent-soft)}
+.weeks{display:grid;gap:10px}
+.wk{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.wk h2{margin:0 0 8px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+.days{display:flex;flex-wrap:wrap;gap:6px}
+.day{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:500;border:1px solid var(--line2);background:var(--bg)}
+.day i{width:8px;height:8px;border-radius:50%;background:var(--faint)}
+.day.p i{background:var(--good)}.day.a{border-color:var(--bad);color:var(--bad)}.day.a i{background:var(--bad)}
+.day.e i{background:var(--warn)}.day.l i{background:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:6px 0 14px;font-size:12.5px;color:var(--mute)}
+.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:8px;height:8px;border-radius:50%}
+.card{margin-top:20px;padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.card p{margin:0 0 12px;color:var(--mute)}
+.foot{margin-top:18px;font-size:13px;color:var(--mute)}
+</style></head><body>
+<main>
+ <a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a>
+ <h1>My attendance</h1>
+ <p class="sub" id="sub">Loading…</p>
+ <div id="body"></div>
+</main>
+<script src="auth.js"></script>
+<script>
+// Your own row of the class attendance tracker (supabase_attendance.sql, att_mine). Shown only to signed-in students whose
+// account the class secretary has linked to their roll number. Nothing is saved on this device.
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cls=s=>/^present/i.test(s)?'p':/^absent/i.test(s)?'a':/^excused/i.test(s)?'e':/^late/i.test(s)?'l':'';
+function card(t,btn){$('body').innerHTML='<div class="card"><p>'+t+'</p>'+(btn||'')+'</div>'}
+(async function(){
+ try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
+ if(!Auth.cloud){$('sub').textContent='';card('Attendance needs the online features, which aren\'t set up here.');return}
+ if(!Auth.ses()){$('sub').textContent='';card('Sign in with the Google account you use for the reviewers to see your attendance.','<a class="btn primary" href="./?signin=1">Sign in with Google</a>');return}
+ let a=null;try{a=await Auth.rpc('att_mine',{},true)}catch(e){}
+ if(!a){$('sub').textContent='';card('Couldn\'t load your attendance. Check your connection and try again.');return}
+ if(!a.linked){$('sub').textContent='';card('Your account isn\'t linked to the class attendance tracker yet. Message the class secretary with the Google account you use here, and it will show up.');return}
+ const upd=a.updated?new Date(a.updated).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+ $('sub').innerHTML=esc(a.name)+' · from the class tracker'+(upd?', updated '+esc(upd):'');
+ const late=(a.days||[]).filter(d=>cls(d.s)==='l').length,weeks=[];
+ for(const d of a.days||[]){let w=weeks[weeks.length-1];if(!w||w.name!==d.w){w={name:d.w||'',days:[]};weeks.push(w)}w.days.push(d)}
+ $('body').innerHTML='<div class="kpis"><div class="kpi main"><div class="k">Attendance</div><div class="v">'+esc(a.pct||'–')+'</div></div>'+
+  '<div class="kpi"><div class="k">Present</div><div class="v">'+(a.present??'–')+'</div></div>'+
+  '<div class="kpi"><div class="k">Absent</div><div class="v">'+(a.absent??'–')+'</div></div>'+
+  '<div class="kpi"><div class="k">Excused</div><div class="v">'+(a.excused??'–')+'</div></div></div>'+
+  '<div class="legend"><span><i style="background:var(--good)"></i>Present</span>'+(late?'<span><i style="background:var(--accent)"></i>Late ('+late+')</span>':'')+'<span><i style="background:var(--warn)"></i>Excused</span><span><i style="background:var(--bad)"></i>Absent</span></div>'+
+  '<div class="weeks">'+weeks.slice().reverse().map(w=>'<section class="wk"><h2>'+esc(w.name||'Classes')+'</h2><div class="days">'+w.days.map(d=>'<span class="day '+cls(d.s)+'" title="'+esc(d.s)+'"><i></i>'+esc(d.d)+(cls(d.s)==='p'?'':' · '+esc(d.s))+'</span>').join('')+'</div></section>').join('')+'</div>'+
+  '<p class="foot">Only you can see this. Something look wrong? Message the class secretary.</p>';
+})();
+</script>
+<script src="update.js" defer></script>
+</body></html>

@@ -553,5 +553,13 @@
   "title": "Crossword class board",
   "text": "Solve the daily crossword while signed in and your time goes on the class board (first name and last initial; time + 15 seconds per hint). Your puzzle also follows you between your phone and laptop. Don't want to be listed? Tap Hide me under the board.",
   "link": "crossword.html"
+ },
+ {
+  "id": 67,
+  "date": "2026-10-28",
+  "type": "feature",
+  "title": "My attendance",
+  "text": "Signed in? Once the class secretary links your account, a My attendance tile on the home page shows your own attendance from the class tracker, week by week. Only you can see it. Not showing yet? Message the secretary.",
+  "link": "attendance.html"
  }
 ]
