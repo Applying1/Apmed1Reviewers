@@ -236,6 +236,7 @@ html.introing body{overflow:hidden}
  <nav class="tools" aria-label="Tools">
   <a class="tool" href="quiz.html"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Live quiz</b><span>Quiz your study group, live: everyone joins on their phone with a code</span></span></a>
  <a class="tool" id="cwtool" href="crossword.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crossword"/></svg></span><span><b>Daily crossword</b><span id="cwsub">A short puzzle on your next eval</span></span></a>
+ <a class="tool" id="wdtool" href="apmeddle.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-letters"/></svg></span><span><b>APMed'dle</b><span id="wdsub">Guess the term of the day</span></span></a>
  <a class="tool" id="atttool" href="attendance.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span><span><b>My attendance</b><span id="attsub">From the class tracker</span></span></a>
  </nav>
  <div class="try" id="try" hidden></div>
@@ -386,6 +387,17 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  t.hidden=false;
 }catch(e){}
 function shiftDay(d,n){const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)}})();
+// APMed'dle tile: only on days with a word; "Solved ✓" / "Missed" once played, "New" until the page is opened once
+(async function(){try{
+ const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const d=((await (await fetch('apmeddle/days.json')).json()).days||[]).find(x=>x.date===day);if(!d)return;
+ let st={};try{st=JSON.parse(localStorage.getItem('reviewer_apmeddle'))||{}}catch(e){}
+ const g=(st.g||{})[day],t=$('wdtool'),sub=$('wdsub');
+ if(g&&g.w===1)sub.innerHTML='<span class="done">Solved today in '+g.r.length+'/6 ✓</span> · new word tomorrow';
+ else if(g&&(g.r||[]).length>=6)sub.textContent='Missed today · new word tomorrow';
+ else sub.textContent=g&&(g.r||[]).length?'Keep going: '+g.r.length+'/6 guesses used':'Spin for today’s subject · '+d.n+' letters';
+ if(!st.how)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
+ t.hidden=false}catch(e){}})();
 // Test countdown: the next exams, evals and quizzes on the timetable (next 14 days), ticking every second.
 (async function(){try{await Sched.load();const box=document.getElementById('tests');let list=[];
  const pick=()=>{const now=new Date();list=Remind.list(3,now).filter(a=>a.from-now<14*864e5).slice(0,4)};
