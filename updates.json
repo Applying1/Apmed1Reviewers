@@ -430,5 +430,13 @@
   "title": "Slide viewer + mixed look-alike practice",
   "text": "Slides (Purposive Communication, NSTP) now open one slide at a time: swipe or use the arrow keys, pinch to zoom, and it remembers where you stopped. Drills → Don't mix up has a new button for a short practice round that switches between look-alike topics.",
   "link": "index.html"
+ },
+ {
+  "id": 52,
+  "date": "2026-10-28",
+  "type": "content",
+  "title": "Psychology: why each wrong choice is wrong",
+  "text": "Psychology chapters 11 and 12 now explain why each wrong choice is wrong: pick a wrong answer in practice and you see a one-line reason, ready for the Evals on Nov 4. Also new: a Warm up button on the home page before a class (when that topic has questions).",
+  "link": "reviewer.html?course=psych"
  }
 ]

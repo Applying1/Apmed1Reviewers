@@ -24,7 +24,7 @@ const Sched = {
   // Classes of week n with their dates and that week's topic; cancelled ones are kept but marked.
   classes(n) {
     const d = this.data, w = (d.weeks || {})[n] || {}, start = this.weekStart(n);
-    const list = d.classes.map(c => Object.assign({}, c, (w.times || {})[c.id] || {}, { topic: (w.topics || {})[c.id] || '', cancelled: (w.cancel || []).includes(c.id), changed: !!(w.times || {})[c.id] }))
+    const list = d.classes.map(c => Object.assign({}, c, (w.times || {})[c.id] || {}, { topic: (w.topics || {})[c.id] || '', preview: (w.preview || {})[c.id] || '', cancelled: (w.cancel || []).includes(c.id), changed: !!(w.times || {})[c.id] }))
       .concat((w.extra || []).map((c, i) => Object.assign({ id: 'extra-' + i, extra: true }, c)));
     for (const c of list) {
       const di = DAYS.indexOf(c.day), at = new Date(start);

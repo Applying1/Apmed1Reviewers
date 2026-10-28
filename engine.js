@@ -699,6 +699,10 @@ addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.cont
 addEventListener('load',()=>{const m=location.hash.match(/^#discuss=([\w.-]*)$/);if(m){history.replaceState(history.state,'',location.pathname+location.search);setTimeout(()=>openDiscuss(m[1]||undefined),400)}});
 // v71: #due (from the daily review reminder) opens the reviews that are due today, if there are any
 function openDue(){if(location.hash!=='#due')return;history.replaceState(history.state,'',location.pathname+location.search);if(state.prefs.srs&&BANK.some(isDue))selectSection('DUE')}
+// v91: #preview=<section> (from the home page's Next class strip) starts a 5-question warm-up on a topic that is coming up. A free round: it never changes mastery.
+function openPreview(){const m=location.hash.match(/^#preview=([A-Za-z0-9:._-]+)$/);if(!m)return;try{history.replaceState(history.state,'',location.pathname+location.search)}catch(e){}
+ const k=m[1];if(!validSection(k)||!inSection(k).length)return;selectSection(k);freeStart(5)}
+if(document.readyState==='complete')setTimeout(openPreview,400);else addEventListener('load',()=>setTimeout(openPreview,400));
 if(document.readyState==='complete')setTimeout(openDue,300);else addEventListener('load',()=>setTimeout(openDue,300));
 // ---- discussion notifications: polls the course's newest posts (discussion_recent). state.dn = {base, seen, read:{thread:id}}.
 // base: the newest post when notifications started (older posts never count as unread); seen: newest post already announced.

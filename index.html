@@ -92,6 +92,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 /* Next class, from the timetable */
 .upnext{display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow)}
 .upnext[hidden]{display:none}
+.prevq{display:flex;margin:-10px 0 18px;justify-content:flex-start;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.prevq[hidden]{display:none}
 .upnext:hover{border-color:var(--line2)}
 .upnext .bar{flex:none;align-self:stretch;width:4px;border-radius:9px;background:oklch(.6 .13 var(--h))}
 .upnext .w{flex:1;min-width:0}
@@ -220,6 +221,7 @@ html.introing body{overflow:hidden}
  <h1 id="hi">Pick a course</h1>
  <div class="bkcard" id="bkcard" hidden></div>
  <a class="upnext" id="upnext" href="schedule.html" hidden></a>
+ <a class="btn prevq" id="prevq" hidden></a>
  <section class="tests" id="tests" hidden aria-label="Tests coming up"></section>
  <section class="today" id="today" hidden aria-label="Today"></section>
  <nav class="tools" aria-label="Tools">
@@ -340,7 +342,10 @@ function closeSpot(){document.getElementById('spot').hidden=true}
 (async function(){try{await Sched.load();const c=Sched.upNext();if(!c)return;const e=document.getElementById('upnext');
  e.style.setProperty('--h',+c.subj.hue||260);
  e.innerHTML='<span class="bar"></span><span class="w"><span class="l'+(c.now?' live':'')+'">'+(c.now?'Now · until '+Sched.time(c.end):'Next class · '+Sched.when(c.date)+', '+Sched.time(c.start))+'</span><b>'+esc(c.subj.name)+(c.kind?' · '+esc(c.kind):'')+'</b><span class="s">'+esc(c.topic||c.teacher||'')+'</span></span><span class="go">Timetable →</span>';
- e.hidden=false}catch(err){}})();
+ e.hidden=false;
+ // a warm-up on the topic, from the day before until class starts (only where the timetable links the topic to the course's questions)
+ const crs=c.subj&&c.subj.course,hrs=(c.from-new Date())/36e5;
+ if(crs&&c.preview&&!c.now&&hrs>0&&hrs<=40){const p=document.getElementById('prevq');p.href='reviewer.html?course='+encodeURIComponent(crs)+'#preview='+encodeURIComponent(c.preview);p.textContent='Warm up: 5 questions on '+(c.topic||'the next topic').replace(/ \(.*$/,'').slice(0,60);p.hidden=false}}catch(err){}})();
 // Test countdown: the next exams, evals and quizzes on the timetable (next 14 days), ticking every second.
 (async function(){try{await Sched.load();const box=document.getElementById('tests');let list=[];
  const pick=()=>{const now=new Date();list=Remind.list(3,now).filter(a=>a.from-now<14*864e5).slice(0,4)};

@@ -1,5 +1,5 @@
 {
- "_how": "classes = the standard weekly timetable. weeks.<n> changes one week only: topics (by class id), times (class id -> {start, end}), cancel (class ids), extra (make-up or added classes), notes. Week 1 starts on week1 (a Monday). holidays = {\"YYYY-MM-DD\": \"name\"}: no classes that day (shown as an overlay; tests that day are cancelled).",
+ "_how": "classes = the standard weekly timetable. weeks.<n> changes one week only: topics (by class id), times (class id -> {start, end}), cancel (class ids), extra (make-up or added classes), notes. Week 1 starts on week1 (a Monday). holidays = {\"YYYY-MM-DD\": \"name\"}: no classes that day (shown as an overlay; tests that day are cancelled). weeks.<n>.preview = {class id: section key} (e.g. \"CH:6\" or \"6-2\") adds a \"Warm up: 5 questions\" link on the home page from the day before that class; only set it for topics the course has questions for.",
  "term": "1st Semester · AY 2026–2027",
  "week1": "2026-07-27",
  "freeDays": {
@@ -254,7 +254,10 @@
    ],
    "cancel": [
     "pharma"
-   ]
+   ],
+   "preview": {
+    "pharma": "CH:6"
+   }
   },
   "16": {
    "topics": {
