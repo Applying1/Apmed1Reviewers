@@ -37,12 +37,14 @@ body.fs.show .bar{transform:none}
 body.fs #thumbs{position:absolute;left:0;right:0;bottom:4px}
 .help{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:3;padding:6px 14px;border-radius:99px;background:#000a;color:#e5e7ee;font-size:12.5px;pointer-events:none;opacity:0;transition:opacity .4s;white-space:nowrap}
 .help.on{opacity:1}
-@media (max-width:560px){.bar .lbl{display:none}.th canvas{width:112px}}
+.btn .sh{display:none}
+@media (max-width:560px){.bar .lbl{display:none}.th canvas{width:112px}.btn .sh{display:inline}#dl{display:none}.bar{gap:6px}.btn{padding:7px 9px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
 <div class="bar" id="bar">
  <button class="btn icon" onclick="goBack()" aria-label="Back"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg></button>
  <h1 id="ttl">Slides<span id="sub" aria-live="polite">Loading…</span></h1>
+ <a class="btn on" id="qbtn" title="A free 5-question round on this part of the deck (Q)" hidden><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-target"/></svg><span class="lbl">Questions on this slide</span><span class="sh">Quiz</span></a>
  <button class="btn" id="tbtn" onclick="toggleThumbs()" aria-pressed="false" title="All slides (T)" hidden><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-list"/></svg><span class="lbl">Slides</span></button>
  <a class="btn" id="txt" title="Read as pages: search and copy text" hidden><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-file-text"/></svg><span class="lbl">Read</span></a>
  <button class="btn icon" id="fsbtn" onclick="toggleFs()" aria-label="Full screen" title="Full screen (F)" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
@@ -88,10 +90,20 @@ async function show(k,keepZoom){k=clamp(k,1,N);const my=++tok,page=await pdf.get
  document.querySelector('.nav.prev').disabled=n<=1;document.querySelector('.nav.next').disabled=n>=N;
  try{localStorage.setItem(KEY,String(n))}catch(e){}
  try{history.replaceState(null,'','#'+n)}catch(e){}
- markThumb();
+ markThumb();setQ();
  // draw the neighbors ahead of time so flipping is instant
  setTimeout(()=>{if(my!==tok)return;const kk=Math.round(w*dpr());for(const j of [n+1,n-1]){if(j<1||j>N||cacheGet(j,kk))continue;renderTo(j,w,dpr()).then(cc=>cachePut(j,kk,cc)).catch(()=>{})}},150)}
 function step(d){if(pdf)show(n+d)}
+// "Questions on this slide": the course's doc entry lists [first slide, section] pairs (SLIDE_SECTIONS in build_site.py). The button opens
+// that section's free 5-question round in the course (it never changes mastery) and hides on slides before the first part.
+let secs=null;
+function setQ(){const b=$('qbtn');if(!secs||!course){b.hidden=true;return}
+ let key=null;for(const [from,k] of secs)if(from<=n)key=k;
+ if(!key){b.hidden=true;return}
+ b.href='reviewer.html?course='+encodeURIComponent(course)+'#preview='+encodeURIComponent(key);b.hidden=false}
+async function loadSecs(){if(!ok||!/^[a-z0-9_-]+$/i.test(course))return;
+ try{const c=await (await fetch('courses/'+course+'.json')).json(),d=((c.config||{}).docs||[]).find(x=>x.file===file);
+  if(d&&Array.isArray(d.secs)&&d.secs.length){secs=d.secs;setQ()}}catch(e){}}
 function applyT(){const maxX=Math.max(0,(cw*z-stage.clientWidth)/2),maxY=Math.max(0,(chh*z-stage.clientHeight)/2);px=clamp(px,-maxX,maxX);py=clamp(py,-maxY,maxY);
  view.style.transform='translate('+px+'px,'+py+'px) scale('+z+')';stage.classList.toggle('zoomed',z>1.01)}
 let settle=null;function settleZoom(){clearTimeout(settle);settle=setTimeout(()=>{if(z>1.05&&pdf)show(n,true)},250)}
@@ -121,7 +133,7 @@ addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const k=
  if(k==='ArrowRight'||k==='PageDown'||k===' '||k==='Enter'||k==='ArrowDown'){e.preventDefault();step(1)}
  else if(k==='ArrowLeft'||k==='PageUp'||k==='ArrowUp'||k==='Backspace'){e.preventDefault();step(-1)}
  else if(k==='Home'){e.preventDefault();if(pdf)show(1)}else if(k==='End'){e.preventDefault();if(pdf)show(N)}
- else if(k==='f'||k==='F')toggleFs();else if(k==='t'||k==='T')toggleThumbs();
+ else if((k==='q'||k==='Q')&&!$('qbtn').hidden)location.href=$('qbtn').href;else if(k==='f'||k==='F')toggleFs();else if(k==='t'||k==='T')toggleThumbs();
  else if(k==='+'||k==='='){z=clamp(z*1.25,1,4);applyT();settleZoom()}else if(k==='-'){z=clamp(z/1.25,1,4);if(z<=1.01){px=py=0}applyT();settleZoom()}else if(k==='0'){z=1;px=py=0;applyT();if(pdf)show(n)}});
 // ---- full screen (iPhone Safari has none, so the button stays hidden there)
 const root=document.documentElement,canFs=!!(root.requestFullscreen||root.webkitRequestFullscreen);
@@ -152,7 +164,7 @@ addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(
  catch(e){say('Could not load the slides. Check your connection and reload.');return}
  N=pdf.numPages;let start=1;const h=parseInt(location.hash.slice(1),10);
  if(h>=1&&h<=N)start=h;else{try{const s=+localStorage.getItem(KEY);if(s>=1&&s<=N)start=s}catch(e){}}
- $('tbtn').hidden=false;await show(start);
+ $('tbtn').hidden=false;await show(start);loadSecs();
  let open=false;try{open=!!localStorage.getItem('slides_thumbs')}catch(e){}if(open)toggleThumbs(true);
  const hp=$('help');hp.classList.add('on');setTimeout(()=>hp.classList.remove('on'),3500);
 })();

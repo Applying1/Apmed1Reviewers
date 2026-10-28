@@ -569,5 +569,22 @@
   "title": "Link your attendance",
   "text": "Signed in but no attendance yet? Tap My attendance on the home page, type your roll number and last name, and the class secretary will link your account.",
   "link": "attendance.html"
+ },
+ {
+  "id": 69,
+  "date": "2026-10-29",
+  "type": "feature",
+  "title": "Questions on this slide",
+  "text": "Reading the Pharmacology Anti-Inflammatory slides? A Quiz button now sits in the slide viewer and opens a free 5-question round on the part you are looking at. It never changes your mastery.",
+  "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 70,
+  "date": "2026-10-29",
+  "type": "content",
+  "course": "psych",
+  "title": "Psychology chapter 13 started",
+  "text": "68 new questions on psychological disorders (classifying, anxiety, OCD and trauma, dissociative and somatic disorders), checked against the teacher's slides and the book. Mood disorders, schizophrenia and personality disorders come next.",
+  "link": "reviewer.html?course=psych"
  }
 ]
