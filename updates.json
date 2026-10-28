@@ -487,5 +487,14 @@
   "title": "Pharmacology Lesson 7: 12 more cases",
   "text": "Twelve new patient cases on anti-inflammatory drugs, and some answer choices reworded so the longest option is not the giveaway.",
   "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 59,
+  "date": "2026-10-28",
+  "type": "content",
+  "course": "pharma",
+  "title": "Pharmacology Evals 2 mock updated",
+  "text": "The Evals 2 mock now uses 7 patient cases and 6 lesson items plus 2 typed questions. The cases are hidden in normal practice (turn them on in Personalize).",
+  "link": "reviewer.html?course=pharma"
  }
 ]
