@@ -116,6 +116,14 @@ html.touch .chip{font-size:12px;padding:3px 9px}
 .review ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
 .review li{font-size:14px;color:var(--mute)}
 .review li b{color:var(--text);letter-spacing:.03em;margin-right:6px}
+.lb{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.lbh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.lb h3{margin:0;font-size:15px}
+.seg{display:inline-flex;background:var(--raised);border-radius:10px;padding:3px}.seg button{border:0;background:none;padding:4px 11px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--mute)}.seg button[aria-selected="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.lbl{list-style:none;margin:0;padding:0;display:grid;gap:2px}.lbl li{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;font-size:14px}
+.lbl li.me{background:var(--accent-soft);font-weight:600}.lbl .rk{width:22px;text-align:right;color:var(--mute);font-variant-numeric:tabular-nums;font-weight:600}.lbl .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbl .tm{font-variant-numeric:tabular-nums}.lbl .tm small{color:var(--mute);font-weight:500;margin-left:4px}
+.lbnote{margin:8px 0 0;font-size:13px;color:var(--mute)}.lbnote .link{border:0;background:none;padding:0;color:var(--accent);font-weight:600;font-size:13px;cursor:pointer}
+.lbform{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.lbform input{flex:1;min-width:140px;padding:7px 10px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:inherit;font-size:14px}
 .past{margin-top:32px}
 .past h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:0 0 8px}
 .past a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;text-decoration:none;font-size:14px;border:1px solid var(--line);background:var(--surface);margin-bottom:6px}
@@ -146,6 +154,7 @@ html.touch .toast.on{transform:translate(-50%,0)}
    <li>Tap a square and type. Tap the same square again to switch between Across and Down.</li>
    <li>Tap a clue, or use the arrows on the clue bar, to jump between words.</li>
    <li>Stuck? <b>Hint</b> on the clue bar shows one letter of the word at a time (like A _ _ _ G _ _). The <b>Hints</b> menu can also check or reveal. Each counts as a hint.</li>
+   <li>Signed in? Your puzzle follows you to your other devices, and your time goes on the <b>class board</b> (time + 15 s per hint). You can hide yourself from it anytime.</li>
    <li>A new puzzle comes out every day at midnight, mixing the courses with the nearest evals or exams. The small tag on each clue shows its course. Your answers save on this device.</li>
   </ul>
   <button class="btn primary" onclick="closeHow()">Start</button>
@@ -176,6 +185,7 @@ html.touch .toast.on{transform:translate(-50%,0)}
 <script src="schedule-core.js"></script>
 <script src="reminders-core.js"></script>
 <script src="dialog.js"></script>
+<script src="auth.js"></script>
 <script>
 // Daily crossword. Puzzles: crossword/puzzles.json (built by tools/make_crossword.py). Progress: localStorage
 // 'reviewer_crossword' = {v:1, seen, how, g:{<puzzle id>:{f: letters, m: marks, t: seconds, h: help used, k: layout key, done, day}}}.
@@ -205,7 +215,8 @@ async function boot(){
  if(!S.how)openHow();
  let data=null;
  try{data=await (await fetch('crossword/puzzles.json')).json()}catch(e){}
- try{const cl=await (await fetch('courses.json')).json();for(const c of cl)NAMES[c.id]=c.title}catch(e){}
+ try{const cl=await (await fetch('courses.json')).json();for(const c of cl)NAMES[c.id]=c.title;const cl2=cl.find(c=>c.cloud&&c.cloud.url);if(cl2)Auth.cloud=cl2.cloud}catch(e){}
+ await cwPull();   // this account's progress from other devices first
  // the nearest test per course, from the timetable
  try{await Sched.load();for(const a of Remind.list(8)){const c=a.subj&&a.subj.course;if(c&&!TESTS[c])TESTS[c]=a}}catch(e){}
  ALL=((data&&data.puzzles)||[]).filter(p=>p.date<=TODAY);
@@ -221,7 +232,7 @@ async function boot(){
  open(p);
  addEventListener('resize',size);
  document.addEventListener('keydown',key);
- document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();else if(G&&G.f.trim()&&!G.done)start()});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){pause();cwPush(true)}else{if(G&&G.f.trim()&&!G.done)start();cwPull().then(m=>{if(m&&m.cur&&P)open(P);else if(m&&m.any&&P){drawHead();drawPast()}})}});
  addEventListener('pagehide',pause);
 }
 // same-day puzzles, the course with the nearest test first
@@ -237,6 +248,7 @@ function open(p){
  if(!G||G.k!==k||G.f.length!==n)G=S.g[p.id]={f:' '.repeat(n),m:'0'.repeat(n),t:0,h:0,k};
  wasFull=G.f.split('').every((ch,j)=>!cells[j]||ch!==' ');
  history.replaceState(null,'','?id='+encodeURIComponent(p.id));
+ cwOpen();
  drawHead();drawGrid();drawClues();drawKb();
  const first=order.find(w=>w.idx.some(j=>G.f[j]===' '))||order[0];
  dir=first.d;cur=first.idx.find(j=>G.f[j]===' ');if(cur===undefined)cur=first.idx[0];
@@ -244,6 +256,7 @@ function open(p){
  render();drawDone();drawPast();drawTimer();size();
  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(size);
  if(G.f.trim()&&!G.done)start();
+ if(G.done&&G.post==='pending'&&isToday(P))cwSubmit().then(drawBoard);   // a solve that couldn't post while offline
 }
 
 function drawHead(){
@@ -343,7 +356,7 @@ function pause(){if(G&&tStart){G.t+=(Date.now()-tStart)/1000;tStart=0;save()}cle
 function secs(){return Math.floor(G.t+(tStart?(Date.now()-tStart)/1000:0))}
 const clock=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 function drawTimer(){const e=$('timer');e.hidden=!G;if(G){e.textContent=clock(secs());e.classList.toggle('done',!!G.done)}}
-function persist(){if(tStart){G.t+=(Date.now()-tStart)/1000;tStart=Date.now()}save()}
+function persist(){if(tStart){G.t+=(Date.now()-tStart)/1000;tStart=Date.now()}G.u=Date.now();save();cwPush()}
 
 function full(){
  const isFull=cells.every((c,j)=>!c||G.f[j]!==' ');
@@ -352,10 +365,11 @@ function full(){
  wasFull=isFull;
 }
 function win(){
- pause();G.done=Date.now();G.day=manila();save();clearTimeout(toast.t);$('toast').classList.remove('on');
+ pause();G.done=Date.now();G.day=manila();G.u=Date.now();save();clearTimeout(toast.t);$('toast').classList.remove('on');
  render();drawTimer();drawHead();drawPast();
  const g=$('grid');g.classList.remove('won');void g.offsetWidth;g.classList.add('won');
  drawDone();setTimeout(()=>$('done').scrollIntoView({behavior:'smooth',block:'nearest'}),450);
+ cwPush(true);cwSubmit().then(drawBoard);
 }
 
 // Check / Reveal
@@ -392,7 +406,7 @@ async function reveal(s){closeMenu();
  G.h++;if(s==='all')G.gave=1;persist();render();full()}
 async function restart(){closeMenu();
  if(!await ask('This clears your letters, help count and time for this puzzle.',{title:'Start this puzzle over?',ok:'Start over',danger:1}))return;
- pause();delete S.g[P.id];save();open(P)}
+ pause();delete S.g[P.id];open(P);G.u=Date.now();save();cwPush(true)}
 
 function streak(){const days=new Set();for(const id in S.g){const g=S.g[id];if(g.done&&!g.gave&&g.day===id.slice(0,10))days.add(g.day)}
  let d=days.has(TODAY)?TODAY:shift(TODAY,-1),n=0;while(days.has(d)){n++;d=shift(d,-1)}return n}
@@ -405,8 +419,8 @@ function drawDone(){
   '<div class="row">'+(G.gave?'':'<button class="btn primary" onclick="share()">'+ic('share')+'Share result</button>')+
   (other?'<button class="btn" onclick="go(\''+other.id+'\')">Next: '+esc(label(other))+' puzzle</button>':'')+
   P.courses.map(c=>'<a class="btn" href="reviewer.html?course='+encodeURIComponent(c)+'">Practice '+esc(short(c))+'</a>').join('')+'</div>'+
-  '<details class="review" open><summary>The words</summary><ul>'+order.map(w=>'<li><b>'+w.a+'</b>'+(P.courses.length>1&&w.k?'<span class="tg">'+esc(short(w.k))+'</span>':'')+esc(w.q)+'</li>').join('')+'</ul></details>';
- b.hidden=false;
+  '<section class="lb" id="lb" aria-label="Class board"></section><details class="review"><summary>The words</summary><ul>'+order.map(w=>'<li><b>'+w.a+'</b>'+(P.courses.length>1&&w.k?'<span class="tg">'+esc(short(w.k))+'</span>':'')+esc(w.q)+'</li>').join('')+'</ul></details>';
+ b.hidden=false;drawBoard();
 }
 function share(){
  const s=Math.round(G.t),t='APMed \'33 Daily Crossword · '+niceDate(P.date)+'\n'+P.courses.map(c=>NAMES[c]||c).join(' + ')+(P.title?': '+P.title:'')+'\nSolved in '+clock(s)+(G.h?' with '+G.h+(G.h===1?' hint':' hints'):', no hints')+(streak()>1?' · '+streak()+'-day streak':'')+'\n'+location.origin+location.pathname;
@@ -420,6 +434,67 @@ function drawPast(){
 }
 function openHow(){$('howto').hidden=false;$('howto').querySelector('.btn').focus()}
 function closeHow(){$('howto').hidden=true;S.how=1;save()}
+// ---------- sync between devices (the courses' sync code; one row "_crossword") ----------
+// Per puzzle: a solved copy beats an unsolved one (the earlier solve when both are), otherwise the copy changed last wins.
+const syncCode=()=>{try{return (JSON.parse(localStorage.getItem('reviewer_sync'))||{}).code||''}catch(e){return ''}};
+const cloudOn=()=>!!(Auth.cloud&&syncCode());
+function better(a,b){if(!a)return b;if(!b)return a;if(!!a.done!==!!b.done)return a.done?a:b;if(a.done)return a.done<=b.done?a:b;return (b.u||0)>(a.u||0)?b:a}
+function mergeCw(r){const m={any:false,cur:false};if(!r||r.v!==1||!r.g||typeof r.g!=='object')return m;
+ for(const id in r.g){const a=S.g[id],b=r.g[id];if(!b||typeof b.f!=='string'||typeof b.m!=='string')continue;if(P&&id===P.id&&tStart)continue;/* never swap the puzzle being typed in */if(better(a,b)!==a){S.g[id]=Object.assign({},b);m.any=true;if(P&&id===P.id)m.cur=true}}
+ if(r.how&&!S.how){S.how=1;m.any=true}if(r.seen&&!S.seen){S.seen=1;m.any=true}
+ if(r.lb&&(r.lb.at||0)>((S.lb||{}).at||0)){S.lb=r.lb;m.any=true}
+ if(m.any)save();return m}
+let pushT=0,pulling=null;
+function cwPull(){if(!cloudOn())return Promise.resolve(null);if(pulling)return pulling;
+ pulling=Promise.race([Auth.rpc('sync_get',{p_code:syncCode(),p_course:'_crossword'}),new Promise(r=>setTimeout(()=>r(null),3000))])
+  .then(rows=>{const row=Array.isArray(rows)?rows[0]:rows;return row&&row.data?mergeCw(row.data):null}).catch(()=>null).finally(()=>{pulling=null});
+ return pulling}
+// merge the other devices' copy first, then upload (a burst of typing uploads once, 4 s after the last letter)
+function cwPush(now){clearTimeout(pushT);if(!cloudOn())return;
+ const go=()=>cwPull().then(m=>{if(m&&m.cur&&P&&!tStart)open(P);return Auth.rpc('sync_put',{p_code:syncCode(),p_course:'_crossword',p_data:{v:1,g:S.g,how:S.how||0,seen:S.seen||0,lb:S.lb||null}})}).catch(()=>{});
+ if(now)go();else pushT=setTimeout(go,4000)}
+
+// ---------- class board (supabase_crossword.sql; signed-in classmates; on unless you hide yourself) ----------
+// Score = time + 15 s per hint. Only the first solve of today's puzzle posts; the server times it from when you opened it.
+const signedIn=()=>!!(Auth.cloud&&Auth.ses()&&Auth.acc());
+const isToday=p=>!!p&&p.date===manila();
+function defName(){const a=Auth.acc()||{},w=String(a.name||'').replace(/[^\p{L} .'-]/gu,'').trim().split(/\s+/).filter(Boolean);
+ return w.length?w[0].slice(0,18)+(w.length>1?' '+w[w.length-1].charAt(0).toUpperCase()+'.':''):'Classmate'}
+const lbName=()=>(S.lb&&S.lb.name)||defName();
+function cwOpen(){if(!signedIn()||!isToday(P)||G.done||cwOpen.id===P.id)return;const id=P.id;cwOpen.id=id;Auth.rpc('cw_open',{p_puzzle:id},true).catch(()=>{if(cwOpen.id===id)cwOpen.id=''})}
+async function cwSubmit(){if(!signedIn()||!G.done||G.gave||(S.lb&&S.lb.off)||G.post==='ok'||G.post==='already')return;
+ if(G.day!==P.date||!isToday(P)){G.post='late';save();return}
+ const g=G;try{g.post=await Auth.rpc('cw_submit',{p_puzzle:P.id,p_secs:Math.round(g.t),p_hints:g.h,p_name:lbName()},true)||'error'}catch(e){g.post='pending'}
+ save();cwPush()}
+let lbTab='day',lbEdit=false;
+const POSTNOTE={late:'You solved it after its day, so this time isn\'t on the board.','not opened':'Your time wasn\'t posted: the puzzle was opened while offline.',rejected:'Your time couldn\'t be posted.',pending:'Your time will post when you\'re back online.','not today':'Only solves on the puzzle\'s own day go on the board.',error:'Your time couldn\'t be posted.'};
+async function drawBoard(){const el=$('lb');if(!el||!G||!G.done)return;const head=t=>'<div class="lbh"><h3>Class board</h3>'+(t||'')+'</div>';
+ if(!signedIn()){el.innerHTML=head()+'<p class="lbnote"><a href="./?signin=1">Sign in with Google</a> to post your time and see the class board.</p>';return}
+ const pid=P.id;if(!el.innerHTML)el.innerHTML=head()+'<p class="lbnote">Loading…</p>';
+ let b=null;try{b=await Auth.rpc('cw_board',{p_puzzle:pid},true)}catch(e){}
+ if(!P||P.id!==pid||!$('lb'))return;
+ if(!b){el.innerHTML=head()+'<p class="lbnote">Couldn\'t load the board. Check your connection.</p>';return}
+ const pl=b.player||{name:lbName(),off:!!(S.lb&&S.lb.off)};
+ const seg='<div class="seg" role="tablist"><button role="tab" aria-selected="'+(lbTab==='day')+'" onclick="lbTab=\'day\';drawBoard()">Today</button><button role="tab" aria-selected="'+(lbTab==='week')+'" onclick="lbTab=\'week\';drawBoard()">This week</button></div>';
+ let list;
+ if(lbTab==='day'){const top=b.top||[];
+  list=top.length?'<ol class="lbl">'+top.map(x=>'<li'+(x.me?' class="me"':'')+'><span class="rk">'+x.rank+'</span><span class="nm">'+esc(x.name)+'</span><span class="tm">'+clock(x.secs)+(x.hints?'<small>+'+x.hints+(x.hints===1?' hint':' hints')+'</small>':'')+'</span></li>').join('')+'</ol>'
+   +(b.me&&b.me.rank>10?'<p class="lbnote">You: #'+b.me.rank+' of '+b.me.of+' · '+clock(b.me.secs)+'</p>':'')
+   :'<p class="lbnote">No times yet'+(isToday(P)?'. Yours will be the first.':' for this puzzle.')+'</p>'}
+ else{const wk=b.week||[];list=wk.length?'<ol class="lbl">'+wk.map((x,i)=>'<li'+(x.me?' class="me"':'')+'><span class="rk">'+(i+1)+'</span><span class="nm">'+esc(x.name)+'</span><span class="tm">'+x.days+(x.days===1?' day':' days')+'</span></li>').join('')+'</ol>':'<p class="lbnote">No solves this week yet.</p>'}
+ const me=lbEdit?'<form class="lbform" onsubmit="return lbSave(event)"><input id="lbn" maxlength="24" value="'+esc(pl.name)+'" aria-label="Name on the board" autocomplete="off"><button class="btn sm primary">Save</button><button type="button" class="btn sm" onclick="lbEdit=false;drawBoard()">Cancel</button></form>'
+  :pl.off?'<p class="lbnote">You\'re hidden from the board. <button class="link" onclick="lbHide(false)">Show me</button></p>'
+  :'<p class="lbnote">You\'re on the board as <b>'+esc(pl.name)+'</b> · <button class="link" onclick="lbEdit=true;drawBoard()">Change name</button> · <button class="link" onclick="lbHide(true)">Hide me</button></p>';
+ const note=G.post&&POSTNOTE[G.post]?'<p class="lbnote">'+POSTNOTE[G.post]+'</p>':'';
+ el.innerHTML=head(seg)+list+note+me+'<p class="lbnote">Time + 15 s per hint. Only solves on the puzzle\'s own day count.</p>';
+ if(lbEdit)setTimeout(()=>{const i=$('lbn');if(i){i.focus();i.select()}},0)}
+async function lbHide(off){try{await Auth.rpc('cw_player',{p_name:lbName(),p_off:off},true)}catch(e){toast('Couldn\'t change that. Check your connection.');return}
+ S.lb={name:lbName(),off,at:Date.now()};save();cwPush(true);if(!off)await cwSubmit();drawBoard()}
+async function lbSave(e){e.preventDefault();const n=$('lbn').value.trim().replace(/\s+/g,' ');
+ if(!/^\p{L}[\p{L} .'-]{0,23}$/u.test(n)){toast('Use letters only, up to 24.');return false}
+ try{await Auth.rpc('cw_player',{p_name:n,p_off:!!(S.lb&&S.lb.off)},true)}catch(e){toast('Couldn\'t save the name. Check your connection.');return false}
+ S.lb={name:n,off:!!(S.lb&&S.lb.off),at:Date.now()};save();cwPush(true);lbEdit=false;drawBoard();return false}
+
 boot();
 </script>
 <script src="update.js" defer></script>

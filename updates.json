@@ -545,5 +545,13 @@
   "title": "Why did I miss it?",
   "text": "After a wrong answer, tap why you missed it: didn't know, mixed it up, misread or careless. Your dashboard then shows what trips you up most and lets you practice your mix-ups. Explain it differently now uses the same why-not lines you see.",
   "link": "index.html"
+ },
+ {
+  "id": 66,
+  "date": "2026-10-28",
+  "type": "feature",
+  "title": "Crossword class board",
+  "text": "Solve the daily crossword while signed in and your time goes on the class board (first name and last initial; time + 15 seconds per hint). Your puzzle also follows you between your phone and laptop. Don't want to be listed? Tap Hide me under the board.",
+  "link": "crossword.html"
  }
 ]
