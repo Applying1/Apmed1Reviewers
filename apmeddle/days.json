@@ -1,5 +1,76 @@
 {
 "v": 1,
 "tries": 6,
-"days": []
+"days": [
+{
+"date": "2026-10-29",
+"course": "psych",
+"sec": "12-1",
+"topic": "Chapter 12: Stress, Health, and Coping · Stress: What It Is, Where It Comes From",
+"n": 8,
+"x": "SFpPf0tBbgE=",
+"clue": "Any event or situation that threatens or taxes us and sets off the body's alarm and coping reactions",
+"card": "Stress-OR sounds like an actor: it is the thing doing the pushing. The stress is your reaction; the stressor is the cause. Money and work top the Stress in America survey."
+},
+{
+"date": "2026-10-30",
+"course": "botany",
+"sec": "5-2",
+"topic": "Lesson 5: Flower, Fruits and Seeds · Androecium, Gynoecium, Flower Types",
+"n": 9,
+"x": "SFpcd1FcaUBm",
+"clue": "Type of unisexual flower that is male: androecium present, gynoecium absent",
+"card": "Staminate = stamens only (male). Don't mix it up with pistillate, the female flower with only the gynoecium. Bisexual flowers have both."
+},
+{
+"date": "2026-10-31",
+"course": "psych",
+"sec": "12-2",
+"topic": "Chapter 12: Stress, Health, and Coping · Psychological Moderators of Stress",
+"n": 6,
+"x": "X0tTc1le",
+"clue": "Pretending a stressor does not exist; it is NOT one of the helpful moderators of stress",
+"card": "Hardiness, humor, control and support moderate stress. Ignoring the problem does not: the exam question is 'all EXCEPT pretending that stressors do not exist'."
+},
+{
+"date": "2026-11-01",
+"course": "botany",
+"sec": "5-5",
+"topic": "Lesson 5: Flower, Fruits and Seeds · Seeds",
+"n": 5,
+"x": "T0tOblk=",
+"clue": "Protective outer covering of a seed, also called the seed coat",
+"card": "Testa = seed coat; pericarp = fruit wall. A seed has three basic parts: embryo, endosperm (stored food) and the testa. In dicots, food sits in the cotyledons."
+},
+{
+"date": "2026-11-02",
+"course": "psych",
+"sec": "11-3",
+"topic": "Chapter 11: Personality: Theory and Measurement · Learning-Theory Perspectives",
+"n": 7,
+"x": "WU9Tfk1LUg==",
+"clue": "Psychologist who developed social cognitive theory and ran the Bobo doll study",
+"card": "Bandura = observation: kids copy a model's aggression toward the Bobo doll. Social cognitive theory keeps behavior but adds person variables like self-efficacy."
+},
+{
+"date": "2026-11-03",
+"course": "botany",
+"sec": "6-3",
+"topic": "Lesson 6: Plant Kingdom · Bryophyta",
+"n": 9,
+"x": "V0dLf0pOXHt3",
+"clue": "Bryophyte with a flat, leafy gametophyte anchored by rhizoids; the other bryophytes are mosses and hornworts",
+"card": "Bryophytes have no vascular tissue: mosses, hornworts, liverworts. The liverwort's body is flat and leafy, and rhizoids hold it down. Its sporophyte looks like a tiny palm tree."
+},
+{
+"date": "2026-11-04",
+"course": "psych",
+"sec": "11-1",
+"topic": "Chapter 11: Personality: Theory and Measurement · The Psychodynamic Perspective",
+"n": 7,
+"x": "WkBFc11NSg==",
+"clue": "Unpleasant tension Freud said the ego fights with defense mechanisms such as repression",
+"card": "Repression is the ego's automatic ejection of anxiety-evoking ideas from awareness. Remember: defense mechanisms exist to cope with anxiety. Good luck on the eval!"
+}
+]
 }
