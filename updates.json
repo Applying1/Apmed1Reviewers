@@ -504,5 +504,14 @@
   "title": "Tidier color picker",
   "text": "The Colors picker is now an even grid of tiles, on the home page and in Personalize.",
   "link": "index.html"
+ },
+ {
+  "id": 61,
+  "date": "2026-10-28",
+  "type": "content",
+  "course": "purcom",
+  "title": "Two Purposive Communication fixes",
+  "text": "The circular-research choices are reworded so they no longer differ by one word, and the title question now spells out the acronym as your teacher advised.",
+  "link": "reviewer.html?course=purcom"
  }
 ]
