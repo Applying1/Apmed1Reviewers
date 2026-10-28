@@ -513,5 +513,13 @@
   "title": "Two Purposive Communication fixes",
   "text": "The circular-research choices are reworded so they no longer differ by one word, and the title question now spells out the acronym as your teacher advised.",
   "link": "reviewer.html?course=purcom"
+ },
+ {
+  "id": 62,
+  "date": "2026-10-28",
+  "type": "feature",
+  "title": "New course icons",
+  "text": "The home-page pictures are now soft 3D icons in one purple palette, with no background box, so they match your theme in light and dark mode.",
+  "link": "index.html"
  }
 ]

@@ -7,7 +7,7 @@
   "itemWord": "question",
   "count": 460,
   "storageKey": "study_reviewer_iml_history_of_medicine_2026_v1",
-  "image": "courses/iml/topic-1-card.webp",
+  "image": "img/icons/iml.svg",
   "extras": [
    "Yuri"
   ],
@@ -15,7 +15,8 @@
    "courses/iml/topic-1-card.webp",
    "courses/iml/topic-2-card.webp",
    "courses/iml/topic-3-card.webp",
-   "courses/iml/topic-4-card.webp"
+   "courses/iml/topic-4-card.webp",
+   "img/icons/iml.svg"
   ],
   "exam": {
    "name": "Prefinals",
@@ -41,7 +42,7 @@
   "itemWord": "concept",
   "count": 629,
   "storageKey": "psych_midterm_tutor_2026_v1",
-  "image": "courses/psych/chapter-6-card.webp",
+  "image": "img/icons/psych.svg",
   "extras": [],
   "assets": [
    "courses/psych/chapter-6-card.webp",
@@ -50,7 +51,8 @@
    "courses/psych/chapter-9-card.webp",
    "courses/psych/chapter-10-card.webp",
    "courses/psych/chapter-11-card.webp",
-   "courses/psych/chapter-12-card.webp"
+   "courses/psych/chapter-12-card.webp",
+   "img/icons/psych.svg"
   ],
   "exam": {
    "name": "Evals",
@@ -102,13 +104,14 @@
   "itemWord": "question",
   "count": 372,
   "storageKey": "study_reviewer_purcom_midterm_2026_v1",
-  "image": "courses/purcom/topic-1-card.webp",
+  "image": "img/icons/purcom.svg",
   "extras": [],
   "assets": [
    "courses/purcom/topic-1-card.webp",
    "courses/purcom/topic-2-card.webp",
    "courses/purcom/topic-3-card.webp",
-   "courses/purcom/topic-4-card.webp"
+   "courses/purcom/topic-4-card.webp",
+   "img/icons/purcom.svg"
   ],
   "exam": {
    "name": "Research quiz",
@@ -146,7 +149,7 @@
   "itemWord": "question",
   "count": 1531,
   "storageKey": "study_reviewer_chem_midterm_2026_v1",
-  "image": "courses/chem/topic-1-card.webp",
+  "image": "img/icons/chem.svg",
   "extras": [
    "Transes quizzes"
   ],
@@ -161,7 +164,8 @@
    "courses/chem/topic-8-card.webp",
    "courses/chem/topic-9-card.webp",
    "courses/chem/topic-10-card.webp",
-   "courses/chem/topic-11-card.webp"
+   "courses/chem/topic-11-card.webp",
+   "img/icons/chem.svg"
   ],
   "exam": {
    "name": "Lecture quiz",
@@ -222,7 +226,7 @@
   "itemWord": "question",
   "count": 843,
   "storageKey": "study_reviewer_pharma_2026_v1",
-  "image": "courses/pharma/topic-1-card.webp",
+  "image": "img/icons/pharma.svg",
   "extras": [],
   "assets": [
    "courses/pharma/topic-1-card.webp",
@@ -230,7 +234,8 @@
    "courses/pharma/topic-3-card.webp",
    "courses/pharma/topic-4-card.webp",
    "courses/pharma/topic-5-card.webp",
-   "courses/pharma/topic-6-card.webp"
+   "courses/pharma/topic-6-card.webp",
+   "img/icons/pharma.svg"
   ],
   "exam": {
    "name": "Evals 2 (anti-inflammatory)",
@@ -320,12 +325,13 @@
   "itemWord": "question",
   "count": 452,
   "storageKey": "study_reviewer_nstp_2026_v1",
-  "image": "courses/nstp/topic-1-card.webp",
+  "image": "img/icons/nstp.svg",
   "extras": [],
   "assets": [
    "courses/nstp/topic-1-card.webp",
    "courses/nstp/topic-2-card.webp",
-   "courses/nstp/topic-3-card.webp"
+   "courses/nstp/topic-3-card.webp",
+   "img/icons/nstp.svg"
   ],
   "exam": {
    "name": "Prefinals",
@@ -351,14 +357,15 @@
   "itemWord": "question",
   "count": 881,
   "storageKey": "study_reviewer_botany_2026_v1",
-  "image": "courses/botany/topic-1-card.webp",
+  "image": "img/icons/botany.svg",
   "extras": [],
   "assets": [
    "courses/botany/topic-1-card.webp",
    "courses/botany/topic-2-card.webp",
    "courses/botany/topic-3-card.webp",
    "courses/botany/topic-4-card.webp",
-   "courses/botany/topic-5-card.webp"
+   "courses/botany/topic-5-card.webp",
+   "img/icons/botany.svg"
   ],
   "exam": {
    "name": "Evals: Lessons 5 and 6",
@@ -398,10 +405,11 @@
   "itemWord": "problem",
   "count": 464,
   "storageKey": "study_reviewer_mmw_2026_v1",
-  "image": "courses/mmw/topic-8-card.webp",
+  "image": "img/icons/mmw.svg",
   "extras": [],
   "assets": [
-   "courses/mmw/topic-8-card.webp"
+   "courses/mmw/topic-8-card.webp",
+   "img/icons/mmw.svg"
   ],
   "exam": {
    "name": "Finals",
@@ -426,9 +434,10 @@
   "id": "pe1",
   "title": "PE 1",
   "soon": true,
-  "image": "courses/soon/pe1-card.webp",
+  "image": "img/icons/pe.svg",
   "assets": [
-   "courses/soon/pe1-card.webp"
+   "courses/soon/pe1-card.webp",
+   "img/icons/pe.svg"
   ]
  }
 ]

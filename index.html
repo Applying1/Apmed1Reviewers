@@ -30,10 +30,10 @@ main{max-width:1000px;margin:0 auto;padding:40px 24px 64px}
 h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:36px 0 22px}
 .lede{color:var(--mute);margin:0 0 26px;max-width:62ch}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-.course{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);text-decoration:none;transition:transform .18s var(--ease),box-shadow .18s,border-color .18s}
-.course:hover{transform:translateY(-3px);border-color:var(--accent-line);box-shadow:0 10px 28px color-mix(in oklab,var(--accent) 14%,transparent)}
-.art{aspect-ratio:16/9;background:radial-gradient(120% 120% at 0 0,color-mix(in oklab,var(--accent) 18%,var(--surface)),var(--surface) 70%);display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--line)}
-.art img{width:100%;height:100%;object-fit:cover}
+.course{display:flex;flex-direction:column;background:var(--surface);border:1.5px solid color-mix(in oklab,var(--accent) 26%,var(--line2));border-radius:18px;overflow:hidden;box-shadow:0 1px 2px color-mix(in oklab,var(--accent) 10%,transparent),0 8px 18px -10px color-mix(in oklab,var(--accent) 30%,transparent);text-decoration:none;transition:transform .18s var(--ease),box-shadow .18s,border-color .18s}
+.course:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 1px 2px color-mix(in oklab,var(--accent) 14%,transparent),0 14px 28px -10px color-mix(in oklab,var(--accent) 38%,transparent)}
+.art{background:none;display:flex;justify-content:center;align-items:center;height:132px;padding:16px 10px 0}
+.art img{width:auto;height:100%;max-width:100%;object-fit:contain}:root{--ic-gl0:color-mix(in oklab,var(--accent) 12%,#fff);--ic-gl1:color-mix(in oklab,var(--accent) 50%,#fff);--ic-gm0:color-mix(in oklab,var(--accent) 56%,#fff);--ic-gm1:var(--accent);--ic-gd0:color-mix(in oklab,var(--accent) 92%,#fff);--ic-gd1:color-mix(in oklab,var(--accent) 78%,#000);--ic-gx0:color-mix(in oklab,var(--accent) 84%,#000);--ic-gx1:color-mix(in oklab,var(--accent) 52%,#000)}.art .ic{display:block;height:100%;max-width:100%}.art .ic svg{display:block;height:100%;width:auto;max-width:100%}
 .art b{font:600 56px/1 var(--serif);color:var(--accent);opacity:.4}
 .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:4px;flex:1}
 .body .t{font:600 18px/1.3 var(--serif)}
@@ -43,7 +43,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .tag.exam{background:var(--accent-soft);color:var(--accent)}
 /* Courses without a reviewer yet: shown, but not clickable */
 .course.soon{cursor:default}
-.course.soon:hover{transform:none;border-color:var(--line);box-shadow:var(--shadow)}
+.course.soon:hover{transform:none}.course.soon{border-style:dashed;box-shadow:none}.course.soon:hover{border-color:color-mix(in oklab,var(--accent) 26%,var(--line2));box-shadow:none}
 .course.soon .art img{filter:saturate(.55);opacity:.7}
 .course.soon .t{color:var(--mute)}
 .tag.soon{background:var(--raised);color:var(--faint)}
@@ -51,7 +51,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .track{height:6px;border-radius:9px;background:var(--raised);overflow:hidden}
 .fill{height:100%;border-radius:9px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
 /* Phones: two courses per row with the whole picture, so the list is a third as long */
-@media (max-width:520px){.grid{grid-template-columns:1fr 1fr;gap:10px}.art{aspect-ratio:4/3}.body{padding:10px 11px 12px;gap:2px}.body .t{font-size:15px;line-height:1.25}.body .s{font-size:12.5px}
+@media (max-width:520px){.grid{grid-template-columns:1fr 1fr;gap:10px}.art{height:104px;padding-top:12px}.body{padding:10px 11px 12px;gap:2px}.body .t{font-size:15px;line-height:1.25}.body .s{font-size:12.5px}
  .tags{gap:4px;margin-top:4px}.tag{font-size:11px;padding:1px 7px}.prog{padding-top:8px}.meta{font-size:11px;flex-wrap:wrap;gap:2px 6px}.course:hover{transform:none}}
 .meta{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:12.5px;color:var(--faint);font-variant-numeric:tabular-nums}
 .note{margin-top:28px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--mute);font-size:13.5px}
@@ -297,16 +297,20 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
  if(CLOUD&&window.Push){Push.init(CLOUD);setTimeout(()=>Push.heal(),1500)}
  if(CLOUD){drawSyncBtn();finishSignIn().then(done=>{const q=new URLSearchParams(location.search);if(done)return;
   if(q.has('signin')){history.replaceState(null,'',location.pathname);signIn()}else if(q.has('sync')){history.replaceState(null,'',location.pathname);openSync()}else setTimeout(spotlight,700)})}
- const art=c=>'<span class="art">'+(c.image?'<img src="'+esc(c.thumb||c.image)+'" alt="" loading="lazy" decoding="async" width="480" height="360">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>';
+ const ICONS={};const loadIcon=u=>ICONS[u]||(ICONS[u]=fetch(u).then(r=>r.ok?r.text():'').catch(()=>''));
+ const inlineIcons=()=>document.querySelectorAll('.ic[data-src]').forEach(el=>{const u=el.dataset.src;loadIcon(u).then(t=>{if(t&&el.isConnected){el.innerHTML=t;el.removeAttribute('data-src')}else if(!t){el.innerHTML='<img src="'+u+'" alt="" height="140" width="160">'}})});
+ const artHTML=c=>!c.image?'<b>'+esc(c.title.charAt(0))+'</b>':/\.svg$/.test(c.image)?'<span class="ic" data-src="'+esc(c.image)+'" role="img" aria-hidden="true"></span>':'<img src="'+esc(c.thumb||c.image)+'" alt="" loading="lazy" decoding="async" width="160" height="140">';
+ const art=c=>'<span class="art">'+artHTML(c)+'</span>';
  window.drawCourses=()=>{document.getElementById('list').innerHTML=list.map(c=>{
   if(c.soon)return '<div class="course soon" aria-disabled="true">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag soon">Not available yet</span></span></span></div>';
   if(c.notesOnly)return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag exam">Notes &amp; transes</span><span class="tag soon">Questions coming soon</span></span></span></a>';
   const s=summary(c.storageKey),pr=progressOf(c,s),pct=pr.pct;
   return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+
-   '<span class="art">'+(c.image?'<img src="'+esc(c.thumb||c.image)+'" alt="" loading="lazy" decoding="async" width="480" height="360">':'<b>'+esc(c.title.charAt(0))+'</b>')+'</span>'+
+   '<span class="art">'+artHTML(c)+'</span>'+
    '<span class="body"><span class="t">'+esc(c.title)+'</span>'+
    (c.exam?'<span class="tags">'+examTag(c.exam)+'</span>':'')+
    '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?(pr.scope&&!(c.exam&&c.exam.name===pr.scope)?esc(pr.scope)+': ':'')+pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('')};
+ {const _dc=window.drawCourses;window.drawCourses=()=>{_dc();inlineIcons()}}
  drawCourses();
  window.COURSE_LIST=list;if(window.afterCourses)afterCourses(list);
  if(CLOUD&&getCode()){pullSummaries(list);if(window.Daily&&Daily.sync)Daily.sync(rpc,getCode()).then(c=>{if(c&&window.drawToday)drawToday()})}
