@@ -496,5 +496,13 @@
   "title": "Pharmacology Evals 2 mock updated",
   "text": "The Evals 2 mock now uses 7 patient cases and 6 lesson items plus 2 typed questions. The cases are hidden in normal practice (turn them on in Personalize).",
   "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 60,
+  "date": "2026-10-28",
+  "type": "feature",
+  "title": "Tidier color picker",
+  "text": "The Colors picker is now an even grid of tiles, on the home page and in Personalize.",
+  "link": "index.html"
  }
 ]

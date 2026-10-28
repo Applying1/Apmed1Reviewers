@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='91',APP_DATE='Oct 28, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='92',APP_DATE='Oct 28, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1747,6 +1747,8 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'92',date:'Oct 28, 2026',title:'Tidier color picker',items:[
+  'The <b>Colors</b> picker is now an even grid of equal tiles instead of ragged pills, on the home page and in Personalize.']},
  {v:'91',date:'Oct 28, 2026',title:'Mix look-alikes and a slide viewer',items:[
   'On <b>Drills → Don&#39;t mix up</b> there is now a <b>Practice mixed look-alikes</b> button: a short round that switches between the look-alikes in turn, so you have to tell them apart. It does not change your mastery.',
   'Slides now open as a real <b>slide viewer</b>: one slide at a time, swipe or arrow keys, pinch to zoom, a strip of all slides, full screen on laptops, and it remembers where you stopped. <b>Read</b> in the viewer opens the same file as pages you can search.']},

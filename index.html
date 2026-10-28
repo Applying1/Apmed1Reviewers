@@ -186,8 +186,8 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
 /* One-time offer to try the APMed '33 colors */
 .try{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--accent-line)}
 .try[hidden]{display:none}
-.colors{margin:26px 0 4px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}.colors b{font-size:13px;color:var(--mute)}.colors small{flex-basis:100%;font-size:12px;color:var(--faint)}
-.pals{display:flex;flex-wrap:wrap;gap:6px}.pals button{display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);font:600 13px var(--sans);color:var(--mute);cursor:pointer}.pals button:hover:not(.on){color:var(--text)}.pals button.on{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 2px var(--accent-soft)}.pals i{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1px #0003;flex:none}
+.colors{margin:26px 0 4px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}.colors b{font-size:13px;color:var(--mute)}.colors #pals{flex:1 1 100%}.colors small{flex-basis:100%;font-size:12px;color:var(--faint)}
+.pals{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}.pals button{display:flex;align-items:center;gap:8px;padding:6px 10px 6px 7px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font:600 12.5px var(--sans);color:var(--mute);cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden}.pals button:hover:not(.on){color:var(--text);border-color:var(--line2)}.pals button.on{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 2px var(--accent-soft)}.pals i{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 1px #0003;flex:none}
 .try .sw{flex:none;display:flex;gap:3px}.try .sw i{width:14px;height:14px;border-radius:50%;border:1px solid #0002}
 .try p{flex:1;min-width:180px;margin:0;font-size:14px;color:var(--mute)}.try p b{color:var(--text)}
 .try .row{margin:0;flex-wrap:nowrap}.try .row .btn{flex:none}
