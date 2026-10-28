@@ -406,5 +406,13 @@
   "title": "New address: apmed33.online + pink theme",
   "text": "The site now lives at apmed33.online. If you're signed in with Google, your progress comes with you. Your streak, daily goal and notification settings now sync between devices too. New Sakura pink theme in Personalize → Appearance → Colors.",
   "link": "index.html"
+ },
+ {
+  "id": 49,
+  "date": "2026-10-28",
+  "type": "feature",
+  "title": "Matcha theme, number keys, PurCom slides",
+  "text": "New Matcha green theme in Personalize → Appearance → Colors. On a keyboard you can now pick answers with 1–5 as well as A–E. Purposive Communication has the Nature of Research slides under Notes & transes.",
+  "link": "index.html"
  }
 ]
