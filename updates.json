@@ -452,7 +452,23 @@
   "date": "2026-10-28",
   "type": "content",
   "title": "Botany: Plant Kingdom (Eval 2) + slides",
-  "text": "General Botany has a new lesson, Lesson 6: Plant Kingdom, with 149 questions, notes and transes (algae, mosses, ferns, gymnosperms, angiosperms). The Flower, Seed and Fruit slides and the Plant Kingdom slides now open in the slide viewer. Evals: Eval 1 is Lesson 5 and Eval 2 is Lesson 6, picked in Mock exam.",
+  "text": "General Botany has a new lesson, Lesson 6: Plant Kingdom, with 149 questions, notes and transes (algae, mosses, ferns, gymnosperms, angiosperms). The Flower, Seed and Fruit slides and the Plant Kingdom slides now open in the slide viewer. The Evals cover both topics (Lesson 5 and Lesson 6); the Eval mock is 30 questions split between them.",
+  "link": "reviewer.html?course=botany"
+ },
+ {
+  "id": 55,
+  "date": "2026-10-28",
+  "type": "content",
+  "title": "Pharmacology: Anti-Inflammatory Drugs (Lesson 7)",
+  "text": "Pharmacology has a new lesson, Lesson 7: Anti-Inflammatory Drugs, for the next evals: 158 questions with why-not lines for every wrong choice, notes with mnemonics, drills, transes, and the slides in the slide viewer. The Mock exam has an Eval 2 preset (13 MCQ + 2 VSA).",
+  "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 56,
+  "date": "2026-10-28",
+  "type": "content",
+  "title": "Botany: why each wrong choice is wrong",
+  "text": "General Botany Lessons 5 and 6 (Flower, Fruits and Seeds; Plant Kingdom) now explain why each wrong choice is wrong: pick a wrong answer in practice and you see a one-line reason.",
   "link": "reviewer.html?course=botany"
  }
 ]
