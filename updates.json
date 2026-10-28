@@ -438,5 +438,21 @@
   "title": "Psychology: why each wrong choice is wrong",
   "text": "Psychology chapters 11 and 12 now explain why each wrong choice is wrong: pick a wrong answer in practice and you see a one-line reason, ready for the Evals on Nov 4. Also new: a Warm up button on the home page before a class (when that topic has questions).",
   "link": "reviewer.html?course=psych"
+ },
+ {
+  "id": 53,
+  "date": "2026-10-28",
+  "type": "content",
+  "title": "Chemistry: why each wrong choice is wrong",
+  "text": "Chemistry topics 12 (Aromatic compounds) and 13 (Alcohols, amines, ethers, thiols) now explain why each wrong choice is wrong. Pick a wrong answer in practice and you get a one-line reason, which helps most for naming and true/false items.",
+  "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 54,
+  "date": "2026-10-28",
+  "type": "content",
+  "title": "Botany: Plant Kingdom (Eval 2) + slides",
+  "text": "General Botany has a new lesson, Lesson 6: Plant Kingdom, with 149 questions, notes and transes (algae, mosses, ferns, gymnosperms, angiosperms). The Flower, Seed and Fruit slides and the Plant Kingdom slides now open in the slide viewer. Evals: Eval 1 is Lesson 5 and Eval 2 is Lesson 6, picked in Mock exam.",
+  "link": "reviewer.html?course=botany"
  }
 ]

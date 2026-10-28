@@ -327,10 +327,10 @@
  {
   "id": "botany",
   "title": "General Botany",
-  "scope": "Finals: Flower, Fruits and Seeds",
+  "scope": "Evals: Flower, Fruits and Seeds, then Plant Kingdom",
   "unit": "Lesson",
   "itemWord": "question",
-  "count": 732,
+  "count": 881,
   "storageKey": "study_reviewer_botany_2026_v1",
   "image": "courses/botany/topic-1-card.webp",
   "extras": [],
@@ -342,10 +342,10 @@
    "courses/botany/topic-5-card.webp"
   ],
   "exam": {
-   "name": "Finals",
+   "name": "Eval 1: Flower, Fruits and Seeds",
    "date": ""
   },
-  "activeExam": "finals",
+  "activeExam": "eval1",
   "exams": [
    {
     "id": "midterm",
@@ -358,10 +358,25 @@
     ]
    },
    {
+    "id": "eval1",
+    "name": "Eval 1: Flower, Fruits and Seeds",
+    "chapters": [
+     "5"
+    ]
+   },
+   {
+    "id": "eval2",
+    "name": "Eval 2: Plant Kingdom",
+    "chapters": [
+     "6"
+    ]
+   },
+   {
     "id": "finals",
     "name": "Finals",
     "chapters": [
-     "5"
+     "5",
+     "6"
     ]
    }
   ],
