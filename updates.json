@@ -414,5 +414,13 @@
   "title": "Matcha theme, number keys, PurCom slides",
   "text": "New Matcha green theme in Personalize → Appearance → Colors. On a keyboard you can now pick answers with 1–5 as well as A–E. Purposive Communication has the Nature of Research slides under Notes & transes.",
   "link": "index.html"
+ },
+ {
+  "id": 50,
+  "date": "2026-10-28",
+  "type": "feature",
+  "title": "Live quiz sounds + Ocean, Lavender, Coffee",
+  "text": "The live quiz now has sound: lobby music, a ticking countdown, correct and wrong sounds, a drumroll and a winner fanfare. Tap the speaker in the corner to mute. Three new color themes (Ocean, Lavender, Coffee), and you can now pick colors right on the home page.",
+  "link": "quiz.html"
  }
 ]

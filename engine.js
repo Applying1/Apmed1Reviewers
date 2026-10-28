@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='89',APP_DATE='Oct 27, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='90',APP_DATE='Oct 28, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1728,6 +1728,9 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'90',date:'Oct 28, 2026',title:'Ocean, Lavender and Coffee colors',items:[
+  'Three new color themes: <b>Ocean</b> (blue), <b>Lavender</b> (purple) and <b>Coffee</b> (warm brown). Each has a light and a dark version.',
+  'You can now pick colors on the <b>home page</b> too, under the course list. It applies to every course on this device.']},
  ...(FULL_BANK.some(c=>c.type==='self')?[{v:'36',date:'Oct 25, 2026',title:'Written quiz practice',items:[
   'For written quizzes: <b>type the name</b> of a structure (checked strictly: every number counts), and <b>draw, predict products or explain</b> on paper, then show the answer and mark yourself.',
   'A <b>Mock quiz (written)</b> preset: true or false, identification and naming, drawing and reactions, then an essay. Written answers are checked on the results page.',
@@ -1916,7 +1919,7 @@ function closeCharts(){$('charts').hidden=true;ovClosed('charts')}
 /* ---------- theme ---------- */
 function curTheme(){return document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}
 // Colors picker: a chip per palette with its swatch (page, accent, second accent)
-const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']]];
+const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']],['ocean','Ocean',['#eef5fa','#0a6c9e','#5cc0ef']],['lavender','Lavender',['#f5f2fb','#6b46c1','#b9a2f5']],['coffee','Coffee',['#f6f0e8','#8a4b22','#e0a574']]];
 function palHTML(cur){return '<span class="pals" role="radiogroup" aria-label="Colors">'+PALS.map(([v,t,c])=>'<button role="radio" aria-checked="'+(v===cur)+'" class="'+(v===cur?'on':'')+'" onclick="setPalette(\''+v+'\')"><i style="background:linear-gradient(135deg,'+c[0]+' 0 50%,'+c[1]+' 50% 75%,'+c[2]+' 75%)"></i>'+t+'</button>').join('')+'</span>'}
 function replayIntro(){try{localStorage.removeItem('reviewer_intro_v1')}catch(e){}location.href=CONFIG.home||'./'}
 function setPalette(p){if(p==='classic'){delete document.documentElement.dataset.palette;try{localStorage.removeItem('reviewer_palette')}catch(e){}}else{document.documentElement.dataset.palette=p;try{localStorage.setItem('reviewer_palette',p)}catch(e){}}if(page==='prefs')drawPrefs()}

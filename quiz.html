@@ -100,6 +100,7 @@ main,#app,.card{min-width:0}#app>.card:first-child,#app>.qhead:first-child,#app>
  <div id="app" aria-live="polite"></div>
 </main>
 <script src="live.js"></script>
+<script src="sfx.js"></script>
 <script>
 /* Live quiz. One person hosts (a laptop or a shared screen), everyone else joins on a phone with a 5-character code.
    Everything travels over Supabase Realtime broadcast (live.js): nothing is stored, and the right answer never leaves the
@@ -200,7 +201,7 @@ async function host(again){const btn=$('hb');let cfg;
  keepAwake();hSave();hDraw()}
 function hOn(m){if(!H||!m||typeof m!=='object')return;
  if(m.t==='hello'){const pid=String(m.pid||'').slice(0,24),name=cleanName(m.name);if(!pid||!name)return;
-  const p=H.players[pid]||(H.players[pid]={name,score:0,right:0,streak:0});p.name=name;hLobby();hSave();
+  const fresh=!H.players[pid],p=H.players[pid]||(H.players[pid]={name,score:0,right:0,streak:0});p.name=name;if(fresh)Sfx.join();hLobby();hSave();
   if(H.phase==='q')hSendQ();else if(H.phase==='reveal')Bus.send(H.lastReveal);else if(H.phase==='end')Bus.send(H.lastEnd);
   if(H.phase==='lobby')hDraw();else hCount()}
  else if(m.t==='ans'&&H.phase==='q'&&m.i===H.i){const pid=String(m.pid||'');if(!H.players[pid]||H.answers[pid])return;const c=+m.c;if(!(c>=0&&c<H.qs[H.i].choices.length))return;
@@ -217,13 +218,16 @@ function hReveal(){if(!H||H.phase!=='q')return;clearTimeout(hTimer);const q=H.qs
   let pts=0;if(ok){p.streak=(p.streak||0)+1;pts=Math.round(1000-500*Math.min(a.ms,dur)/dur)+Math.min(300,100*(p.streak-1));p.right++}else p.streak=0;
   p.score+=pts;gain[pid]=pts}
  const rank=hRank(),res={};rank.forEach(([pid,p],k)=>{res[pid]=[gain[pid],p.score,k+1,H.answers[pid]?(H.answers[pid].c===q.correct?1:0):-1]});
- H.phase='reveal';H.gain=gain;H.counts=counts;
+ H.phase='reveal';H.gain=gain;H.counts=counts;Sfx.music(null);Sfx.stopCount();Sfx.reveal();
  H.lastReveal={t:'reveal',i:H.i,n:H.qs.length,correct:q.correct,choices:q.choices,stem:q.stem,why:q.why,counts,res,top:rank.slice(0,5).map(([pid,p])=>[p.name,p.score]),players:rank.length,math:H.math};
  Bus.send(H.lastReveal);hSave();hDraw()}
 function hRank(){return Object.entries(H.players).sort((a,b)=>b[1].score-a[1].score||b[1].right-a[1].right||a[1].name.localeCompare(b[1].name))}
-function hEnd(){clearTimeout(hTimer);H.phase='end';const rank=hRank();H.lastEnd={t:'end',n:H.qs.length,board:rank.map(([pid,p])=>[pid,p.name,p.score,p.right])};Bus.send(H.lastEnd);hSave();hDraw()}
+function hEnd(){clearTimeout(hTimer);H.phase='end';const rank=hRank();H.lastEnd={t:'end',n:H.qs.length,board:rank.map(([pid,p])=>[pid,p.name,p.score,p.right])};Bus.send(H.lastEnd);hSave();
+ if(Sfx.muted()){hDraw();return}
+ Sfx.music(null);Sfx.stopCount();Sfx.drumroll(1700);$('main').classList.add('wide');$('app').innerHTML='<h1 style="justify-content:center">'+ic('trophy')+'And the winner is…</h1>';
+ setTimeout(()=>{if(H&&H.phase==='end'){hDraw();Sfx.fanfare()}},1800)}
 function hDraw(){const a=$('app');$('main').classList.toggle('wide',H.phase!=='lobby');const np=Object.keys(H.players).length;
- if(H.phase==='lobby'){const link=location.origin+location.pathname.replace(/[^/]*$/,'')+'quiz.html?join='+H.code+(LOCAL?'&bus=local':'');
+ if(H.phase==='lobby'){Sfx.music('lobby');const link=location.origin+location.pathname.replace(/[^/]*$/,'')+'quiz.html?join='+H.code+(LOCAL?'&bus=local':'');
   a.innerHTML='<section class="card lob"><div class="eb">'+esc(H.title)+'<br>'+H.qs.length+' questions · '+H.cfg.dur+'-second timer</div>'+
    '<div class="bigcode" aria-label="Code '+esc(H.code.split('').join(' '))+'">'+esc(H.code)+'</div>'+
    '<p class="how">On the reviewer site, tap <b>Live quiz</b> and type this code. Or send them the invite link.</p>'+
@@ -231,7 +235,7 @@ function hDraw(){const a=$('app');$('main').classList.toggle('wide',H.phase!=='l
    '<div class="ppl" id="ppl">'+(np?Object.values(H.players).map(p=>'<span>'+ic('user')+esc(p.name)+'</span>').join(''):'<span class="none">Waiting for players to join…</span>')+'</div>'+
    '<button class="btn primary big" onclick="hStart()"'+(np?'':' disabled')+'>'+ic('play')+' Start'+(np?' · '+np+' player'+(np>1?'s':''):'')+'</button>'+
    '<p class="note"><button class="btn" style="padding:6px 12px;font-size:13.5px" onclick="hQuit()">Cancel</button></p></section>';return}
- if(H.phase==='q'){const q=H.qs[H.i];
+ if(H.phase==='q'){Sfx.music('q');Sfx.countdown(H.cfg.dur*1000-(Date.now()-H.qStart));const q=H.qs[H.i];
   a.innerHTML='<div class="qhead"><span>Question '+(H.i+1)+' of '+H.qs.length+'</span><span class="sp"></span><span class="cnt" id="acount"></span></div>'+
    '<div class="timer"><i id="tbar"></i></div><p class="stem">'+esc(q.stem)+'</p>'+
    '<div class="ch'+(q.choices.length<3?' one':'')+'">'+q.choices.map((c,k)=>'<div class="opt c'+k+'"><span class="l">'+LETTERS[k]+'</span><span>'+esc(c)+'</span></div>').join('')+'</div>'+
@@ -249,7 +253,7 @@ function hDraw(){const a=$('app');$('main').classList.toggle('wide',H.phase!=='l
   '<section class="card"><ol class="lb">'+rank.map(([pid,p],k)=>'<li><span class="rk">'+(k+1)+'</span><b>'+esc(p.name)+'</b><span class="dl" style="color:var(--mute)">'+p.right+'/'+H.qs.length+'</span><span class="sc">'+p.score+'</span></li>').join('')+'</ol></section>'+
   '<div class="ctl"><button class="btn" onclick="hQuit()">Done</button><button class="btn primary" onclick="host(H.cfg)">'+ic('rotate-cw')+' Play again</button></div>'}
 function hCopy(link,b){(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(link):Promise.reject()).then(()=>{b.innerHTML=ic('check')+' Copied'},()=>{prompt('Copy this link:',link)})}
-function hQuit(){if(H){Bus.send({t:'end',n:H.qs.length,board:H.phase==='end'?H.lastEnd.board:[],closed:1})}clearTimeout(hTimer);H=null;try{sessionStorage.removeItem('quiz_host')}catch(e){}history.replaceState(null,'','quiz.html'+(LOCAL?'?bus=local':''));start()}
+function hQuit(){Sfx.music(null);Sfx.stopCount();if(H){Bus.send({t:'end',n:H.qs.length,board:H.phase==='end'?H.lastEnd.board:[],closed:1})}clearTimeout(hTimer);H=null;try{sessionStorage.removeItem('quiz_host')}catch(e){}history.replaceState(null,'','quiz.html'+(LOCAL?'?bus=local':''));start()}
 // the timer bar runs on its own (no per-frame work)
 function bar(el,left,dur){if(!el)return;el.style.transition='none';el.style.transform='scaleX('+Math.max(0,left/dur)+')';void el.offsetWidth;el.style.transition='transform '+Math.max(0,left)+'ms linear';el.style.transform='scaleX(0)'}
 
@@ -265,18 +269,18 @@ function join(){const code=($('jc').value||'').toUpperCase(),name=cleanName($('j
  try{sessionStorage.setItem('quiz_player',JSON.stringify({code,pid,name}))}catch(e){}
  history.replaceState(null,'','quiz.html?join='+code+(LOCAL?'&bus=local':''));
  $('jb').disabled=true;$('jb').textContent='Joining…';m.textContent='';
- Bus.open(code,pOn,()=>Bus.send({t:'hello',pid,name}));
+ Sfx.tap();Bus.open(code,pOn,()=>Bus.send({t:'hello',pid,name}));
  clearTimeout(P.t);P.t=setTimeout(()=>{if(P&&P.phase==='joining'){$('jb').disabled=false;$('jb').textContent='Try again';m.textContent='No quiz with that code is open. Check the code, and ask the host to keep the quiz page open.'}},6000);
  keepAwake()}
 function pOn(m){if(!P||!m||typeof m!=='object')return;
- if(m.t==='lobby'){const me=(m.players||[]).some(x=>x[0]===P.pid);if(!me)return;P.title=m.title;P.n=m.n;P.count=(m.players||[]).length;if(P.phase==='joining'||P.phase==='lobby'&&m.phase==='lobby'){P.phase='lobby';pDraw()}}
+ if(m.t==='lobby'){const me=(m.players||[]).some(x=>x[0]===P.pid);if(!me)return;P.title=m.title;P.n=m.n;P.count=(m.players||[]).length;if(P.phase==='joining'||P.phase==='lobby'&&m.phase==='lobby'){if(P.phase==='joining')Sfx.join();P.phase='lobby';pDraw()}}
  else if(m.t==='q'){if(P.phase==='joining')P.phase='lobby';if(P.q&&P.q.i===m.i&&P.phase==='q')return;
-  P.phase='q';P.q={i:m.i,n:m.n,stem:String(m.stem||''),choices:(m.choices||[]).map(String).slice(0,4),dur:+m.dur||20000,left:+m.left||0,at:Date.now(),math:!!m.math};P.pick=null;P.sent=false;pDraw()}
+  P.phase='q';P.q={i:m.i,n:m.n,stem:String(m.stem||''),choices:(m.choices||[]).map(String).slice(0,4),dur:+m.dur||20000,left:+m.left||0,at:Date.now(),math:!!m.math};P.pick=null;P.sent=false;pDraw();Sfx.go();Sfx.countdown(P.q.left)}
  else if(m.t==='got'){if(P.phase==='q'&&P.q&&m.i===P.q.i&&(m.pids||[]).includes(P.pid)){P.sent=true;clearTimeout(resend);const s=$('sent');if(s)s.textContent='Answer received ✓'}}
  else if(m.t==='reveal'){if(P.phase==='joining')return;const r=(m.res||{})[P.pid];if(!r)return;
-  P.phase='reveal';P.rv=m;P.score=r[1];clearTimeout(resend);pDraw();if(navigator.vibrate)try{navigator.vibrate(r[3]===1?40:[40,60,40])}catch(e){}}
- else if(m.t==='end'){if(P.phase==='joining')return;P.phase='end';P.end=m;clearTimeout(resend);try{sessionStorage.removeItem('quiz_player')}catch(e){}pDraw()}}
-function pick(k){if(!P||P.phase!=='q'||P.pick!=null)return;P.pick=k;const send=()=>Bus.send({t:'ans',pid:P.pid,i:P.q.i,c:k});send();
+  P.phase='reveal';P.rv=m;P.score=r[1];clearTimeout(resend);Sfx.stopCount();if(r[3]===1)Sfx.correct();else Sfx.wrong();pDraw();if(navigator.vibrate)try{navigator.vibrate(r[3]===1?40:[40,60,40])}catch(e){}}
+ else if(m.t==='end'){if(P.phase==='joining')return;P.phase='end';P.end=m;clearTimeout(resend);Sfx.stopCount();if(!(m.closed&&!(m.board||[]).length)){const w=(m.board||[]).findIndex(x=>x[0]===P.pid);if(w===0)Sfx.fanfare();else Sfx.over()}try{sessionStorage.removeItem('quiz_player')}catch(e){}pDraw()}}
+function pick(k){if(!P||P.phase!=='q'||P.pick!=null)return;P.pick=k;Sfx.stopCount();Sfx.tap();const send=()=>Bus.send({t:'ans',pid:P.pid,i:P.q.i,c:k});send();
  let tries=0;clearTimeout(resend);const again=()=>{resend=setTimeout(()=>{if(P&&P.phase==='q'&&!P.sent&&tries++<3){send();again()}},1500)};again();pDraw()}
 function pDraw(){const a=$('app');$('main').classList.remove('wide');
  if(P.phase==='lobby'){a.innerHTML='<section class="card fb wait"><div class="ic">'+ic('check')+'</div><h2>You\'re in, '+esc(P.name)+'!</h2><p>'+esc(P.title||'')+(P.n?' · '+P.n+' questions':'')+'</p><p>'+(P.count?P.count+' player'+(P.count>1?'s':'')+' so far. ':'')+'Waiting for the host to start…</p><p class="note">Keep this page open.</p></section>';return}

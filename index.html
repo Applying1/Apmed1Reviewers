@@ -185,6 +185,8 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
 /* One-time offer to try the APMed '33 colors */
 .try{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--accent-line)}
 .try[hidden]{display:none}
+.colors{margin:26px 0 4px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}.colors b{font-size:13px;color:var(--mute)}.colors small{flex-basis:100%;font-size:12px;color:var(--faint)}
+.pals{display:flex;flex-wrap:wrap;gap:6px}.pals button{display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);font:600 13px var(--sans);color:var(--mute);cursor:pointer}.pals button:hover:not(.on){color:var(--text)}.pals button.on{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 2px var(--accent-soft)}.pals i{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1px #0003;flex:none}
 .try .sw{flex:none;display:flex;gap:3px}.try .sw i{width:14px;height:14px;border-radius:50%;border:1px solid #0002}
 .try p{flex:1;min-width:180px;margin:0;font-size:14px;color:var(--mute)}.try p b{color:var(--text)}
 .try .row{margin:0;flex-wrap:nowrap}.try .row .btn{flex:none}
@@ -228,6 +230,7 @@ html.introing body{overflow:hidden}
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <p class="note inst" id="install" hidden>Use this like an app, even offline. <button class="linkbtn" id="installbtn">Install app</button></p>
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
+ <section class="colors" aria-label="Colors"><b>Colors</b><span id="pals"></span><small>Saved on this device only.</small></section>
  <div class="class"><p class="legal"><a href="privacy.html">Privacy &amp; terms</a></p></div>
 </main>
 <div class="modal" id="sync" hidden onclick="if(event.target===this)closeSync()"><div class="box" role="dialog" aria-modal="true" aria-labelledby="synch">
@@ -317,6 +320,11 @@ function tryBox(step){const b=document.getElementById('try');try{if(step==='ask'
   :sw+'<p><b>Like it?</b> You can change it any time in a course\'s Personalize → Appearance → Colors.</p><span class="row"><button class="btn primary" onclick="tryBox(\'done\')">Keep it</button><button class="btn" onclick="setPal(null);tryBox(\'done\')">Switch back</button></span>';
  b.hidden=false}
 tryBox('ask');
+// Colors picker on the home page: same setting as a course's Personalize → Appearance → Colors (per device).
+const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']],['ocean','Ocean',['#eef5fa','#0a6c9e','#5cc0ef']],['lavender','Lavender',['#f5f2fb','#6b46c1','#b9a2f5']],['coffee','Coffee',['#f6f0e8','#8a4b22','#e0a574']]];
+function drawPals(){let cur='classic';try{cur=localStorage.getItem('reviewer_palette')||'classic'}catch(e){}
+ document.getElementById('pals').innerHTML='<span class="pals" role="radiogroup" aria-label="Colors">'+PALS.map(([v,t,c])=>'<button role="radio" aria-checked="'+(v===cur)+'" class="'+(v===cur?'on':'')+'" onclick="setPal('+(v==='classic'?'null':'\''+v+'\'')+');drawPals()"><i style="background:linear-gradient(135deg,'+c[0]+' 0 50%,'+c[1]+' 50% 75%,'+c[2]+' 75%)"></i>'+t+'</button>').join('')+'</span>'}
+drawPals();
 // Shown once to everyone (new and returning): Sign in & sync, and Discuss, which are easy to miss.
 const SPOT_KEY='reviewer_spot_sync_discuss';
 function spotlight(){try{if(localStorage.getItem(SPOT_KEY))return;localStorage.setItem(SPOT_KEY,'1')}catch(e){return}
