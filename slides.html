@@ -1,0 +1,162 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Slides · APMed '33</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#111318">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{display:flex;flex-direction:column;height:100dvh;background:#0c0e13;color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden;overscroll-behavior:none}
+button,a{font:inherit;color:inherit}
+.bar{flex:none;display:flex;align-items:center;gap:8px;padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));background:var(--surface);border-bottom:1px solid var(--line);z-index:5}
+.bar h1{flex:1;min-width:0;margin:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar h1 span{display:block;font-size:12.5px;font-weight:500;color:var(--mute);font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--raised)}.btn.icon{padding:7px 9px}.btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.btn[hidden]{display:none}
+#stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+#stage.zoomed{cursor:move}
+#view{will-change:transform;transform-origin:50% 50%;box-shadow:0 6px 30px #0008;background:#fff;line-height:0}
+#view[hidden]{display:none}
+#view canvas{display:block}
+.nav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:46px;height:70px;border:0;border-radius:12px;background:#0007;color:#fff;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .15s}
+.nav.prev{left:max(8px,env(safe-area-inset-left,0px))}.nav.next{right:max(8px,env(safe-area-inset-right,0px))}
+#stage:hover .nav,.nav:focus-visible,body.show .nav{opacity:.9}.nav[disabled]{opacity:0!important;pointer-events:none}
+@media (hover:none){.nav{width:40px;height:56px}body.show .nav{opacity:.8}}
+#prog{flex:none;height:4px;background:#ffffff1f}#prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+#thumbs{flex:none;display:flex;gap:10px;overflow-x:auto;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);scrollbar-width:thin}
+#thumbs[hidden]{display:none}
+.th{flex:none;position:relative;padding:0;border:2px solid transparent;border-radius:8px;background:#fff;cursor:pointer;line-height:0;overflow:hidden}
+.th.cur{border-color:var(--accent)}.th canvas{display:block;width:150px;height:auto;aspect-ratio:var(--ar,1.777);background:#fff}
+.th b{position:absolute;left:4px;bottom:4px;min-width:22px;padding:1px 6px;border-radius:99px;background:#000b;color:#fff;font:700 11.5px/1.5 var(--sans);text-align:center}
+.msg{margin:auto;max-width:420px;text-align:center;color:#c9ced8;padding:0 20px}
+.msg[hidden]{display:none}
+body.fs .bar{position:absolute;left:0;right:0;top:0;transform:translateY(-100%);transition:transform .2s}
+body.fs.show .bar{transform:none}
+body.fs #thumbs{position:absolute;left:0;right:0;bottom:4px}
+.help{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:3;padding:6px 14px;border-radius:99px;background:#000a;color:#e5e7ee;font-size:12.5px;pointer-events:none;opacity:0;transition:opacity .4s;white-space:nowrap}
+.help.on{opacity:1}
+@media (max-width:560px){.bar .lbl{display:none}.th canvas{width:112px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<div class="bar" id="bar">
+ <button class="btn icon" onclick="goBack()" aria-label="Back"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg></button>
+ <h1 id="ttl">Slides<span id="sub" aria-live="polite">Loading…</span></h1>
+ <button class="btn" id="tbtn" onclick="toggleThumbs()" aria-pressed="false" title="All slides (T)" hidden><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-list"/></svg><span class="lbl">Slides</span></button>
+ <a class="btn" id="txt" title="Read as pages: search and copy text" hidden><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-file-text"/></svg><span class="lbl">Read</span></a>
+ <button class="btn icon" id="fsbtn" onclick="toggleFs()" aria-label="Full screen" title="Full screen (F)" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+ <a class="btn icon" id="dl" download aria-label="Download"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-download"/></svg></a>
+</div>
+<div id="stage" aria-label="Slide">
+ <p class="msg" id="msg">Loading the slides…</p>
+ <div id="view" hidden></div>
+ <button class="nav prev" onclick="step(-1)" aria-label="Previous slide" disabled><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg></button>
+ <button class="nav next" onclick="step(1)" aria-label="Next slide" disabled><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></button>
+ <div class="help" id="help">Swipe or use the arrow keys · pinch to zoom</div>
+</div>
+<div id="prog"><i id="progi"></i></div>
+<div id="thumbs" hidden aria-label="All slides"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// A slide deck viewer: one slide at a time, fitted to the screen. Swipe or arrow keys to move, pinch or double-tap to zoom,
+// T for the slide strip, F for full screen. Remembers the slide you were on (on this device).
+const q=new URLSearchParams(location.search),file=q.get('f')||'',title=q.get('t')||'Slides',course=q.get('c')||'';
+const ok=/^courses\/[a-z0-9_-]+\/[a-z0-9_.-]+\.pdf$/i.test(file);
+const $=id=>document.getElementById(id);
+const KEY='slides_pos_'+file;
+document.title=title+' · APMed \'33';$('ttl').firstChild.textContent=title;
+if(ok){$('dl').href=file;$('txt').href='transes.html?f='+encodeURIComponent(file)+'&t='+encodeURIComponent(title)+(course?'&c='+encodeURIComponent(course):'');$('txt').hidden=false}else $('dl').hidden=true;
+function goBack(){if(history.length>1)history.back();else location.href=course?'reviewer.html?course='+encodeURIComponent(course):'./'}
+let pdf=null,N=0,n=1,tok=0,z=1,px=0,py=0,ar=9/16,cw=0,chh=0;
+const view=$('view'),stage=$('stage'),cache=new Map();
+const dpr=()=>Math.min(window.devicePixelRatio||1,2.5);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function say(t){const m=$('msg');m.textContent=t;m.hidden=false;view.hidden=true}
+function fitBox(vw,vh){const W=stage.clientWidth,H=stage.clientHeight,s=Math.min(W/vw,H/vh);return [Math.floor(vw*s),Math.floor(vh*s)]}
+async function renderTo(k,w,res){const page=await pdf.getPage(k),vp0=page.getViewport({scale:1}),vp=page.getViewport({scale:Math.max(.2,Math.min(w*res,3600)/vp0.width)});
+ const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;return c}
+const cacheGet=(k,kw)=>cache.get(k+'|'+kw);
+function cachePut(k,kw,c){cache.set(k+'|'+kw,c);while(cache.size>7)cache.delete(cache.keys().next().value)}
+async function show(k,keepZoom){k=clamp(k,1,N);const my=++tok,page=await pdf.getPage(k),vp0=page.getViewport({scale:1});ar=vp0.height/vp0.width;
+ const [w,h]=fitBox(vp0.width,vp0.height);cw=w;chh=h;const res=dpr()*(keepZoom?z:1),key=Math.round(w*res);
+ let c=cacheGet(k,key);if(!c){try{c=await renderTo(k,w,res)}catch(e){if(my===tok)say('This slide could not be drawn.');return}cachePut(k,key,c)}
+ if(my!==tok)return;
+ n=k;if(!keepZoom){z=1;px=py=0}
+ c.style.width=w+'px';c.style.height=h+'px';view.replaceChildren(c);view.hidden=false;$('msg').hidden=true;applyT();
+ $('sub').textContent='Slide '+n+' of '+N;$('progi').style.width=(100*n/N)+'%';
+ document.querySelector('.nav.prev').disabled=n<=1;document.querySelector('.nav.next').disabled=n>=N;
+ try{localStorage.setItem(KEY,String(n))}catch(e){}
+ try{history.replaceState(null,'','#'+n)}catch(e){}
+ markThumb();
+ // draw the neighbors ahead of time so flipping is instant
+ setTimeout(()=>{if(my!==tok)return;const kk=Math.round(w*dpr());for(const j of [n+1,n-1]){if(j<1||j>N||cacheGet(j,kk))continue;renderTo(j,w,dpr()).then(cc=>cachePut(j,kk,cc)).catch(()=>{})}},150)}
+function step(d){if(pdf)show(n+d)}
+function applyT(){const maxX=Math.max(0,(cw*z-stage.clientWidth)/2),maxY=Math.max(0,(chh*z-stage.clientHeight)/2);px=clamp(px,-maxX,maxX);py=clamp(py,-maxY,maxY);
+ view.style.transform='translate('+px+'px,'+py+'px) scale('+z+')';stage.classList.toggle('zoomed',z>1.01)}
+let settle=null;function settleZoom(){clearTimeout(settle);settle=setTimeout(()=>{if(z>1.05&&pdf)show(n,true)},250)}
+// ---- gestures: swipe, pinch, pan, double-tap
+const ptr=new Map();let g=null,lastTap=0;
+function flashBar(){document.body.classList.add('show');clearTimeout(window.__hide);window.__hide=setTimeout(()=>document.body.classList.remove('show'),2500)}
+stage.addEventListener('pointerdown',e=>{if(e.target.closest('.nav'))return;try{stage.setPointerCapture(e.pointerId)}catch(x){}ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(ptr.size===1)g={x:e.clientX,y:e.clientY,t:Date.now(),px,py,moved:0,pinch:0};
+ if(ptr.size===2){const [a,b]=[...ptr.values()];g={pinch:1,d:Math.hypot(a.x-b.x,a.y-b.y)||1,z0:z,mx:(a.x+b.x)/2,my:(a.y+b.y)/2,px0:px,py0:py}}});
+stage.addEventListener('pointermove',e=>{if(!ptr.has(e.pointerId)||!g)return;ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(g.pinch&&ptr.size>=2){const [a,b]=[...ptr.values()],d=Math.hypot(a.x-b.x,a.y-b.y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+  z=clamp(g.z0*d/g.d,1,4);px=g.px0+(mx-g.mx);py=g.py0+(my-g.my);if(z<=1.01){px=py=0}applyT();return}
+ if(ptr.size===1&&!g.pinch){const dx=e.clientX-g.x,dy=e.clientY-g.y;g.moved=Math.max(g.moved,Math.hypot(dx,dy));if(z>1.01){px=g.px+dx;py=g.py+dy;applyT()}}});
+function endPtr(e){if(!ptr.has(e.pointerId))return;const wasPinch=g&&g.pinch;ptr.delete(e.pointerId);
+ if(wasPinch){if(ptr.size<2){g=null;settleZoom();if(ptr.size===1){const a=[...ptr.values()][0];g={x:a.x,y:a.y,t:Date.now(),px,py,moved:99,pinch:0}}}return}
+ if(!g||ptr.size)return;const dx=e.clientX-g.x,dy=e.clientY-g.y,quick=Date.now()-g.t<700;
+ if(z<=1.01&&quick&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.4){step(dx<0?1:-1);g=null;return}
+ if(g.moved<8){const now=Date.now();
+  if(now-lastTap<320){lastTap=0;if(z>1.01){z=1;px=py=0}else{z=2.5;const r=stage.getBoundingClientRect();px=(r.left+r.width/2-e.clientX)*1.5;py=(r.top+r.height/2-e.clientY)*1.5}applyT();settleZoom()}
+  else{lastTap=now;flashBar()}}
+ else if(z>1.01)settleZoom();
+ g=null}
+stage.addEventListener('pointerup',endPtr);stage.addEventListener('pointercancel',endPtr);
+stage.addEventListener('wheel',e=>{if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();z=clamp(z*(e.deltaY<0?1.12:.89),1,4);if(z<=1.01){px=py=0}applyT();settleZoom()},{passive:false});
+// ---- keyboard
+addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
+ if(k==='ArrowRight'||k==='PageDown'||k===' '||k==='Enter'||k==='ArrowDown'){e.preventDefault();step(1)}
+ else if(k==='ArrowLeft'||k==='PageUp'||k==='ArrowUp'||k==='Backspace'){e.preventDefault();step(-1)}
+ else if(k==='Home'){e.preventDefault();if(pdf)show(1)}else if(k==='End'){e.preventDefault();if(pdf)show(N)}
+ else if(k==='f'||k==='F')toggleFs();else if(k==='t'||k==='T')toggleThumbs();
+ else if(k==='+'||k==='='){z=clamp(z*1.25,1,4);applyT();settleZoom()}else if(k==='-'){z=clamp(z/1.25,1,4);if(z<=1.01){px=py=0}applyT();settleZoom()}else if(k==='0'){z=1;px=py=0;applyT();if(pdf)show(n)}});
+// ---- full screen (iPhone Safari has none, so the button stays hidden there)
+const root=document.documentElement,canFs=!!(root.requestFullscreen||root.webkitRequestFullscreen);
+if(canFs)$('fsbtn').hidden=false;
+function toggleFs(){if(!canFs)return;const d=document;
+ if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}
+ else{try{const r=(root.requestFullscreen||root.webkitRequestFullscreen).call(root);if(r&&r.catch)r.catch(()=>{})}catch(e){}}}
+document.addEventListener('fullscreenchange',()=>{const on=!!document.fullscreenElement;document.body.classList.toggle('fs',on);if(!on)document.body.classList.remove('show');setTimeout(()=>pdf&&show(n),150)});
+addEventListener('mousemove',()=>{if(document.body.classList.contains('fs'))flashBar()});
+// ---- the slide strip
+let thumbsBuilt=false,tio=null;
+function toggleThumbs(force){if(!pdf)return;const t=$('thumbs'),open=force===undefined?t.hidden:force;t.hidden=!open;$('tbtn').classList.toggle('on',open);$('tbtn').setAttribute('aria-pressed',open);
+ if(open&&!thumbsBuilt)buildThumbs();show(n);markThumb(true);try{localStorage.setItem('slides_thumbs',open?'1':'')}catch(e){}}
+function buildThumbs(){thumbsBuilt=true;const t=$('thumbs');t.style.setProperty('--ar',String(ar));
+ t.innerHTML=Array.from({length:N},(_,i)=>'<button class="th" data-n="'+(i+1)+'" aria-label="Slide '+(i+1)+'"><canvas></canvas><b>'+(i+1)+'</b></button>').join('');
+ t.onclick=e=>{const b=e.target.closest('.th');if(b)show(+b.dataset.n)};
+ tio=new IntersectionObserver(es=>{for(const en of es)if(en.isIntersecting){tio.unobserve(en.target);thumb(en.target)}},{root:t,rootMargin:'300px'});
+ t.querySelectorAll('.th').forEach(b=>tio.observe(b));markThumb(true)}
+async function thumb(b){const k=+b.dataset.n,c=b.querySelector('canvas');try{const page=await pdf.getPage(k),vp0=page.getViewport({scale:1}),vp=page.getViewport({scale:Math.min(2,300/vp0.width)});
+ c.width=Math.round(vp.width);c.height=Math.round(vp.height);await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise}catch(e){}}
+function markThumb(scroll){if(!thumbsBuilt)return;document.querySelectorAll('.th.cur').forEach(b=>b.classList.remove('cur'));const b=document.querySelector('.th[data-n="'+n+'"]');if(b){b.classList.add('cur');if(scroll)b.scrollIntoView({inline:'center',block:'nearest'})}}
+addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>pdf&&show(n),150)});
+// ---- start
+(async()=>{
+ if(!ok){say('That slide file cannot be opened.');return}
+ try{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const buf=await (await fetch(file)).arrayBuffer();pdf=await pdfjsLib.getDocument({data:buf}).promise}
+ catch(e){say('Could not load the slides. Check your connection and reload.');return}
+ N=pdf.numPages;let start=1;const h=parseInt(location.hash.slice(1),10);
+ if(h>=1&&h<=N)start=h;else{try{const s=+localStorage.getItem(KEY);if(s>=1&&s<=N)start=s}catch(e){}}
+ $('tbtn').hidden=false;await show(start);
+ let open=false;try{open=!!localStorage.getItem('slides_thumbs')}catch(e){}if(open)toggleThumbs(true);
+ const hp=$('help');hp.classList.add('on');setTimeout(()=>hp.classList.remove('on'),3500);
+})();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+<script src="update.js" defer></script>
+</body></html>

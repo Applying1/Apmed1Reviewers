@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='90',APP_DATE='Oct 28, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='91',APP_DATE='Oct 28, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -336,7 +336,7 @@ function freeBoxHTML(){const s=state.section,N=inSection(s).length,cur=Math.min(
   '<span class="fcust"><input id="freen" class="txt exmin" type="number" min="1" max="'+N+'" value="'+cur+'" aria-label="Number of questions" onkeydown="if(event.key===\'Enter\'){event.preventDefault();freeStart(this.value)}"><button class="btn sm primary" onclick="freeStart($(\'freen\').value)">Start</button></span></div></div>'}
 function poolFor(s){if(onPass(s)){const d=state.pass.done,ids=state.pass.ids;return inSection(s).filter(c=>!d.includes(c.id)&&(!ids||ids.includes(c.id)))}if(s==='DUE')return BANK.filter(isDue);const a=inSection(s);if(s==='STAR'||s==='CLASS'||s==='CRAM'){const d=(s==='STAR'?state.starDone:s==='CRAM'?state.cramDone:state.classDone)||[];return a.filter(c=>!d.includes(c.id))}return a.filter(c=>!isM(c))}
 function completed(s){const p=progress(s);return p.done===p.total}
-const secTitle=s=>s==='DUE'?'Due for review':s==='MISSED'?'Missed '+ITEMS:s==='STAR'?'Starred '+ITEMS:s==='CLASS'?'Class\'s most missed':s==='CRAM'?'Cram mode':s==='ALL'?'All '+unitsW+', shuffled':isCh(s)?CH_NAMES[s.slice(3)]:s+' '+SECTION_NAMES[s];
+const secTitle=s=>s==='ALL'&&state.pass&&state.pass.order&&state.pass.sec==='ALL'?'Mixed look-alikes':s==='DUE'?'Due for review':s==='MISSED'?'Missed '+ITEMS:s==='STAR'?'Starred '+ITEMS:s==='CLASS'?'Class\'s most missed':s==='CRAM'?'Cram mode':s==='ALL'?'All '+unitsW+', shuffled':isCh(s)?CH_NAMES[s.slice(3)]:s+' '+SECTION_NAMES[s];
 const navList=s=>isX(s)?[]:isCh(s)?chapters.map(c=>'CH:'+c):sectionKeys;
 
 // fx (class challenges): a fixed seed and item list, so every device builds exactly the same question.
@@ -380,6 +380,7 @@ function makeQuestion(c,fx){const src=fx?fx.items:BANK,sd=tag=>fx?stableHash(fx.
  return {cid:c.id,kind,stem,choices:choices.map((x,i)=>({...x,letter:LETTERS[i]})),why,hint:c.hint,usedHint:false};
 }
 function chooseNext(){const s=state.section;let pool=poolFor(s);if(!pool.length)return null;
+ if(state.pass&&state.pass.order&&state.pass.sec===s){const nx=state.pass.order.find(id=>!state.pass.done.includes(id)&&byId[id]);if(nx)return makeQuestion(byId[nx])}
  const recent=state.history.filter(h=>h.cid).slice(-3).map(h=>h.cid),K=id=>state.concepts[id],qn=state.qn||0;
  // v70: a problem with parts goes on part by part, so your work for part 1 is still fresh for part 2
  const last=secLog().slice(-1)[0],lc=last&&last.q&&byId[last.q.cid];
@@ -939,7 +940,7 @@ function focusNote(cid){const c=byId[cid];if(!c)return;const low=t=>String(t||''
    The file version opens the website's copy (through CONFIG.shareUrl). */
 const DOCS=(CONFIG.docs||[]).filter(d=>d&&d.file);
 // On the website, PDFs open in the site's own reader (transes.html); the single-file version links the PDF directly.
-function docView(d,u){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.home||!id||!/^https?:$/.test(location.protocol)||!/^courses\/[\w-]+\/[\w.-]+\.pdf$/i.test(d.file))return u;return 'transes.html?f='+encodeURIComponent(d.file)+'&t='+encodeURIComponent(d.title||'Full transes')+'&c='+encodeURIComponent(id)}
+function docView(d,u){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.home||!id||!/^https?:$/.test(location.protocol)||!/^courses\/[\w-]+\/[\w.-]+\.pdf$/i.test(d.file))return u;return (d.kind==='slides'||/^slides?\b/i.test(d.title||'')?'slides.html':'transes.html')+'?f='+encodeURIComponent(d.file)+'&t='+encodeURIComponent(d.title||'Full transes')+'&c='+encodeURIComponent(id)}
 function docURL(d){if(/^https?:/i.test(d.file)||/^https?:$/.test(location.protocol))return d.file;try{return new URL(d.file,CONFIG.shareUrl).href}catch(e){return ''}}
 function drawNotes(){
  $('nChartBtn').hidden=!chartsOn();$('nBlurtBtn').hidden=!state.prefs.blurt||!NOTES_PARSED.some(n=>noteScope(n.ch)&&/^\d/.test(n.ch));
@@ -1098,13 +1099,27 @@ function drawMix(){const card=$('xcard');if(!MX){card.innerHTML='<p class="empty
   '<p class="prompt mixcue">'+stemHTML(MX.cue)+'</p>'+
   '<div class="mixopts">'+MX.opts.map((o,k)=>'<button class="mixopt'+(done?(o===MX.t?' right':o===MX.pick?' wrong':''):'')+'" '+(done?'disabled':'')+' onclick="mixPick('+o+')"><span class="key">'+(k+1)+'</span>'+esc(g.members[o].name)+'</button>').join('')+'</div>'+
   (done?'<div class="fb '+(ok?'good':'bad')+'"><h3>'+FBICON[ok?'good':'bad']+(ok?'Correct':'It\'s '+esc(g.members[MX.t].name))+'</h3><p>'+MX.opts.map(o=>'<b>'+esc(g.members[o].name)+':</b> '+esc(g.members[o].cues.join('; '))).join('<br>')+'</p></div>':'')+
-  '<div class="actions"><span class="aux"><span class="khint">Keys: 1 or ← picks the left, 2 or → the right'+(done?', Enter goes on':'')+'</span></span>'+
+  mixGoHTML()+'<div class="actions"><span class="aux"><span class="khint">Keys: 1 or ← picks the left, 2 or → the right'+(done?', Enter goes on':'')+'</span></span>'+
   (done?'<button class="btn primary" onclick="nextMix()">Next <kbd>Enter</kbd></button>':'')+'</div>'}
 // A right answer moves on by itself after a moment; a wrong one waits so you can read both clues.
 function mixPick(o){if(!MX||MX.pick!=null)return;MX.pick=o;const ok=o===MX.t;mixRun.total++;if(ok){mixRun.right++;mixRun.streak++}else mixRun.streak=0;
  state.mixBest=Math.max(state.mixBest||0,mixRun.streak);save();drawMix();
  if(ok){const cur=MX;setTimeout(()=>{if(MX===cur&&page==='match'&&drillTab==='mix')nextMix()},1200)}}
 function nextMix(){newMix();drawMix()}
+/* ---------- Mix look-alikes: a practice round that alternates between the members of each Don't mix up group ---------- */
+// Questions that name a member of a look-alike group (in the stem or the answer), two per member, taken in turns so the look-alikes land next to each other.
+function mixIds(n){const norm=x=>String(x||'').toLowerCase(),pool=inSection('ALL').filter(c=>!c.case&&c.type!=='id'&&c.type!=='self'),
+ txt=new Map(pool.map(c=>[c.id,norm([c.q,c.a,c.term,c.definition].join(' '))])),used=new Set(),out=[],
+ has=(c,name)=>{const k=norm(name).trim();return k.length>=4&&txt.get(c.id).includes(k)};
+ for(const g of shuffle(dmPool(),rnd())){if(out.length>=n)break;
+  const lists=g.members.map(m=>shuffle(pool.filter(c=>!used.has(c.id)&&has(c,m.name)),rnd()).slice(0,2));
+  if(lists.filter(l=>l.length).length<2)continue;
+  for(let k=0;k<2;k++)for(const l of lists){const c=l[k];if(c&&!used.has(c.id)){used.add(c.id);out.push(c.id)}}}
+ return out.slice(0,n)}
+function mixGoHTML(){const k=mixIds(20).length;return k<4?'':'<div class="mixgo"><p>Want questions on these? A short round that switches between the look-alikes, so you have to tell them apart. It does not change your mastery.</p><button class="btn" onclick="mixStart()">Practice mixed look-alikes ('+k+')</button></div>'}
+function mixStart(){const ids=mixIds(20);if(ids.length<4)return;
+ state.section='ALL';state.pmatch=null;state.pass={sec:'ALL',done:[],miss:[],free:1,ids,order:ids.slice(),right:0};state.complete=state.complete.filter(x=>x!=='ALL');freeOpen=false;
+ state.active=null;state.feedback=null;state.selected=null;view=null;page='study';state.page='study';save();draw();window.scrollTo(0,0)}
 function mixKey(e){if(!MX)return false;const k=e.key;
  if(MX.pick==null){if(k==='1'||k==='ArrowLeft'){mixPick(MX.opts[0]);return true}if(k==='2'||k==='ArrowRight'){mixPick(MX.opts[1]);return true}return false}
  if((k==='Enter'||k===' ')&&e.target.tagName!=='BUTTON'){nextMix();return true}return false}
@@ -1728,6 +1743,9 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'91',date:'Oct 28, 2026',title:'Mix look-alikes and a slide viewer',items:[
+  'On <b>Drills → Don&#39;t mix up</b> there is now a <b>Practice mixed look-alikes</b> button: a short round that switches between the look-alikes in turn, so you have to tell them apart. It does not change your mastery.',
+  'Slides now open as a real <b>slide viewer</b>: one slide at a time, swipe or arrow keys, pinch to zoom, a strip of all slides, full screen on laptops, and it remembers where you stopped. <b>Read</b> in the viewer opens the same file as pages you can search.']},
  {v:'90',date:'Oct 28, 2026',title:'Ocean, Lavender and Coffee colors',items:[
   'Three new color themes: <b>Ocean</b> (blue), <b>Lavender</b> (purple) and <b>Coffee</b> (warm brown). Each has a light and a dark version.',
   'You can now pick colors on the <b>home page</b> too, under the course list. It applies to every course on this device.']},

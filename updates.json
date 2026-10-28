@@ -422,5 +422,13 @@
   "title": "Live quiz sounds + Ocean, Lavender, Coffee",
   "text": "The live quiz now has sound: lobby music, a ticking countdown, correct and wrong sounds, a drumroll and a winner fanfare. Tap the speaker in the corner to mute. Three new color themes (Ocean, Lavender, Coffee), and you can now pick colors right on the home page.",
   "link": "quiz.html"
+ },
+ {
+  "id": 51,
+  "date": "2026-10-28",
+  "type": "feature",
+  "title": "Slide viewer + mixed look-alike practice",
+  "text": "Slides (Purposive Communication, NSTP) now open one slide at a time: swipe or use the arrow keys, pinch to zoom, and it remembers where you stopped. Drills → Don't mix up has a new button for a short practice round that switches between look-alike topics.",
+  "link": "index.html"
  }
 ]
