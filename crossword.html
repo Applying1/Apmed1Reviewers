@@ -1,0 +1,426 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily crossword · APMed '33</title>
+<meta name="description" content="A short daily crossword on the course with the nearest eval.">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}if(matchMedia('(pointer:coarse)').matches)document.documentElement.classList.add('touch')</script><script>(function(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const f=()=>{if(document.body)m.content=getComputedStyle(document.body).backgroundColor},g=()=>{f();setTimeout(f,350)};addEventListener('DOMContentLoaded',f);new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',g)})()</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:1040px;margin:0 auto;padding:22px 20px 48px}
+.top{display:flex;align-items:center;gap:10px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+.sp{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:10px}
+.btn.icon{width:36px;height:36px;padding:0}
+.timer{font:600 13px/1 var(--sans);font-variant-numeric:tabular-nums;color:var(--mute);padding:8px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.timer.done{color:var(--good)}
+h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18px 0 4px}
+.sub{margin:0;color:var(--mute);font-size:14px}
+.sub b{color:var(--text);font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:3px 10px;border-radius:999px}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line2);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:13.5px;font-weight:600;color:var(--mute)}
+.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tabs .ck{margin-left:5px}
+.howto{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.45)}
+.howto[hidden]{display:none}
+.hbox{width:min(440px,100%);background:var(--surface);border:1px solid var(--line2);border-radius:18px;padding:20px 22px 18px;box-shadow:0 20px 50px #0004;font-size:14.5px}
+.howto h2{margin:0 0 8px;font:600 20px/1.3 var(--serif)}
+.howto ul{margin:0 0 16px;padding-left:18px;color:var(--mute)}
+.howto li{margin:2px 0}
+.note{margin:12px 0 0;padding:10px 14px;border-radius:12px;background:var(--raised);color:var(--mute);font-size:13.5px}
+.play{display:grid;gap:22px;margin-top:18px;align-items:start}
+@media (min-width:900px){.play{grid-template-columns:minmax(0,1fr) 340px}}
+.board{min-width:0}
+.gridwrap{display:flex;justify-content:center}
+.grid{--cs:32px;--gap:3px;display:grid;grid-template-columns:repeat(var(--cols),var(--cs));grid-auto-rows:var(--cs);gap:var(--gap);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.cell{position:relative;border-radius:calc(var(--cs)*.18);background:var(--surface);border:1.5px solid var(--line2);display:grid;place-items:center;cursor:pointer;transition:background .12s,border-color .12s}
+.cell i{position:absolute;left:2px;top:0;font:600 calc(var(--cs)*.27)/1.3 var(--sans);font-style:normal;color:var(--faint);pointer-events:none}
+.cell b{font:650 calc(var(--cs)*.54)/1 var(--sans);text-transform:uppercase;pointer-events:none}
+.cell.hw{background:var(--accent-soft);border-color:var(--accent-line)}
+.cell.cur{background:color-mix(in srgb,var(--accent) 26%,var(--surface));border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent)}
+.cell.ok b{color:var(--accent)}
+.cell.rv b{color:var(--accent-2)}
+.cell.rv::after{content:"";position:absolute;right:2px;top:2px;border:solid transparent;border-width:0 calc(var(--cs)*.2) calc(var(--cs)*.2) 0;border-right-color:var(--accent-2);border-radius:0 3px 0 0}
+.cell.bad b{color:var(--bad)}
+.cell.bad::before{content:"";position:absolute;left:14%;right:14%;top:50%;height:2px;background:var(--bad);transform:rotate(-35deg);opacity:.75}
+.grid.won .cell{animation:pop .5s var(--ease) both;animation-delay:calc(var(--k)*18ms)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.12);background:var(--accent-soft)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.grid.won .cell{animation:none}}
+.dock{margin-top:14px}
+.cluebar{display:flex;align-items:stretch;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);min-height:56px}
+.cluebar button{flex:none;width:42px;border:0;background:none;color:var(--mute);border-radius:12px;display:grid;place-items:center}
+.cluebar button:hover{background:var(--raised);color:var(--text)}
+.cluebar .ct{flex:1;min-width:0;padding:8px 2px;cursor:pointer}
+.cluebar .hint{width:auto;align-self:center;padding:5px 10px;border:1px solid var(--accent-line);border-radius:999px;color:var(--accent);background:var(--accent-soft);font-size:12.5px;font-weight:600}
+.cluebar .hint:hover{background:var(--accent-soft);color:var(--accent);filter:brightness(1.05)}
+.cluebar .ct b{display:block;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.cluebar .ct span{display:block;font-size:14.5px;line-height:1.35}
+.en{color:var(--faint);white-space:nowrap}
+.tg{display:inline-block;margin-right:6px;padding:0 6px;border-radius:6px;background:var(--raised);border:1px solid var(--line);color:var(--mute);font-size:11px;font-weight:600;line-height:1.6;vertical-align:1px}
+.mwrap{position:relative}
+.menu{position:absolute;top:calc(100% + 6px);right:0;z-index:20;background:var(--surface);border:1px solid var(--line2);border-radius:12px;box-shadow:0 8px 28px #0002;padding:5px;min-width:190px}
+.menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;border-radius:8px;font-size:14px}
+.menu button:hover{background:var(--raised)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+.menu .warn{color:var(--bad)}
+.kb{display:none}
+html.touch .kb{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.kb div{display:flex;gap:5px;justify-content:center}
+.kb button{flex:1 1 0;max-width:44px;height:42px;border:0;border-radius:8px;background:var(--raised);font-weight:600;font-size:16px;color:var(--text);touch-action:manipulation}
+.kb button:active{background:var(--accent-soft)}
+.kb button.wide{max-width:66px;flex:1.5 1 0}
+html.touch .dock{position:sticky;bottom:0;z-index:10;background:var(--bg);padding:8px 0 calc(8px + env(safe-area-inset-bottom));margin:10px -4px 0;padding-left:4px;padding-right:4px}
+html.touch .dock.over .kb{display:none}
+html.touch main{padding-top:10px}
+html.touch h1{font-size:22px;margin:8px 0 2px}
+html.touch .sub{font-size:13.5px}
+html.touch .cluebar{min-height:52px}
+html.touch .cluebar .ct span{font-size:14px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+html.touch .tabs button{padding:5px 12px;font-size:13px}
+html.touch .hrow{margin-top:8px}
+html.touch .chip{font-size:12px;padding:3px 9px}
+.clues{display:grid;gap:18px;grid-template-columns:1fr 1fr}
+@media (max-width:620px){.clues{grid-template-columns:1fr}}
+@media (min-width:900px){.clues{grid-template-columns:1fr;max-height:calc(100vh - 120px);overflow:auto;position:sticky;top:16px;padding-right:4px}}
+.clues h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:0 0 6px}
+.clues ol{list-style:none;margin:0;padding:0}
+.clues li{display:flex;gap:9px;padding:7px 9px;border-radius:10px;cursor:pointer;font-size:14px;line-height:1.4;border-left:3px solid transparent}
+.clues li:hover{background:var(--raised)}
+.clues li .n{flex:none;width:20px;font-weight:700;color:var(--mute);text-align:right}
+.clues li.on{background:var(--accent-soft);border-left-color:var(--accent)}
+.clues li.full{color:var(--faint)}
+.clues li.full .n{color:var(--faint)}
+.done{margin-top:20px;padding:18px;border-radius:16px;background:var(--surface);border:1.5px solid var(--accent-line);box-shadow:var(--shadow)}
+.done h2{margin:0;font:600 22px/1.2 var(--serif)}
+.done .meta{margin:4px 0 12px;color:var(--mute);font-size:14px}
+.streak{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:13.5px;color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent);padding:4px 10px;border-radius:999px;margin-bottom:12px}
+.done .row{display:flex;gap:8px;flex-wrap:wrap}
+.review{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.review summary{cursor:pointer;font-weight:600;font-size:14px}
+.review ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.review li{font-size:14px;color:var(--mute)}
+.review li b{color:var(--text);letter-spacing:.03em;margin-right:6px}
+.past{margin-top:32px}
+.past h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:0 0 8px}
+.past a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;text-decoration:none;font-size:14px;border:1px solid var(--line);background:var(--surface);margin-bottom:6px}
+.past a:hover{border-color:var(--accent-line)}
+.past a span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.past a small{color:var(--mute);font-size:12.5px;flex:none}
+.past a small.s{color:var(--good);font-weight:600}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+html.touch .toast{bottom:auto;top:16px;transform:translate(-50%,-20px)}
+html.touch .toast.on{transform:translate(-50%,0)}
+.empty{padding:40px 0;color:var(--mute);text-align:center}
+@media (max-width:520px){main{padding:14px 14px 24px}h1{margin-top:12px}}
+</style></head><body>
+<main>
+ <div class="top">
+  <a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a>
+  <span class="sp"></span>
+  <span class="timer" id="timer" aria-label="Time" hidden>0:00</span>
+  <div class="mwrap"><button class="btn sm" id="hintbtn" onclick="menu(this)" aria-haspopup="menu">Hints<svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg></button></div>
+ </div>
+ <h1>Daily crossword</h1>
+ <p class="sub" id="sub">Loading today's puzzle…</p>
+ <div class="hrow"><div class="tabs" id="tabs" role="tablist" hidden></div><div id="chip"></div></div>
+ <div class="howto" id="howto" hidden onclick="if(event.target===this)closeHow()"><div class="hbox" role="dialog" aria-modal="true" aria-labelledby="howh">
+  <h2 id="howh">How to play</h2>
+  <ul>
+   <li>Tap a square and type. Tap the same square again to switch between Across and Down.</li>
+   <li>Tap a clue, or use the arrows on the clue bar, to jump between words.</li>
+   <li>Stuck? <b>Hint</b> on the clue bar shows one letter of the word at a time (like A _ _ _ G _ _). The <b>Hints</b> menu can also check or reveal. Each counts as a hint.</li>
+   <li>A new puzzle comes out every day at midnight, mixing the courses with the nearest evals or exams. The small tag on each clue shows its course. Your answers save on this device.</li>
+  </ul>
+  <button class="btn primary" onclick="closeHow()">Start</button>
+ </div></div>
+ <div id="notice"></div>
+ <div class="play" id="play" hidden>
+  <div class="board">
+   <div class="gridwrap"><div class="grid" id="grid" role="grid" aria-label="Crossword grid"></div></div>
+   <div class="dock" id="dock">
+    <div class="cluebar">
+     <button onclick="nextWord(-1)" aria-label="Previous clue"><svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg></button>
+     <div class="ct" onclick="flip()" title="Tap to switch direction"><b id="cbn"></b><span id="cbq"></span></div>
+     <button class="hint" id="hintone" onclick="hint()" title="Show one letter of this word">Hint</button>
+     <button onclick="nextWord(1)" aria-label="Next clue"><svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></button>
+    </div>
+    <div class="kb" id="kb" aria-label="Keyboard"></div>
+   </div>
+   <section class="done" id="done" hidden></section>
+  </div>
+  <section class="clues" id="clues" aria-label="Clues">
+   <div><h2>Across</h2><ol id="across"></ol></div>
+   <div><h2>Down</h2><ol id="down"></ol></div>
+  </section>
+ </div>
+ <section class="past" id="past" hidden></section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="schedule-core.js"></script>
+<script src="reminders-core.js"></script>
+<script src="dialog.js"></script>
+<script>
+// Daily crossword. Puzzles: crossword/puzzles.json (built by tools/make_crossword.py). Progress: localStorage
+// 'reviewer_crossword' = {v:1, seen, how, g:{<puzzle id>:{f: letters, m: marks, t: seconds, h: help used, k: layout key, done, day}}}.
+// Site-wide and on this device only; puzzles older than 60 days are dropped.
+const KEY='reviewer_crossword';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ic=n=>'<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
+function manila(d=new Date()){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)}catch(e){return d.toISOString().slice(0,10)}}
+function shift(day,n){const d=new Date(day+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}
+function niceDate(day,long){return new Date(day+'T12:00:00').toLocaleDateString('en-US',long?{weekday:'long',month:'long',day:'numeric'}:{weekday:'short',month:'short',day:'numeric'})}
+const TODAY=manila();
+const TOUCH=document.documentElement.classList.contains('touch');
+let S=(()=>{let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}s=s&&s.v===1&&typeof s.g==='object'?s:{v:1,g:{}};return s})();
+function save(){const cut=shift(TODAY,-60);for(const id in S.g)if(id.slice(0,10)<cut)delete S.g[id];try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),ms||2600)}
+
+let ALL=[],NAMES={},TESTS={},P=null,cells=[],words=[],order=[],cur=-1,dir='A',G=null,tStart=0,tick=0,wasFull=false;
+const short=c=>(NAMES[c]||c).replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,'');
+const solved=p=>{const g=S.g[p.id];return !!(g&&g.done)};
+const label=p=>p.courses.map(short).join(' + ');
+// the nearest test among a puzzle's courses
+const testOf=p=>p.courses.map(c=>TESTS[c]).filter(Boolean).sort((a,b)=>a.from-b.from)[0]||null;
+
+async function boot(){
+ S.seen=1;save();
+ if(!S.how)openHow();
+ let data=null;
+ try{data=await (await fetch('crossword/puzzles.json')).json()}catch(e){}
+ try{const cl=await (await fetch('courses.json')).json();for(const c of cl)NAMES[c.id]=c.title}catch(e){}
+ // the nearest test per course, from the timetable
+ try{await Sched.load();for(const a of Remind.list(8)){const c=a.subj&&a.subj.course;if(c&&!TESTS[c])TESTS[c]=a}}catch(e){}
+ ALL=((data&&data.puzzles)||[]).filter(p=>p.date<=TODAY);
+ if(!ALL.length){$('sub').textContent='No puzzle yet. Check back tomorrow.';return}
+ const want=new URLSearchParams(location.search).get('id');
+ let p=want&&ALL.find(x=>x.id===want);
+ if(!p){
+  const day=ALL.some(x=>x.date===TODAY)?TODAY:ALL[ALL.length-1].date;
+  const set=dayPuzzles(day);
+  p=set.find(x=>!solved(x))||set[0];
+  if(day!==TODAY)$('notice').innerHTML='<p class="note">Today\'s puzzle isn\'t out yet. Here\'s the latest one.</p>';
+ }
+ open(p);
+ addEventListener('resize',size);
+ document.addEventListener('keydown',key);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();else if(G&&G.f.trim()&&!G.done)start()});
+ addEventListener('pagehide',pause);
+}
+// same-day puzzles, the course with the nearest test first
+function dayPuzzles(day){const at=p=>{const t=testOf(p);return t?+t.from:Infinity};return ALL.filter(x=>x.date===day).sort((a,b)=>at(a)-at(b)||a.id.localeCompare(b.id))}
+
+function open(p){
+ pause();
+ P=p;const n=p.rows*p.cols;cells=new Array(n).fill(null);
+ words=p.words.map((w,i)=>{const idx=[];for(let k=0;k<w.a.length;k++){const j=(w.r+(w.d==='D'?k:0))*p.cols+w.c+(w.d==='A'?k:0);idx.push(j);cells[j]=cells[j]||{a:w.a[k],n:0,A:-1,D:-1};cells[j][w.d]=i}cells[idx[0]].n=w.n;return Object.assign({i,idx},w)});
+ order=words.slice().sort((a,b)=>a.d===b.d?a.n-b.n:a.d==='A'?-1:1);
+ const k=p.rows+'x'+p.cols+':'+p.words.map(w=>w.d+w.r+'.'+w.c+w.a).join('|');
+ G=S.g[p.id];
+ if(!G||G.k!==k||G.f.length!==n)G=S.g[p.id]={f:' '.repeat(n),m:'0'.repeat(n),t:0,h:0,k};
+ wasFull=G.f.split('').every((ch,j)=>!cells[j]||ch!==' ');
+ history.replaceState(null,'','?id='+encodeURIComponent(p.id));
+ drawHead();drawGrid();drawClues();drawKb();
+ const first=order.find(w=>w.idx.some(j=>G.f[j]===' '))||order[0];
+ dir=first.d;cur=first.idx.find(j=>G.f[j]===' ');if(cur===undefined)cur=first.idx[0];
+ $('play').hidden=false;
+ render();drawDone();drawPast();drawTimer();size();
+ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(size);
+ if(G.f.trim()&&!G.done)start();
+}
+
+function drawHead(){
+ const t=testOf(P),name=P.courses.map(c=>P.courses.length>1||TOUCH?short(c):NAMES[c]||c).join(' + ');
+ $('sub').innerHTML=esc(niceDate(P.date,!TOUCH))+' · <b>'+esc(name)+'</b>'+(P.title&&!(TOUCH&&P.courses.length>1)?': '+esc(P.title):'')+(P.for?' <span class="en">('+esc(P.for)+')</span>':'');
+ $('chip').innerHTML=t?'<span class="chip">'+ic('hourglass')+esc(t.label.replace(/\s*\(.*$/,''))+' · '+esc(Sched.when(t.date))+'</span>':'';
+ const set=dayPuzzles(P.date),tb=$('tabs');
+ tb.hidden=set.length<2;
+ tb.innerHTML=set.map(x=>'<button role="tab" aria-selected="'+(x.id===P.id)+'" onclick="go(\''+x.id+'\')">'+esc(label(x))+(solved(x)?'<span class="ck">✓</span>':'')+'</button>').join('');
+}
+function go(id){const p=ALL.find(x=>x.id===id);if(p&&p!==P){open(p);scrollTo({top:0,behavior:'smooth'})}}
+
+function drawGrid(){
+ const g=$('grid');g.classList.remove('won');g.style.setProperty('--cols',P.cols);
+ let k=0;
+ g.innerHTML=cells.map((c,j)=>c?'<div class="cell" data-j="'+j+'" style="--k:'+(k++)+'" role="gridcell">'+(c.n?'<i>'+c.n+'</i>':'')+'<b></b></div>':'<div></div>').join('');
+ g.onclick=e=>{const el=e.target.closest('.cell');if(el)tap(+el.dataset.j)};
+ size();
+}
+// square size: fill the width, and keep the whole grid plus the clue bar (and keyboard on phones) on screen
+function size(){if(!P)return;const g=$('grid'),w=g.parentElement.clientWidth,gap=w<420?2:3;let cs=Math.floor((w-(P.cols-1)*gap)/P.cols);
+ {const top=g.parentElement.getBoundingClientRect().top+scrollY,avail=innerHeight-$('dock').offsetHeight-top-12;cs=Math.min(cs,Math.floor((avail-(P.rows-1)*gap)/P.rows))}
+ g.style.setProperty('--gap',gap+'px');g.style.setProperty('--cs',Math.max(22,Math.min(44,cs))+'px')}
+// on phones, bring the grid back into view (the keyboard sits under it)
+function toGrid(){if(!TOUCH)return;const r=$('grid').getBoundingClientRect(),dock=$('dock').getBoundingClientRect().top;if(r.top<0||r.bottom>dock+2)scrollTo({top:Math.max(0,r.top+scrollY-8),behavior:'smooth'})}
+function drawClues(){
+ const tag=w=>P.courses.length>1&&w.k?'<span class="tg">'+esc(short(w.k))+'</span>':'';
+ for(const d of ['A','D'])$(d==='A'?'across':'down').innerHTML=order.filter(w=>w.d===d).map(w=>'<li data-i="'+w.i+'"><span class="n">'+w.n+'</span><span>'+tag(w)+esc(w.q)+' <span class="en">('+esc(w.e)+')</span></span></li>').join('');
+ $('clues').onclick=e=>{const li=e.target.closest('li');if(!li)return;const w=words[+li.dataset.i];dir=w.d;cur=w.idx.find(j=>G.f[j]===' ');if(cur===undefined)cur=w.idx[0];render();toGrid()};
+}
+function drawKb(){
+ $('kb').innerHTML=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'].map((r,i)=>'<div>'+r.split('').map(ch=>'<button data-k="'+ch+'">'+ch+'</button>').join('')+(i===2?'<button class="wide" data-k="BS" aria-label="Delete">⌫</button>':'')+'</div>').join('');
+ $('kb').onclick=e=>{const b=e.target.closest('button');if(!b)return;b.dataset.k==='BS'?back():type(b.dataset.k)};
+}
+const wordAt=(j,d)=>cells[j]&&cells[j][d]>=0?words[cells[j][d]]:null;
+const locked=j=>G.m[j]==='1'||G.m[j]==='2';
+const setc=(s,j,c)=>s.slice(0,j)+c+s.slice(j+1);
+
+function render(){
+ const W=wordAt(cur,dir)||wordAt(cur,dir==='A'?'D':'A');if(W)dir=W.d;
+ const on=new Set(W?W.idx:[]);
+ for(const el of $('grid').children){if(!el.dataset.j)continue;const j=+el.dataset.j,m=G.m[j];
+  el.lastChild.textContent=G.f[j].trim();
+  el.className='cell'+(on.has(j)?' hw':'')+(j===cur&&!G.done?' cur':'')+(m==='1'?' ok':m==='2'?' rv':m==='3'?' bad':'');
+  el.setAttribute('aria-label',(cells[j].n?cells[j].n+', ':'')+(G.f[j].trim()||'blank'))}
+ if(W){$('cbn').textContent=W.n+' '+(W.d==='A'?'Across':'Down')+(P.courses.length>1&&W.k?' · '+short(W.k):'');$('cbq').innerHTML=esc(W.q)+' <span class="en">('+esc(W.e)+')</span>'}
+ const wide=matchMedia('(min-width:900px)').matches;
+ for(const li of $('clues').querySelectorAll('li')){const w=words[+li.dataset.i],isOn=w===W;
+  li.classList.toggle('on',isOn);li.classList.toggle('full',w.idx.every(j=>G.f[j]!==' '));
+  if(isOn&&wide)li.scrollIntoView({block:'nearest'})}
+ $('dock').classList.toggle('over',!!G.done);$('hintone').hidden=!!G.done;
+}
+function tap(j){toGrid();if(j===cur){if(wordAt(j,dir==='A'?'D':'A'))dir=dir==='A'?'D':'A'}else{cur=j;if(!wordAt(j,dir))dir=dir==='A'?'D':'A'}render()}
+function flip(){if(wordAt(cur,dir==='A'?'D':'A')){dir=dir==='A'?'D':'A';render()}}
+
+function type(ch){
+ if(cur<0||G.done)return;start();
+ if(!locked(cur)){G.f=setc(G.f,cur,ch);if(G.m[cur]==='3')G.m=setc(G.m,cur,'0')}
+ const W=wordAt(cur,dir),k=W.idx.indexOf(cur);
+ // next square of the word (typing a whole answer goes straight through letters already there); at the end, the first gap
+ // left in the word, else the next word with gaps
+ const any=W.idx.find(j=>G.f[j]===' ');
+ if(k+1<W.idx.length)cur=W.idx[k+1];else if(any!==undefined)cur=any;else{const nx=nextOpen(W,1);if(nx){dir=nx.d;cur=nx.idx.find(j=>G.f[j]===' ')}}
+ persist();render();full();
+}
+function back(){
+ if(cur<0||G.done)return;
+ if(G.f[cur]!==' '&&!locked(cur)){G.f=setc(G.f,cur,' ');G.m=setc(G.m,cur,'0')}
+ else{const W=wordAt(cur,dir),k=W.idx.indexOf(cur);if(k>0){cur=W.idx[k-1];if(!locked(cur)){G.f=setc(G.f,cur,' ');G.m=setc(G.m,cur,'0')}}}
+ persist();render();
+}
+// the next (step 1) or previous (-1) word that still has empty squares; any next word when the grid is full
+function nextOpen(W,step){const i=order.indexOf(W);for(let t=1;t<=order.length;t++){const w=order[(i+step*t+order.length*2)%order.length];if(w.idx.some(j=>G.f[j]===' '))return w}return null}
+function nextWord(step){const W=wordAt(cur,dir),w=(G.done?null:nextOpen(W,step))||order[(order.indexOf(W)+step+order.length)%order.length];dir=w.d;cur=w.idx.find(j=>G.f[j]===' ');if(cur===undefined)cur=w.idx[0];render()}
+function move(dr,dc){
+ const d=dc?'A':'D';if(dir!==d&&wordAt(cur,d)){dir=d;render();return}
+ let r=Math.floor(cur/P.cols),c=cur%P.cols;
+ for(;;){r+=dr;c+=dc;if(r<0||c<0||r>=P.rows||c>=P.cols)return;const j=r*P.cols+c;if(cells[j]){cur=j;if(!wordAt(j,dir))dir=dir==='A'?'D':'A';render();return}}
+}
+function key(e){
+ const ab=document.getElementById('askbox');if(!P||e.ctrlKey||e.metaKey||e.altKey||(ab&&!ab.hidden))return;
+ if(!$('howto').hidden){if(e.key==='Escape'||e.key==='Enter'){e.preventDefault();closeHow()}return}
+ if(document.activeElement&&/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName))return;
+ const k=e.key;
+ if(/^[a-z]$/i.test(k)){e.preventDefault();type(k.toUpperCase())}
+ else if(k==='Backspace'||k==='Delete'){e.preventDefault();back()}
+ else if(k==='ArrowLeft'){e.preventDefault();move(0,-1)}else if(k==='ArrowRight'){e.preventDefault();move(0,1)}
+ else if(k==='ArrowUp'){e.preventDefault();move(-1,0)}else if(k==='ArrowDown'){e.preventDefault();move(1,0)}
+ else if(k==='Tab'||k==='Enter'){if(k==='Tab'||!document.activeElement||document.activeElement===document.body){e.preventDefault();nextWord(e.shiftKey?-1:1)}}
+ else if(k===' '&&(!document.activeElement||document.activeElement===document.body)){e.preventDefault();flip()}
+ else if(k==='Escape')closeMenu();
+}
+
+// timer: runs from the first letter while the page is open
+function start(){if(G&&!G.done&&!tStart){tStart=Date.now();clearInterval(tick);tick=setInterval(drawTimer,1000);drawTimer()}}
+function pause(){if(G&&tStart){G.t+=(Date.now()-tStart)/1000;tStart=0;save()}clearInterval(tick);tick=0}
+function secs(){return Math.floor(G.t+(tStart?(Date.now()-tStart)/1000:0))}
+const clock=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+function drawTimer(){const e=$('timer');e.hidden=!G;if(G){e.textContent=clock(secs());e.classList.toggle('done',!!G.done)}}
+function persist(){if(tStart){G.t+=(Date.now()-tStart)/1000;tStart=Date.now()}save()}
+
+function full(){
+ const isFull=cells.every((c,j)=>!c||G.f[j]!==' ');
+ if(isFull&&cells.every((c,j)=>!c||G.f[j]===c.a))return win();
+ if(isFull&&!wasFull)toast('Almost! At least one square is wrong. Check can find it.',3600);
+ wasFull=isFull;
+}
+function win(){
+ pause();G.done=Date.now();G.day=manila();save();clearTimeout(toast.t);$('toast').classList.remove('on');
+ render();drawTimer();drawHead();drawPast();
+ const g=$('grid');g.classList.remove('won');void g.offsetWidth;g.classList.add('won');
+ drawDone();setTimeout(()=>$('done').scrollIntoView({behavior:'smooth',block:'nearest'}),450);
+}
+
+// Check / Reveal
+function menu(btn){
+ const had=document.querySelector('.menu');closeMenu();if(had)return;
+ const m=document.createElement('div');m.className='menu';m.setAttribute('role','menu');
+ const item=(f,t,c)=>'<button role="menuitem"'+(c?' class="'+c+'"':'')+' onclick="'+f+'">'+t+'</button>';
+ m.innerHTML=(G&&!G.done?item("check('cell')",'Check this square')+item("check('word')",'Check this word')+item("check('all')",'Check the puzzle')+'<hr>'+
+  item("reveal('cell')",'Reveal this square')+item("reveal('word')",'Reveal this word')+item("reveal('all')",'Reveal the puzzle')+'<hr>':'')+
+  item('closeMenu();openHow()','How to play')+(G&&(G.f.trim()||G.done)?item('restart()','Start over','warn'):'');
+ btn.parentElement.appendChild(m);btn.setAttribute('aria-expanded','true');
+ setTimeout(()=>document.addEventListener('click',outside),0);
+}
+function outside(e){if(!e.target.closest('.menu'))closeMenu()}
+function closeMenu(){document.querySelectorAll('.menu').forEach(m=>m.remove());$('hintbtn').setAttribute('aria-expanded','false');document.removeEventListener('click',outside)}
+function scope(s){return s==='cell'?[cur]:s==='word'?wordAt(cur,dir).idx:cells.map((c,j)=>c?j:-1).filter(j=>j>=0)}
+function check(s){closeMenu();let bad=0,n=0;
+ for(const j of scope(s)){if(G.f[j]===' '||G.m[j]==='2')continue;n++;if(G.f[j]===cells[j].a)G.m=setc(G.m,j,'1');else{G.m=setc(G.m,j,'3');bad++}}
+ if(!n){toast('Nothing to check yet.');return}
+ G.h++;persist();render();toast(bad?bad+(bad===1?' square is':' squares are')+' wrong.':'All correct so far.')}
+// one letter of the current word: the first letter, then letters spread through the word
+function hint(){
+ if(G.done)return;const W=wordAt(cur,dir);if(!W)return;
+ const open=W.idx.filter(j=>G.f[j]!==cells[j].a&&G.m[j]!=='2');
+ if(!open.length){toast('This word is already right.');return}
+ const known=W.idx.map((j,i)=>G.f[j]===cells[j].a||G.m[j]==='2'?i:-1).filter(i=>i>=0);
+ // pick the open square farthest from any known letter (the first letter goes first)
+ const far=i=>known.length?Math.min(...known.map(k=>Math.abs(k-i))):(i===0?99:0);
+ const j=open.reduce((b,x)=>far(W.idx.indexOf(x))>far(W.idx.indexOf(b))?x:b,open[0]);
+ start();G.f=setc(G.f,j,cells[j].a);G.m=setc(G.m,j,'2');G.h++;persist();render();full()}
+async function reveal(s){closeMenu();
+ if(s==='all'&&!await ask('This fills in every answer and ends the puzzle. It won\'t count toward your streak.',{title:'Reveal the whole puzzle?',ok:'Reveal'}))return;
+ start();for(const j of scope(s))if(G.f[j]!==cells[j].a||G.m[j]==='3'){G.f=setc(G.f,j,cells[j].a);G.m=setc(G.m,j,'2')}
+ G.h++;if(s==='all')G.gave=1;persist();render();full()}
+async function restart(){closeMenu();
+ if(!await ask('This clears your letters, help count and time for this puzzle.',{title:'Start this puzzle over?',ok:'Start over',danger:1}))return;
+ pause();delete S.g[P.id];save();open(P)}
+
+function streak(){const days=new Set();for(const id in S.g){const g=S.g[id];if(g.done&&!g.gave&&g.day===id.slice(0,10))days.add(g.day)}
+ let d=days.has(TODAY)?TODAY:shift(TODAY,-1),n=0;while(days.has(d)){n++;d=shift(d,-1)}return n}
+function drawDone(){
+ const b=$('done');if(!G.done){b.hidden=true;return}
+ const s=Math.round(G.t),help=G.gave?'answers revealed':G.h?G.h+(G.h===1?' hint':' hints'):'no hints',n=streak();
+ const other=dayPuzzles(P.date).find(x=>x!==P&&!solved(x));
+ b.innerHTML='<h2>'+(G.gave?'Puzzle revealed':'Solved!')+'</h2><p class="meta">'+esc(P.title||label(P))+' · '+clock(s)+' · '+help+'</p>'+
+  (n?'<div class="streak">'+ic('flame')+n+'-day streak</div>':'')+
+  '<div class="row">'+(G.gave?'':'<button class="btn primary" onclick="share()">'+ic('share')+'Share result</button>')+
+  (other?'<button class="btn" onclick="go(\''+other.id+'\')">Next: '+esc(label(other))+' puzzle</button>':'')+
+  P.courses.map(c=>'<a class="btn" href="reviewer.html?course='+encodeURIComponent(c)+'">Practice '+esc(short(c))+'</a>').join('')+'</div>'+
+  '<details class="review" open><summary>The words</summary><ul>'+order.map(w=>'<li><b>'+w.a+'</b>'+(P.courses.length>1&&w.k?'<span class="tg">'+esc(short(w.k))+'</span>':'')+esc(w.q)+'</li>').join('')+'</ul></details>';
+ b.hidden=false;
+}
+function share(){
+ const s=Math.round(G.t),t='APMed \'33 Daily Crossword · '+niceDate(P.date)+'\n'+P.courses.map(c=>NAMES[c]||c).join(' + ')+(P.title?': '+P.title:'')+'\nSolved in '+clock(s)+(G.h?' with '+G.h+(G.h===1?' hint':' hints'):', no hints')+(streak()>1?' · '+streak()+'-day streak':'')+'\n'+location.origin+location.pathname;
+ if(navigator.share)navigator.share({text:t}).catch(()=>{});
+ else (navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied. Paste it in the group chat.'),()=>toast('Could not copy here.'));
+}
+function drawPast(){
+ const list=ALL.filter(p=>p.date!==P.date).sort((a,b)=>b.id.localeCompare(a.id)).slice(0,10),b=$('past');
+ b.hidden=!list.length;if(!list.length)return;
+ b.innerHTML='<h2>Earlier puzzles</h2>'+list.map(p=>{const g=S.g[p.id];return '<a href="?id='+encodeURIComponent(p.id)+'" onclick="event.preventDefault();go(\''+p.id+'\')"><span><b>'+esc(label(p))+'</b> · '+esc(p.title||'')+'</span><small'+(g&&g.done?' class="s">Solved':'>'+(g&&g.f&&g.f.trim()?'In progress':''))+'</small><small>'+esc(niceDate(p.date))+'</small></a>'}).join('');
+}
+function openHow(){$('howto').hidden=false;$('howto').querySelector('.btn').focus()}
+function closeHow(){$('howto').hidden=true;S.how=1;save()}
+boot();
+</script>
+<script src="update.js" defer></script>
+</body></html>

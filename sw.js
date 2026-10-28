@@ -4,11 +4,11 @@
 // saved copy waits up to 1.5 s for the network first, so someone coming back after a while gets the newest version when
 // the connection allows. Without a connection, the saved copy is used. Pictures show the saved copy first and refresh in
 // the background. Fonts are cached after first use; transes PDFs only once opened.
-const CACHE = 'reviewers-v16';
+const CACHE = 'reviewers-v17';
 const FRESH = 6 * 3600e3, WAIT = 1500;
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'dialog.js', 'live.js', 'ui.css', 'icons.svg', 'reminders-core.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html', 'update.js',
-  'daily.js', 'move.js', 'quiz.html', 'sfx.js', 'slides.html',
+  'daily.js', 'move.js', 'quiz.html', 'sfx.js', 'slides.html', 'crossword.html', 'crossword/puzzles.json',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
 // A saved copy remembers when it was saved (x-saved-at), so its age can be checked.
@@ -97,6 +97,20 @@ self.addEventListener('fetch', e => {
     if (nav && [...url.searchParams.keys()].some(k => /^(fbclid|mibextid|igshid|utm_\w+)$/.test(k))) {
       for (const k of [...url.searchParams.keys()]) if (/^(fbclid|mibextid|igshid|utm_\w+)$/.test(k)) url.searchParams.delete(k);
       e.respondWith(Response.redirect(url.href, 302));
+      return;
+    }
+    // The daily crossword file gains a new day's puzzle overnight: ask the network first (up to 4 s), else the saved copy.
+    if (url.pathname.endsWith('/crossword/puzzles.json')) {
+      e.respondWith((async () => {
+        const c = await caches.open(CACHE), key = keyFor(req.url, false);
+        const net = fetch(req, { cache: 'no-cache' }).then(async res => { if (res.ok) await c.put(key, await stamp(res.clone())); return res; });
+        const hit = await c.match(key);
+        if (!hit) return net;
+        const res = await Promise.race([net.catch(() => null), new Promise(r => setTimeout(() => r(null), 4000))]);
+        if (res && res.ok) return res;
+        e.waitUntil(net.catch(() => {}));
+        return hit;
+      })());
       return;
     }
     // Pictures rarely change: show the saved copy at once and refresh it in the background.

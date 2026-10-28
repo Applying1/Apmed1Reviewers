@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='92',APP_DATE='Oct 28, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='93',APP_DATE='Oct 28, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1747,6 +1747,8 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'93',date:'Oct 28, 2026',title:'Daily crossword',items:[
+  'New on the home page: a <b>Daily crossword</b>. Every day there is one short puzzle mixing the courses with the nearest evals (until Nov 4: Psychology and Botany, with a tag on each clue). Tap a square and type; <b>Hints</b> can check or reveal letters. Your streak counts the days you solve it.']},
  {v:'92',date:'Oct 28, 2026',title:'Tidier color picker',items:[
   'The <b>Colors</b> picker is now an even grid of equal tiles instead of ragged pills, on the home page and in Personalize.']},
  {v:'91',date:'Oct 28, 2026',title:'Mix look-alikes and a slide viewer',items:[

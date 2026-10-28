@@ -155,6 +155,8 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:0 0 18px}
 .tool{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow);min-width:0;transition:border-color .15s,transform .18s var(--ease)}
 .tool:hover{border-color:var(--accent-line);transform:translateY(-1px)}
+.tool .new{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:700 10.5px/1.6 var(--sans);letter-spacing:.04em;text-transform:uppercase;vertical-align:2px}
+.tool .done{color:var(--good);font-weight:600}
 .tool .tic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-size:18px}
 .tool>span:last-child{min-width:0}.tool b{display:block;font-size:14.5px}.tool span span{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:520px){.tool span span{white-space:normal}}
@@ -226,6 +228,7 @@ html.introing body{overflow:hidden}
  <section class="today" id="today" hidden aria-label="Today"></section>
  <nav class="tools" aria-label="Tools">
   <a class="tool" href="quiz.html"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Live quiz</b><span>Quiz your study group, live: everyone joins on their phone with a code</span></span></a>
+ <a class="tool" id="cwtool" href="crossword.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crossword"/></svg></span><span><b>Daily crossword</b><span id="cwsub">A short puzzle on your next eval</span></span></a>
  </nav>
  <div class="try" id="try" hidden></div>
  <div class="try" id="move" hidden></div>
@@ -350,6 +353,24 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  // a warm-up on the topic, from the day before until class starts (only where the timetable links the topic to the course's questions)
  const crs=c.subj&&c.subj.course,hrs=(c.from-new Date())/36e5;
  if(crs&&c.preview&&!c.now&&hrs>0&&hrs<=40){const p=document.getElementById('prevq');p.href='reviewer.html?course='+encodeURIComponent(crs)+'#preview='+encodeURIComponent(c.preview);p.textContent='Warm up: 5 questions on '+(c.topic||'the next topic').replace(/ \(.*$/,'').slice(0,60);p.hidden=false}}catch(err){}})();
+// Daily crossword tile: today's courses (nearest test first), "New" until the puzzle page is opened once
+(async function(){try{
+ const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const data=await (await fetch('crossword/puzzles.json')).json(),all=(data.puzzles||[]).filter(p=>p.date<=day&&p.date>=shiftDay(day,-2));
+ if(!all.length)return;
+ let st={};try{st=JSON.parse(localStorage.getItem('reviewer_crossword'))||{}}catch(e){}
+ const g=st.g||{},done=p=>!!(g[p.id]&&g[p.id].done),today=all.filter(p=>p.date===day),t=$('cwtool'),sub=$('cwsub');
+ let names={};try{for(const c of await (await fetch('courses.json')).json())names[c.id]=c.title.replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,'')}catch(e){}
+ const nm=p=>p.courses.map(c=>names[c]||c).join(' + ');
+ if(today.length){
+  if(today.every(done))sub.innerHTML='<span class="done">Solved today ✓</span> · a new one tomorrow';
+  else{let when='';try{await Sched.load();const a=Remind.list(8).find(x=>x.subj&&today.some(p=>p.courses.includes(x.subj.course)));if(a)when=' · for '+(a.kind==='evals'?'Evals':a.kind==='quiz'?'the quiz':'the exam')+' '+(/^(Today|Tomorrow)$/.test(Sched.when(a.date))?Sched.when(a.date).toLowerCase():'on '+Sched.when(a.date))}catch(e){}
+   sub.textContent='Today: '+today.filter(p=>!done(p)).map(nm).join(' and ')+when}
+ }else{const left=all.filter(p=>!done(p));if(!left.length)return;sub.textContent='Catch up: '+nm(left[left.length-1])+' from '+(left[left.length-1].date===shiftDay(day,-1)?'yesterday':'this week')}
+ if(!st.seen)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
+ t.hidden=false;
+}catch(e){}
+function shiftDay(d,n){const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)}})();
 // Test countdown: the next exams, evals and quizzes on the timetable (next 14 days), ticking every second.
 (async function(){try{await Sched.load();const box=document.getElementById('tests');let list=[];
  const pick=()=>{const now=new Date();list=Remind.list(3,now).filter(a=>a.from-now<14*864e5).slice(0,4)};

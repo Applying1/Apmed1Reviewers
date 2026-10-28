@@ -521,5 +521,21 @@
   "title": "New course icons",
   "text": "The home-page pictures are now soft 3D icons in one purple palette, with no background box, so they match your theme in light and dark mode.",
   "link": "index.html"
+ },
+ {
+  "id": 63,
+  "date": "2026-10-28",
+  "type": "feature",
+  "title": "Daily crossword",
+  "text": "One short crossword a day, mixing the courses with the nearest evals. Until Wednesday's evals it's Psychology and Botany together, with a tag on each clue. Find it on the home page.",
+  "link": "crossword.html"
+ },
+ {
+  "id": 64,
+  "date": "2026-10-28",
+  "type": "schedule",
+  "title": "Botany evals on Wednesday",
+  "text": "General Botany has its evals on Wed, Nov 4 (Flower, Fruits and Seeds; Plant Kingdom), the same day as the Psychology evals. The timetable and reminders are updated.",
+  "link": "schedule.html"
  }
 ]
