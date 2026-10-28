@@ -604,5 +604,22 @@
   "title": "Chemistry: first draft of topics 14 and 15",
   "text": "A beginning set of 130 questions on Aldehydes and Ketones and on Carboxylic Acids and Derivatives, made from the slides only. They are in the Finals exam and will be revised after the class discussion.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 73,
+  "date": "2026-10-29",
+  "type": "content",
+  "course": "botany",
+  "title": "Botany: why not your choice, lessons 1 to 4",
+  "text": "Every question in Lessons 1 to 4 now explains why each wrong choice is wrong, so all six Botany lessons have it.",
+  "link": "reviewer.html?course=botany"
+ },
+ {
+  "id": 74,
+  "date": "2026-10-29",
+  "type": "feature",
+  "title": "Questions on this slide: more decks",
+  "text": "The Quiz button in the slide viewer now also works for the Botany (flower, seed, fruit, plant kingdom), NSTP (Bill of Rights, leadership, health) and PurCom research slides.",
+  "link": "index.html"
  }
 ]
