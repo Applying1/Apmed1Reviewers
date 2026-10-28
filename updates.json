@@ -478,5 +478,14 @@
   "title": "Pharmacology Evals added to the timetable",
   "text": "Evals on Anti-inflammatory drugs are set for Tuesday, Nov 10 (week 16), before GI Drugs 1 and 2.",
   "link": "schedule.html"
+ },
+ {
+  "id": 58,
+  "date": "2026-10-28",
+  "type": "content",
+  "course": "pharma",
+  "title": "Pharmacology Lesson 7: 12 more cases",
+  "text": "Twelve new patient cases on anti-inflammatory drugs, and some answer choices reworded so the longest option is not the giveaway.",
+  "link": "reviewer.html?course=pharma"
  }
 ]
