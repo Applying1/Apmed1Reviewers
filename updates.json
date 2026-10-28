@@ -621,5 +621,6 @@
   "title": "Questions on this slide: more decks",
   "text": "The Quiz button in the slide viewer now also works for the Botany (flower, seed, fruit, plant kingdom), NSTP (Bill of Rights, leadership, health) and PurCom research slides.",
   "link": "index.html"
- }
+ },
+ {"id": 75, "date": "2026-10-29", "type": "feature", "title": "Display names and profile pictures", "text": "Tap your picture at the top of the home page, then Edit, to pick a display name and a picture for the discussion. On phones the top bar now shows just your picture. If your sign-in ends on a device, the home page tells you and offers Sign in again.", "link": "index.html?sync"}
 ]

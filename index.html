@@ -175,14 +175,20 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .or{display:flex;align-items:center;gap:10px;margin:18px 0 4px;color:var(--faint);font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 .who{display:flex;align-items:center;gap:12px;margin:12px 0 4px;padding:12px;border-radius:14px;background:var(--raised);border:1px solid var(--line)}
-.who img,.av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;background:var(--accent-soft)}
-.av{display:grid;place-items:center;font-weight:700;font-size:18px;color:var(--accent)}
 .who b{display:block;font-size:15px}
-.who span{display:block;color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis}
+.who>div>span{display:block;color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .who>div{min-width:0}
 details.alt{margin-top:16px}
 details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weight:600}
-#syncbtn img{width:20px;height:20px;border-radius:50%;object-fit:cover;margin:-3px 0}
+#syncbtn .avw{position:relative;display:inline-flex;margin:-4px 0}#syncbtn.me{gap:7px;padding-left:7px}
+#syncbtn .adot{position:absolute;right:-2px;top:-2px;width:9px;height:9px;border-radius:50%;background:var(--warn,#d97706);box-shadow:0 0 0 2px var(--surface)}
+.who .btn.sm{margin-left:auto;padding:6px 12px;font-size:13px}
+.modtag{font-size:10.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent);vertical-align:2px}
+.okline{color:var(--mute);font-size:14px}
+.ended{margin:12px 0;padding:12px 14px;border-radius:14px;border:1px solid var(--line2);background:var(--raised);font-size:14px;color:var(--mute)}.ended b{color:var(--text)}
+.alinks{display:flex;flex-direction:column;margin:14px 0 4px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.al{display:flex;flex-direction:column;gap:1px;padding:10px 14px;border:0;border-top:1px solid var(--line);background:var(--surface);text-align:left;font:600 14.5px var(--sans);color:var(--text);text-decoration:none;cursor:pointer}
+.al:first-child{border-top:0}.al:hover{background:var(--raised)}.al small{font-weight:400;font-size:12.5px;color:var(--mute)}
 .top .acts .btn{white-space:nowrap}
 #syncbtn{min-width:0;max-width:200px}#syncbtn .nm{overflow:hidden;text-overflow:ellipsis}
 #theme svg{flex:none}
@@ -195,7 +201,7 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
 .try p{flex:1;min-width:180px;margin:0;font-size:14px;color:var(--mute)}.try p b{color:var(--text)}
 .try .row{margin:0;flex-wrap:nowrap}.try .row .btn{flex:none}
 @media (max-width:520px){main{padding:24px 16px 48px}.top .acts{margin-left:0;width:100%;flex-wrap:nowrap}
- .top .acts>.btn{flex:none}#syncbtn{flex:0 1 auto;max-width:none}#theme .tl{display:none}#theme{padding:8px 11px}
+ .top .acts>.btn{flex:none}#syncbtn{flex:0 1 auto;max-width:none}#syncbtn.me .nm{display:none}#syncbtn.me{padding:6px 8px}#theme .tl{display:none}#theme{padding:8px 11px}
  .upnext .go{display:none}.upnext .l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* One-time welcome intro (see the script at the end of the page) */
@@ -250,6 +256,7 @@ html.introing body{overflow:hidden}
 </div></div>
 <script src="schedule-core.js"></script>
 <script src="auth.js"></script>
+<script src="profile.js"></script>
 <script src="dialog.js"></script>
 <script src="notify-core.js"></script>
 <script src="reminders-core.js"></script>
@@ -299,9 +306,9 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
  let list;
  try{list=await (await fetch('courses.json')).json()}
  catch(e){document.getElementById('list').innerHTML='<p class="empty">Courses could not be loaded. Check your connection and reload.</p>';return}
- CLOUD=(list.find(c=>c.cloud&&c.cloud.url)||{}).cloud||null;document.getElementById('syncbtn').hidden=!CLOUD;
+ CLOUD=(list.find(c=>c.cloud&&c.cloud.url)||{}).cloud||null;document.getElementById('syncbtn').hidden=!CLOUD;if(CLOUD)Auth.cloud=CLOUD;
  if(CLOUD&&window.Push){Push.init(CLOUD);setTimeout(()=>Push.heal(),1500)}
- if(CLOUD){drawSyncBtn();finishSignIn().then(done=>{const q=new URLSearchParams(location.search);if(done)return;
+ if(CLOUD){drawSyncBtn();finishSignIn().then(done=>{const q=new URLSearchParams(location.search);if(!done)checkAccount();if(done)return;
   if(q.has('signin')){history.replaceState(null,'',location.pathname);signIn()}else if(q.has('sync')){history.replaceState(null,'',location.pathname);openSync()}else setTimeout(spotlight,700)})}
  const ICONS={};const loadIcon=u=>ICONS[u]||(ICONS[u]=fetch(u).then(r=>r.ok?r.text():'').catch(()=>''));
  const inlineIcons=()=>document.querySelectorAll('.ic[data-src]').forEach(el=>{const u=el.dataset.src;loadIcon(u).then(t=>{if(t&&el.isConnected){el.innerHTML=t;el.removeAttribute('data-src')}else if(!t){el.innerHTML='<img src="'+u+'" alt="" height="140" width="160">'}})});
@@ -428,8 +435,14 @@ addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('sync').hidden)closeSync(
 const ACC_KEY='reviewer_account';
 function getAcc(){try{return JSON.parse(localStorage.getItem(ACC_KEY))||null}catch(e){return null}}
 const G='<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>';
-function avatar(a,cls){return a&&a.avatar?'<img'+(cls?' class="'+cls+'"':'')+' src="'+esc(a.avatar)+'" alt="" referrerpolicy="no-referrer">':'<div class="av">'+esc(((a&&(a.name||a.email))||'?').charAt(0).toUpperCase())+'</div>'}
-function drawSyncBtn(){const a=getAcc(),b=$('syncbtn');if(!b)return;b.innerHTML=a?(a.avatar?'<img src="'+esc(a.avatar)+'" alt="" referrerpolicy="no-referrer">':'')+'<span class="nm">'+esc((a.name||a.email||'Account').split(' ')[0])+'</span>':'Sign in'}
+function drawSyncBtn(){const a=getAcc(),b=$('syncbtn');if(!b)return;
+ if(!a){b.innerHTML='Sign in';b.classList.remove('me');b.removeAttribute('aria-label');b.title='';return}
+ const m=Profile.me(a),off=Auth.ended();b.classList.add('me');b.setAttribute('aria-label','Your account: '+m.name+(off?' (sign in again)':''));b.title=off?'Sign in again':'Your account';
+ b.innerHTML='<span class="avw">'+Profile.html(m,24)+(off?'<i class="adot" aria-hidden="true"></i>':'')+'</span><span class="nm">'+esc(m.name.split(' ')[0])+'</span>'}
+// On load: read the profile (name/picture changed on another device) and notice a sign-in that has ended
+async function checkAccount(){if(!getAcc()||!getCode())return;if(Auth.ses()){await Auth.token();if(Auth.ses())await Profile.refresh()}
+ drawSyncBtn();if(!$('sync').hidden)drawSync()}
+function editProfile(){Profile.edit().then(a=>{if(a){drawSyncBtn();drawSync('Profile saved.',true)}})}
 function signIn(){if(!CLOUD)return;const back=location.origin+location.pathname;
  location.href=CLOUD.url.replace(/\/+$/,'')+'/auth/v1/authorize?provider=google&redirect_to='+encodeURIComponent(back)}
 // Back from Google: the token arrives in the address (#access_token=...). Use it once to get the account's code and name.
@@ -447,15 +460,23 @@ async function finishSignIn(){const h=new URLSearchParams(location.hash.slice(1)
   if(!/^[A-Z0-9]{12}$/.test(code||''))throw new Error('no code');
   const was=getCode();setCode(code);
   try{localStorage.setItem(ACC_KEY,JSON.stringify({name:m.full_name||m.name||'',email:u.email||m.email||'',avatar:m.avatar_url||m.picture||'',at:Date.now()}))}catch(e){}
+  await Profile.refresh();
   drawSyncBtn();drawSync(was&&was!==code?'Signed in. Open your courses and your progress here is combined with your account.':'Signed in. Your progress now follows you on every device where you sign in.',true)
  }catch(e){drawSync('Could not finish signing in. Check your connection and try again.')}
  return true}
 function signOut(sure){if(sure!==true){ask('Your progress stays here, but it stops syncing until you sign in again.',{title:'Sign out on this device?',ok:'Sign out',danger:1}).then(y=>{if(y)signOut(true)});return}
  try{localStorage.removeItem(ACC_KEY);localStorage.removeItem('reviewer_session')}catch(e){}setCode('');drawSyncBtn();drawSync('Signed out.',true)}
 function drawSync(msg,ok){const c=getCode(),a=getAcc(),b=$('syncbody');$('synch').textContent=a&&c?'Your account':'Sign in to sync';const note='<p class="msg'+(ok?' ok':'')+'" id="syncmsg">'+(msg||'')+'</p>';
- if(a&&c){b.innerHTML='<div class="who">'+avatar(a)+'<div><b>'+esc(a.name||'Signed in')+'</b><span>'+esc(a.email||'')+'</span></div></div>'+
-  '<p>Your progress in every course syncs to this account. Sign in with the same Google account on your other devices.</p>'+note+
-  '<div class="row"><button class="btn" onclick="signOut()">Sign out</button></div>';return}
+ if(a&&c){const m=Profile.me(a),off=Auth.ended(),g=a.gname||a.name||'';
+  b.innerHTML='<div class="who">'+Profile.html(m,52)+'<div><b>'+esc(m.name)+(a.mod?' <span class="modtag">Moderator</span>':'')+'</b><span>'+esc(a.dname&&g&&g!==a.dname?g+' · ':'')+esc(a.email||'')+'</span></div>'+
+   (off?'':'<button class="btn sm" onclick="editProfile()">Edit</button>')+'</div>'+
+   (off?'<div class="ended"><b>Your sign-in ended on this device.</b> Your progress still syncs, but the discussion, attendance and your profile need you to sign in again.<button class="gbtn" onclick="this.disabled=true;signIn()">'+G+'Sign in again</button></div>'
+    :'<p class="okline">✓ Your progress in every course syncs to this account. Sign in with the same Google account on your other devices.</p>')+
+   '<div class="alinks">'+
+    '<a class="al" href="attendance.html"><span>My attendance</span><small>From the class tracker</small></a>'+
+    '<a class="al" href="notifications.html"><span>Notifications</span><small>Reminders and class updates</small></a>'+
+    '<a class="al" href="privacy.html"><span>Privacy and your data</span><small>What is saved and who can see it</small></a></div>'+
+   note+'<div class="row"><button class="btn" onclick="signOut()">Sign out</button></div>';return}
  b.innerHTML='<p>Keep the same progress on your phone and laptop, for every course at once.</p>'+
   '<button class="gbtn" onclick="this.disabled=true;signIn()">'+G+'Sign in with Google</button>'+
   (c?note+'<details class="alt" open><summary>Or keep using your sync code</summary><p>This device syncs with this code:</p><div class="codebox">'+spaced(c)+'</div>'+

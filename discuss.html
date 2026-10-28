@@ -32,7 +32,9 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 4px;letter-spacing:-.3px}
 .embed .dock{padding:10px 12px 12px}
 .post{display:flex;gap:11px;padding:12px 0;border-top:1px solid var(--line)}
 .post:first-child{border-top:0}
-.av{flex:none;width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--accent-soft);display:grid;place-items:center;font-weight:700;color:var(--accent)}
+.avb{flex:none;border:0;background:none;padding:0;cursor:pointer;border-radius:50%;height:36px}
+.nmb{border:0;background:none;padding:0;font:700 14.5px var(--sans);color:var(--text);cursor:pointer;text-align:left}.nmb:hover{text-decoration:underline}
+.me{border:0;background:none;padding:0;color:var(--accent);font:600 12.5px var(--sans);cursor:pointer}
 .pb{flex:1;min-width:0}
 .ph{display:flex;align-items:flex-start;gap:8px}
 .who{flex:1;min-width:0;display:flex;align-items:baseline;gap:4px 8px;flex-wrap:wrap}
@@ -64,13 +66,14 @@ textarea:focus{border-color:var(--accent)}
 <main>
  <a class="back" id="back" href="./">← Back to the course</a>
  <h1 id="ttl">Discussion</h1>
- <p class="lede" id="lede">Ask questions, share tips, help each other out. Posts show your Google name and photo, so keep it kind.</p>
+ <p class="lede" id="lede">Ask questions, share tips, help each other out. Posts show your display name and picture, and classmates can tap them to see your Google account name, so keep it kind.</p>
  <div id="qbox"></div>
  <button class="btn more" id="more" hidden onclick="loadMore()">Show earlier posts</button>
  <div class="list" id="list"><p class="empty">Loading…</p></div>
 </main>
 <div class="dock"><div class="in" id="dock"></div></div>
 <script src="auth.js"></script>
+<script src="profile.js"></script>
 <script src="dialog.js"></script>
 <script src="live.js"></script>
 <script>
@@ -89,8 +92,9 @@ const G='<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><pat
 function ago(t){const s=(Date.now()-new Date(t))/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' h ago';
  const d=new Date(t);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+(s>31536000?', '+d.getFullYear():'')}
 function linkify(s){return esc(s).replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]/g,u=>'<a href="'+u+'" target="_blank" rel="noopener nofollow">'+u+'</a>')}
-function postHTML(p){return '<div class="post" id="p'+p.id+'">'+(p.avatar?'<img class="av" src="'+esc(p.avatar)+'" alt="" referrerpolicy="no-referrer" loading="lazy">':'<div class="av">'+esc((p.author||'?').charAt(0).toUpperCase())+'</div>')+
- '<div class="pb"><div class="ph"><span class="who"><b>'+esc(p.author)+'</b>'+(p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time></span>'+
+// the avatar and name open the poster's card (display name, Google account name for signed-in viewers, Moderator)
+function postHTML(p){return '<div class="post" id="p'+p.id+'"><button class="avb" onclick="who('+p.id+')" aria-label="About '+esc(p.author)+'">'+Profile.html({av:p.av,url:p.avatar,name:p.author},36)+'</button>'+
+ '<div class="pb"><div class="ph"><span class="who"><button class="nmb" onclick="who('+p.id+')">'+esc(p.author)+'</button>'+(p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time></span>'+
  (p.can_delete?'<button class="del" onclick="del('+p.id+')">Delete</button>':'')+'</div><div class="tx">'+linkify(p.body)+'</div></div></div>'}
 function drawList(stick){const L=$('list'),atEnd=innerHeight+scrollY>=document.body.scrollHeight-80;
  L.innerHTML=posts.length?posts.map(postHTML).join(''):'<p class="empty">'+(qid?'No posts about this question yet. Ask or explain it here!':'No posts yet. Start the conversation!')+'</p>';
@@ -100,7 +104,7 @@ async function load(first){if(busy)return;busy=true;
   const fresh=rows.slice().reverse();
   // keep earlier pages already loaded
   const ids=new Set(fresh.map(p=>p.id)),older=posts.filter(p=>!ids.has(p.id)&&p.id<(fresh[0]?fresh[0].id:Infinity));
-  const changed=JSON.stringify(older.concat(fresh).map(p=>[p.id,p.can_delete]))!==JSON.stringify(posts.map(p=>[p.id,p.can_delete]));
+  const sig=l=>JSON.stringify(l.map(p=>[p.id,p.can_delete,p.author,p.av,p.avatar])),changed=sig(older.concat(fresh))!==sig(posts);
   posts=older.concat(fresh);if(first){oldest=fresh.length?fresh[0].id:null;$('more').hidden=rows.length<100}
   if(first||changed)drawList(first);
   else document.querySelectorAll('.post time').forEach(t=>t.textContent=ago(t.getAttribute('datetime')));
@@ -117,15 +121,17 @@ async function send(){const t=$('msg'),b=t.value.trim(),btn=$('sendbtn');if(!b)r
  catch(e){$('note').textContent=/JWT|sign in|401/i.test(e.message)?'Your sign-in expired. Sign in again to post.':e.message;$('note').className='err';
   if(!(await Auth.token())){drawDock()}}
  btn.disabled=false;t.focus()}
+function who(id){const p=posts.find(x=>x.id===id);if(p)Profile.card(p,editMe)}
+function editMe(){Profile.edit().then(a=>{if(a){drawDock();load(true)}})}
 async function del(id){if(!await ask('This cannot be undone.',{title:'Delete this post?',ok:'Delete',danger:1}))return;
  try{await Auth.rpc('discussion_delete',{p_id:id},true);posts=posts.filter(p=>p.id!==id);drawList(false);pingOthers()}catch(e){tell('Could not delete it. Try again.')}}
 // Live: others viewing this thread reload at once; the course pages hear about it too (pop-ups, red dots)
 function pingOthers(){if(!window.Live)return;Live.ping('discuss:'+thread);Live.ping('course:'+course,{thread})}
 function grow(){const t=$('msg');if(!t)return;t.style.height='auto';t.style.height=Math.min(160,t.scrollHeight)+'px';$('count').textContent=t.value.length>850?(1000-t.value.length)+' left':''}
-function drawDock(msg){const a=Auth.acc(),d=$('dock');
- if(!Auth.ses()||!a){d.innerHTML='<button class="gbtn" onclick="this.disabled=true;startSignIn()">'+G+'Sign in with Google to post</button>'+(msg?'<div class="hint"><span class="err">'+esc(msg)+'</span></div>':'');return}
+function drawDock(msg){const a=Auth.acc(),d=$('dock');if(!msg&&Auth.ended())msg='Your sign-in ended on this device. Sign in again to post.';
+ if(!Auth.ses()||!a){d.innerHTML='<button class="gbtn" onclick="this.disabled=true;startSignIn()">'+G+(a?'Sign in again to post':'Sign in with Google to post')+'</button>'+(msg?'<div class="hint"><span class="err">'+esc(msg)+'</span></div>':'');return}
  d.innerHTML='<div class="compose"><textarea id="msg" rows="1" maxlength="1000" placeholder="Write a message…" oninput="grow()" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
-  '<button class="btn primary" id="sendbtn" onclick="send()">Post</button></div><div class="hint"><span id="note">Posting as '+esc(a.name||a.email)+'</span><span id="count"></span></div>'}
+  '<button class="btn primary" id="sendbtn" onclick="send()">Post</button></div><div class="hint"><span id="note">Posting as '+esc(Profile.me(a).name)+' · <button class="me" onclick="editMe()">Change</button></span><span id="count"></span></div>'}
 (async function(){
  if(!/^[a-z0-9_-]{1,40}$/.test(course)||(qid&&!/^[a-z0-9_.-]{1,60}$/.test(qid))){$('list').innerHTML='<p class="empty">This discussion could not be found.</p>';return}
  $('back').href='reviewer.html?course='+encodeURIComponent(course);
@@ -144,6 +150,7 @@ function drawDock(msg){const a=Auth.acc(),d=$('dock');
  let msg='',done=null;try{done=await Auth.finish()}catch(e){msg=e.message}
  // signed in from the panel: go back to the course, which reopens the panel
  const ret=Q.get('return');if(done&&ret){try{const u=new URL(ret);if(u.origin===location.origin){location.replace(u.href);return}}catch(e){}}
+ if(Auth.ses()){await Auth.token();if(Auth.ses())await Profile.refresh()}
  drawDock(msg);
  await load(true);
  // instant via Realtime; the slow check is only a backup for sleeping phones and dropped connections

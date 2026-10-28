@@ -88,6 +88,14 @@
     ]
    },
    {
+    "id": "evals2",
+    "name": "Evals 2",
+    "chapters": [
+     "13",
+     "14"
+    ]
+   },
+   {
     "id": "finals",
     "name": "Finals",
     "chapters": [

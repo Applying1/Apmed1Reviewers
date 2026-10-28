@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='94',APP_DATE='Oct 28, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='95',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -712,7 +712,7 @@ let DREC=[],dnT=null;
 const nPref=k=>window.Notify?Notify.prefs()[k]!==false:state.prefs[k]!==false;
 const dnOn=()=>discussOn()&&cloudOn();
 function dnS(){return state.dn||(state.dn={base:null,seen:0,read:{}})}
-const dnMine=p=>{const a=account();return !!(a&&a.name&&p.author===a.name)};
+const dnMine=p=>{const a=account();return !!(a&&((a.name&&p.author===a.name)||(a.dname&&p.author===a.dname)))};   // posts show the display name when one is set
 function dnUnread(thread){if(!dnOn()||!nPref('ddot'))return 0;const S=dnS();
  return DREC.filter(p=>(thread==null||p.thread===thread)&&p.id>Math.max(S.base||0,S.read[p.thread]||0)&&!dnMine(p)).length}
 const dnDot=n=>n?'<span class="ndot" aria-label="'+n+' unread">'+(n>9?'9+':n)+'</span>':'';
@@ -1754,6 +1754,10 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'95',date:'Oct 29, 2026',title:'Your profile',items:[
+  'Pick a <b>display name</b> and a <b>picture</b> for the discussion: tap your picture at the top of the home page, then <b>Edit</b>. Classmates who tap your name can still see your Google account name.',
+  'The home page shows just your picture on phones, so the top bar is less crowded. Your account menu also has quick links to attendance, notifications and privacy.',
+  'If your sign-in ends on a device, the home page now says so and offers <b>Sign in again</b>, instead of quietly hiding My attendance. A dropped connection no longer signs you out.']},
  {v:'94',date:'Oct 28, 2026',title:'Why did I miss it?',items:[
   'After a wrong answer, tap <b>why</b> you missed it: <b>Didn&#39;t know</b>, <b>Mixed it up</b>, <b>Misread</b> or <b>Careless</b>. One tap, and you can skip it.',
   'The dashboard then shows <b>Why you miss</b>: what trips you up most, a tip for it, and your mix-ups side by side with a <b>Practice your mix-ups</b> round. Turn it off in Personalize.',

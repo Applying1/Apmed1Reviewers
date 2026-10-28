@@ -181,7 +181,7 @@ async function pickCourse(){const id=$('hc').value,t=$('ht');t.innerHTML='<optio
  try{const d=await courseFile(id);if($('hc').value!==id)return;t.innerHTML=topics(d).map(([v,l])=>'<option value="'+esc(v)+'">'+esc(l).replace(/^  /,'&nbsp;&nbsp;&nbsp;')+'</option>').join('');t.disabled=false}
  catch(e){t.innerHTML='<option>Could not load the course</option>'}}
 function myName(){try{const s=JSON.parse(sessionStorage.getItem('quiz_player')||'null');if(s&&s.name)return s.name;const n=localStorage.getItem('reviewer_quiz_name');if(n)return n;
- const a=JSON.parse(localStorage.getItem('reviewer_account')||'null');if(a&&a.name)return cleanName(a.name.split(' ')[0])}catch(e){}return ''}
+ const a=JSON.parse(localStorage.getItem('reviewer_account')||'null');if(a&&(a.dname||a.name))return cleanName(a.dname||a.name.split(' ')[0])}catch(e){}return ''}
 
 /* =================================================================== host */
 let H=null,hTimer=null,gotT=null;

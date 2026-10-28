@@ -31,19 +31,33 @@ const Auth = {
     this.set(this.ACC, a);
     return a;
   },
-  // A valid access token, refreshed when it has expired; '' when signed out (or the refresh failed).
+  // A valid access token, refreshed when it has expired; '' when signed out or the refresh failed.
+  // Only one page refreshes at a time (Supabase rotates refresh tokens, so a second use of the old one is refused);
+  // the others wait and then use the new token. The session is dropped only when the server refuses the refresh
+  // token, never because the phone was offline or the server had a hiccup.
   async token() {
     const s = this.ses();
     if (!s || !s.access) return '';
     if (Date.now() < s.exp) return s.access;
-    try {
-      const r = await fetch(this.base() + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: this.headers(), body: JSON.stringify({ refresh_token: s.refresh }) });
-      if (!r.ok) throw new Error(r.status);
-      const h = await r.json();
-      this.saveSession(h);
-      return h.access_token;
-    } catch (e) { this.set(this.SES, null); return ''; }
+    try { if (navigator.locks) return await navigator.locks.request('reviewer-auth-refresh', () => this.refresh()); } catch (e) {}
+    return this.refresh();
   },
+  async refresh() {
+    const s = this.ses();
+    if (!s || !s.access) return '';
+    if (Date.now() < s.exp) return s.access;   // another page refreshed while this one waited
+    let r;
+    try { r = await fetch(this.base() + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: this.headers(), body: JSON.stringify({ refresh_token: s.refresh }) }); }
+    catch (e) { return ''; }                   // offline: keep the session for later
+    if (r.ok) { try { const h = await r.json(); if (h.access_token) { this.saveSession(h); return h.access_token; } } catch (e) {} return ''; }
+    if (r.status >= 500 || r.status === 429) return '';
+    const now = this.ses();                    // refused: unless another page already got a new one, the sign-in has ended
+    if (now && now.refresh !== s.refresh) return now.access;
+    this.set(this.SES, null);
+    return '';
+  },
+  // Signed in before, but this device's session has ended (refresh refused): show "Sign in again".
+  ended() { return !!this.acc() && !this.ses(); },
   async rpc(fn, body, signedIn) {
     const tok = signedIn ? await this.token() : '';
     const r = await fetch(this.base() + '/rest/v1/rpc/' + fn, { method: 'POST', headers: this.headers(tok), body: JSON.stringify(body || {}) });
