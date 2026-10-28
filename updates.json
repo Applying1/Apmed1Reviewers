@@ -595,5 +595,14 @@
   "title": "Pharmacology: why not your choice",
   "text": "Lessons 1 to 5 now explain why each wrong choice is wrong, like Lessons 6 and 7. Pick a wrong answer in practice and see the reason.",
   "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 72,
+  "date": "2026-10-29",
+  "type": "content",
+  "course": "chem",
+  "title": "Chemistry: first draft of topics 14 and 15",
+  "text": "A beginning set of 130 questions on Aldehydes and Ketones and on Carboxylic Acids and Derivatives, made from the slides only. They are in the Finals exam and will be revised after the class discussion.",
+  "link": "reviewer.html?course=chem"
  }
 ]
