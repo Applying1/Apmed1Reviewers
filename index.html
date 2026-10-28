@@ -356,9 +356,10 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  // a warm-up on the topic, from the day before until class starts (only where the timetable links the topic to the course's questions)
  const crs=c.subj&&c.subj.course,hrs=(c.from-new Date())/36e5;
  if(crs&&c.preview&&!c.now&&hrs>0&&hrs<=40){const p=document.getElementById('prevq');p.href='reviewer.html?course='+encodeURIComponent(crs)+'#preview='+encodeURIComponent(c.preview);p.textContent='Warm up: 5 questions on '+(c.topic||'the next topic').replace(/ \(.*$/,'').slice(0,60);p.hidden=false}}catch(err){}})();
-// My attendance tile: only for signed-in students whose account is linked to the class tracker (att_mine)
+// My attendance tile: for signed-in students (att_mine); not linked yet = a link to send a request
 (async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c||!Auth.ses())return;Auth.cloud=c.cloud;
- const a=await Auth.rpc('att_mine',{},true);if(!a||!a.linked)return;
+ const a=await Auth.rpc('att_mine',{},true);if(!a)return;
+ if(!a.linked){$('attsub').textContent=a.request&&a.request.status==='pending'?'Request waiting for the class secretary':'Link your account to see your attendance';$('atttool').hidden=false;return}
  $('attsub').textContent=(a.pct?a.pct+' · ':'')+(a.present??0)+' present · '+(a.absent??0)+' absent'+(a.excused?' · '+a.excused+' excused':'');$('atttool').hidden=false}catch(e){}})();
 // Daily crossword tile: today's courses (nearest test first), "New" until the puzzle page is opened once
 (async function(){try{

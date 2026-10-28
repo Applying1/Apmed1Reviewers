@@ -41,6 +41,10 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 .card{margin-top:20px;padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
 .card p{margin:0 0 12px;color:var(--mute)}
 .foot{margin-top:18px;font-size:13px;color:var(--mute)}
+.req{display:grid;grid-template-columns:110px 1fr;gap:10px;margin:4px 0 12px}@media (max-width:420px){.req{grid-template-columns:1fr}}
+.req label{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--mute)}
+.req input{padding:9px 11px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:inherit;font-size:15px}
+.msg{min-height:1.2em;font-size:13.5px;margin:0 0 10px}.msg.bad{color:var(--bad)}.msg.ok{color:var(--good)}
 </style></head><body>
 <main>
  <a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a>
@@ -56,13 +60,24 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const cls=s=>/^present/i.test(s)?'p':/^absent/i.test(s)?'a':/^excused/i.test(s)?'e':/^late/i.test(s)?'l':'';
 function card(t,btn){$('body').innerHTML='<div class="card"><p>'+t+'</p>'+(btn||'')+'</div>'}
+// not linked yet: ask the class secretary to link this account (roll number + last name, checked against the tracker)
+function drawRequest(rq){
+ if(rq&&rq.status==='pending'){card('Your request for roll number <b>'+esc(rq.roll)+'</b> is waiting for the class secretary. Your attendance shows up here once it\'s approved.','<button class="btn" onclick="drawRequest(null)">Change the request</button>');return}
+ $('body').innerHTML='<div class="card"><p>'+(rq&&rq.status==='rejected'?'Your last request wasn\'t approved. Check your roll number, or message the class secretary.':'Your account isn\'t linked to the class attendance tracker yet. Send a request and the class secretary will link it.')+'</p>'+
+  '<form class="req" onsubmit="return sendRequest(event)"><label>Roll number<input id="roll" inputmode="numeric" pattern="[0-9]*" maxlength="3" required></label><label>Last name<input id="last" autocomplete="family-name" maxlength="40" required></label></form>'+
+  '<p class="msg" id="rmsg"></p><button class="btn primary" id="rgo" onclick="sendRequest(event)">Send request</button></div>'}
+async function sendRequest(e){e.preventDefault();const roll=parseInt($('roll').value,10),last=$('last').value.trim(),m=$('rmsg');
+ if(!roll||last.length<3){m.className='msg bad';m.textContent='Type your roll number and last name.';return false}
+ $('rgo').disabled=true;let r='';try{r=await Auth.rpc('att_request',{p_roll:roll,p_last:last},true)}catch(err){r='error'}
+ if(r==='ok'){drawRequest({roll,status:'pending'});return false}
+ $('rgo').disabled=false;m.className='msg bad';m.textContent=r==='mismatch'?'That roll number and last name don\'t match the class tracker. Check both, or message the class secretary.':r==='linked'?'Your account is already linked. Reload the page.':r==='slow down'?'Too many tries. Wait a minute.':'Couldn\'t send the request. Check your connection.';return false}
 (async function(){
  try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
  if(!Auth.cloud){$('sub').textContent='';card('Attendance needs the online features, which aren\'t set up here.');return}
  if(!Auth.ses()){$('sub').textContent='';card('Sign in with the Google account you use for the reviewers to see your attendance.','<a class="btn primary" href="./?signin=1">Sign in with Google</a>');return}
  let a=null;try{a=await Auth.rpc('att_mine',{},true)}catch(e){}
  if(!a){$('sub').textContent='';card('Couldn\'t load your attendance. Check your connection and try again.');return}
- if(!a.linked){$('sub').textContent='';card('Your account isn\'t linked to the class attendance tracker yet. Message the class secretary with the Google account you use here, and it will show up.');return}
+ if(!a.linked){$('sub').textContent='';drawRequest(a.request);return}
  const upd=a.updated?new Date(a.updated).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
  $('sub').innerHTML=esc(a.name)+' · from the class tracker'+(upd?', updated '+esc(upd):'');
  const late=(a.days||[]).filter(d=>cls(d.s)==='l').length,weeks=[];

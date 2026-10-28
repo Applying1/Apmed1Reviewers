@@ -561,5 +561,13 @@
   "title": "My attendance",
   "text": "Signed in? Once the class secretary links your account, a My attendance tile on the home page shows your own attendance from the class tracker, week by week. Only you can see it. Not showing yet? Message the secretary.",
   "link": "attendance.html"
+ },
+ {
+  "id": 68,
+  "date": "2026-10-28",
+  "type": "feature",
+  "title": "Link your attendance",
+  "text": "Signed in but no attendance yet? Tap My attendance on the home page, type your roll number and last name, and the class secretary will link your account.",
+  "link": "attendance.html"
  }
 ]

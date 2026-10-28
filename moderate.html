@@ -6,6 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
 <script>try{const t=localStorage.getItem('reviewer_theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <script src="dialog.js" defer></script>
+<script src="auth.js"></script>
 <link rel="stylesheet" href="ui.css">
 <style>
 *{box-sizing:border-box}
@@ -67,6 +68,11 @@ textarea.inp{resize:vertical;line-height:1.45}
 .help{margin-top:14px;font-size:13.5px;color:var(--mute)}
 .help summary{cursor:pointer;font-weight:600;color:var(--text)}
 .help li{margin:4px 0}
+.cnt{display:inline-block;margin-left:6px;padding:0 7px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:12px}
+.ah{font-size:15px;margin:22px 0 8px}.arow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;margin-bottom:8px}.arow p{margin:2px 0 0}
+.mute{color:var(--faint)}.warnt{color:var(--bad)}.ulist{font-size:13.5px;color:var(--mute);line-height:1.8}
+.lrow{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr) auto;gap:10px;align-items:center;padding:7px 2px;border-bottom:1px solid var(--line);font-size:14px}.lrow .sub{margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:620px){.lrow{grid-template-columns:1fr auto}.lrow .sub{grid-column:1/-1;grid-row:2}}
 </style></head><body>
 <main id="app"><p class="empty">Loading…</p></main>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -76,7 +82,7 @@ textarea.inp{resize:vertical;line-height:1.45}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PASS_KEY='reviewer_mod_pass';
-let CLOUD=null,COURSES=[],BYKEY={},DATA={},ME=null,PASS='',ROWS=[],tab='pending',courseF='',busy=false;
+let CLOUD=null,COURSES=[],BYKEY={},DATA={},ME=null,PASS='',ROWS=[],tab='pending',courseF='',busy=false,ATT=null,view='queue';
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2600)}
 function rpc(fn,body){const h={'Content-Type':'application/json',apikey:CLOUD.key};if(/^eyJ/.test(CLOUD.key))h.Authorization='Bearer '+CLOUD.key;
  return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body)})
@@ -113,14 +119,31 @@ async function signIn(p,quiet,remember){let r=null;
  await load();return true}
 function signOut(){try{sessionStorage.removeItem(PASS_KEY);localStorage.removeItem(PASS_KEY)}catch(e){}PASS='';ME=null;drawLogin()}
 async function load(){try{ROWS=await rpc('contrib_mod_list',{p_pass:PASS,p_status:'all'})||[]}catch(e){toast('Could not load the queue.');ROWS=ROWS||[]}
- await Promise.all([...new Set(ROWS.map(r=>r.course))].map(k=>course(k).catch(()=>null)));draw()}
+ await Promise.all([...new Set(ROWS.map(r=>r.course))].map(k=>course(k).catch(()=>null)));await attLoad();draw()}
 
+/* ---------- Attendance links (supabase_attendance.sql): only when this browser is also signed in with the site owner's
+   Google account (att_admin_list refuses everyone else, so other moderators never see this). Students send a request from
+   My attendance (roll number + last name, checked against the tracker); approve it here. */
+async function attLoad(){ATT=null;if(!Auth.ses())return;Auth.cloud=Auth.cloud||CLOUD;try{ATT=await Auth.rpc('att_admin_list',{},true)}catch(e){ATT=null}}
+function attBtn(){if(!ATT)return '';const n=(ATT.requests||[]).filter(r=>r.status==='pending').length;return '<button class="btn" onclick="view=\'att\';draw()">Attendance links'+(n?'<b class="cnt">'+n+'</b>':'')+'</button>'}
+function drawAtt(){if(!ATT){view='queue';return draw()}document.title='Attendance links';
+ const pend=ATT.requests.filter(r=>r.status==='pending'),rej=ATT.requests.filter(r=>r.status!=='pending'),who=x=>esc(x.google||'(no name)')+(x.email?' <span class="mute">'+esc(x.email)+'</span>':'');
+ $('app').innerHTML='<div class="top"><div><h1>Attendance links</h1><p class="sub">Which Google account sees which student\'s attendance. Tracker imported '+(ATT.imported?esc(ago(ATT.imported)):'never')+'.</p></div>'+
+  '<div class="acts"><button class="btn" onclick="attLoad().then(draw)">Refresh</button><button class="btn" onclick="view=\'queue\';draw()">Back to the queue</button></div></div>'+
+  '<h2 class="ah">Requests'+(pend.length?' <b class="cnt">'+pend.length+'</b>':'')+'</h2>'+
+  (pend.length?pend.map(r=>'<div class="card arow"><div><b>#'+r.roll+' '+esc(r.student)+'</b><p class="sub">'+who(r)+' · '+esc(ago(r.at))+(r.already?' · <span class="warnt">already linked to '+r.already+' account'+(r.already>1?'s':'')+'</span>':'')+'</p></div><div class="acts"><button class="btn" onclick="attDecide(\''+r.user+'\',false)">Reject</button><button class="btn primary" onclick="attDecide(\''+r.user+'\',true)">Approve</button></div></div>').join(''):'<p class="empty">No requests waiting.</p>')+
+  (rej.length?'<details class="card"><summary>Rejected ('+rej.length+')</summary>'+rej.map(r=>'<p>#'+r.roll+' '+esc(r.student)+' · '+who(r)+'</p>').join('')+'</details>':'')+
+  '<h2 class="ah">Not linked yet ('+ATT.unlinked.length+')</h2><p class="sub">Ask them to open <b>My attendance</b> from the home page while signed in and send a request.</p><p class="ulist">'+ATT.unlinked.map(x=>'#'+x.roll+' '+esc(x.student)).join(' · ')+'</p>'+
+  '<h2 class="ah">Linked ('+ATT.links.length+' accounts)</h2>'+ATT.links.map(l=>'<div class="lrow"><span><b>#'+l.roll+'</b> '+esc(l.student)+'</span><span class="sub">'+who(l)+'</span><button class="link" onclick="attUnlink(\''+l.user+'\',\''+esc(l.student).replace(/'/g,'')+'\')">Unlink</button></div>').join('')}
+async function attDecide(u,ok){try{await Auth.rpc('att_admin_decide',{p_user:u,p_ok:ok},true);toast(ok?'Linked.':'Rejected.')}catch(e){toast('Could not save: '+e.message)}await attLoad();draw()}
+async function attUnlink(u,name){if(!await ask('They will no longer see attendance on this account.',{title:'Unlink '+name+'?',ok:'Unlink',danger:1}))return;
+ try{await Auth.rpc('att_admin_unlink',{p_user:u},true);toast('Unlinked.')}catch(e){toast('Could not unlink: '+e.message)}await attLoad();draw()}
 const isOpen=r=>r.status==='pending';
 const inTab=r=>tab==='pending'?isOpen(r):tab==='approved'?r.status==='approved':tab==='done'?r.status==='rejected'||r.status==='resolved':true;
-function draw(){const mine=ROWS.filter(r=>!courseF||r.course===courseF),n=t=>{const k=tab;tab=t;const c=mine.filter(inTab).length;tab=k;return c};
+function draw(){if(view==='att')return drawAtt();const mine=ROWS.filter(r=>!courseF||r.course===courseF),n=t=>{const k=tab;tab=t;const c=mine.filter(inTab).length;tab=k;return c};
  const keys=[...new Set(ROWS.map(r=>r.course))],list=mine.filter(inTab);document.title=(n('pending')?'('+n('pending')+') ':'')+'Moderator Queue';
  $('app').innerHTML='<div class="top"><div><h1>Moderator queue</h1><p class="sub">Signed in as <b>'+esc(ME.name)+'</b>'+(ME.courses?' · '+ME.courses.map(k=>esc((BYKEY[k]||{}).title||k)).join(', '):' · all courses')+'</p></div>'+
-  '<div class="acts"><button class="btn" onclick="load()">Refresh</button><button class="btn" onclick="signOut()">Sign out</button></div></div>'+
+  '<div class="acts">'+attBtn()+'<button class="btn" onclick="load()">Refresh</button><button class="btn" onclick="signOut()">Sign out</button></div></div>'+
   '<div class="bar"><span class="seg" role="group" aria-label="Show">'+[['pending','Waiting'],['approved','Added'],['done','Closed'],['all','All']].map(([k,l])=>'<button aria-pressed="'+(tab===k)+'" onclick="tab=\''+k+'\';draw()">'+l+(k==='pending'&&n(k)?'<b>'+n(k)+'</b>':'')+'</button>').join('')+'</span>'+
   (keys.length>1?'<select class="inp" aria-label="Course" onchange="courseF=this.value;draw()"><option value="">All courses</option>'+keys.map(k=>'<option value="'+esc(k)+'"'+(k===courseF?' selected':'')+'>'+esc((BYKEY[k]||{}).title||k)+'</option>').join('')+'</select>':'')+
   (tab==='pending'&&list.some(r=>r.kind==='report')?'<button class="link" style="margin-left:auto" onclick="copyReports()">Copy open reports</button>':'')+'</div>'+
