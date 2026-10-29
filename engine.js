@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='99',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='100',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -113,6 +113,18 @@ const KEY=CONFIG.storageKey;
 // cards.js schedules; sync carries it as "fc" (+ "fcd" today's counts, "fch" the review log).
 const FC_KEY=KEY+'_cards';
 let FC=(()=>{try{const o=JSON.parse(localStorage.getItem(FC_KEY));if(o&&o.v===1&&o.c&&typeof o.c==='object')return o}catch(e){}return {v:1,c:{},day:['',0,0,0]}})();
+// v100: FC.sus = {card id: [1 suspended / 0, time]}. Own cards: "<storageKey>_mycards" = {v:1, c:[{i:'u…', c: chapter, t: topic,
+// f/b (basic) or x (cloze text) + b (extra), k: 'b'|'c', at: last change, sug: suggestion id, del: 1 = deleted (kept 60 days for sync)}]}.
+const MC_KEY=KEY+'_mycards';
+let MYC=(()=>{try{const o=JSON.parse(localStorage.getItem(MC_KEY));if(o&&o.v===1&&Array.isArray(o.c))return o}catch(e){}return {v:1,c:[]}})();
+function mcSave(){const cut=Date.now()-60*864e5;MYC.c=MYC.c.filter(m=>!m.del||m.at>cut);try{localStorage.setItem(MC_KEY,JSON.stringify(MYC))}catch(e){STORE_FULL=true;storeWarn()}
+ if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}}
+function fcAddMine(card){const m=Object.assign({i:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),at:Date.now()},card);MYC.c.push(m);mcSave();return m}
+// Practice: after a wrong answer, "+ Flashcard" turns the question into one of your own cards
+function fcMakeHTML(q,fb){if(!pageOn('cards')||fb.correct||fb.lookup||!q.cid||!byId[q.cid])return '';const done=MYC.c.some(m=>m.src===q.cid&&!m.del);
+ return '<button class="btn sm fcmk" onclick="fcFromQ(\''+esc(String(q.cid))+'\')"'+(done?' disabled':'')+'>'+(done?'Card added ✓':'+ Flashcard')+'</button>'}
+function fcFromQ(cid){const it=byId[cid];if(!it||MYC.c.some(m=>m.src===cid&&!m.del))return;const a=it.q?it.a:it.definition||it.a;
+ fcAddMine({c:secCh(it.section),t:SECTION_NAMES[it.section]||'',f:it.q||it.term,b:String(a||'')+(it.why?'\n\n'+it.why:''),k:'b',src:cid});toast('Added to your flashcards (Flashcards → My cards).');draw()}
 // Storage missing or full: the cards keep working in memory, and the same warning as for answers comes up.
 function fcSave(){const put=()=>{try{localStorage.setItem(FC_KEY,JSON.stringify(FC));return true}catch(e){return false}};let ok=put();if(!ok){freeSpace();ok=put()}
  if(ok===STORE_FULL){STORE_FULL=!ok;storeWarn()}
@@ -455,7 +467,7 @@ function feedbackHTML(q,fb,live,ai){   // ai: the AI box also shows on an earlie
  if(!fb.correct&&!fb.self)out+='<p><b>Answer:</b> '+ansHTML(fb.correctLabel)+'</p>';
  if(q.why)out+='<p>'+esc(q.why)+'</p>';out+=stepsHTML(q.cid&&byId[q.cid]);
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
- if(live)out+=missRowHTML(q,fb);
+ if(live)out+=missRowHTML(q,fb)+fcMakeHTML(q,fb);
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'<span data-dn="'+esc(discKey(q.cid))+'">'+dnDot(dnUnread(discKey(q.cid)))+'</span></a></p>';
  if((live||ai)&&!fb.self)out+=aiHTML(q,fb);
@@ -1618,8 +1630,8 @@ function drawContrib(){const b=$('contribmodal').querySelector('.box'),nm=mineRo
  const rows=mineRows(),ST={pending:'Waiting for review',approved:'Added',rejected:'Not added',resolved:'Fixed'};
  b.innerHTML='<h2 id="cfh">Your suggestions</h2><p>What you sent from this device, and what the moderator decided.</p><ul class="cmine">'+
   (rows.length?rows.map(r=>{const d=r.data||{},rep=r.kind==='report',st=rep&&r.status==='rejected'?'No change needed':ST[r.status]||r.status;
-   return '<li><span class="cst '+esc(r.status)+'">'+esc(st)+'</span> <span class="cm">'+(rep?'Report':'Question')+' · '+esc(d.section||'')+' · '+agoShort(Date.parse(r.created_at))+'</span>'+
-    '<span class="cq">'+esc(rep?d.note||'':d.q||'')+'</span>'+(rep&&d.q?'<span class="cm">On: '+esc(d.q.length>110?d.q.slice(0,107)+'…':d.q)+'</span>':'')+
+   return '<li><span class="cst '+esc(r.status)+'">'+esc(st)+'</span> <span class="cm">'+(rep?'Report':r.kind==='card'?'Flashcard':'Question')+' · '+esc(d.section||(d.ch?UNIT+' '+d.ch:''))+' · '+agoShort(Date.parse(r.created_at))+'</span>'+
+    '<span class="cq">'+esc(rep?d.note||'':d.q||d.front||'')+'</span>'+(rep&&d.q?'<span class="cm">On: '+esc(d.q.length>110?d.q.slice(0,107)+'…':d.q)+'</span>':'')+
     (r.mod_note?'<span class="cn"><b>Moderator:</b> '+esc(r.mod_note)+'</span>':'')+'</li>'}).join(''):'<li class="empty">Nothing sent from this device yet.</li>')+'</ul>'+
   '<div class="setacts"><span></span><button class="btn" onclick="closeContrib()">Close</button><button class="btn primary" onclick="openContrib(\'question\')">Suggest a question</button></div>'}
 function cfMsg(t){const e=$('cfmsg');if(e)e.textContent=t||''}
@@ -1663,7 +1675,7 @@ function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=new Uint8Array(1
 function prefSig(){return JSON.stringify([state.prefs,state.exSetup||null])}
 function syncPayload(){const c={};for(const id in state.concepts){const k=state.concepts[id];if(k.seen||k.star||k.lookups||k.srs)c[id]=[k.seen||0,k.right||0,k.wrong||0,k.lookups||0,k.hints||0,k.star?1:0,k.srs?k.srs.lvl:0,k.srs?k.srs.due:0,k.lucky||0]}
  let sum=null;try{sum=summaryObj()}catch(e){}
- return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},miss:state.missLog||[],name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,fc:FC.c,fcd:FC.day,fch:FC.h||{},
+ return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},miss:state.missLog||[],name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,fc:FC.c,fcd:FC.day,fch:FC.h||{},fcs:FC.sus||{},mc:MYC.c,
   prefs:state.prefs,exSetup:state.exSetup||null,prefsAt:state.prefsAt||0,
   cur:state.pmatch?null:{at:state.curAt||0,section:state.section,active:state.active,feedback:state.feedback,selected:state.selected,pass:state.pass||null,starDone:state.starDone||[],dueDone:state.dueDone||[],classDone:state.classDone||[]}}}
 function unpack(r){const c={};for(const id in r.c||{}){const x=r.c[id];c[id]={seen:x[0],right:x[1],wrong:x[2],lookups:x[3],hints:x[4],star:!!x[5],srs:x[7]?{lvl:x[6],due:x[7]}:null,lucky:x[8]||0,history:[]}}return Object.assign({},r,{concepts:c})}
@@ -1678,9 +1690,13 @@ function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r)
  if((r.exams||[]).length>(state.exams||[]).length){state.exams=r.exams;changed=true}
  for(const k in r.chalLog||{})if(!(state.chalLog||{})[k]){state.chalLog=state.chalLog||{};state.chalLog[k]=r.chalLog[k];changed=true}
  if(r.name&&!state.name){state.name=r.name;changed=true}
+ // own flashcards: per card, the newer change wins (a deletion is a change too)
+ if(Array.isArray(r.mc)){let mc=false;for(const b of r.mc){if(!b||typeof b.i!=='string')continue;const i=MYC.c.findIndex(x=>x.i===b.i);if(i<0){MYC.c.push(b);mc=true}else if((b.at||0)>(MYC.c[i].at||0)){MYC.c[i]=b;mc=true}}
+  if(mc){syncHold=true;mcSave();syncHold=false;changed=true}}
  // flashcards: per card, the copy with the newer review wins; today's counts keep the higher number
  if(r.fc&&typeof r.fc==='object'){let fc=false;for(const id in r.fc){const a=FC.c[id],b=r.fc[id];if(Array.isArray(b)&&b.length>=8&&(!a||b[3]>a[3])){FC.c[id]=b;fc=true}}
   if(Array.isArray(r.fcd)&&Array.isArray(FC.day)&&r.fcd[0]===FC.day[0])for(let i=1;i<4;i++)if((r.fcd[i]||0)>(FC.day[i]||0)){FC.day[i]=r.fcd[i];fc=true}
+  if(r.fcs&&typeof r.fcs==='object')for(const id in r.fcs){const b=r.fcs[id],a=(FC.sus||{})[id];if(Array.isArray(b)&&(!a||b[1]>a[1])){(FC.sus||(FC.sus={}))[id]=b.slice(0,2);fc=true}}
   if(r.fch&&typeof r.fch==='object')for(const d in r.fch){const b=r.fch[d],a=(FC.h||{})[d];if(Array.isArray(b)&&(!a||b[0]>a[0])){(FC.h||(FC.h={}))[d]=b.slice(0,2);fc=true}}
   if(fc){syncHold=true;fcSave();syncHold=false;changed=true}}
  // "Why did I miss it?" taps: one entry per answer (question + time); both devices' entries are kept
@@ -1792,6 +1808,12 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'100',date:'Oct 29, 2026',title:'Your own flashcards',items:[
+  '<b>My cards:</b> write your own flashcards in Flashcards → My cards. Type {{c1::word}} to make a fill-in-the-blank card.',
+  'After a wrong answer in Practice, tap <b>+ Flashcard</b> to turn that question into a card.',
+  'Share a good card with the class: <b>Suggest to class</b> sends it to the moderator, and approved cards join everyone\'s deck.',
+  'Cards you keep missing get a note with <b>Explain it differently</b>, a link to the notes, and <b>Suspend</b> to set them aside.',
+  'Diagram cards: some cards hide a label on a picture; say what is under the box, then flip.']},
  {v:'99',date:'Oct 29, 2026',title:'Flashcards: exam pacing, cram and stats',items:[
   '<b>Exam pacing:</b> before an eval, new cards are spread over the days left so you see every card about 2 days before it, and each card comes back before the eval.',
   'Reviews are spread evenly across days, and after a break the most-forgotten cards come first instead of a pile of hundreds.',

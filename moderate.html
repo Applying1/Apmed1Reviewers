@@ -46,6 +46,7 @@ textarea.inp{resize:vertical;line-height:1.45}
 .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--mute)}
 .tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--raised);color:var(--mute)}
 .tag.q{background:var(--accent-soft);color:var(--accent)}
+.tag.k{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
 .tag.r{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
 .tag.approved,.tag.resolved{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
 .tag.rejected{background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)}
@@ -155,10 +156,24 @@ function draw(){if(view==='att')return drawAtt();const mine=ROWS.filter(r=>!cour
   '<li><b>Reports</b> point at a question that may be wrong. Class questions can be fixed right here; for the built-in questions, use <b>Copy open reports</b> and paste them to Claude, then mark them Fixed.</li>'+
   '<li>“Sent from this device: N” counts everything one device has sent, to spot spam.</li></ul></details>'}
 
+// a flashcard a student suggested from their own cards (flashcards v100): approved cards join everyone's deck
+function flashCard(r,head){const c=DATA[r.course],d=r.data||{},ed=r.status!=='rejected',v=Object.assign({ch:d.ch,topic:d.topic,front:d.front,back:d.back,by:d.name},r.status==='approved'?r.item||{}:{}),chs=c?c.cfg.chapters||{}:{};
+ const ro=ed?'':' readonly';
+ return '<article class="card" id="r'+r.id+'">'+head+
+  '<div class="grid2"><label class="f"><span>Chapter<em>decides which decks it joins</em></span><select class="inp" data-k="ch"'+(ed?'':' disabled')+'>'+Object.keys(chs).map(k=>'<option value="'+esc(k)+'"'+(k===String(v.ch)?' selected':'')+'>'+esc(k+' '+chs[k])+'</option>').join('')+(String(v.ch) in chs?'':'<option selected value="'+esc(v.ch||'')+'">'+esc(v.ch||'none')+'</option>')+'</select></label>'+
+  '<label class="f"><span>Topic<em>optional, shown above the card</em></span><input class="inp" data-k="topic" maxlength="120" value="'+esc(v.topic||'')+'"'+ro+'></label></div>'+
+  '<label class="f"><span>Front<em>{{c1::word}} makes a fill-in-the-blank card</em></span><textarea class="inp" rows="2" data-k="front"'+ro+'>'+esc(v.front||'')+'</textarea></label>'+
+  '<label class="f"><span>Back</span><textarea class="inp" rows="2" data-k="back"'+ro+'>'+esc(v.back||'')+'</textarea></label>'+
+  '<label class="f"><span>Credit as<em>blank = “a classmate”</em></span><input class="inp" data-k="by" maxlength="40" value="'+esc(v.by||'')+'"'+ro+'></label>'+
+  noteField(r)+'<div class="acts2">'+
+  (r.status==='pending'?'<button class="btn bad" onclick="decide('+r.id+',\'rejected\')">Not added</button><span class="sp"></span><button class="btn primary" onclick="decide('+r.id+',\'approved\')">Approve</button>':
+   r.status==='approved'?'<button class="btn bad" onclick="decide('+r.id+',\'rejected\')">Take it out</button><span class="sp"></span><button class="btn primary" onclick="decide('+r.id+',\'approved\')">Save changes</button>':
+   '<span class="sp"></span><button class="btn" onclick="decide('+r.id+',\'pending\')">Back to waiting</button>')+'</div></article>'}
 function card(r){const c=DATA[r.course],d=r.data||{},it=r.item||{},q=r.kind==='question',ed=q&&r.status!=='rejected';
- const head='<div class="meta"><span class="tag '+(q?'q':'r')+'">'+(q?'Question':'Report')+'</span>'+(r.status!=='pending'?'<span class="tag '+esc(r.status)+'">'+esc({approved:'Added',rejected:q?'Not added':'No change',resolved:'Fixed'}[r.status]||r.status)+'</span>':'')+
+ const fk=r.kind==='card',head='<div class="meta"><span class="tag '+(fk?'k':q?'q':'r')+'">'+(fk?'Flashcard':q?'Question':'Report')+'</span>'+(r.status!=='pending'?'<span class="tag '+esc(r.status)+'">'+esc({approved:'Added',rejected:q||fk?'Not added':'No change',resolved:'Fixed'}[r.status]||r.status)+'</span>':'')+
   '<span>'+esc(c?c.title:r.course)+'</span><span>·</span><span>'+esc(d.name?'from '+d.name:'no name')+'</span><span>·</span><span>'+ago(r.created_at)+'</span>'+(r.same_sender>3?'<span>· Sent from this device: '+r.same_sender+'</span>':'')+
   (r.reviewed_by?'<span>· '+esc(r.reviewed_by)+' '+ago(r.reviewed_at)+'</span>':'')+'</div>';
+ if(fk)return flashCard(r,head);
  if(q){const v=Object.assign({section:d.section,q:d.q,a:d.a,d:d.d||[],why:d.why,hint:'',by:d.name},r.status==='approved'?it:{}),nd=c?c.nd:3,secs=c?c.cfg.sections:{};
   const ds=Array.from({length:Math.max(nd,(v.d||[]).length)},(_,i)=>(v.d||[])[i]||''),sim=c&&similar(c,v.q,'cc_'+r.id);
   return '<article class="card" id="r'+r.id+'">'+head+
@@ -195,7 +210,9 @@ function openClass(qid){const id=+qid.slice(3);tab='all';courseF='';draw();const
 
 async function decide(id,status){if(busy)return;const r=ROWS.find(x=>x.id===id),el=$('r'+id);if(!r||!el)return;
  const val=k=>{const e=el.querySelector('[data-k="'+k+'"]');return e?e.value.trim():''};let item=null;
- if(status==='approved'){const d=[...el.querySelectorAll('[data-k="d"]')].map(e=>e.value.trim()).filter(Boolean);
+ if(status==='approved'&&r.kind==='card'){item={ch:val('ch'),topic:val('topic'),front:val('front'),back:val('back'),by:val('by')};
+  if(item.front.length<3||(!item.back&&!/\{\{c\d+::/.test(item.front))){toast('A card needs a front, and a back unless it has a {{c1::blank}}.');return}}
+ else if(status==='approved'){const d=[...el.querySelectorAll('[data-k="d"]')].map(e=>e.value.trim()).filter(Boolean);
   item={section:val('section'),q:val('q'),a:val('a'),d,why:val('why'),hint:val('hint'),by:val('by')};
   const low=[item.a].concat(d).map(x=>x.toLowerCase().replace(/\s+/g,' '));
   if(!item.q||!item.a||!d.length){toast('A question needs the question, the right answer and wrong choices.');return}
@@ -204,7 +221,7 @@ async function decide(id,status){if(busy)return;const r=ROWS.find(x=>x.id===id),
  try{const ok=await rpc('contrib_mod_decide',{p_pass:PASS,p_id:id,p_status:status,p_item:item,p_note:val('note')});
   if(ok===false){busy=false;signOut();return}
   Object.assign(r,{status,mod_note:val('note')||null,reviewed_by:status==='pending'?null:ME.name,reviewed_at:status==='pending'?null:new Date().toISOString()},item?{item:Object.assign(item,{id:'cc_'+id})}:{});
-  toast({approved:'Added. Students get it the next time they open the reviewer.',rejected:r.kind==='question'?'Marked as not added.':'Closed: no change needed.',resolved:'Marked as fixed.',pending:'Moved back to waiting.'}[status])}
+  toast({approved:'Added. Students get it the next time they open the reviewer.',rejected:r.kind!=='report'?'Marked as not added.':'Closed: no change needed.',resolved:'Marked as fixed.',pending:'Moved back to waiting.'}[status])}
  catch(e){toast('Could not save: '+e.message)}
  busy=false;draw()}
 

@@ -8,6 +8,9 @@
    v99 adds: exam pacing (new cards spread so all are seen ~2 days before the deck's eval; no review lands after it),
    a load balancer (a review goes to the lightest day its fuzz allows; optional easy day), the most-forgotten reviews first
    when there are more than the daily limit, cram mode (weakest first, changes no schedule) and a stats panel.
+   v100 adds: class cards (approved suggestions, contrib_cards), own cards (engine MYC, "My cards" screen, suggest to class),
+   diagram cards (k 'o': a picture with boxes, one hidden label per card), leeches (missed 4+ times: explain differently,
+   the notes, suspend; FC.sus).
    ===================================================================== */
 (function(){
 const W=[0.40255,1.18385,3.173,15.69105,7.1949,0.5345,1.4604,0.0046,1.54575,0.1192,1.01925,1.9395,0.11,0.29605,2.2698,0.2315,2.9898,0.51655,0.6621];
@@ -45,21 +48,32 @@ const NEWK={s:null,d:null,due:0,last:null,reps:0,lapses:0,st:0,step:0};
 function recall(a,day){if(!a)return 0;const k=unpack(a);return k.st===2?R(day-dayNum(k.last),k.s):.3}
 
 /* ---------- deck ---------- */
-let DECK=null,LOADING=null,ERR=false,CUR=null,LAST='',UNDO=null,DRAG=null,CRAM=null,STATS=false;
+let DECK=null,LOADING=null,ERR=false,CUR=null,LAST='',UNDO=null,DRAG=null,CRAM=null,STATS=false,CLASSC=[],VIEW=null,EDIT=null,AIC={};
 const now=()=>Cards.clock?Cards.clock():Date.now();
 function load(){if(DECK||LOADING)return LOADING;
  LOADING=fetch(CONFIG.cards).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(d=>{DECK=d.cards||[];ERR=false;LOADING=null;if(page==='cards')draw()})
-  .catch(()=>{ERR=true;LOADING=null;if(page==='cards')draw()});return LOADING}
+  .catch(()=>{ERR=true;LOADING=null;if(page==='cards')draw()});loadClass();return LOADING}
+// Class cards: approved suggestions (contrib_cards), kept for offline use
+const CC_KEY=KEY+'_classcards',clozeNs=x=>[...new Set([...String(x).matchAll(/\{\{c(\d+)::/g)].map(m=>+m[1]))];
+function classCard(it){if(!it||!it.id||!it.front)return [];const base={c:String(it.ch||''),t:it.topic||'Class card',by:it.by||'',cls:1};
+ return /\{\{c\d+::/.test(it.front)?clozeNs(it.front).map(n=>Object.assign({i:it.id+'_'+n,x:it.front,n,b:it.back||'',k:'c'},base)):[Object.assign({i:it.id,f:it.front,b:it.back||'',k:'b'},base)]}
+function loadClass(){try{CLASSC=JSON.parse(localStorage.getItem(CC_KEY))||[]}catch(e){CLASSC=[]}if(!cloudOn())return;
+ rpc('contrib_cards',{p_course:KEY}).then(rows=>{CLASSC=(rows||[]).flatMap(r=>classCard(r.item));try{localStorage.setItem(CC_KEY,JSON.stringify(CLASSC))}catch(e){}if(page==='cards'&&DECK)draw()}).catch(()=>{})}
+// Own cards (engine MYC); a cloze card makes one card per blank
+function mineCards(){const out=[];for(const m of MYC.c){if(m.del)continue;const base={c:String(m.c||''),t:m.t||'',mine:m.i};
+ if(m.k==='c')clozeNs(m.x).forEach(n=>out.push(Object.assign({i:m.i+'_'+n,x:m.x,n,b:m.b||'',k:'c'},base)));else out.push(Object.assign({i:m.i,f:m.f,b:m.b||'',k:'b'},base))}return out}
+const allCards=()=>DECK.concat(CLASSC,mineCards()),live=c=>!(FC.sus&&FC.sus[c.i]&&FC.sus[c.i][0]);
 const chOrder=()=>Object.keys(CONFIG.chapters||{});
 const examChs=e=>e.chapters?e.chapters.map(String):[...new Set((e.sections||[]).map(s=>String(s).split('-')[0]))];
-function decks(){const have=new Set(DECK.map(c=>c.c)),ord=chOrder(),chs=[...have].sort((a,b)=>(ord.indexOf(a)+1||999)-(ord.indexOf(b)+1||999)||String(a).localeCompare(b,undefined,{numeric:true})),out=[];
+function decks(){const have=new Set(allCards().map(c=>c.c).filter(Boolean)),ord=chOrder(),chs=[...have].sort((a,b)=>(ord.indexOf(a)+1||999)-(ord.indexOf(b)+1||999)||String(a).localeCompare(b,undefined,{numeric:true})),out=[];
  for(const e of EXAMS){const s=examChs(e).filter(c=>have.has(c));if(s.length)out.push({id:'e:'+e.id,name:e.name+(e.date?' · '+fmtDay(e.date):''),chs:s})}
  if(chs.length>1)out.push({id:'all',name:'All '+unitsW,chs});
  for(const c of chs)out.push({id:'c:'+c,name:(/^\d/.test(c)?UNIT+' '+c+(CH_NAMES[c]?': ':''):'')+(CH_NAMES[c]||(/^\d/.test(c)?'':c)),chs:[c]});
+ const mine=mineCards();if(mine.length)out.push({id:'mine',name:'My cards ('+MYC.c.filter(m=>!m.del).length+')',chs:[...new Set(mine.map(c=>c.c))],mine:1});
  return out}
 // The deck picked here, else the exam chosen under "Studying for", else everything.
 function deck(){const D=decks(),p=state.prefs.fcDeck,e=examObj();return D.find(d=>d.id===p)||(e&&D.find(d=>d.id==='e:'+e.id))||D.find(d=>d.id==='all')||D[0]}
-function pool(){const s=new Set(deck().chs);return DECK.filter(c=>s.has(c.c))}
+function pool(){const dk=deck();if(dk.mine)return mineCards().filter(live);const s=new Set(dk.chs);return allCards().filter(c=>s.has(c.c)&&live(c))}
 // The deck's next eval: an exam deck's own date, or the nearest dated exam that covers one of the deck's chapters.
 function exam(dk){const td=dayNum(now());let best=null;
  for(const e of EXAMS){if(!e.date)continue;if(dk.id.slice(0,2)==='e:'?'e:'+e.id!==dk.id:!examChs(e).some(c=>dk.chs.includes(c)))continue;
@@ -107,11 +121,15 @@ function statsHTML(){const t=now(),td=dayNum(t),e=exam(deck()),P=pool(),at=e?td+
   '<div><b>'+pct+'%</b><span>'+(e?'ready for '+esc(e.name):'you would recall today')+'</span><small>'+ready+' of '+P.length+' cards</small></div>'+
   '<div><b>'+(rv?Math.round(100*(rv-ag)/rv)+'%':'–')+'</b><span>remembered this week</span><small>'+rv+' review'+(rv===1?'':'s')+'</small></div>'+
   '<div><b>'+seen+'</b><span>cards started</span><small>'+(P.length-seen)+' still new</small></div></div>'+
+  (Object.values(FC.sus||{}).some(x=>x[0])?'<p class="fcnote">'+Object.values(FC.sus).filter(x=>x[0]).length+' suspended card(s) are left out. <button class="link" onclick="Cards.unsuspend()">Turn them back on</button></p>':'')+
   '<p class="fchl">Last 30 days (questions and cards, every course)</p><div class="fcheat" role="img" aria-label="Activity in the last 30 days">'+cells.map(([d,n])=>'<i title="'+d+': '+n+'" style="--a:'+(n?(.25+.75*n/mx).toFixed(2):0)+'"></i>').join('')+'</div></section>'}
 
 /* ---------- screen ---------- */
 const $b=()=>$('fcbody');
+const box=b=>'left:'+b[0]+'%;top:'+b[1]+'%;width:'+b[2]+'%;height:'+b[3]+'%';
 function face(c,back){
+ if(c.k==='o')return '<div class="fcio"><img src="'+esc(c.img)+'" alt="'+esc(c.t||'Diagram')+'">'+(c.bx||[]).map((b,i)=>'<i class="'+(i!==c.n?'m':back?'a':'q')+'" style="'+box(b)+'">'+(i===c.n&&!back?'?':'')+'</i>').join('')+'</div>'+
+  (back?'<div class="fca">'+esc(c.b)+'</div>':'<div class="fcx">What is under the highlighted box?</div>');
  if(c.k==='c'){const x=esc(c.x).replace(/\{\{c(\d+)::(.+?)(?:::(.+?))?\}\}/g,(m,i,a,h)=>+i!==c.n?a:back?'<b class="fcz">'+a+'</b>':'<span class="fcz q">['+(h||'…')+']</span>');
   return '<div class="fcq">'+x+'</div>'+(back&&c.b?'<div class="fcx">'+esc(c.b)+'</div>':'')}
  return '<div class="fcq">'+esc(c.f)+'</div>'+(back?'<div class="fca">'+esc(c.b)+'</div>':'')}
@@ -119,7 +137,7 @@ function when(ms){const m=Math.max(1,Math.round(ms/MIN));return m<60?m+' min':m<
 function grades(){return state.prefs.fcFour?[[1,'Again'],[2,'Hard'],[3,'Good'],[4,'Easy']]:[[1,'Again'],[3,'Good']]}
 function ring(left,done){const tot=left+done,p=tot?done/tot:1,C=2*Math.PI*15;
  return '<span class="fcring" role="img" aria-label="'+left+' left today"><svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle cx="19" cy="19" r="15" class="t"/>'+(p?'<circle cx="19" cy="19" r="15" class="f" stroke-dasharray="'+(C*p).toFixed(1)+' '+C.toFixed(1)+'"/>':'')+'</svg><b>'+left+'</b></span>'}
-function cardHTML(c,flip,k){const tag=(/^\d/.test(c.c)?UNIT+' '+c.c+' · ':'')+(c.t||'');
+function cardHTML(c,flip,k){const tag=(/^\d/.test(c.c)?UNIT+' '+c.c+' · ':'')+(c.t||'')+(c.cls?' · Class card'+(c.by?' by '+c.by:''):c.mine?' · My card':'');
  return '<section class="card fccard'+(flip?' flip':'')+'" id="fccard" aria-live="polite"'+(flip?'':' role="button" tabindex="0" aria-label="Show the answer" onclick="Cards.flip()"')+'>'+
   '<div class="fctag">'+esc(tag)+(k.st===0?'<span class="fcpill n">New</span>':k.lapses>=4?'<span class="fcpill l" title="Missed '+k.lapses+' times">Tricky</span>':'')+'</div>'+face(c,flip)+'</section>'}
 function draw(){const el=$b();if(!el)return;
@@ -127,6 +145,7 @@ function draw(){const el=$b();if(!el)return;
   if(!el.firstChild)el.innerHTML='<p class="desc">Loading the cards…</p>';load();return}
  if(!DECK.length){el.innerHTML='<section class="panel"><h2>No cards yet</h2><p class="desc">This course has no flashcards yet.</p></section>';return}
  if(CRAM){drawCram(el);return}
+ if(VIEW==='mine'){el.innerHTML=mineHTML();return}
  const D=decks(),dk=deck(),e=pacing();
  if(CUR&&!pool().some(c=>c.i===CUR.c.i))CUR=null;
  if(!CUR){const c=pick();CUR=c?{c,flip:false}:null}
@@ -135,7 +154,7 @@ function draw(){const el=$b();if(!el)return;
   '<span class="fcstat"><span class="fccounts"><span class="cn" title="New cards left today">'+n.nw+'<small>new</small></span><span class="cl" title="Learning: seen today, coming back soon">'+n.lrn+'<small>learning</small></span><span class="cr" title="Reviews due today">'+n.rev+'<small>due</small></span></span>'+ring(left,done)+'</span></div>'+
   '<div class="fcmeta"><span>'+(e?'<b>'+esc(e.name)+' '+(e.left===0?'today':e.left===1?'tomorrow':'in '+e.left+' days')+'</b>'+(n.newAll&&e.left>2?' · about '+Math.ceil((n.newAll+FC.day[1])/(e.left-1))+' new a day to see them all in time':''):'')+
    (n.revAll>n.rev?(e?' · ':'')+(n.revAll-n.rev)+' more due, coming back over the next days':'')+'</span>'+
-   '<button class="link" onclick="Cards.cram(true)">Cram</button><button class="link" onclick="Cards.stats()" aria-expanded="'+STATS+'">Stats</button></div>';
+   '<button class="link" onclick="Cards.mine(true)">My cards</button><button class="link" onclick="Cards.cram(true)">Cram</button><button class="link" onclick="Cards.stats()" aria-expanded="'+STATS+'">Stats</button></div>';
  if(!CUR){const t=now(),nx=pool().map(c=>FC.c[c.i]).filter(Boolean).map(a=>a[2]*MIN).filter(d=>d>t).sort((a,b)=>a-b)[0];
   h+='<section class="card fcdone"><h2>'+(done?'All done for today':'Nothing due right now')+'</h2><p class="desc">'+(done?'You studied <b>'+done+'</b> card'+(done===1?'':'s')+' today. ':'')+
    (nx?'The next card comes back '+(dayNum(nx)===dayNum(t)?'in '+when(nx-t):dayNum(nx)===dayNum(t)+1?'tomorrow':'in '+(dayNum(nx)-dayNum(t))+' days')+'.':'')+'</p>'+
@@ -145,10 +164,46 @@ function draw(){const el=$b();if(!el)return;
   el.innerHTML=h;return}
  const c=CUR.c,k=FC.c[c.i]?unpack(FC.c[c.i]):NEWK;
  h+=cardHTML(c,CUR.flip,k);
+ if(CUR.flip&&k.lapses>=4)h+=leechHTML(c,k);
  if(!CUR.flip)h+='<div class="fcbtns one"><button class="btn primary" onclick="Cards.flip()">Show answer</button></div>';
  else{const t=now();h+='<div class="fcbtns">'+grades().map(([g,l])=>{const nk=review(k,g,t,opts(false));return '<button class="btn fcg g'+g+'" onclick="Cards.grade('+g+')"><b>'+l+'</b><small>'+when(nk.due-t)+'</small></button>'}).join('')+'</div>'}
  h+='<p class="fckeys">'+(CUR.flip?(state.prefs.fcFour?'1 Again · 2 Hard · 3 Good · 4 Easy':'1 Again · 2 or Space Good')+' · or swipe left / right':'Space or tap the card to flip')+(UNDO?' · <button class="link" onclick="Cards.undo()">Undo</button>':'')+'</p>'+(STATS?statsHTML():'');
  el.innerHTML=h;swipe()}
+// A card missed 4+ times: another angle (AI, built-in cards only), the notes, or set it aside
+function leechHTML(c,k){const ai=AIC[c.i]||{},canAI=cloudOn()&&!c.cls&&!c.mine&&typeof aiPost==='function';
+ return '<div class="fcleech"><b>You keep missing this one</b> (missed '+k.lapses+' times). Try a different angle, or set it aside for now.'+
+  '<div class="fclr">'+(canAI&&!ai.text?'<button class="btn sm" onclick="Cards.explain()"'+(ai.busy?' disabled':'')+'>'+(ai.busy?'Thinking…':'Explain it differently')+'</button>':'')+
+  (pageOn('notes')&&/^\d/.test(c.c)?'<button class="btn sm" onclick="openNotes(\''+esc(c.c)+'\')">Read the notes</button>':'')+
+  '<button class="btn sm" onclick="Cards.suspend()">Suspend card</button></div>'+(ai.text?'<div class="fcai">'+esc(ai.text)+'</div>':ai.err?'<div class="fcai err">'+ai.err+'</div>':'')+'</div>'}
+async function explain(){if(!CUR)return;const c=CUR.c;if(AIC[c.i]&&AIC[c.i].busy)return;AIC[c.i]={busy:1};draw();
+ try{const o=await aiPost({course:courseId(),card:c.i});AIC[c.i]=o.r&&o.r.ok&&o.j.text?{text:o.j.text}:{err:aiErr(o,'explanations')}}catch(e){AIC[c.i]={err:'No connection. Try again when you\'re online.'}}
+ if(CUR&&CUR.c.i===c.i)draw()}
+function suspend(){if(!CUR)return;const id=CUR.c.i;(FC.sus||(FC.sus={}))[id]=[1,Date.now()];fcSave();CUR=null;toast('Card suspended. Turn it back on under Stats.');draw()}
+function unsuspendAll(){for(const id in FC.sus||{})FC.sus[id]=[0,Date.now()];fcSave();draw()}
+
+/* ---------- My cards: write, edit, delete, suggest to the class ---------- */
+function mineHTML(){const list=MYC.c.filter(m=>!m.del).slice().reverse(),ed=EDIT&&MYC.c.find(m=>m.i===EDIT),chs=chOrder().filter(c=>/^\d/.test(c));
+ const cur=ed?String(ed.c):(deck().chs||[])[0]||chs[chs.length-1]||'';
+ return '<section class="panel fcmine"><h2>'+(ed?'Edit your card':'My cards')+'</h2><p class="desc">Your cards are saved with your progress and sync when you are signed in. Type <b>{{c1::word}}</b> on the front to make a fill-in-the-blank card (c2, c3 … for more blanks, each its own card).</p>'+
+  '<div class="fcform"><label><span>'+esc(UNIT)+'</span><select id="fcmch">'+chs.map(c=>'<option value="'+esc(c)+'"'+(c===cur?' selected':'')+'>'+esc(UNIT+' '+c+(CH_NAMES[c]?': '+CH_NAMES[c]:''))+'</option>').join('')+'</select></label>'+
+  '<label><span>Front</span><textarea id="fcmf" rows="2" maxlength="500" placeholder="A question, a term, or a sentence with {{c1::a blank}}">'+esc(ed?ed.k==='c'?ed.x:ed.f:'')+'</textarea></label>'+
+  '<label><span>Back</span><textarea id="fcmb" rows="2" maxlength="800" placeholder="The answer (optional for fill-in-the-blank cards)">'+esc(ed?ed.b||'':'')+'</textarea></label>'+
+  '<div class="fcfa"><span id="fcmmsg" class="fcnote"></span>'+(ed?'<button class="btn" onclick="Cards.mineEdit(null)">Cancel</button>':'')+'<button class="btn primary" onclick="Cards.mineSave()">'+(ed?'Save changes':'Add card')+'</button></div></div>'+
+  (list.length?'<ul class="fclist">'+list.map(m=>'<li><div><b>'+esc((m.k==='c'?m.x:m.f).replace(/\{\{c\d+::(.+?)(::.+?)?\}\}/g,'[$1]'))+'</b>'+(m.b?'<span>'+esc(m.b.split('\n')[0])+'</span>':'')+
+   '<small>'+esc(UNIT+' '+m.c)+(m.src?' · from a missed question':'')+(m.sug?' · suggested to the class':'')+'</small></div>'+
+   '<span class="fcla"><button class="link" onclick="Cards.mineEdit(\''+m.i+'\')">Edit</button><button class="link" onclick="Cards.mineDel(\''+m.i+'\')">Delete</button>'+
+   (contribOn()&&!m.sug?'<button class="link" onclick="Cards.mineSuggest(\''+m.i+'\')">Suggest to class</button>':'')+'</span></li>').join('')+'</ul>':'<p class="fcnote">No cards yet. You can also tap <b>+ Flashcard</b> after a wrong answer in Practice.</p>')+
+  '<button class="btn" onclick="Cards.mine(false)">Back to studying</button></section>'}
+function mineSave(){const f=($('fcmf').value||'').trim(),b=($('fcmb').value||'').trim(),ch=$('fcmch').value,cl=/\{\{c\d+::.+?\}\}/.test(f),msg=t=>{$('fcmmsg').textContent=t};
+ if(f.length<3)return msg('Write the front first.');if(!cl&&!b)return msg('Add the answer on the back, or make a blank with {{c1::word}}.');
+ const card=cl?{c:ch,k:'c',x:f,b,f:undefined}:{c:ch,k:'b',f,b,x:undefined},ed=EDIT&&MYC.c.find(m=>m.i===EDIT);
+ if(ed){Object.assign(ed,card,{at:Date.now()});mcSave();EDIT=null;toast('Card saved.')}else{fcAddMine(card);toast('Card added.')}draw()}
+function mineDel(id){ask('It is removed from your deck on every device.',{title:'Delete this card?',ok:'Delete',danger:1}).then(y=>{if(!y)return;const m=MYC.c.find(x=>x.i===id);if(m){Object.assign(m,{del:1,at:Date.now()});mcSave()}if(EDIT===id)EDIT=null;draw()})}
+function mineSuggest(id){const m=MYC.c.find(x=>x.i===id);if(!m||m.sug)return;
+ rpc('contrib_submit',{p_course:KEY,p_kind:'card',p_data:{ch:String(m.c||''),topic:m.t||'',front:m.k==='c'?m.x:m.f,back:m.b||'',name:lsGet(CONTRIB_NAME)||''},p_token:contribToken(true)})
+  .then(sid=>{m.sug=sid;m.at=Date.now();mcSave();MINE.rows=[{id:sid,course:KEY,kind:'card',data:{ch:m.c,front:m.k==='c'?m.x:m.f},status:'pending',mod_note:null,created_at:new Date().toISOString(),reviewed_at:null}].concat(MINE.rows||[]);saveMine();
+   toast('Sent to the moderator. Approved cards join everyone\'s deck.');draw()})
+  .catch(e=>toast(/slow down/.test(e.message)?'A lot was sent just now. Try again in a few minutes.':'Could not send. Check your connection.'))}
 function drawCram(el){const c=CRAM.q[0];
  let h='<div class="fcbar fccram"><span><b>Cram</b> · '+CRAM.q.length+' left · weakest first. Your schedule doesn\'t change.</span><button class="btn sm" onclick="Cards.cram(false)">Done cramming</button></div>';
  if(!c){h+='<section class="card fcdone"><h2>Deck crammed</h2><p class="desc">You went through all '+CRAM.done+' cards. Good luck!</p><button class="btn" onclick="Cards.cram(false)">Back to the deck</button></section>';el.innerHTML=h;return}
@@ -173,12 +228,13 @@ function swipe(){const el=$('fccard');if(!el||!CUR||!CUR.flip)return;
  el.onpointermove=e=>{if(!DRAG)return;DRAG.dx=e.clientX-DRAG.x;if(Math.abs(DRAG.dx)>Math.abs(e.clientY-DRAG.y)){el.style.transform='translateX('+DRAG.dx+'px) rotate('+DRAG.dx/40+'deg)';el.classList.toggle('sl',DRAG.dx<-40);el.classList.toggle('sr',DRAG.dx>40)}};
  el.onpointerup=el.onpointercancel=()=>{if(!DRAG)return;const dx=DRAG.dx;DRAG=null;el.style.transform='';el.classList.remove('sl','sr');if(Math.abs(dx)>80)grade(dx<0?1:3)}}
 function key(e){const k=e.key;
- if(!CUR)return false;
+ if(!CUR||VIEW)return false;
  if(!CUR.flip){if(k===' '||k==='Enter'){flip();return true}return false}
  if(k===' '||k==='Enter'){grade(3);return true}
  const g={'1':1,'2':state.prefs.fcFour&&!CRAM?2:3,'3':3,'4':state.prefs.fcFour&&!CRAM?4:0}[k];if(g){grade(g);return true}
  if((k==='u'||k==='U')&&!CRAM){undo();return true}
  return false}
-window.Cards={draw,key,flip,grade,undo,more,cram,stats:()=>{STATS=!STATS;draw()},retry:()=>{ERR=false;draw()},review,pack,unpack,dayNum,
+window.Cards={draw,key,flip,grade,undo,more,cram,explain,suspend,unsuspend:unsuspendAll,
+ mine:on=>{VIEW=on?'mine':null;EDIT=null;CUR=null;draw()},mineEdit:id=>{EDIT=id;draw();const f=$('fcmf');if(f)f.focus()},mineSave,mineDel,mineSuggest,stats:()=>{STATS=!STATS;draw()},retry:()=>{ERR=false;draw()},review,pack,unpack,dayNum,
  counts:()=>DECK?counts():null,pool:()=>DECK?pool():[],deck:()=>DECK&&deck(),exam:()=>DECK&&exam(deck()),opts,cur:()=>CUR&&CUR.c,cramming:()=>!!CRAM,clock:null,W};
 })();
