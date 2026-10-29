@@ -4,7 +4,7 @@
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
 <script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
 <link rel="stylesheet" href="ui.css">
 <style>
@@ -85,12 +85,60 @@ label.f textarea{resize:vertical;min-height:60px}
 .empty{color:var(--mute);text-align:center;padding:36px 10px}
 .zoom{position:fixed;inset:0;z-index:50;background:#000d;display:grid;place-items:center;padding:20px}.zoom img{max-width:100%;max-height:86vh;object-fit:contain;border-radius:12px;background:#fff}
 .zoom b{position:absolute;bottom:22px;left:0;right:0;text-align:center;color:#fff;font-size:15px}
+
+/* ---- her shop's look: dotted sticker-paper background, a pastel color per catalog, die-cut stickers ---- */
+:root{--paper:#fbf6ee;--dot:#ece2d2;--pink:#ff7fa3;--ink2:#3b2f3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#18161c;--dot:#28242e;--ink2:#f3edf5}}
+:root[data-theme="dark"]{--paper:#18161c;--dot:#28242e;--ink2:#f3edf5}
+body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px) 0 0/18px 18px}
+.hero{position:relative;margin-top:12px;padding:20px 20px 18px;border-radius:26px;background:var(--surface);border:2px dashed color-mix(in srgb,var(--pink) 55%,transparent);box-shadow:0 10px 30px #0000000d}
+.hero h1{font:600 clamp(30px,7vw,42px)/1.05 Fredoka,var(--sans);letter-spacing:0;margin:0 0 8px;color:var(--ink2)}
+.hero .deco{position:absolute;right:16px;top:-14px;font-size:28px;transform:rotate(12deg);filter:drop-shadow(0 2px 2px #0002)}
+.hero .intro{font-size:15px;color:var(--text)}
+.hero .row2{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.hero .state{margin:0}
+.heart{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:4px 11px;border-radius:99px;background:color-mix(in srgb,var(--pink) 16%,transparent);color:color-mix(in srgb,var(--pink) 70%,var(--text))}
+.seg{border-radius:99px}.seg button{border-radius:99px;font-family:Fredoka,var(--sans);font-size:15px;font-weight:500}
+.chips{padding:12px 2px 4px}
+.chip{font:500 15px Fredoka,var(--sans);padding:7px 15px;border:2px solid transparent;background:var(--surface);color:var(--text);box-shadow:0 2px 6px #0000000d}
+.chip[aria-pressed="true"]{background:var(--c,var(--pink));border-color:var(--c,var(--pink));color:#2b2230}
+.cat{margin:26px 0 0;--c:#ff9ab5}
+.cat .ch{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 2px 12px}
+.cat h2{font:600 24px/1.15 Fredoka,var(--sans);margin:0;color:var(--ink2)}
+.cat h2::before{content:"";display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--c);margin-right:9px;vertical-align:2px;box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 30%,transparent)}
+.cat .n{font-size:13px;color:var(--mute)}
+.cat .ch p{flex-basis:100%;margin:0;color:var(--mute);font-size:14px}
+.fund{font:600 12px/1.6 Fredoka,var(--sans);letter-spacing:.02em;text-transform:none;padding:2px 10px;background:color-mix(in srgb,var(--pink) 16%,transparent);color:color-mix(in srgb,var(--pink) 70%,var(--text))}
+.grid{gap:14px}
+@media (max-width:420px){.grid{gap:12px}}
+.it{border:0;border-radius:22px;box-shadow:0 1px 0 color-mix(in srgb,var(--c) 45%,transparent),0 8px 22px #00000010;overflow:visible;transition:transform .2s}
+.it.inc{border:0;box-shadow:0 0 0 3px var(--c),0 8px 22px #00000014}
+.pic{margin:8px 8px 0;width:auto;border-radius:16px;background:color-mix(in srgb,var(--c) 24%,var(--surface));overflow:hidden}
+.pic img{padding:13%;transform:rotate(var(--r,0deg));transition:transform .25s cubic-bezier(.3,1.6,.5,1);
+ filter:drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 5px 6px #0000002e)}
+.it:hover .pic img,.it.inc .pic img{transform:rotate(0) scale(1.06)}
+.sold{border-radius:16px;font-family:Fredoka,var(--sans);font-size:17px}
+.ib{padding:10px 12px 12px;gap:8px}
+.ib b{font:500 15.5px/1.25 Fredoka,var(--sans);color:var(--ink2)}
+.ib .pr span:first-child{display:inline-block;font:600 13.5px Fredoka,var(--sans);padding:1px 10px;border-radius:99px;background:color-mix(in srgb,var(--c) 30%,var(--surface));color:var(--ink2)}
+.add{border:0;border-radius:99px;background:var(--c);color:#2b2230;font:600 15px Fredoka,var(--sans);padding:8px}
+.add:hover{filter:brightness(1.05)}
+.qty{border-radius:99px;background:color-mix(in srgb,var(--c) 25%,var(--surface))}
+.qty button{border-radius:50%;width:34px;height:34px}
+.qty output{font-family:Fredoka,var(--sans);font-size:17px}
+.bar{background:none;border:0;backdrop-filter:none;pointer-events:none}
+.bar .in{pointer-events:auto;max-width:520px;background:var(--ink2);color:var(--paper);border-radius:99px;padding:8px 8px 8px 22px;box-shadow:0 12px 30px #0003}
+.bar .tot{color:color-mix(in srgb,var(--paper) 75%,transparent)}.bar .tot b{color:var(--paper);font-family:Fredoka,var(--sans);font-size:19px}
+.bar .btn.primary{border-radius:99px;background:var(--pink);border-color:var(--pink);color:#2b1220;font-family:Fredoka,var(--sans);font-size:16px;padding:10px 20px}
+.sheet h3{font-family:Fredoka,var(--sans);font-weight:600}
+.btn.primary{border-radius:99px}
+.sheet .btn.primary{background:var(--pink);border-color:var(--pink);color:#2b1220;font:600 16px Fredoka,var(--sans)}
 </style></head><body>
 <main>
  <a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a>
- <h1 id="ttl">Class sticker shop</h1>
+ <header class="hero"><span class="deco" aria-hidden="true">🌸</span><h1 id="ttl">Class sticker shop</h1>
  <p class="intro" id="intro"></p>
- <span class="state off" id="state" hidden></span>
+ <div class="row2"><span class="state off" id="state" hidden></span><span class="heart" id="fundnote" hidden></span></div></header>
  <div class="tabs"><span class="seg" role="group" aria-label="Show"><button id="t-shop" aria-pressed="true" onclick="tab('shop')">Stickers</button><button id="t-orders" aria-pressed="false" onclick="tab('orders')">My orders</button></span><a class="mgr" id="mgr" href="shop-admin.html" hidden>Manage the shop</a></div>
  <div id="shop"><p class="empty">Loading…</p></div>
  <div id="orders" hidden></div>
@@ -119,17 +167,19 @@ function drawBar(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,
 function maxFor(it){const m=D.settings.max_qty||50;return it.left==null?m:Math.min(m,it.left)}
 function setQty(id,q){const it=item(id);if(!it)return;q=Math.max(0,Math.min(maxFor(it),q));if(q)CART[id]=q;else delete CART[id];saveCart();
  const c=document.querySelector('[data-id="'+id+'"]');if(c)c.outerHTML=card(it);drawBar();if(!$('modal').hidden&&$('rlines'))drawReview()}
+const HUES=['#ff9ab5','#86dbb8','#a3b0ff','#ffd27a','#cba6ff','#ffb08a','#8fd3f0'];
+const hue=c=>HUES[Math.max(0,D.catalogs.findIndex(x=>x.id===c))%HUES.length],tilt=id=>(((id*37)%7)-3)*1.1;
 function card(it){const q=CART[it.id]||0,open=D.settings.open,out=it.left===0;
- return '<div class="it'+(q?' inc':'')+'" data-id="'+it.id+'"><button class="pic" onclick="zoom('+it.id+')" aria-label="See '+esc(it.name)+' bigger">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="" loading="lazy">':'<span class="none">No photo</span>')+(out?'<span class="sold">Sold out</span>':'')+'</button>'+
+ return '<div class="it'+(q?' inc':'')+'" data-id="'+it.id+'" style="--r:'+tilt(it.id)+'deg"><button class="pic" onclick="zoom('+it.id+')" aria-label="See '+esc(it.name)+' bigger">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="" loading="lazy">':'<span class="none">No photo</span>')+(out?'<span class="sold">Sold out</span>':'')+'</button>'+
   '<div class="ib"><b>'+esc(it.name)+'</b><div class="pr"><span>'+peso(it.price)+'</span><span>'+(it.left==null?'':out?'':it.left+' left')+'</span></div>'+
   (!open||out?'':q?'<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>'
-   :'<button class="add" onclick="setQty('+it.id+',1)">Add</button>')+'</div></div>'}
+   :'<button class="add" onclick="setQty('+it.id+',1)">+ Add</button>')+'</div></div>'}
 function drawShop(){const s=D.settings,cats=D.catalogs.filter(c=>D.items.some(i=>i.catalog===c.id));
  if(!cats.length){$('shop').innerHTML='<p class="empty">'+(s.opened?'Stickers are coming soon.':'The shop isn\'t open yet. Check back soon!')+'</p>';return}
  $('shop').innerHTML=(cats.length>1?'<div class="chips" role="group" aria-label="Catalogs"><button class="chip" aria-pressed="'+(FILTER==='all')+'" onclick="FILTER=\'all\';drawShop()">All</button>'+
-   cats.map(c=>'<button class="chip" aria-pressed="'+(FILTER===c.id)+'" onclick="FILTER='+c.id+';drawShop()">'+esc(c.name)+'</button>').join('')+'</div>':'')+
-  cats.filter(c=>FILTER==='all'||FILTER===c.id).map(c=>'<section class="cat"><h2>'+esc(c.name)+(c.to_fund?'<span class="fund">Class fund</span>':'')+'</h2>'+(c.blurb?'<p>'+esc(c.blurb)+'</p>':'')+'</section>'+
-   '<div class="grid">'+D.items.filter(i=>i.catalog===c.id).map(card).join('')+'</div>').join('')}
+   cats.map(c=>'<button class="chip" style="--c:'+hue(c.id)+'" aria-pressed="'+(FILTER===c.id)+'" onclick="FILTER='+c.id+';drawShop()">'+esc(c.name)+'</button>').join('')+'</div>':'')+
+  cats.filter(c=>FILTER==='all'||FILTER===c.id).map(c=>{const its=D.items.filter(i=>i.catalog===c.id);return '<section class="cat" style="--c:'+hue(c.id)+'"><div class="ch"><h2>'+esc(c.name)+'</h2>'+(c.to_fund?'<span class="fund">♡ class fund</span>':'')+'<span class="n">'+its.length+' sticker'+(its.length===1?'':'s')+'</span>'+(c.blurb?'<p>'+esc(c.blurb)+'</p>':'')+'</div>'+
+   '<div class="grid">'+its.map(card).join('')+'</div></section>'}).join('')}
 function zoom(id){const it=item(id);if(!it||!it.image)return;const z=document.createElement('div');z.className='zoom';z.innerHTML='<img src="'+esc(img(it.image))+'" alt=""><b>'+esc(it.name)+' · '+peso(it.price)+'</b>';z.onclick=()=>z.remove();document.body.appendChild(z)}
 function closeModal(){$('modal').hidden=true}
 function review(){$('modal').hidden=false;drawReview()}
@@ -174,6 +224,7 @@ async function load(){D=await Auth.rpc('shop_catalog',{},!!Auth.ses());
  const s=D.settings;$('ttl').textContent=s.title||'Class sticker shop';document.title=(s.title||'Class sticker shop')+' · APMed \'33';$('intro').textContent=s.intro||'';
  const dl=s.deadline?new Date(s.deadline):null;$('state').hidden=false;$('state').className='state'+(s.open?'':' off');
  $('state').textContent=s.open?(dl?'Open · orders close '+dl.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Open for orders'):(s.opened?'Orders closed':'Not open yet');
+ const fc=D.catalogs.filter(c=>c.to_fund&&D.items.some(i=>i.catalog===c.id));if(fc.length){$('fundnote').hidden=false;$('fundnote').textContent='♡ '+fc.map(c=>c.name).join(' & ')+' help the APMed \'33 class fund'}
  $('mgr').hidden=!D.manager;drawShop();drawBar();if(location.hash==='#orders')tab('orders');
 })();
 </script>
