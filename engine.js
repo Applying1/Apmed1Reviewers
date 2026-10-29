@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='98',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='99',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -109,7 +109,8 @@ const isX=s=>s==='ALL'||s==='MISSED'||s==='STAR'||s==='DUE'||s==='CLASS'||s==='C
 const secCh=s=>isCh(s)?s.slice(3):chOf(s);
 const KEY=CONFIG.storageKey;
 // v98 flashcards: each card's memory, apart from state.concepts, in "<storageKey>_cards" = {v:1, c:{card id: [stability, difficulty,
-// due, last, reps, lapses, state, step]} (times in minutes), day:[study day, new, reviews, extra new]}. cards.js schedules; sync carries it as "fc".
+// due, last, reps, lapses, state, step]} (times in minutes), day:[study day, new, reviews, extra new], h:{study day:[reviews, again]}}.
+// cards.js schedules; sync carries it as "fc" (+ "fcd" today's counts, "fch" the review log).
 const FC_KEY=KEY+'_cards';
 let FC=(()=>{try{const o=JSON.parse(localStorage.getItem(FC_KEY));if(o&&o.v===1&&o.c&&typeof o.c==='object')return o}catch(e){}return {v:1,c:{},day:['',0,0,0]}})();
 // Storage missing or full: the cards keep working in memory, and the same warning as for answers comes up.
@@ -191,7 +192,7 @@ const FC_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke=
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true,missTags:true,cards:true,fcFour:false,fcRet:.88,fcNew:40,fcRev:150,fcDeck:null};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true,missTags:true,cards:true,fcFour:false,fcRet:.88,fcNew:40,fcRev:150,fcDeck:null,fcExam:true,fcEasy:-1};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -1662,7 +1663,7 @@ function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=new Uint8Array(1
 function prefSig(){return JSON.stringify([state.prefs,state.exSetup||null])}
 function syncPayload(){const c={};for(const id in state.concepts){const k=state.concepts[id];if(k.seen||k.star||k.lookups||k.srs)c[id]=[k.seen||0,k.right||0,k.wrong||0,k.lookups||0,k.hints||0,k.star?1:0,k.srs?k.srs.lvl:0,k.srs?k.srs.due:0,k.lucky||0]}
  let sum=null;try{sum=summaryObj()}catch(e){}
- return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},miss:state.missLog||[],name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,fc:FC.c,fcd:FC.day,
+ return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},miss:state.missLog||[],name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,fc:FC.c,fcd:FC.day,fch:FC.h||{},
   prefs:state.prefs,exSetup:state.exSetup||null,prefsAt:state.prefsAt||0,
   cur:state.pmatch?null:{at:state.curAt||0,section:state.section,active:state.active,feedback:state.feedback,selected:state.selected,pass:state.pass||null,starDone:state.starDone||[],dueDone:state.dueDone||[],classDone:state.classDone||[]}}}
 function unpack(r){const c={};for(const id in r.c||{}){const x=r.c[id];c[id]={seen:x[0],right:x[1],wrong:x[2],lookups:x[3],hints:x[4],star:!!x[5],srs:x[7]?{lvl:x[6],due:x[7]}:null,lucky:x[8]||0,history:[]}}return Object.assign({},r,{concepts:c})}
@@ -1680,6 +1681,7 @@ function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r)
  // flashcards: per card, the copy with the newer review wins; today's counts keep the higher number
  if(r.fc&&typeof r.fc==='object'){let fc=false;for(const id in r.fc){const a=FC.c[id],b=r.fc[id];if(Array.isArray(b)&&b.length>=8&&(!a||b[3]>a[3])){FC.c[id]=b;fc=true}}
   if(Array.isArray(r.fcd)&&Array.isArray(FC.day)&&r.fcd[0]===FC.day[0])for(let i=1;i<4;i++)if((r.fcd[i]||0)>(FC.day[i]||0)){FC.day[i]=r.fcd[i];fc=true}
+  if(r.fch&&typeof r.fch==='object')for(const d in r.fch){const b=r.fch[d],a=(FC.h||{})[d];if(Array.isArray(b)&&(!a||b[0]>a[0])){(FC.h||(FC.h={}))[d]=b.slice(0,2);fc=true}}
   if(fc){syncHold=true;fcSave();syncHold=false;changed=true}}
  // "Why did I miss it?" taps: one entry per answer (question + time); both devices' entries are kept
  if(Array.isArray(r.miss)&&r.miss.length){const seen=new Set((state.missLog||[]).map(e=>e[0]+'|'+e[2])),add=r.miss.filter(e=>Array.isArray(e)&&e.length>=3&&!seen.has(e[0]+'|'+e[2]));
@@ -1764,7 +1766,9 @@ function drawPrefs(){
   row('Grade buttons',state.prefs.fcFour?'Again, Hard, Good and Easy, like Anki.':'Again or Good: quick on a phone. Turn on four buttons for Hard and Easy too.',segHTML("fcPref('fcFour')",[[false,'2 buttons'],[true,'4 buttons']],!!state.prefs.fcFour,'Grade buttons'))+
   row('How much to remember','The share of cards you should still know when each one comes back. Higher means more reviews a day.',segHTML("fcPref('fcRet')",[[.85,'85%'],[.88,'88%'],[.9,'90%'],[.95,'95%']],+state.prefs.fcRet||.88,'Target retention'))+
   row('New cards a day','The most new cards a day in this course.',segHTML("fcPref('fcNew')",[[10,'10'],[20,'20'],[40,'40'],[80,'80']],+state.prefs.fcNew||40,'New cards a day'))+
-  row('Reviews a day','The most review cards a day in this course; the rest wait for the next day.',segHTML("fcPref('fcRev')",[[100,'100'],[150,'150'],[300,'300']],+state.prefs.fcRev||150,'Reviews a day'))+'</section>';
+  row('Reviews a day','The most review cards a day in this course; the rest wait for the next day, the most-forgotten first.',segHTML("fcPref('fcRev')",[[100,'100'],[150,'150'],[300,'300']],+state.prefs.fcRev||150,'Reviews a day'))+
+  row('Exam pacing',state.prefs.fcExam!==false?'On: before a deck\'s eval, new cards are spread so you see them all about 2 days before it, and every card comes back before the eval.':'Off: new cards follow the daily limit only, and intervals ignore the eval date.',sw(state.prefs.fcExam!==false,"setPref('fcExam',"+(state.prefs.fcExam===false)+")",'Exam pacing'))+
+  row('Easy day','Fewer reviews land on this day; the other days take a little more.',segHTML("fcPref('fcEasy')",[[-1,'None'],[6,'Saturday'],[0,'Sunday']],state.prefs.fcEasy==null?-1:+state.prefs.fcEasy,'Easy day'))+'</section>';
  h+='<section class="panel"><h2>Question banks</h2><p class="desc">Main is the full reviewer. Each extra bank is its own question set with its own progress. Sets you add are saved in this browser only; Export one to share it.</p>'+
   BANKS.map(b=>row(esc(b.name)+'<span class="pill set">'+bankItems(b).length+' '+ITEMS+'</span>',esc(b.desc||''),(b.user?'<button class="btn sm" onclick="openSetEditor(\''+b.id+'\')">Edit</button><button class="btn sm" onclick="exportSet(\''+b.id+'\')">Export</button>':'')+(b.id===state.bank?'<span class="pill">In use</span>':'<button class="btn sm" onclick="setBank(\''+b.id+'\')">Use</button>'))).join('')+
   row('Add a question set','Paste questions or upload a .txt or .csv file, like a set a classmate exported or one your group wrote in Google Sheets.','<button class="btn sm" onclick="openSetEditor()">Add a set</button>')+'</section>';
@@ -1788,6 +1792,11 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'99',date:'Oct 29, 2026',title:'Flashcards: exam pacing, cram and stats',items:[
+  '<b>Exam pacing:</b> before an eval, new cards are spread over the days left so you see every card about 2 days before it, and each card comes back before the eval.',
+  'Reviews are spread evenly across days, and after a break the most-forgotten cards come first instead of a pile of hundreds.',
+  '<b>Cram</b> runs through the whole deck, weakest cards first, without changing your schedule. <b>Stats</b> shows how ready you are for the eval and your last 30 days.',
+  'New in Personalize → Flashcards: Exam pacing and an Easy day.']},
  {v:'98',date:'Oct 29, 2026',title:'Flashcards',items:[
   'A new <b>Flashcards</b> page in each course, with cards made from the notes. It starts with the deck for your next exam.',
   'Flip a card, then tap <b>Again</b> or <b>Good</b> (or swipe left or right). Each card comes back just before you would forget it.',

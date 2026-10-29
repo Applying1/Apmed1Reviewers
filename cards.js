@@ -1,9 +1,13 @@
 /* =====================================================================
-   FLASHCARDS (v98): loaded by the engine the first time the Flashcards page opens. Source: src/cards.js (build_site.py copies it).
-   The deck comes from courses/<id>.cards.json (built from the notes, term/definition items and cards_src/). What each card's
-   memory is lives in the engine (FC, fcSave, synced as "fc"): [stability, difficulty, due, last review, reps, lapses, state, step],
-   times in minutes since 1970, state 1 learning, 2 review, 3 relearning (a new card has no entry yet).
+   FLASHCARDS (v98, step 2 in v99): loaded by the engine the first time the Flashcards page opens. Source: src/cards.js
+   (build_site.py copies it). The deck comes from courses/<id>.cards.json (built from the notes, term/definition items and
+   cards_src/). Each card's memory lives in the engine (FC, fcSave, synced as "fc"): [stability, difficulty, due, last review,
+   reps, lapses, state, step], times in minutes since 1970, state 1 learning, 2 review, 3 relearning (a new card has no entry).
+   FC.h = {study day: [reviews, again]} for the retention stat.
    Scheduling is FSRS-5, ported from py-fsrs 4.1.2 (same formulas, same learning steps); tests/fsrs_ref.json checks it.
+   v99 adds: exam pacing (new cards spread so all are seen ~2 days before the deck's eval; no review lands after it),
+   a load balancer (a review goes to the lightest day its fuzz allows; optional easy day), the most-forgotten reviews first
+   when there are more than the daily limit, cram mode (weakest first, changes no schedule) and a stats panel.
    ===================================================================== */
 (function(){
 const W=[0.40255,1.18385,3.173,15.69105,7.1949,0.5345,1.4604,0.0046,1.54575,0.1192,1.01925,1.9395,0.11,0.29605,2.2698,0.2315,2.9898,0.51655,0.6621];
@@ -15,17 +19,18 @@ const shortS=(s,g)=>s*Math.exp(W[17]*(g-3+W[18]));
 function nextD(d,g){const dd=-W[6]*(g-3);return clampD(W[7]*D0(4)+(1-W[7])*(d+(10-d)*dd/9))}
 function forgetS(d,s,r){return Math.min(W[11]*Math.pow(d,-W[12])*(Math.pow(s+1,W[13])-1)*Math.exp((1-r)*W[14]),s/Math.exp(W[17]*W[18]))}
 function recallS(d,s,r,g){return s*(1+Math.exp(W[8])*(11-d)*Math.pow(s,-W[9])*(Math.exp((1-r)*W[10])-1)*(g===2?W[15]:1)*(g===4?W[16]:1))}
-// Same fuzz as py-fsrs: review intervals of 3+ days move a little, so cards learned together don't stay bunched.
-function fuzz(days,max,rand){if(days<2.5)return days;let dl=1;for(const [a,b,f] of [[2.5,7,.15],[7,20,.1],[20,Infinity,.05]])dl+=f*Math.max(Math.min(days,b)-a,0);
- let lo=Math.max(2,Math.round(days-dl)),hi=Math.min(Math.round(days+dl),max);lo=Math.min(lo,hi);return Math.min(Math.round(rand()*(hi-lo+1)+lo),max)}
+// Same fuzz range as py-fsrs: review intervals of 3+ days may move a little, so cards learned together don't stay bunched.
+function fuzzRange(days,max){if(days<2.5)return null;let dl=1;for(const [a,b,f] of [[2.5,7,.15],[7,20,.1],[20,Infinity,.05]])dl+=f*Math.max(Math.min(days,b)-a,0);
+ let lo=Math.max(2,Math.round(days-dl)),hi=Math.min(Math.round(days+dl),max);return [Math.min(lo,hi),hi]}
 // Study days start at 4 am local time (like Anki), so a card due "tomorrow" is due all of tomorrow.
 const dayNum=t=>Math.floor((t-new Date(t).getTimezoneOffset()*MIN-4*36e5)/DAY);
 // One review. k = {s,d,due,last,reps,lapses,st,step} (ms times, s=null for a new card); g = 1 Again, 2 Hard, 3 Good, 4 Easy.
-// o = {ret, max (days), rand (null = no fuzz)}. Returns the new k.
+// o = {ret, max (days), rand (random fuzz) or pick(lo, hi) (the load balancer chooses the day), neither = no fuzz}.
 function review(k,g,now,o){const c=Object.assign({},k),el=c.last!=null?dayNum(now)-dayNum(c.last):null;let next=0;
  const upd=()=>{if(c.s==null){c.s=S0(g);c.d=D0(g)}else if(el!=null&&el<1){c.s=shortS(c.s,g);c.d=nextD(c.d,g)}
   else{const r=R(el,c.s);c.s=g===1?forgetS(c.d,c.s,r):recallS(c.d,c.s,r,g);c.d=nextD(c.d,g)}};
- const toReview=()=>{c.st=2;c.step=0;let n=ivl(c.s,o.ret,o.max);if(o.rand)n=fuzz(n,o.max,o.rand);next=n*DAY};
+ const toReview=()=>{c.st=2;c.step=0;let n=ivl(c.s,o.ret,o.max);const fr=o.rand||o.pick?fuzzRange(n,o.max):null;
+  if(fr)n=o.pick?o.pick(fr[0],fr[1]):Math.min(Math.round(o.rand()*(fr[1]-fr[0]+1)+fr[0]),o.max);next=n*DAY};
  const steps=a=>{if(c.step>a.length)return toReview();if(g===1){c.step=0;next=a[0]}else if(g===2)next=c.step===0?(a.length===1?a[0]*1.5:(a[0]+a[1])/2):a[c.step];
   else if(g===3){if(c.step+1>=a.length)toReview();else{c.step++;next=a[c.step]}}else toReview()};
  if(c.st===2){upd();if(g===1){c.st=3;c.step=0;c.lapses=(c.lapses||0)+1;next=RELEARN[0]}else toReview()}
@@ -36,9 +41,11 @@ const r3=x=>Math.round(x*1000)/1000;
 const pack=k=>[r3(k.s),r3(k.d),Math.round(k.due/MIN),Math.round(k.last/MIN),k.reps,k.lapses||0,k.st,k.step||0];
 const unpack=a=>({s:a[0],d:a[1],due:a[2]*MIN,last:a[3]*MIN,reps:a[4],lapses:a[5],st:a[6],step:a[7]});
 const NEWK={s:null,d:null,due:0,last:null,reps:0,lapses:0,st:0,step:0};
+// how likely the card is remembered on study day `day` (0 = never studied, learning cards count as fragile)
+function recall(a,day){if(!a)return 0;const k=unpack(a);return k.st===2?R(day-dayNum(k.last),k.s):.3}
 
 /* ---------- deck ---------- */
-let DECK=null,LOADING=null,ERR=false,CUR=null,LAST='',UNDO=null,DRAG=null;
+let DECK=null,LOADING=null,ERR=false,CUR=null,LAST='',UNDO=null,DRAG=null,CRAM=null,STATS=false;
 const now=()=>Cards.clock?Cards.clock():Date.now();
 function load(){if(DECK||LOADING)return LOADING;
  LOADING=fetch(CONFIG.cards).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(d=>{DECK=d.cards||[];ERR=false;LOADING=null;if(page==='cards')draw()})
@@ -53,14 +60,30 @@ function decks(){const have=new Set(DECK.map(c=>c.c)),ord=chOrder(),chs=[...have
 // The deck picked here, else the exam chosen under "Studying for", else everything.
 function deck(){const D=decks(),p=state.prefs.fcDeck,e=examObj();return D.find(d=>d.id===p)||(e&&D.find(d=>d.id==='e:'+e.id))||D.find(d=>d.id==='all')||D[0]}
 function pool(){const s=new Set(deck().chs);return DECK.filter(c=>s.has(c.c))}
+// The deck's next eval: an exam deck's own date, or the nearest dated exam that covers one of the deck's chapters.
+function exam(dk){const td=dayNum(now());let best=null;
+ for(const e of EXAMS){if(!e.date)continue;if(dk.id.slice(0,2)==='e:'?'e:'+e.id!==dk.id:!examChs(e).some(c=>dk.chs.includes(c)))continue;
+  const left=dayNum(new Date(e.date+'T12:00').getTime())-td;if(left>=0&&(!best||left<best.left))best={name:e.name,left}}
+ return best}
+const pacing=()=>state.prefs.fcExam!==false&&DECK?exam(deck()):null;
 const newCap=()=>+state.prefs.fcNew||40,revCap=()=>+state.prefs.fcRev||150;
 function dayRoll(){const t=String(dayNum(now()));if(!Array.isArray(FC.day)||FC.day[0]!==t)FC.day=[t,0,0,0]}   // [study day, new, reviews, extra new allowed]
-const opts=fz=>({ret:+state.prefs.fcRet||.88,max:365,rand:fz?Math.random:null});
-function sortOut(){const t=now(),td=dayNum(t),L=[],Rv=[],N=[],soon=[];
+// New cards today: the daily limit, and with an eval coming, just enough to see every card by ~2 days before it.
+function newAllow(unseen){dayRoll();const cap=Math.max(0,newCap()+FC.day[3]-FC.day[1]),e=pacing();if(!e||e.left<=2)return cap;
+ return Math.min(cap,Math.max(0,Math.ceil((unseen+FC.day[1])/(e.left-1))-FC.day[1]+FC.day[3]))}
+// Load balancer: among the days a review may move to, the one with the fewest reviews already due (the easy day counts triple).
+function balancer(){const td=dayNum(now()),cnt={},easy=state.prefs.fcEasy==null?-1:+state.prefs.fcEasy;
+ for(const id in FC.c){const a=FC.c[id];if(a[6]===2){const d=dayNum(a[2]*MIN)-td;cnt[d]=(cnt[d]||0)+1}}
+ return (lo,hi)=>{let best=lo,bs=Infinity;for(let d=lo;d<=hi;d++){const wd=new Date(now()+d*DAY).getDay(),sc=(cnt[d]||0)*(wd===easy?3:1)+Math.random()*.5;if(sc<bs){bs=sc;best=d}}return best}}
+// Intervals stop at the day before the eval, so every card comes back before it.
+function opts(live){const e=pacing();return {ret:+state.prefs.fcRet||.88,max:e?Math.max(1,e.left-1):365,...(live?{pick:balancer()}:{})}}
+function sortOut(){const t=now(),td=dayNum(t),L=[],N=[],soon=[];let Rv=[];
  for(const c of pool()){const a=FC.c[c.i];if(!a){N.push(c);continue}const due=a[2]*MIN;
   if(a[6]===2){if(dayNum(due)<=td)Rv.push(c)}else if(due<=t)L.push(c);else if(due<=t+AHEAD)soon.push([due,c]);}
- dayRoll();return {L,Rv,N,soon,nl:Math.max(0,newCap()+FC.day[3]-FC.day[1]),rl:Math.max(0,revCap()-FC.day[2])}}
-function counts(){const o=sortOut();return {lrn:o.L.length+o.soon.length,rev:Math.min(o.Rv.length,o.rl),nw:Math.min(o.N.length,o.nl),newAll:o.N.length,revAll:o.Rv.length}}
+ dayRoll();const rl=Math.max(0,revCap()-FC.day[2]),all=Rv.length;
+ if(Rv.length>rl)Rv=Rv.map(c=>[recall(FC.c[c.i],td),c]).sort((a,b)=>a[0]-b[0]).slice(0,rl).map(x=>x[1]);   // a backlog: the most-forgotten first, the rest wait
+ return {L,Rv,N,soon,nl:newAllow(N.length),rl,revAll:all}}
+function counts(){const o=sortOut();return {lrn:o.L.length+o.soon.length,rev:Math.min(o.Rv.length,o.rl),nw:Math.min(o.N.length,o.nl),newAll:o.N.length,revAll:o.revAll}}
 // Random order (no position memorizing): learning cards that are due first, then reviews and new cards mixed.
 function pick(){const o=sortOut(),rnd=a=>{const b=a.length>1?a.filter(c=>c.i!==LAST):a;return b[Math.floor(Math.random()*b.length)]};
  if(o.L.length)return rnd(o.L);
@@ -68,6 +91,23 @@ function pick(){const o=sortOut(),rnd=a=>{const b=a.length>1?a.filter(c=>c.i!==L
  if(nr||nn)return nn&&(!nr||Math.random()<nn/(nn+nr))?rnd(o.N):rnd(o.Rv);
  if(o.soon.length){o.soon.sort((a,b)=>a[0]-b[0]);return o.soon[0][1]}   // learn ahead up to 20 min, like Anki
  return null}
+
+/* ---------- cram: the whole deck, weakest first; Again sends a card 3 back; nothing is rescheduled ---------- */
+function cram(on){if(!on){CRAM=null;CUR=null;draw();return}const td=dayNum(now());
+ CRAM={q:pool().map(c=>[recall(FC.c[c.i],td),Math.random(),c]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]).map(x=>x[2]),done:0,seen:new Set()};CUR=null;draw()}
+
+/* ---------- stats ---------- */
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function statsHTML(){const t=now(),td=dayNum(t),e=exam(deck()),P=pool(),at=e?td+e.left:td;let seen=0,ready=0,rv=0,ag=0;
+ for(const c of P){const a=FC.c[c.i];if(!a)continue;seen++;if(a[6]===2&&recall(a,at)>=.8)ready++}
+ for(let d=td-6;d<=td;d++){const x=(FC.h||{})[d];if(x){rv+=x[0];ag+=x[1]}}
+ const days=window.Daily?Daily.data().days:{},cells=[];let mx=1;for(let i=29;i>=0;i--){const d=new Date(t);d.setDate(d.getDate()-i);const n=days[ymd(d)]||0;mx=Math.max(mx,n);cells.push([ymd(d),n])}
+ const pct=P.length?Math.round(100*ready/P.length):0;
+ return '<section class="panel fcstats"><h2>Your cards</h2><div class="fckpi">'+
+  '<div><b>'+pct+'%</b><span>'+(e?'ready for '+esc(e.name):'you would recall today')+'</span><small>'+ready+' of '+P.length+' cards</small></div>'+
+  '<div><b>'+(rv?Math.round(100*(rv-ag)/rv)+'%':'–')+'</b><span>remembered this week</span><small>'+rv+' review'+(rv===1?'':'s')+'</small></div>'+
+  '<div><b>'+seen+'</b><span>cards started</span><small>'+(P.length-seen)+' still new</small></div></div>'+
+  '<p class="fchl">Last 30 days (questions and cards, every course)</p><div class="fcheat" role="img" aria-label="Activity in the last 30 days">'+cells.map(([d,n])=>'<i title="'+d+': '+n+'" style="--a:'+(n?(.25+.75*n/mx).toFixed(2):0)+'"></i>').join('')+'</div></section>'}
 
 /* ---------- screen ---------- */
 const $b=()=>$('fcbody');
@@ -79,35 +119,53 @@ function when(ms){const m=Math.max(1,Math.round(ms/MIN));return m<60?m+' min':m<
 function grades(){return state.prefs.fcFour?[[1,'Again'],[2,'Hard'],[3,'Good'],[4,'Easy']]:[[1,'Again'],[3,'Good']]}
 function ring(left,done){const tot=left+done,p=tot?done/tot:1,C=2*Math.PI*15;
  return '<span class="fcring" role="img" aria-label="'+left+' left today"><svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle cx="19" cy="19" r="15" class="t"/>'+(p?'<circle cx="19" cy="19" r="15" class="f" stroke-dasharray="'+(C*p).toFixed(1)+' '+C.toFixed(1)+'"/>':'')+'</svg><b>'+left+'</b></span>'}
+function cardHTML(c,flip,k){const tag=(/^\d/.test(c.c)?UNIT+' '+c.c+' · ':'')+(c.t||'');
+ return '<section class="card fccard'+(flip?' flip':'')+'" id="fccard" aria-live="polite"'+(flip?'':' role="button" tabindex="0" aria-label="Show the answer" onclick="Cards.flip()"')+'>'+
+  '<div class="fctag">'+esc(tag)+(k.st===0?'<span class="fcpill n">New</span>':k.lapses>=4?'<span class="fcpill l" title="Missed '+k.lapses+' times">Tricky</span>':'')+'</div>'+face(c,flip)+'</section>'}
 function draw(){const el=$b();if(!el)return;
  if(!DECK){if(ERR){el.innerHTML='<section class="panel"><h2>The cards could not be loaded</h2><p class="desc">Check your connection, then try again.</p><button class="btn" onclick="Cards.retry()">Try again</button></section>';return}
   if(!el.firstChild)el.innerHTML='<p class="desc">Loading the cards…</p>';load();return}
  if(!DECK.length){el.innerHTML='<section class="panel"><h2>No cards yet</h2><p class="desc">This course has no flashcards yet.</p></section>';return}
- const D=decks(),dk=deck();
+ if(CRAM){drawCram(el);return}
+ const D=decks(),dk=deck(),e=pacing();
  if(CUR&&!pool().some(c=>c.i===CUR.c.i))CUR=null;
  if(!CUR){const c=pick();CUR=c?{c,flip:false}:null}
  const n=counts(),left=n.lrn+n.rev+n.nw,done=FC.day[1]+FC.day[2];
  let h='<div class="fcbar"><label class="fcdeck"><span>Deck</span><select onchange="setPref(\'fcDeck\',this.value)" aria-label="Deck">'+D.map(d=>'<option value="'+esc(d.id)+'"'+(d.id===dk.id?' selected':'')+'>'+esc(d.name)+'</option>').join('')+'</select></label>'+
-  '<span class="fcstat"><span class="fccounts"><span class="cn" title="New cards left today">'+n.nw+'<small>new</small></span><span class="cl" title="Learning: seen today, coming back soon">'+n.lrn+'<small>learning</small></span><span class="cr" title="Reviews due today">'+n.rev+'<small>due</small></span></span>'+ring(left,done)+'</span></div>';
+  '<span class="fcstat"><span class="fccounts"><span class="cn" title="New cards left today">'+n.nw+'<small>new</small></span><span class="cl" title="Learning: seen today, coming back soon">'+n.lrn+'<small>learning</small></span><span class="cr" title="Reviews due today">'+n.rev+'<small>due</small></span></span>'+ring(left,done)+'</span></div>'+
+  '<div class="fcmeta"><span>'+(e?'<b>'+esc(e.name)+' '+(e.left===0?'today':e.left===1?'tomorrow':'in '+e.left+' days')+'</b>'+(n.newAll&&e.left>2?' · about '+Math.ceil((n.newAll+FC.day[1])/(e.left-1))+' new a day to see them all in time':''):'')+
+   (n.revAll>n.rev?(e?' · ':'')+(n.revAll-n.rev)+' more due, coming back over the next days':'')+'</span>'+
+   '<button class="link" onclick="Cards.cram(true)">Cram</button><button class="link" onclick="Cards.stats()" aria-expanded="'+STATS+'">Stats</button></div>';
  if(!CUR){const t=now(),nx=pool().map(c=>FC.c[c.i]).filter(Boolean).map(a=>a[2]*MIN).filter(d=>d>t).sort((a,b)=>a-b)[0];
   h+='<section class="card fcdone"><h2>'+(done?'All done for today':'Nothing due right now')+'</h2><p class="desc">'+(done?'You studied <b>'+done+'</b> card'+(done===1?'':'s')+' today. ':'')+
    (nx?'The next card comes back '+(dayNum(nx)===dayNum(t)?'in '+when(nx-t):dayNum(nx)===dayNum(t)+1?'tomorrow':'in '+(dayNum(nx)-dayNum(t))+' days')+'.':'')+'</p>'+
-   (n.newAll?'<button class="btn" onclick="Cards.more()">Study 10 more new cards</button><p class="fcnote">'+n.newAll+' new card'+(n.newAll===1?'':'s')+' left in this deck. The daily limit ('+newCap()+') is in Personalize.</p>':'')+
-   (UNDO?'<button class="link" onclick="Cards.undo()">Undo last card</button>':'')+'</section>';
-  $b().innerHTML=h;return}
- const c=CUR.c,k=FC.c[c.i]?unpack(FC.c[c.i]):NEWK,tag=(/^\d/.test(c.c)?UNIT+' '+c.c+' · ':'')+(c.t||'');
- h+='<section class="card fccard'+(CUR.flip?' flip':'')+'" id="fccard" aria-live="polite"'+(CUR.flip?'':' role="button" tabindex="0" aria-label="Show the answer" onclick="Cards.flip()"')+'>'+
-  '<div class="fctag">'+esc(tag)+(k.st===0?'<span class="fcpill n">New</span>':k.lapses>=4?'<span class="fcpill l" title="Missed '+k.lapses+' times">Tricky</span>':'')+'</div>'+face(c,CUR.flip)+'</section>';
+   (n.newAll?'<button class="btn" onclick="Cards.more()">Study 10 more new cards</button><p class="fcnote">'+n.newAll+' new card'+(n.newAll===1?'':'s')+' left in this deck. '+(e&&e.left>2?'New cards are spread over the days before '+esc(e.name)+'.':'The daily limit ('+newCap()+') is in Personalize.')+'</p>':'')+
+   (e&&e.left<=3?'<button class="btn" onclick="Cards.cram(true)">Cram the deck</button>':'')+
+   (UNDO?'<button class="link" onclick="Cards.undo()">Undo last card</button>':'')+'</section>'+(STATS?statsHTML():'');
+  el.innerHTML=h;return}
+ const c=CUR.c,k=FC.c[c.i]?unpack(FC.c[c.i]):NEWK;
+ h+=cardHTML(c,CUR.flip,k);
  if(!CUR.flip)h+='<div class="fcbtns one"><button class="btn primary" onclick="Cards.flip()">Show answer</button></div>';
  else{const t=now();h+='<div class="fcbtns">'+grades().map(([g,l])=>{const nk=review(k,g,t,opts(false));return '<button class="btn fcg g'+g+'" onclick="Cards.grade('+g+')"><b>'+l+'</b><small>'+when(nk.due-t)+'</small></button>'}).join('')+'</div>'}
- h+='<p class="fckeys">'+(CUR.flip?(state.prefs.fcFour?'1 Again · 2 Hard · 3 Good · 4 Easy':'1 Again · 2 or Space Good')+' · or swipe left / right':'Space or tap the card to flip')+(UNDO?' · <button class="link" onclick="Cards.undo()">Undo</button>':'')+'</p>';
+ h+='<p class="fckeys">'+(CUR.flip?(state.prefs.fcFour?'1 Again · 2 Hard · 3 Good · 4 Easy':'1 Again · 2 or Space Good')+' · or swipe left / right':'Space or tap the card to flip')+(UNDO?' · <button class="link" onclick="Cards.undo()">Undo</button>':'')+'</p>'+(STATS?statsHTML():'');
+ el.innerHTML=h;swipe()}
+function drawCram(el){const c=CRAM.q[0];
+ let h='<div class="fcbar fccram"><span><b>Cram</b> · '+CRAM.q.length+' left · weakest first. Your schedule doesn\'t change.</span><button class="btn sm" onclick="Cards.cram(false)">Done cramming</button></div>';
+ if(!c){h+='<section class="card fcdone"><h2>Deck crammed</h2><p class="desc">You went through all '+CRAM.done+' cards. Good luck!</p><button class="btn" onclick="Cards.cram(false)">Back to the deck</button></section>';el.innerHTML=h;return}
+ if(!CUR||CUR.c!==c)CUR={c,flip:false};
+ h+=cardHTML(c,CUR.flip,FC.c[c.i]?unpack(FC.c[c.i]):NEWK);
+ h+=CUR.flip?'<div class="fcbtns"><button class="btn fcg g1" onclick="Cards.grade(1)"><b>Again</b><small>a few cards later</small></button><button class="btn fcg g3" onclick="Cards.grade(3)"><b>Good</b><small>done</small></button></div>'
+  :'<div class="fcbtns one"><button class="btn primary" onclick="Cards.flip()">Show answer</button></div>';
  el.innerHTML=h;swipe()}
 function flip(){if(!CUR||CUR.flip)return;CUR.flip=true;draw()}
-function grade(g){if(!CUR||!CUR.flip)return;const c=CUR.c,old=FC.c[c.i]||null,k=old?unpack(old):NEWK;dayRoll();
- UNDO={id:c.i,old,day:FC.day.slice(),c};
- FC.c[c.i]=pack(review(k,g,now(),opts(true)));if(!old)FC.day[1]++;else if(k.st===2)FC.day[2]++;
+function grade(g){if(!CUR||!CUR.flip)return;const c=CUR.c;
+ if(CRAM){CRAM.q.shift();if(g===1)CRAM.q.splice(Math.min(3,CRAM.q.length),0,c);else CRAM.done++;if(!CRAM.seen.has(c.i)){CRAM.seen.add(c.i);dailyAdd(1)}CUR=null;draw();return}
+ const old=FC.c[c.i]||null,k=old?unpack(old):NEWK;dayRoll();
+ UNDO={id:c.i,old,day:FC.day.slice(),h:FC.h?JSON.stringify(FC.h):null,c};
+ FC.c[c.i]=pack(review(k,g,now(),opts(true)));if(!old)FC.day[1]++;
+ else if(k.st===2){FC.day[2]++;const td=dayNum(now()),H=FC.h||(FC.h={}),x=H[td]||(H[td]=[0,0]);x[0]++;if(g===1)x[1]++;for(const d in H)if(+d<td-60)delete H[d]}
  fcSave();if(!old||k.st===2)dailyAdd(1);LAST=c.i;CUR=null;draw()}
-function undo(){if(!UNDO)return;const u=UNDO;UNDO=null;if(u.old)FC.c[u.id]=u.old;else delete FC.c[u.id];FC.day=u.day;fcSave();CUR={c:u.c,flip:true};LAST='';draw()}
+function undo(){if(!UNDO)return;const u=UNDO;UNDO=null;if(u.old)FC.c[u.id]=u.old;else delete FC.c[u.id];FC.day=u.day;if(u.h)FC.h=JSON.parse(u.h);else delete FC.h;fcSave();CUR={c:u.c,flip:true};LAST='';draw()}
 function more(){dayRoll();FC.day[3]+=10;fcSave();CUR=null;draw()}
 // Phones: drag the flipped card left for Again, right for Good.
 function swipe(){const el=$('fccard');if(!el||!CUR||!CUR.flip)return;
@@ -118,8 +176,9 @@ function key(e){const k=e.key;
  if(!CUR)return false;
  if(!CUR.flip){if(k===' '||k==='Enter'){flip();return true}return false}
  if(k===' '||k==='Enter'){grade(3);return true}
- const g={'1':1,'2':state.prefs.fcFour?2:3,'3':3,'4':state.prefs.fcFour?4:0}[k];if(g){grade(g);return true}
- if(k==='u'||k==='U'){undo();return true}
+ const g={'1':1,'2':state.prefs.fcFour&&!CRAM?2:3,'3':3,'4':state.prefs.fcFour&&!CRAM?4:0}[k];if(g){grade(g);return true}
+ if((k==='u'||k==='U')&&!CRAM){undo();return true}
  return false}
-window.Cards={draw,key,flip,grade,undo,more,retry:()=>{ERR=false;draw()},review,pack,unpack,dayNum,counts:()=>DECK?counts():null,deck:()=>DECK&&deck(),cur:()=>CUR&&CUR.c,clock:null,W};
+window.Cards={draw,key,flip,grade,undo,more,cram,stats:()=>{STATS=!STATS;draw()},retry:()=>{ERR=false;draw()},review,pack,unpack,dayNum,
+ counts:()=>DECK?counts():null,pool:()=>DECK?pool():[],deck:()=>DECK&&deck(),exam:()=>DECK&&exam(deck()),opts,cur:()=>CUR&&CUR.c,cramming:()=>!!CRAM,clock:null,W};
 })();
