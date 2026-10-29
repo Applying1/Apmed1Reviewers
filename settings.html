@@ -40,6 +40,7 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
 .tiles{list-style:none;margin:0 0 10px;padding:0}.tiles li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px dashed var(--line)}.tiles li:first-child{border-top:0}
 .tiles .nm{flex:1;min-width:0;font-size:14px;font-weight:600}.tiles .nm small{display:block;font-weight:400;color:var(--mute);font-size:12.5px}.tiles li.off .nm{color:var(--faint)}
 .mv{flex:none;width:30px;height:30px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);color:var(--mute);display:grid;place-items:center;padding:0}.mv:disabled{opacity:.35;cursor:default}.mv:hover:not(:disabled){color:var(--text)}
+.cnt{display:inline-block;margin-left:6px;padding:0 7px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:12px;vertical-align:1px}
 .sub{font-size:13px;font-weight:700;color:var(--mute);margin:12px 0 2px;text-transform:uppercase;letter-spacing:.4px}
 </style></head><body>
 <main>
@@ -55,11 +56,13 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
  <section class="sec"><h2>Notifications</h2>
   <div class="row"><div class="t"><b>What you hear about</b><span>Announcements, new courses and content, timetable changes, exam reminders, replies and push notifications on this device.</span></div><a class="btn" href="notifications.html#settings">Open</a></div>
  </section>
+ <section class="sec" id="mod" hidden></section>
  <section class="sec" id="snd"></section>
  <section class="sec" id="store"></section>
  <p class="note">Each course's study settings (recall goal, flashcards, question order and more) are in that course's <b>Personalize</b> page. <a href="privacy.html">Privacy &amp; terms</a></p>
 </main>
 <script src="daily.js"></script>
+<script src="auth.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -80,7 +83,7 @@ function drawLook(){$('theme').innerHTML=seg('theme',[['auto','Device'],['light'
 // Home page (this device, like the colors): which tiles show, in what order, compact tiles, courses first.
 // Saved as 'reviewer_home' = {layout: auto|compact|full, first, hide: [element ids], order: [tool ids]}; the home page reads it in its <head>.
 const SECTIONS=[['upnext','Next class','The class coming up, with a warm-up quiz before it'],['tests','Tests coming up','Countdowns to exams, evals and quizzes'],['today','Today','Your daily goal, streak and reviews due']];
-const TOOLS=[['gdtool','General discussion'],['qztool','Live quiz'],['cwtool','Daily crossword'],['wdtool','APMed\u2019le'],['atttool','My attendance'],['shoptool','Class shop'],['cdtool','Class day','Only the class secretary sees it']];
+const TOOLS=[['gdtool','General discussion'],['qztool','Live quiz'],['cwtool','Daily crossword'],['wdtool','APMed\u2019le'],['atttool','My attendance'],['shoptool','Class shop'],['cdtool','Class day','Only the class secretary sees it'],['modtool','Moderator','Only the site owner sees it']];
 function homeGet(){let h={};try{h=JSON.parse(get('reviewer_home'))||{}}catch(e){}h.hide=Array.isArray(h.hide)?h.hide:[];const ids=TOOLS.map(t=>t[0]);h.order=(Array.isArray(h.order)?h.order:[]).filter(x=>ids.includes(x));ids.forEach(x=>{if(!h.order.includes(x))h.order.push(x)});return h}
 function homePut(h){set('reviewer_home',JSON.stringify(h));drawHome()}
 function homeSet(k,v){const h=homeGet();h[k]=v;homePut(h)}
@@ -112,7 +115,14 @@ async function drawStore(){let list=[];try{list=await (await fetch('courses.json
  const rows=list.filter(c=>!c.soon&&c.storageKey).map(c=>[c,size(c.storageKey)]).sort((a,b)=>b[1]-a[1]);
  $('store').innerHTML='<h2>Storage on this device</h2><p class="d">'+mb(all)+' of about 5 MB used. Signed in, everything is also saved online.</p><div class="bar"><i style="width:'+Math.min(100,Math.max(1,100*all/cap))+'%"></i></div>'+
   '<ul class="crs">'+rows.map(([c,n])=>'<li><a href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+esc(c.title)+'</a><small>'+(n?mb(n):'not started')+'</small></li>').join('')+'</ul>'}
-drawAcc();drawLook();drawHome();drawGoal();drawSnd();drawStore();
+// moderator page: shown to the site owner (with what is waiting) and on devices that remember a moderator passphrase
+async function drawMod(){let m=null,pass=false;try{pass=!!localStorage.getItem('reviewer_mod_pass')}catch(e){}
+ try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(c&&Auth.ses()){Auth.cloud=c.cloud;m=await Auth.rpc('mod_counts',{},true)}}catch(e){m=null}
+ if(!m&&!pass)return;const n=m?(m.links||0)+(m.questions||0)+(m.reports||0)+(m.cards||0):0;
+ const p=m?[[m.links,'link request'],[m.questions,'question'],[m.reports,'report'],[m.cards,'flashcard']].filter(x=>x[0]).map(x=>x[0]+' '+x[1]+(x[0]>1?'s':'')):[];
+ $('mod').innerHTML='<h2>Moderator</h2><div class="row"><div class="t"><b>Moderator page'+(n?' <span class="cnt">'+n+'</span>':'')+'</b><span>'+(m?(n?esc(p.join(' · '))+' waiting.':'Nothing waiting.')+' Update attendance, approve link requests, review questions and reports.':'Review the questions and reports classmates send.')+'</span></div><a class="btn'+(n?' primary':'')+'" href="moderate.html">Open</a></div>'+
+  (m?'<div class="row"><div class="t"><b>Attendance</b><span>Read the tracker sheet now, or set up the one-tap update.</span></div><a class="btn" href="moderate.html#sync">Update settings</a></div>':'');$('mod').hidden=false}
+drawAcc();drawLook();drawHome();drawGoal();drawSnd();drawStore();drawMod();
 if(location.hash==='#home')setTimeout(()=>$('home').scrollIntoView({block:'start'}),50);
 addEventListener('storage',()=>{drawAcc();drawLook();drawHome();drawGoal();drawSnd()});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');

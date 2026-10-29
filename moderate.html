@@ -20,7 +20,7 @@ h1{font:600 28px/1.2 var(--serif);letter-spacing:-.4px;margin:0}
 .sub{color:var(--mute);margin:6px 0 0}
 .top{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .top .acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:7px 13px;font-weight:600;font-size:13.5px;border:1px solid var(--line2);background:var(--surface);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:7px 13px;font-weight:600;font-size:13.5px;border:1px solid var(--line2);background:var(--surface);white-space:nowrap;text-decoration:none}
 .btn:hover{background:var(--raised)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
@@ -74,22 +74,41 @@ textarea.inp{resize:vertical;line-height:1.45}
 .mute{color:var(--faint)}.warnt{color:var(--bad)}.ulist{font-size:13.5px;color:var(--mute);line-height:1.8}
 .lrow{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr) auto;gap:10px;align-items:center;padding:7px 2px;border-bottom:1px solid var(--line);font-size:14px}.lrow .sub{margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:620px){.lrow{grid-template-columns:1fr auto}.lrow .sub{grid-column:1/-1;grid-row:2}}
+.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.owner{margin-top:18px}.oh{display:flex;gap:12px;align-items:center}.oh .sub{margin:0;font-size:13.5px}
+.oic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.owner .acts2 .cnt{margin-left:2px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.stat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:11px 14px}
+.stat b{font:600 24px/1.1 var(--serif);color:var(--accent)}.stat span{font-size:12.5px;color:var(--mute);font-weight:600}
+.stat.zero b{color:var(--faint)}.stat:hover{border-color:var(--line2)}.stat.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.steps{margin:0;padding-left:22px}.steps li{margin:0 0 14px;font-size:14.5px}.steps li:last-child{margin:0}
+pre.code{margin:10px 0 8px;padding:12px;border-radius:10px;background:var(--raised);border:1px solid var(--line);font:12.5px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow:auto}
+.urlrow{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}.urlrow .inp{flex:1 1 240px;width:auto}
+.cbox{position:fixed;inset:0;background:#0007;display:grid;place-items:center;padding:16px;z-index:10}.cbox .card{width:min(560px,100%);margin:0}.cbox textarea{margin-top:10px;font:12.5px ui-monospace,Consolas,monospace}
+.newpill{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:8;border:0;border-radius:99px;padding:8px 16px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:13.5px;box-shadow:0 4px 14px #0003}
+.newpill[hidden]{display:none}
+@media (max-width:480px){.stat{padding:9px 10px}.stat b{font-size:20px}.top .acts{margin-left:0}}
 </style></head><body>
 <main id="app"><p class="empty">Loading…</p></main>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<button class="newpill" id="newpill" hidden onclick="load()"></button>
 <script>
 /* Moderator queue for class contributions (see supabase_contrib.sql). Only someone with a moderator passphrase sees anything:
    the database checks the passphrase on every call. The passphrase stays in this browser (this tab, or this device if remembered). */
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PASS_KEY='reviewer_mod_pass';
-let CLOUD=null,COURSES=[],BYKEY={},DATA={},ME=null,PASS='',ROWS=[],tab='pending',courseF='',busy=false,ATT=null,view='queue';
+let CLOUD=null,COURSES=[],BYKEY={},DATA={},ME=null,PASS='',ROWS=[],tab='pending',courseF='',kindF='',busy=false,ATT=null,SYNC=null,view='queue',NEWN=0;
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2600)}
 function rpc(fn,body){const h={'Content-Type':'application/json',apikey:CLOUD.key};if(/^eyJ/.test(CLOUD.key))h.Authorization='Bearer '+CLOUD.key;
  return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body)})
   .then(r=>r.text().then(t=>{if(!r.ok){let m='';try{m=JSON.parse(t).message||''}catch(e){}throw new Error(m||'error '+r.status)}return t?JSON.parse(t):null}))}
 function ago(t){const s=(Date.now()-Date.parse(t))/1000;return s<90?'just now':s<5400?Math.round(s/60)+' min ago':s<129600?Math.round(s/3600)+' h ago':Math.round(s/86400)+' days ago'}
 function copy(text,msg){(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(text):Promise.reject()).then(()=>toast(msg),()=>copyBox(text))}
+// no clipboard (http, old browser): show the text selected, ready for Ctrl+C / long-press Copy
+function copyBox(text){const d=document.createElement('div');d.className='cbox';d.innerHTML='<div class="card"><b>Copy this</b><textarea class="inp" rows="10" readonly></textarea><div class="acts2"><span class="sp"></span><button class="btn primary">Done</button></div></div>';
+ d.querySelector('textarea').value=text;d.querySelector('button').onclick=()=>d.remove();document.body.appendChild(d);d.querySelector('textarea').select()}
 
 async function course(key){const c=BYKEY[key];if(!c)return null;if(DATA[key])return DATA[key];
  const d=await fetch('courses/'+c.id+'.json').then(r=>r.json());
@@ -102,11 +121,15 @@ async function boot(){
  try{COURSES=await fetch('courses.json').then(r=>r.json());BYKEY=Object.fromEntries(COURSES.map(c=>[c.storageKey,c]));
   const first=await fetch('courses/'+COURSES[0].id+'.json').then(r=>r.json());CLOUD=first.config.cloud}catch(e){}
  if(!CLOUD||!CLOUD.url){$('app').innerHTML='<p class="empty">The class cloud is not set up for these reviewers.</p>';return}
+ if(location.hash==='#sync')view='sync';else if(location.hash==='#links')view='att';
  try{PASS=sessionStorage.getItem(PASS_KEY)||localStorage.getItem(PASS_KEY)||''}catch(e){}
  if(PASS&&await signIn(PASS,true))return;
+ await attLoad();
+ if(ATT&&view!=='queue')return draw();
  drawLogin()}
-function drawLogin(err){document.title='Moderator Queue';
- $('app').innerHTML='<div class="card login"><h1>Moderator</h1><p>Review the questions and problem reports classmates send from the reviewers. Sign in with your moderator passphrase.</p>'+
+function drawLogin(err){document.title='Moderator';view='queue';
+ $('app').innerHTML=(ATT?'<div class="top"><div><h1>Moderator</h1><p class="sub">Your owner tools work without the passphrase.</p></div><div class="acts"><a class="btn" href="./">Home</a></div></div>'+ownerPanel():'')+
+  '<div class="card login"'+(ATT?' style="margin-top:22px"':'')+'>'+(ATT?'<h2 class="ah" style="margin-top:0">Question queue</h2>':'<h1>Moderator</h1>')+'<p>Review the questions, flashcards and problem reports classmates send from the reviewers. Sign in with your moderator passphrase.</p>'+
   '<input class="inp" id="pass" type="password" autocomplete="current-password" placeholder="Passphrase" aria-label="Passphrase">'+
   '<label class="chk"><input type="checkbox" id="remember"> Stay signed in on this device</label>'+
   '<p class="msg" id="lmsg">'+esc(err||'')+'</p><div class="acts2"><span class="sp"></span><a class="btn" href="./">Back to reviewers</a><button class="btn primary" id="go">Sign in</button></div></div>';
@@ -120,32 +143,97 @@ async function signIn(p,quiet,remember){let r=null;
  await load();return true}
 function signOut(){try{sessionStorage.removeItem(PASS_KEY);localStorage.removeItem(PASS_KEY)}catch(e){}PASS='';ME=null;drawLogin()}
 async function load(){try{ROWS=await rpc('contrib_mod_list',{p_pass:PASS,p_status:'all'})||[]}catch(e){toast('Could not load the queue.');ROWS=ROWS||[]}
- await Promise.all([...new Set(ROWS.map(r=>r.course))].map(k=>course(k).catch(()=>null)));await attLoad();draw()}
+ await Promise.all([...new Set(ROWS.map(r=>r.course))].map(k=>course(k).catch(()=>null)));await attLoad();$('newpill').hidden=true;draw()}
+// while the page is open (and on coming back to it): new items show a "N new" button instead of redrawing over edits
+async function poll(){if(!ME||busy||document.hidden||view!=='queue')return;let rows=null,links=linkN();
+ try{rows=await rpc('contrib_mod_list',{p_pass:PASS,p_status:'all'})}catch(e){return}
+ if(ATT)try{const a=await Auth.rpc('att_admin_list',{},true);links=(a.requests||[]).filter(r=>r.status==='pending').length}catch(e){}
+ const known=new Set(ROWS.map(r=>r.id)),n=(rows||[]).filter(r=>!known.has(r.id)&&isOpen(r)).length+Math.max(0,links-linkN());
+ if(n){NEWN=n;const b=$('newpill');b.textContent=n+' new · Show';b.hidden=false;document.title='('+n+' new) Moderator'}}
+setInterval(poll,120000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
 
 /* ---------- Attendance links (supabase_attendance.sql): only when this browser is also signed in with the site owner's
    Google account (att_admin_list refuses everyone else, so other moderators never see this). Students send a request from
    My attendance (roll number + last name, checked against the tracker); approve it here. */
-async function attLoad(){ATT=null;if(!Auth.ses())return;Auth.cloud=Auth.cloud||CLOUD;try{ATT=await Auth.rpc('att_admin_list',{},true)}catch(e){ATT=null}}
-function attBtn(){if(!ATT)return '';const n=(ATT.requests||[]).filter(r=>r.status==='pending').length;return '<a class="btn" href="classday.html">Class day</a><button class="btn" onclick="view=\'att\';draw()">Attendance links'+(n?'<b class="cnt">'+n+'</b>':'')+'</button>'}
-function drawAtt(){if(!ATT){view='queue';return draw()}document.title='Attendance links';
+async function attLoad(){ATT=null;SYNC=null;if(!Auth.ses())return;Auth.cloud=Auth.cloud||CLOUD;
+ try{ATT=await Auth.rpc('att_admin_list',{},true)}catch(e){ATT=null;return}
+ try{SYNC=await Auth.rpc('att_sync_info',{},true)}catch(e){SYNC=null}}
+const linkN=()=>ATT?(ATT.requests||[]).filter(r=>r.status==='pending').length:0;
+const back=()=>{view='queue';history.replaceState(null,'',location.pathname);ME?draw():drawLogin()};
+// owner tools (site owner's Google account only): attendance update + links + class day, shown on top of the queue
+function ownerPanel(){if(!ATT)return '';const n=linkN(),s=SYNC||{},bad=s.note&&!/^ok/.test(s.note);
+ return '<section class="card owner"><div class="oh"><span class="oic"><svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span><div><b>Attendance</b><p class="sub">Tracker imported '+(ATT.imported?esc(ago(ATT.imported)):'never')+
+  (s.ready?' · '+(s.auto?'checks the sheet every hour':'hourly check off'):' · not automatic yet')+'</p></div></div>'+
+  (bad?'<div class="warn">Last check '+esc(ago(s.sync_at))+': '+esc(s.note)+'</div>':'')+
+  '<div class="acts2">'+(s.ready?'<button class="btn primary" id="syncbtn" onclick="attSync(this)"><svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-rotate-cw"/></svg>Update attendance now</button>':'<button class="btn primary" onclick="go(\'sync\')">Set up one-tap update</button>')+
+  '<button class="btn" onclick="go(\'att\')">Link requests'+(n?'<b class="cnt">'+n+'</b>':'')+'</button><a class="btn" href="classday.html">Class day</a>'+
+  (s.ready?'<span class="sp"></span><button class="link" onclick="go(\'sync\')">Update settings</button>':'')+'</div></section>'}
+function go(v){view=v;history.replaceState(null,'',location.pathname+(v==='sync'?'#sync':v==='att'?'#links':''));draw();scrollTo(0,0)}
+async function attSync(btn){if(btn){btn.disabled=true;btn.lastChild.textContent='Updating…'}let r=null;
+ try{const tok=await Auth.token();if(!tok)throw new Error('signin');
+  const res=await fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/attsync',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+tok},body:'{}'});
+  r=await res.json().catch(()=>({error:'server '+res.status}))}
+ catch(e){r={error:e.message==='signin'?'signin':'offline'}}
+ const why={signin:'Your Google sign-in ended. Sign in again on the home page.',offline:'Could not reach the server. Check your connection.','not set up':'Set up the one-tap update first.',
+  key:'The key in the Apps Script does not match. Copy the code again (Update settings).',access:'The Web app is not open to “Anyone”. Deploy it again with Who has access: Anyone.',
+  empty:'The sheet sent no rows. Is the tab still called Sheet1?',import:'The sheet layout changed: '+(r&&r.detail||'')}[r&&r.error];
+ if(r&&r.ok)toast('Attendance updated: '+r.students+' students'+(r.latest?', latest day '+r.latest:'')+'.'+(r.mismatches?' '+r.mismatches+' totals do not match the days, check the sheet.':''));
+ else await tell(why||('Could not update: '+((r&&r.error)||'unknown')),{title:'Attendance not updated'});
+ await attLoad();draw()}
+// one-time setup: an Apps Script in the tracker answers with the sheet's values when asked with this key
+function drawSync(){if(!ATT||!SYNC){view='queue';return ME?draw():drawLogin()}document.title='Attendance update';const s=SYNC;
+ $('app').innerHTML='<div class="top"><div><h1>One-tap attendance</h1><p class="sub">Connect the tracker once. Then <b>Update attendance now</b> reads it in a few seconds, and the site also checks it every hour.</p></div>'+
+  '<div class="acts"><button class="btn" onclick="back()">Back</button></div></div>'+
+  '<div class="card"><ol class="steps">'+
+  '<li>Open the attendance tracker sheet, then <b>Extensions → Apps Script</b>.</li>'+
+  '<li>Delete what is in the editor, paste this code, and press <b>Save</b>.<pre class="code" id="gas">'+esc(gasCode(s.key))+'</pre><button class="btn" onclick="copy(gasCode(SYNC.key),\'Code copied.\')"><svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-copy"/></svg>Copy code</button></li>'+
+  '<li><b>Deploy → New deployment</b>, pick the type <b>Web app</b> (gear icon). Execute as: <b>Me</b>. Who has access: <b>Anyone</b>. Press Deploy and allow access with your Google account (if Google warns that the app isn\'t verified: Advanced → Go to the project; it is your own script).</li>'+
+  '<li>Copy the <b>Web app URL</b> (it ends in <code>/exec</code>) and paste it here:'+
+  '<div class="urlrow"><input class="inp" id="gurl" placeholder="'+(s.ready?'Saved. Paste a new URL to replace it':'https://script.google.com/macros/s/…/exec')+'" aria-label="Web app URL"><button class="btn primary" onclick="syncSave()">Save and test</button></div></li></ol>'+
+  '<label class="chk"><input type="checkbox" id="gauto"'+(s.auto?' checked':'')+' onchange="syncAuto(this.checked)"> Also check the sheet every hour</label>'+
+  (s.sync_at?'<p class="help">Last check '+esc(ago(s.sync_at))+': '+esc(s.note||'')+'</p>':'')+'</div>'+
+  '<details class="help card"><summary>Is this safe?</summary><ul><li>The script only answers when the request carries the key in the code above. The key is kept in the database where only you (and the update function) can read it.</li>'+
+  '<li>It sends what the update needs: the tracker\'s names and attendance marks, to this site\'s database, which already holds them.</li>'+
+  '<li>To switch it off: in Apps Script, <b>Deploy → Manage deployments → Archive</b>. Changing the code? Deploy a <b>new version</b> of the same deployment so the URL stays.</li></ul></details>'}
+function gasCode(key){return "// APMed '33: lets the site read this attendance tracker when the owner taps \"Update attendance\".\n"+
+ "// Deploy as a Web app: Execute as Me, Who has access: Anyone. It only answers requests that carry this key.\n"+
+ "const KEY = '"+key+"';\n"+
+ "function doGet(e) {\n"+
+ "  const out = o => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);\n"+
+ "  if (!e || !e.parameter || e.parameter.key !== KEY) return out({ error: 'key' });\n"+
+ "  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');\n"+
+ "  const rows = Math.min(Math.max(sh.getLastRow() - 2, 1), 58), cols = Math.max(sh.getLastColumn() - 1, 1);\n"+
+ "  return out({ values: sh.getRange(3, 2, rows, cols).getDisplayValues() });   // B3 onward, like the Sheets connector\n"+
+ "}\n"}
+async function syncSave(){const u=$('gurl').value.trim();if(!u)return toast('Paste the Web app URL first.');
+ try{await Auth.rpc('att_sync_set',{p_url:u,p_auto:null},true)}catch(e){return tell(e.message,{title:'Not saved'})}
+ await attLoad();toast('Saved. Testing…');view='queue';history.replaceState(null,'',location.pathname);await attSync()}
+async function syncAuto(on){try{await Auth.rpc('att_sync_set',{p_url:null,p_auto:on},true);toast(on?'The site checks the sheet every hour.':'Hourly check off. Use the button.')}catch(e){toast('Could not save: '+e.message)}await attLoad()}
+function drawAtt(){if(!ATT){view='queue';return ME?draw():drawLogin()}document.title='Attendance links';
  const pend=ATT.requests.filter(r=>r.status==='pending'),rej=ATT.requests.filter(r=>r.status!=='pending'),who=x=>esc(x.google||'(no name)')+(x.email?' <span class="mute">'+esc(x.email)+'</span>':'');
  $('app').innerHTML='<div class="top"><div><h1>Attendance links</h1><p class="sub">Which Google account sees which student\'s attendance. Tracker imported '+(ATT.imported?esc(ago(ATT.imported)):'never')+'.</p></div>'+
-  '<div class="acts"><button class="btn" onclick="attLoad().then(draw)">Refresh</button><button class="btn" onclick="view=\'queue\';draw()">Back to the queue</button></div></div>'+
+  '<div class="acts"><button class="btn" onclick="attLoad().then(draw)">Refresh</button><button class="btn" onclick="back()">Back</button></div></div>'+
   '<h2 class="ah">Requests'+(pend.length?' <b class="cnt">'+pend.length+'</b>':'')+'</h2>'+
   (pend.length?pend.map(r=>'<div class="card arow"><div><b>#'+r.roll+' '+esc(r.student)+'</b><p class="sub">'+who(r)+' · '+esc(ago(r.at))+(r.already?' · <span class="warnt">already linked to '+r.already+' account'+(r.already>1?'s':'')+'</span>':'')+'</p></div><div class="acts"><button class="btn" onclick="attDecide(\''+r.user+'\',false)">Reject</button><button class="btn primary" onclick="attDecide(\''+r.user+'\',true)">Approve</button></div></div>').join(''):'<p class="empty">No requests waiting.</p>')+
   (rej.length?'<details class="card"><summary>Rejected ('+rej.length+')</summary>'+rej.map(r=>'<p>#'+r.roll+' '+esc(r.student)+' · '+who(r)+'</p>').join('')+'</details>':'')+
   '<h2 class="ah">Not linked yet ('+ATT.unlinked.length+')</h2><p class="sub">Ask them to open <b>My attendance</b> from the home page while signed in and send a request.</p><p class="ulist">'+ATT.unlinked.map(x=>'#'+x.roll+' '+esc(x.student)).join(' · ')+'</p>'+
   '<h2 class="ah">Linked ('+ATT.links.length+' accounts)</h2>'+ATT.links.map(l=>'<div class="lrow"><span><b>#'+l.roll+'</b> '+esc(l.student)+'</span><span class="sub">'+who(l)+'</span><button class="link" onclick="attUnlink(\''+l.user+'\',\''+esc(l.student).replace(/'/g,'')+'\')">Unlink</button></div>').join('')}
-async function attDecide(u,ok){try{await Auth.rpc('att_admin_decide',{p_user:u,p_ok:ok},true);toast(ok?'Linked.':'Rejected.')}catch(e){toast('Could not save: '+e.message)}await attLoad();draw()}
+async function attDecide(u,ok){try{await Auth.rpc('att_admin_decide',{p_user:u,p_ok:ok},true);toast(ok?'Linked. They see their attendance now.':'Rejected.')}catch(e){toast('Could not save: '+e.message)}await attLoad();draw()}
 async function attUnlink(u,name){if(!await ask('They will no longer see attendance on this account.',{title:'Unlink '+name+'?',ok:'Unlink',danger:1}))return;
  try{await Auth.rpc('att_admin_unlink',{p_user:u},true);toast('Unlinked.')}catch(e){toast('Could not unlink: '+e.message)}await attLoad();draw()}
 const isOpen=r=>r.status==='pending';
 const inTab=r=>tab==='pending'?isOpen(r):tab==='approved'?r.status==='approved':tab==='done'?r.status==='rejected'||r.status==='resolved':true;
-function draw(){if(view==='att')return drawAtt();const mine=ROWS.filter(r=>!courseF||r.course===courseF),n=t=>{const k=tab;tab=t;const c=mine.filter(inTab).length;tab=k;return c};
- const keys=[...new Set(ROWS.map(r=>r.course))],list=mine.filter(inTab);document.title=(n('pending')?'('+n('pending')+') ':'')+'Moderator Queue';
- $('app').innerHTML='<div class="top"><div><h1>Moderator queue</h1><p class="sub">Signed in as <b>'+esc(ME.name)+'</b>'+(ME.courses?' · '+ME.courses.map(k=>esc((BYKEY[k]||{}).title||k)).join(', '):' · all courses')+'</p></div>'+
-  '<div class="acts">'+attBtn()+'<button class="btn" onclick="load()">Refresh</button><button class="btn" onclick="signOut()">Sign out</button></div></div>'+
+const KINDS=[['question','Questions'],['report','Reports'],['card','Flashcards']];
+function draw(){if(view==='att')return drawAtt();if(view==='sync')return drawSync();if(!ME)return drawLogin();NEWN=0;
+ const mine=ROWS.filter(r=>(!courseF||r.course===courseF)&&(!kindF||r.kind===kindF)),n=t=>{const k=tab;tab=t;const c=mine.filter(inTab).length;tab=k;return c};
+ const keys=[...new Set(ROWS.map(r=>r.course))],list=mine.filter(inTab),wait=k=>ROWS.filter(r=>isOpen(r)&&r.kind===k&&(!courseF||r.course===courseF)).length;
+ const total=ROWS.filter(isOpen).length+linkN();document.title=(total?'('+total+') ':'')+'Moderator';
+ $('app').innerHTML='<div class="top"><div><h1>Moderator</h1><p class="sub">Signed in as <b>'+esc(ME.name)+'</b>'+(ME.courses?' · '+ME.courses.map(k=>esc((BYKEY[k]||{}).title||k)).join(', '):' · all courses')+'</p></div>'+
+  '<div class="acts"><a class="btn" href="./">Home</a><button class="btn" onclick="load()" aria-label="Refresh"><svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-rotate-cw"/></svg></button><button class="btn" onclick="signOut()">Sign out</button></div></div>'+
+  ownerPanel()+
+  '<div class="stats" role="group" aria-label="Waiting by kind">'+KINDS.map(([k,l])=>{const c=wait(k);return '<button class="stat'+(kindF===k?' on':'')+(c?'':' zero')+'" aria-pressed="'+(kindF===k)+'" onclick="kindF=kindF===\''+k+'\'?\'\':\''+k+'\';tab=\'pending\';draw()"><b>'+c+'</b><span>'+l+' waiting</span></button>'}).join('')+'</div>'+
   '<div class="bar"><span class="seg" role="group" aria-label="Show">'+[['pending','Waiting'],['approved','Added'],['done','Closed'],['all','All']].map(([k,l])=>'<button aria-pressed="'+(tab===k)+'" onclick="tab=\''+k+'\';draw()">'+l+(k==='pending'&&n(k)?'<b>'+n(k)+'</b>':'')+'</button>').join('')+'</span>'+
+  (kindF?'<button class="link" onclick="kindF=\'\';draw()">Show every kind</button>':'')+
   (keys.length>1?'<select class="inp" aria-label="Course" onchange="courseF=this.value;draw()"><option value="">All courses</option>'+keys.map(k=>'<option value="'+esc(k)+'"'+(k===courseF?' selected':'')+'>'+esc((BYKEY[k]||{}).title||k)+'</option>').join('')+'</select>':'')+
   (tab==='pending'&&list.some(r=>r.kind==='report')?'<button class="link" style="margin-left:auto" onclick="copyReports()">Copy open reports</button>':'')+'</div>'+
   (list.length?list.map(card).join(''):'<p class="empty">'+(tab==='pending'?'Nothing waiting. Nice.':'Nothing here yet.')+'</p>')+
@@ -154,7 +242,8 @@ function draw(){if(view==='att')return drawAtt();const mine=ROWS.filter(r=>!cour
   '<li><b>Not added</b> with a short note tells the student why (for example: not in the exam, already in the reviewer, answer is wrong).</li>'+
   '<li><b>Added</b> questions can still be edited (Save changes) or taken out again.</li>'+
   '<li><b>Reports</b> point at a question that may be wrong. Class questions can be fixed right here; for the built-in questions, use <b>Copy open reports</b> and paste them to Claude, then mark them Fixed.</li>'+
-  '<li>“Sent from this device: N” counts everything one device has sent, to spot spam.</li></ul></details>'}
+  '<li>“Sent from this device: N” counts everything one device has sent, to spot spam.</li>'+
+  (ATT?'<li><b>Alerts (only you):</b> a new question, report, flashcard or link request sends one push to your devices with Attendance alerts on (at most one every 15 minutes). The home page Moderator tile shows the count.</li>':'')+'</ul></details>'}
 
 // a flashcard a student suggested from their own cards (flashcards v100): approved cards join everyone's deck
 function flashCard(r,head){const c=DATA[r.course],d=r.data||{},ed=r.status!=='rejected',v=Object.assign({ch:d.ch,topic:d.topic,front:d.front,back:d.back,by:d.name},r.status==='approved'?r.item||{}:{}),chs=c?c.cfg.chapters||{}:{};

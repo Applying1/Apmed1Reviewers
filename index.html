@@ -158,6 +158,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .tool{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow);min-width:0;transition:border-color .15s,transform .18s var(--ease)}
 .tool:hover{border-color:var(--accent-line);transform:translateY(-1px)}
 .tool[hidden]{display:none}
+.tool.due{border-color:var(--accent-line)}.tool.due #modsub{color:var(--accent);font-weight:600}
 .tool.locked{cursor:default;opacity:.62;filter:grayscale(.5)}.tool.locked:hover{transform:none;border-color:var(--line)}
 .tool .new{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:700 10.5px/1.6 var(--sans);letter-spacing:.04em;text-transform:uppercase;vertical-align:2px}
 .tool .done{color:var(--good);font-weight:600}
@@ -255,6 +256,7 @@ html.introing body{overflow:hidden}
  <a class="tool" id="atttool" href="attendance.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span><span><b>My attendance</b><span id="attsub">From the class tracker</span></span></a>
  <a class="tool locked" id="shoptool" aria-disabled="true" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b id="shopname">Coming soon</b><span id="shopsub">Stay tuned</span></span></a>
  <a class="tool" id="cdtool" href="classday.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span><span><b>Class day</b><span>Post today's summary, answer questions (only you see this)</span></span></a>
+ <a class="tool" id="modtool" href="moderate.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-shield-check"/></svg></span><span><b>Moderator</b><span id="modsub">Link requests, questions, reports, attendance update</span></span></a>
   <a class="cust" href="settings.html#home">Customize home</a>
  </nav>
  <div class="try" id="try" hidden></div>
@@ -397,10 +399,14 @@ function annClose(id){if(window.Notify)Notify.annDone(id);$('annc').hidden=true}
 // My attendance tile: for signed-in students (att_mine); not linked yet = a link to send a request. A missed day with
 // its chat still open comes first; the owner (class secretary) also gets the Class day tile.
 (async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c||!Auth.ses())return;Auth.cloud=c.cloud;
- const a=await Auth.rpc('att_mine',{},true);if(!a)return;if(a.owner)$('cdtool').hidden=false;
+ const a=await Auth.rpc('att_mine',{},true);if(!a)return;if(a.owner)$('cdtool').hidden=false;if(a.owner)modTile();
  if(!a.linked){$('attsub').textContent=a.request&&a.request.status==='pending'?'Request waiting for the class secretary':'Link your account to see your attendance';$('atttool').hidden=false;return}
  const m=(a.missed||[]).find(x=>x.open),them=m&&(m.chat||[]).length&&m.chat[m.chat.length-1].o;
  $('attsub').textContent=m?(them?'New reply about '+m.label:'You missed '+m.label+(m.notes?': see the class summary':'')):(a.pct?a.pct+' · ':'')+(a.present??0)+' present · '+(a.absent??0)+' absent'+(a.excused?' · '+a.excused+' excused':'');$('atttool').hidden=false}catch(e){}})();
+// Moderator tile (owner only): what is waiting on moderate.html (mod_counts, supabase_attsync.sql)
+async function modTile(){try{const m=await Auth.rpc('mod_counts',{},true),n=(m.links||0)+(m.questions||0)+(m.reports||0)+(m.cards||0);
+ const p=[[m.links,'link request'],[m.questions,'question'],[m.reports,'report'],[m.cards,'flashcard']].filter(x=>x[0]).map(x=>x[0]+' '+x[1]+(x[0]>1?'s':''));
+ $('modsub').textContent=n?p.join(' · ')+' waiting':'Nothing waiting · update attendance';$('modtool').classList.toggle('due',n>0);$('modtool').hidden=false}catch(e){}}
 // Upcoming tile: until launch everyone sees only the icon and "Coming soon" (a surprise); its testers get the real tile
 (async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c)return;Auth.cloud=Auth.cloud||c.cloud;
  const d=await Auth.rpc('shop_catalog',{},!!Auth.ses()),t=$('shoptool');if(!d)return;
