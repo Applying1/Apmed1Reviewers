@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='101',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='102',APP_DATE='Oct 30, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -633,7 +633,7 @@ function stemHTML(s){return esc(s).replace(/_{2,}/g,'<span class="blank" role="i
 // 3 days away or less, a box above the lessons points to them and to the mock quiz.
 const TEST_SECS=(CONFIG.testSecs||[]).filter(k=>SECTION_NAMES[k]);
 function testKind(){const t=nextTest(),nm=String(t&&t.name||'');return /long quiz/i.test(nm)?'long quiz':/quiz/i.test(nm)?'quiz':/eval/i.test(nm)?'evals':/exam/i.test(nm)?'exam':'test'}
-function testSoonHTML(){if(!TEST_SECS.length)return '';const t=nextTest();if(!t||t.at-Date.now()>3.5*DAY)return '';const k=testKind(),w=whenAt(t.at);
+function testSoonHTML(){if(!TEST_SECS.length)return '';const t=nextTest();if(!t||t.at-Date.now()>3.5*DAY)return '';const k=testKind();if(k!=='quiz'&&k!=='long quiz')return '';const w=whenAt(t.at);
  return '<div class="tsoon"><b>'+esc(k.charAt(0).toUpperCase()+k.slice(1))+' '+esc(w)+'</b><span>Practice these first: they are built like the '+esc(k)+'.</span>'+
   TEST_SECS.map(sec=>{const p=progress(sec);return '<button class="sec" onclick="selectSection(\''+sec+'\')"><span class="no">'+sec+'</span><span class="nm">'+esc(SECTION_NAMES[sec])+'</span><span class="ct">'+p.done+'/'+p.total+'</span></button>'}).join('')+
   (pageOn('exam')&&EX_PRESETS.length?'<button class="link" onclick="setPage(\'exam\');exPreset(0)">Take a mock '+esc(k)+' →</button>':'')+'</div>'}
@@ -1816,6 +1816,8 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'102',date:'Oct 30, 2026',title:'Quiz box only for quizzes',items:[
+  'The box that points to the quiz-style sections now shows only before quizzes, not before exams or evals.']},
  {v:'101',date:'Oct 29, 2026',title:'Clearer problem solving',items:[
   'Problem text is larger, and every part of a written problem shows the <b>whole worked solution</b>: variables, objective, constraints, intercepts, shading, how each corner is solved, and the value at every corner.',
   'Going back to an earlier written answer shows what you wrote, never multiple choice.',
