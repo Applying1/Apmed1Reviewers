@@ -239,7 +239,7 @@ html.introing body{overflow:hidden}
  <a class="tool" id="cwtool" href="crossword.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crossword"/></svg></span><span><b>Daily crossword</b><span id="cwsub">A short puzzle on your next eval</span></span></a>
  <a class="tool" id="wdtool" href="apmeddle.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-letters"/></svg></span><span><b>APMed'le</b><span id="wdsub">Guess the term of the day</span></span></a>
  <a class="tool" id="atttool" href="attendance.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span><span><b>My attendance</b><span id="attsub">From the class tracker</span></span></a>
- <a class="tool" id="shoptool" href="shop.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b>Class sticker shop</b><span id="shopsub">Stickers by a classmate, for the class fund</span></span></a>
+ <a class="tool locked" id="shoptool" aria-disabled="true" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b id="shopname">Coming soon</b><span id="shopsub">Stay tuned</span></span></a>
  <a class="tool" id="cdtool" href="classday.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span><span><b>Class day</b><span>Post today's summary, answer questions (only you see this)</span></span></a>
  </nav>
  <div class="try" id="try" hidden></div>
@@ -374,13 +374,13 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  if(!a.linked){$('attsub').textContent=a.request&&a.request.status==='pending'?'Request waiting for the class secretary':'Link your account to see your attendance';$('atttool').hidden=false;return}
  const m=(a.missed||[]).find(x=>x.open),them=m&&(m.chat||[]).length&&m.chat[m.chat.length-1].o;
  $('attsub').textContent=m?(them?'New reply about '+m.label:'You missed '+m.label+(m.notes?': see the class summary':'')):(a.pct?a.pct+' · ':'')+(a.present??0)+' present · '+(a.absent??0)+' absent'+(a.excused?' · '+a.excused+' excused':'');$('atttool').hidden=false}catch(e){}})();
-// Class sticker shop tile (supabase_shop.sql): before launch everyone sees a locked "Coming soon" tile; its managers (the seller
-// and the owner's accounts) get the real one to test
+// Upcoming tile: until launch everyone sees only the icon and "Coming soon" (a surprise); its testers get the real tile
 (async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c)return;Auth.cloud=Auth.cloud||c.cloud;
  const d=await Auth.rpc('shop_catalog',{},!!Auth.ses()),t=$('shoptool');if(!d)return;
- if(d.soon&&!d.manager){t.removeAttribute('href');t.classList.add('locked');t.setAttribute('aria-disabled','true');$('shopsub').textContent='Coming soon';t.hidden=false;return}
+ if(d.soon&&!d.manager){t.hidden=false;return}
  if(!d.settings.open&&!d.manager)return;
- $('shopsub').textContent=(d.soon?'Testing (not launched) · ':'')+(d.settings.open?(d.items.length+' stickers · orders open'+(d.settings.deadline?' until '+new Date(d.settings.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')):'Not open yet (you manage it)');t.hidden=false}catch(e){}})();
+ t.href='shop.html';t.classList.remove('locked');t.removeAttribute('aria-disabled');$('shopname').textContent=d.settings.title||'Shop';
+ $('shopsub').textContent=(d.soon?'Testing (not launched) · ':'')+(d.settings.open?(d.items.length+' items · orders open'+(d.settings.deadline?' until '+new Date(d.settings.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')):'Not open yet (you manage it)');t.hidden=false}catch(e){}})();
 // Daily crossword tile: today's courses (nearest test first), "New" until the puzzle page is opened once
 (async function(){try{
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
