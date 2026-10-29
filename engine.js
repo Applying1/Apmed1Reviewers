@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='96',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='97',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -670,7 +670,7 @@ function drawTabbar(){const tb=$('tabbar');if(!tb)return;const exam=state.exam&&
  const show=ps.length>=2&&!exam;document.body.classList.toggle('tabs',show);if(!show){setHTML(tb,'');return}
  const sv=(d)=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
  const nm=p=>p==='dashboard'?'Home':p==='study'?'Practice':p==='exam'?'Mock exam':PG[p][0];
- const dot=$('pages')&&$('pages').querySelector('.dndot,.ndot,[data-dn] .dot');
+ const dot=$('pages')&&$('pages').querySelector('.dndot,.ndot:not(.q),[data-dn] .dot');
  setHTML(tb,ps.map(p=>'<button class="'+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')">'+sv(PG[p][1])+nm(p)+'</button>').join('')+
   '<button onclick="toggleNav(true)" aria-label="More: topics, discussion, notifications">'+sv(MORE_IC)+'More'+(dot?'<span class="tbdot"></span>':'')+'</button>')}
 function drawPages(){setHTML($('pages'),HOME_LINK+Object.keys(VIEWS).filter(pageOn).map(p=>'<button class="page '+(p===page?'on':'')+'" aria-current="'+(p===page?'page':'false')+'" onclick="setPage(\''+p+'\')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+PG[p][1]+'</svg>'+PG[p][0]+'</button>').join('')+(NOTES_ONLY?'':'<button class="page" onclick="toggleNav(false);openLastLook()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Last look</button>')+discussLink()+notifyLink()+toolLinks());drawTabbar()}
@@ -713,22 +713,27 @@ const nPref=k=>window.Notify?Notify.prefs()[k]!==false:state.prefs[k]!==false;
 const dnOn=()=>discussOn()&&cloudOn();
 function dnS(){return state.dn||(state.dn={base:null,seen:0,read:{}})}
 const dnMine=p=>{const a=account();return !!(a&&((a.name&&p.author===a.name)||(a.dname&&p.author===a.dname)))};   // posts show the display name when one is set
-function dnUnread(thread){if(!dnOn()||!nPref('ddot'))return 0;const S=dnS();
- return DREC.filter(p=>(thread==null||p.thread===thread)&&p.id>Math.max(S.base||0,S.read[p.thread]||0)&&!dnMine(p)).length}
-const dnDot=n=>n?'<span class="ndot" aria-label="'+n+' unread">'+(n>9?'9+':n)+'</span>':'';
+// v97: the red dot and the pop-up are only for posts that reply to you, @mention you, or come from a moderator (p.ping,
+// computed by the server for the signed-in viewer); other new posts get a quiet gray dot.
+const dnNew=thread=>{const S=dnS();return DREC.filter(p=>(thread==null||p.thread===thread)&&p.id>Math.max(S.base||0,S.read[p.thread]||0)&&!dnMine(p))};
+function dnUnread(thread){if(!dnOn()||!nPref('ddot'))return 0;return dnNew(thread).filter(p=>p.ping).length}
+function dnQuiet(thread){if(!dnOn()||!nPref('ddot'))return 0;return dnNew(thread).filter(p=>!p.ping).length}
+const dnDot=(n,q)=>n?'<span class="ndot" aria-label="'+n+' for you">'+(n>9?'9+':n)+'</span>':q?'<span class="ndot q" aria-label="'+q+' new"></span>':'';
 function dnWhere(t){const q=t.slice(courseId().length+1);if(!q)return 'the '+CONFIG.title+' discussion';const c=BANK.find(x=>String(x.id).toLowerCase()===q);return c?'a question on “'+c.term+'”':'a question'}
 function dnPoll(){if(!dnOn()||document.visibilityState==='hidden')return;const S=dnS();
- rpc('discussion_recent',{p_course:courseId(),p_after:S.base==null?null:S.base}).then(rows=>{rows=Array.isArray(rows)?rows:[];
+ const args={p_course:courseId(),p_after:S.base==null?null:S.base},signed=typeof Auth!=='undefined'&&Auth.ses();if(signed)Auth.cloud=Auth.cloud||CLOUD;
+ (signed?Auth.rpc('discussion_recent',args,true).catch(()=>rpc('discussion_recent',args)):rpc('discussion_recent',args)).then(rows=>{rows=Array.isArray(rows)?rows:[];
   if(S.base==null){S.base=rows.reduce((m,r)=>Math.max(m,r.id),0);S.seen=S.base;DREC=[];save();dnPaint();return}
-  DREC=rows;const fresh=rows.filter(r=>r.id>S.seen&&!dnMine(r)&&r.id>(S.read[r.thread]||0));S.seen=Math.max(S.seen,...rows.map(r=>r.id));save();
+  DREC=rows;const fresh=rows.filter(r=>r.ping&&r.id>S.seen&&!dnMine(r)&&r.id>(S.read[r.thread]||0));S.seen=Math.max(S.seen,...rows.map(r=>r.id));save();
   if(fresh.length&&nPref('dpop')&&!(state.exam&&!state.exam.done&&page==='exam'))dnPop(fresh);dnPaint()}).catch(()=>{})}
-function dnPaint(){if(typeof drawPages==='function')drawPages();document.querySelectorAll('[data-dn]').forEach(e=>{e.innerHTML=dnDot(dnUnread(e.dataset.dn))})}
+function dnPaint(){if(typeof drawPages==='function')drawPages();document.querySelectorAll('[data-dn]').forEach(e=>{e.innerHTML=dnDot(dnUnread(e.dataset.dn),dnQuiet(e.dataset.dn))})}
 function dnRead(thread){const S=dnS();const ids=DREC.filter(p=>thread==null||p.thread===thread).map(p=>p.id);const top=Math.max(S.seen||0,...ids);
  if(thread==null){DREC.forEach(p=>S.read[p.thread]=top)}else S.read[thread]=top;save();dnPaint()}
 function dnPop(fresh){let b=$('dnpop');if(!b){b=document.createElement('div');b.id='dnpop';b.className='dnpop';b.setAttribute('role','status');b.setAttribute('aria-live','polite');document.body.appendChild(b)}
  const p=fresh[0],n=fresh.length;b.dataset.t=p.thread;
- b.innerHTML='<div class="dnh">'+CHAT_SM+'<b>'+(n>1?n+' new comments':'New comment')+'</b><span>'+esc(CONFIG.title)+'</span><button class="dpx" onclick="dnClose()" aria-label="Dismiss">×</button></div>'+
-  '<p class="dnw"><b>'+esc(p.author||'Someone')+'</b> on '+esc(dnWhere(p.thread))+'</p><p class="dnb">'+esc(String(p.body||'').slice(0,140))+(String(p.body||'').length>140?'…':'')+'</p>'+
+ const why={reply:'replied to you',mention:'mentioned you',mod:'posted (moderator)'}[p.ping]||'commented';
+ b.innerHTML='<div class="dnh">'+CHAT_SM+'<b>'+(n>1?n+' new for you':p.ping==='mod'?'Moderator post':p.ping==='mention'?'You were mentioned':'New reply to you')+'</b><span>'+esc(CONFIG.title)+'</span><button class="dpx" onclick="dnClose()" aria-label="Dismiss">×</button></div>'+
+  '<p class="dnw"><b>'+esc(p.author||'Someone')+'</b> '+why+' on '+esc(dnWhere(p.thread))+'</p><p class="dnb">'+esc(String(p.body||'').slice(0,140))+(String(p.body||'').length>140?'…':'')+'</p>'+
   '<div class="dna"><button class="btn sm primary" onclick="dnOpen()">Open</button>'+(n>1?'<button class="btn sm" onclick="dnRead();dnClose()">Mark all read</button>':'')+'</div>';
  b.hidden=false;void b.offsetWidth;b.classList.add('in');clearTimeout(dnPop.t);dnPop.t=setTimeout(dnClose,15000)}
 function dnClose(){const b=$('dnpop');if(b){b.classList.remove('in');setTimeout(()=>{b.hidden=true},250)}}
@@ -755,7 +760,7 @@ function upPop(items){let b=$('uppop');if(!b){b=document.createElement('div');b.
  b.hidden=false;void b.offsetWidth;b.classList.add('in');clearTimeout(upPop.t);upPop.t=setTimeout(upClose,20000)}
 function upClose(){const b=$('uppop');if(b){b.classList.remove('in');setTimeout(()=>{b.hidden=true},250)}}
 function discussLink(){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.discussion||!CONFIG.home||!id||!/^https?:$/.test(location.protocol))return '';
- return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'" onclick="return openDiscuss()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion'+dnDot(dnUnread())+'</a>'}
+ return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'" onclick="return openDiscuss()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion'+dnDot(dnUnread(),dnQuiet())+'</a>'}
 function draw(){
  PV++;
  if(!pageOn(page))page='dashboard';
@@ -1726,8 +1731,8 @@ function drawPrefs(){
   (NOTES_DATA?row('Notes','High-yield recognition notes to read before a mock exam, with a self-test mode.',sw(state.prefs.notes,"setPref('notes',"+!state.prefs.notes+")",'Show the Notes page')):'')+
   (MSETS.length||MIXUP.length?row('Drills',[MSETS.length?MSETS.length+' matching-type sets':'',MIXUP.length?MIXUP.length+' Don\'t mix up look-alike drills':''].filter(Boolean).join(' and ')+'.',sw(state.prefs.matching,"setPref('matching',"+!state.prefs.matching+")",'Show the Drills page')):'')+
   (window.Notify&&CONFIG.home?row('Notifications','Choose what you hear about: new courses and content, transes, timetable changes, comment pop-ups, red dots, and push notifications on this device.','<a class="btn" href="notifications.html#settings">Open settings</a>'):'')+
-  (dnOn()&&!window.Notify?row('New comment pop-ups','A small pop-up when a classmate comments in '+esc(CONFIG.title)+', the course you have open (never during a mock exam, never for your own comments).',sw(state.prefs.dpop!==false,"setPref('dpop',"+(state.prefs.dpop===false)+")",'New comment pop-ups'))+
-   row('Unread dots','A red dot on Discussion and on “Discuss this question” when there are comments you have not opened yet.'+(dnUnread()?' <button class="link" onclick="dnRead();draw()">Mark all as read</button>':''),sw(state.prefs.ddot!==false,"setPref('ddot',"+(state.prefs.ddot===false)+");dnPaint()",'Unread dots')):'')+
+  (dnOn()&&!window.Notify?row('Reply and mention pop-ups','A small pop-up in '+esc(CONFIG.title)+' when someone replies to you, @mentions you, or a moderator posts (never during a mock exam).',sw(state.prefs.dpop!==false,"setPref('dpop',"+(state.prefs.dpop===false)+")",'New comment pop-ups'))+
+   row('Unread dots','A red dot on Discussion for replies to you, @mentions and moderator posts; a small gray dot for other new comments.'+(dnUnread()?' <button class="link" onclick="dnRead();draw()">Mark all as read</button>':''),sw(state.prefs.ddot!==false,"setPref('ddot',"+(state.prefs.ddot===false)+");dnPaint()",'Unread dots')):'')+
   (BANK.some(c=>c.dh)?row('Harder choices in practice','The Mock exam always uses look-alike choices, like the real test (e.g. every option about boy/girl and mother/father). Turn this on to get them in practice too.',sw(!!state.prefs.hardPractice,"setPref('hardPractice',"+!state.prefs.hardPractice+")",'Harder choices in practice')):'')+
   (CHART_DATA.length?row('Charts','A Charts button on Practice, Notes and the Mock exam that opens the reference '+(CHART_DATA.length>1?'charts':'chart')+' ('+CHART_DATA.map(c=>c.title.toLowerCase()).join(', ')+').',sw(state.prefs.charts,"setPref('charts',"+!state.prefs.charts+")",'Show the Charts button')):'')+
   row('Mock exam','A timed run with no hints or answers until the end, then your score by '+unitW+' and a review of your mistakes.',sw(state.prefs.exam,"setPref('exam',"+!state.prefs.exam+")",'Show the Mock exam page'))+'</section>';
@@ -1754,6 +1759,10 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'97',date:'Oct 29, 2026',title:'Replies and @mentions',items:[
+  'Tap <b>Reply</b> under a post in the discussion: your post shows a quote of the one you answered.',
+  'Type <b>@</b> to tag a classmate. They get a notification, and the post is highlighted for them.',
+  'The red dot and the pop-up are now only for <b>replies to you</b>, <b>@mentions</b> and <b>moderator posts</b>. Other new comments show a small gray dot, so you aren\u2019t pinged for every message.']},
  {v:'96',date:'Oct 29, 2026',title:'Missed a class?',items:[
   'Open <b>My attendance</b> after a day you missed (Absent or Excused): the class secretary\'s summary of that day is right there, with deadlines, exam hints and what the teacher stressed.',
   'You can ask the class secretary up to 5 questions about that day, on the day and the 2 days after. Only the two of you see the chat, and it\'s deleted after that.',

@@ -62,6 +62,14 @@ textarea:focus{border-color:var(--accent)}
 .err{color:var(--bad)}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;border-radius:12px;border:1px solid var(--line2);background:#fff;color:#1f1f1f;font-weight:600;cursor:pointer}
 .gbtn:hover{background:#f4f4f4}
+.acts{display:flex;gap:14px;margin-top:4px}.acts button{border:0;background:none;padding:0;color:var(--faint);font:600 12.5px var(--sans);cursor:pointer}.acts button:hover{color:var(--accent)}
+.rq{display:block;width:100%;text-align:left;margin:4px 0 2px;padding:5px 10px;border:0;border-left:3px solid var(--line2);border-radius:6px;background:var(--raised);color:var(--mute);font-size:13px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rq b{color:var(--text);font-weight:600}
+.ment{color:var(--accent);font-weight:600;background:var(--accent-soft);border-radius:5px;padding:0 3px}
+.post.pinged{background:color-mix(in srgb,var(--accent) 7%,transparent);margin:0 -10px;padding:12px 10px;border-radius:12px}
+.post.flash{animation:flash 1.6s ease}@keyframes flash{0%,40%{background:color-mix(in srgb,var(--warn) 22%,transparent)}100%{background:transparent}}
+.rchip{display:flex;align-items:center;gap:8px;margin:0 0 8px;padding:6px 10px;border-radius:10px;background:var(--raised);font-size:13px;color:var(--mute)}.rchip b{color:var(--text)}.rchip span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rchip button{border:0;background:none;color:var(--faint);font-size:18px;line-height:1;cursor:pointer;padding:0 2px}
+.rchip[hidden],.mlist[hidden]{display:none}
+.mlist{margin:0 0 8px;max-height:220px;overflow:auto;border:1px solid var(--line2);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}.mlist button{display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px;border:0;background:none;text-align:left;font-size:14px;cursor:pointer}.mlist button:hover,.mlist button.on{background:var(--raised)}.mlist p{margin:0;padding:10px 12px;color:var(--faint);font-size:13px}
 </style></head><body>
 <main>
  <a class="back" id="back" href="./">← Back to the course</a>
@@ -93,9 +101,14 @@ function ago(t){const s=(Date.now()-new Date(t))/1000;if(s<60)return 'just now';
  const d=new Date(t);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+(s>31536000?', '+d.getFullYear():'')}
 function linkify(s){return esc(s).replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]/g,u=>'<a href="'+u+'" target="_blank" rel="noopener nofollow">'+u+'</a>')}
 // the avatar and name open the poster's card (display name, Google account name for signed-in viewers, Moderator)
-function postHTML(p){return '<div class="post" id="p'+p.id+'"><button class="avb" onclick="who('+p.id+')" aria-label="About '+esc(p.author)+'">'+Profile.html({av:p.av,url:p.avatar,name:p.author},36)+'</button>'+
+function body(p){let h=linkify(p.body);const ns=(p.mention_names||[]).filter(Boolean).sort((a,b)=>b.length-a.length);ns.forEach((n,i)=>{h=h.split('@'+esc(n)).join('\u0000'+i+'\u0001')});
+ return h.replace(/\u0000(\d+)\u0001/g,(m,i)=>'<span class="ment">@'+esc(ns[+i])+'</span>')}
+function quote(p){if(!p.reply_to)return '';return '<button class="rq" onclick="jump('+p.reply_to+')">↩ <b>'+esc(p.reply_author||'A post')+'</b> '+esc(p.reply_body||'')+'</button>'}
+function postHTML(p){return '<div class="post'+(p.pinged?' pinged':'')+'" id="p'+p.id+'"><button class="avb" onclick="who('+p.id+')" aria-label="About '+esc(p.author)+'">'+Profile.html({av:p.av,url:p.avatar,name:p.author},36)+'</button>'+
  '<div class="pb"><div class="ph"><span class="who"><button class="nmb" onclick="who('+p.id+')">'+esc(p.author)+'</button>'+(p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time></span>'+
- (p.can_delete?'<button class="del" onclick="del('+p.id+')">Delete</button>':'')+'</div><div class="tx">'+linkify(p.body)+'</div></div></div>'}
+ (p.can_delete?'<button class="del" onclick="del('+p.id+')">Delete</button>':'')+'</div>'+quote(p)+'<div class="tx">'+body(p)+'</div>'+
+ (Auth.ses()&&!p.mine?'<div class="acts"><button onclick="replyTo('+p.id+')">Reply</button></div>':'')+'</div></div>'}
+function jump(id){const e=$('p'+id);if(!e){tell('That post is further up. Tap Show earlier posts.');return}e.scrollIntoView({block:'center',behavior:'smooth'});e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash')}
 function drawList(stick){const L=$('list'),atEnd=innerHeight+scrollY>=document.body.scrollHeight-80;
  L.innerHTML=posts.length?posts.map(postHTML).join(''):'<p class="empty">'+(qid?'No posts about this question yet. Ask or explain it here!':'No posts yet. Start the conversation!')+'</p>';
  if(stick||atEnd)scrollTo(0,document.body.scrollHeight)}
@@ -117,7 +130,8 @@ async function loadMore(){if(oldest==null)return;$('more').disabled=true;
  $('more').disabled=false}
 async function send(){const t=$('msg'),b=t.value.trim(),btn=$('sendbtn');if(!b)return;
  btn.disabled=true;$('note').textContent='';$('note').className='';
- try{await Auth.rpc('discussion_post',{p_thread:thread,p_body:b},true);t.value='';grow();pingOthers();await load();drawList(true)}
+ const ments=MENT.filter(m=>b.includes('@'+m.name)).map(m=>m.id);
+ try{await Auth.rpc('discussion_post',Object.assign({p_thread:thread,p_body:b},REPLY?{p_reply_to:REPLY.id}:{},ments.length?{p_mentions:ments}:{}),true);t.value='';MENT=[];REPLY=null;drawChip();grow();pingOthers();await load();drawList(true)}
  catch(e){$('note').textContent=/JWT|sign in|401/i.test(e.message)?'Your sign-in expired. Sign in again to post.':e.message;$('note').className='err';
   if(!(await Auth.token())){drawDock()}}
  btn.disabled=false;t.focus()}
@@ -127,11 +141,28 @@ async function del(id){if(!await ask('This cannot be undone.',{title:'Delete thi
  try{await Auth.rpc('discussion_delete',{p_id:id},true);posts=posts.filter(p=>p.id!==id);drawList(false);pingOthers()}catch(e){tell('Could not delete it. Try again.')}}
 // Live: others viewing this thread reload at once; the course pages hear about it too (pop-ups, red dots)
 function pingOthers(){if(!window.Live)return;Live.ping('discuss:'+thread);Live.ping('course:'+course,{thread})}
+// ---- replies and @mentions: REPLY = the post being answered; MENT = people picked from the @ list (sent only if still in the text)
+let REPLY=null,MENT=[],PEOPLE=null,MQ=null,MSEL=0;
+function replyTo(id){const p=posts.find(x=>x.id===id);if(!p)return;REPLY={id,author:p.author,body:p.body};drawChip();const t=$('msg');if(t)t.focus()}
+function drawChip(){const c=$('rchip');if(!c)return;c.hidden=!REPLY;if(REPLY)c.innerHTML='<span>Replying to <b>'+esc(REPLY.author)+'</b> · '+esc(String(REPLY.body).slice(0,80))+'</span><button onclick="REPLY=null;drawChip()" aria-label="Cancel the reply">×</button>'}
+async function people(){if(PEOPLE)return PEOPLE;try{PEOPLE=await Auth.rpc('discussion_people',{},true)||[]}catch(e){PEOPLE=[]}return PEOPLE}
+function mentionAt(){const t=$('msg');if(!t)return null;const pre=t.value.slice(0,t.selectionStart),m=pre.match(/(^|\s)@([^\s@]{0,24}(?: [^\s@]{0,24})?)$/);return m?{q:m[2],at:pre.length-m[2].length-1}:null}
+async function mentionList(){const box=$('mlist'),m=mentionAt();if(!box)return;if(!m){box.hidden=true;MQ=null;return}
+ const all=await people(),q=m.q.toLowerCase(),hit=all.filter(x=>!q||x.name.toLowerCase().split(/\s+/).some(w=>w.startsWith(q))||x.name.toLowerCase().startsWith(q)).slice(0,8);
+ MQ={at:m.at,len:m.q.length+1,hit};MSEL=Math.min(MSEL,Math.max(0,hit.length-1));box.hidden=false;
+ box.innerHTML=hit.length?hit.map((x,i)=>'<button type="button" class="'+(i===MSEL?'on':'')+'" onmousedown="event.preventDefault()" onclick="pickMention('+i+')">'+Profile.html({av:x.av,url:x.avatar,name:x.name},26)+esc(x.name)+'</button>').join(''):'<p>No classmate by that name.</p>'}
+function pickMention(i){const t=$('msg'),x=MQ&&MQ.hit[i];if(!t||!x)return;const v=t.value,ins='@'+x.name+' ';
+ t.value=v.slice(0,MQ.at)+ins+v.slice(MQ.at+MQ.len);const pos=MQ.at+ins.length;t.setSelectionRange(pos,pos);if(!MENT.some(m=>m.id===x.id))MENT.push({id:x.id,name:x.name});
+ $('mlist').hidden=true;MQ=null;grow();t.focus()}
+function mentionKey(e){if(!MQ||$('mlist').hidden||!MQ.hit.length)return false;
+ if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();MSEL=(MSEL+(e.key==='ArrowDown'?1:-1)+MQ.hit.length)%MQ.hit.length;mentionList();return true}
+ if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();pickMention(MSEL);return true}if(e.key==='Escape'){$('mlist').hidden=true;MQ=null;return true}return false}
 function grow(){const t=$('msg');if(!t)return;t.style.height='auto';t.style.height=Math.min(160,t.scrollHeight)+'px';$('count').textContent=t.value.length>850?(1000-t.value.length)+' left':''}
 function drawDock(msg){const a=Auth.acc(),d=$('dock');if(!msg&&Auth.ended())msg='Your sign-in ended on this device. Sign in again to post.';
  if(!Auth.ses()||!a){d.innerHTML='<button class="gbtn" onclick="this.disabled=true;startSignIn()">'+G+(a?'Sign in again to post':'Sign in with Google to post')+'</button>'+(msg?'<div class="hint"><span class="err">'+esc(msg)+'</span></div>':'');return}
- d.innerHTML='<div class="compose"><textarea id="msg" rows="1" maxlength="1000" placeholder="Write a message…" oninput="grow()" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
-  '<button class="btn primary" id="sendbtn" onclick="send()">Post</button></div><div class="hint"><span id="note">Posting as '+esc(Profile.me(a).name)+' · <button class="me" onclick="editMe()">Change</button></span><span id="count"></span></div>'}
+ d.innerHTML='<div class="rchip" id="rchip" hidden></div><div class="mlist" id="mlist" hidden role="listbox" aria-label="Classmates"></div>'+
+  '<div class="compose"><textarea id="msg" rows="1" maxlength="1000" placeholder="Write a message… (@ to tag someone)" oninput="grow();mentionList()" onclick="mentionList()" onkeydown="if(mentionKey(event))return;if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
+  '<button class="btn primary" id="sendbtn" onclick="send()">Post</button></div><div class="hint"><span id="note">Posting as '+esc(Profile.me(a).name)+' · <button class="me" onclick="editMe()">Change</button></span><span id="count"></span></div>';drawChip()}
 (async function(){
  if(!/^[a-z0-9_-]{1,40}$/.test(course)||(qid&&!/^[a-z0-9_.-]{1,60}$/.test(qid))){$('list').innerHTML='<p class="empty">This discussion could not be found.</p>';return}
  $('back').href='reviewer.html?course='+encodeURIComponent(course);
@@ -153,6 +184,7 @@ function drawDock(msg){const a=Auth.acc(),d=$('dock');if(!msg&&Auth.ended())msg=
  if(Auth.ses()){await Auth.token();if(Auth.ses())await Profile.refresh()}
  drawDock(msg);
  await load(true);
+ const hp=location.hash.match(/^#p(\d+)$/);if(hp)setTimeout(()=>jump(+hp[1]),300);
  // instant via Realtime; the slow check is only a backup for sleeping phones and dropped connections
  if(window.Live)Live.listen(cl,'discuss:'+thread,()=>load(),()=>load());
  poll=setInterval(()=>{if(document.visibilityState==='visible')load()},60000);

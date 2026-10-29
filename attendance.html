@@ -117,7 +117,7 @@ async function sendQ(day,b){const t=$('t'+day),e=$('e'+day),v=t.value.trim();if(
  try{await Auth.rpc('att_chat_send',{p_day:day,p_body:v},true);A=await Auth.rpc('att_mine',{},true);drawMe();const c=$('m'+day);if(c)c.scrollIntoView({block:'nearest'})}
  catch(err){b.disabled=false;const m=String(err.message||'');e.textContent=/closed/.test(m)?'This chat has closed.':/no messages/.test(m)?'You\'ve used all your messages for this day.':/slow/.test(m)?'Too many messages at once. Wait a minute.':/not allowed/.test(m)?'You can only ask about a day you missed.':/1 to 500/.test(m)?'Keep it under 500 characters.':'Couldn\'t send. Check your connection.'}}
 function alertsRow(){if(!Push.supported())return '';
- return '<div class="alerts"><div><b>Attendance alerts</b><span>A notification on this device when the summary of a day you missed is posted, or when the class secretary replies.</span><span class="msg bad" id="amsg"></span></div>'+
+ return '<div class="alerts"><div><b>Attendance alerts</b><span>A notification on this device when the summary of a day you missed is posted, or when the class secretary replies. Also turns on reply and @mention alerts from the discussion (Notifications → Personal alerts).</span><span class="msg bad" id="amsg"></span></div>'+
   '<button class="sw" role="switch" aria-checked="'+Push.attOn()+'" aria-label="Attendance alerts" onclick="toggleAlerts(this)"></button></div>'}
 async function toggleAlerts(b){const on=b.getAttribute('aria-checked')!=='true';b.disabled=true;
  try{await Push.attSet(on);b.setAttribute('aria-checked',String(on))}

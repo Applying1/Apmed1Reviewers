@@ -60,6 +60,7 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
  <section id="settings" hidden></section>
 </main>
 <script src="dialog.js"></script>
+<script src="auth.js"></script>
 <script src="notify-core.js"></script>
 <script src="schedule-core.js"></script>
 <script src="reminders-core.js"></script>
@@ -89,10 +90,18 @@ function drawSettings(){const p=Notify.prefs();
   '<div class="sec" id="remsec"></div>'+
   '<div class="sec"><h2>Inside a course</h2>'+
   row('Update pop-ups','A one-time pop-up when something new arrives for the course you have open.',sw(p.pop!==false,"flip('pop')",'Update pop-ups'))+
-  row('New comment pop-ups','A pop-up when a classmate comments in the course you have open (never during a mock exam, never your own).',sw(p.dpop!==false,"flip('dpop')",'New comment pop-ups'))+
-  row('Unread dots','Red dots on Discussion and Notifications for things you haven\'t opened yet.',sw(p.ddot!==false,"flip('ddot')",'Unread dots'))+'</div>'+
-  '<div class="sec" id="pushsec"><h2>On this device</h2><p class="d">Push notifications reach you even when the site is closed.</p><div id="pushbody"><p class="pstat">Checking…</p></div></div>';
- drawDaily();drawRem();Push.draw($('pushbody'))}
+  row('Reply and mention pop-ups','A pop-up in the course you have open when someone replies to you, @mentions you, or a moderator posts (never during a mock exam).',sw(p.dpop!==false,"flip('dpop')",'New comment pop-ups'))+
+  row('Unread dots','Red dots for replies to you, @mentions, moderator posts and new updates; a small gray dot for other new comments.',sw(p.ddot!==false,"flip('ddot')",'Unread dots'))+'</div>'+
+  '<div class="sec" id="pushsec"><h2>On this device</h2><p class="d">Push notifications reach you even when the site is closed.</p><div id="pushbody"><p class="pstat">Checking…</p></div><div id="persbody"></div></div>';
+ drawDaily();drawRem();Push.draw($('pushbody'));drawPersonal()}
+// Personal alerts (supabase_attendance2.sql + supabase_discussion_replies.sql): this device gets pushes meant for your account only:
+// replies and @mentions in the discussion, and attendance (the summary of a day you missed, replies from the class secretary).
+async function drawPersonal(){const el=$('persbody');if(!el)return;if(!Push.supported())return el.innerHTML='';
+ if(!Auth.cloud||!Auth.ses()){el.innerHTML=row('Personal alerts','Replies and @mentions in the discussion, and attendance alerts. Sign in on the home page to turn these on.','');return}
+ el.innerHTML=row('Personal alerts','Replies to you and @mentions in the discussion, and attendance alerts (a summary of a day you missed, replies from the class secretary). Only for your account.',sw(Push.attOn(),'personal(this)','Personal alerts'))+'<p class="pstat" style="color:var(--bad)" id="perr"></p>'}
+async function personal(b){const on=b.getAttribute('aria-checked')!=='true';b.disabled=true;$('perr').textContent='';
+ try{await Push.attSet(on)}catch(e){$('perr').textContent=e.message==='blocked'?'Notifications are blocked for this site. Allow them in your browser\'s site settings first.':e.message==='dismissed'?'':'Couldn\'t change it. Try again in a moment.'}
+ Push.draw($('pushbody'));drawPersonal()}
 // ---------- daily review reminder ----------
 // The server sends one push a day at the hour picked here; this device's own saved progress turns it into the message.
 let FEATS;   // undefined = not checked yet, null = push not reachable, [] = older server copy without 'daily'
@@ -142,7 +151,7 @@ function backLink(){const el=document.querySelector('.back');let r=null;
  if(!label)return;el.href=r;el.textContent='← Back to '+label}
 (async()=>{let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
  try{await Sched.load()}catch(e){}
- list.forEach(c=>COURSES[c.id]=c);backLink();Push.init((list.find(x=>x.cloud&&x.cloud.url)||{}).cloud);Push.heal().then(()=>{if(!$('settings').hidden)drawSettings()});
+ list.forEach(c=>COURSES[c.id]=c);backLink();const cl=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;Push.init(cl);if(cl)Auth.cloud=cl;Push.attRefresh();Push.heal().then(()=>{if(!$('settings').hidden)drawSettings()});
  READ0=Notify.readUpTo();tab(location.hash==='#settings'?'settings':'feed')})();
 </script>
 <script src="update.js" defer></script>
