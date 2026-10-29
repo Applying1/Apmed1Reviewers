@@ -70,12 +70,22 @@ textarea:focus{border-color:var(--accent)}
 .rchip{display:flex;align-items:center;gap:8px;margin:0 0 8px;padding:6px 10px;border-radius:10px;background:var(--raised);font-size:13px;color:var(--mute)}.rchip b{color:var(--text)}.rchip span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rchip button{border:0;background:none;color:var(--faint);font-size:18px;line-height:1;cursor:pointer;padding:0 2px}
 .rchip[hidden],.mlist[hidden]{display:none}
 .mlist{margin:0 0 8px;max-height:220px;overflow:auto;border:1px solid var(--line2);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}.mlist button{display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px;border:0;background:none;text-align:left;font-size:14px;cursor:pointer}.mlist button:hover,.mlist button.on{background:var(--raised)}.mlist p{margin:0;padding:10px 12px;color:var(--faint);font-size:13px}
+/* pinned posts and announcements (Oct 29) */
+.pins{margin:0 0 14px;background:var(--surface);border:1px solid var(--accent-line);border-radius:16px;padding:4px 16px}
+.pins[hidden]{display:none}
+.pins h2{margin:10px 0 0;font:700 12px var(--sans);letter-spacing:.4px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:6px}
+.post.ann .tx{font-size:15.5px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:1px 7px;border-radius:99px;background:var(--accent);color:var(--accent-ink)}
+.annrow{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:13px;color:var(--mute)}
+.annrow input{width:16px;height:16px;accent-color:var(--accent)}
+.annrow b{color:var(--text)}
 </style></head><body>
 <main>
  <a class="back" id="back" href="./">← Back to the course</a>
  <h1 id="ttl">Discussion</h1>
  <p class="lede" id="lede">Ask questions, share tips, help each other out. Posts show your display name and picture, and classmates can tap them to see your Google account name, so keep it kind.</p>
  <div id="qbox"></div>
+ <section class="pins" id="pins" hidden aria-label="Pinned posts"></section>
  <button class="btn more" id="more" hidden onclick="loadMore()">Show earlier posts</button>
  <div class="list" id="list"><p class="empty">Loading…</p></div>
 </main>
@@ -88,7 +98,8 @@ textarea:focus{border-color:var(--accent)}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const Q=new URLSearchParams(location.search),course=(Q.get('c')||'').toLowerCase(),qid=(Q.get('q')||'').toLowerCase();
-const thread=course+(qid?':'+qid:''),EMBED=Q.has('embed');
+const thread=course+(qid?':'+qid:''),EMBED=Q.has('embed'),GENERAL=course==='general'&&!qid;
+let PINS=[],CANPIN=false;   // the thread's pinned posts; CANPIN: the class secretary (only they pin and announce)
 if(EMBED)document.documentElement.classList.add('embed');
 // Google can't show its sign-in inside a frame: in the panel, sign in in the whole window and come back here, then to the course.
 function startSignIn(){if(!EMBED){Auth.signIn();return}
@@ -104,20 +115,23 @@ function linkify(s){return esc(s).replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]
 function body(p){let h=linkify(p.body);const ns=(p.mention_names||[]).filter(Boolean).sort((a,b)=>b.length-a.length);ns.forEach((n,i)=>{h=h.split('@'+esc(n)).join('\u0000'+i+'\u0001')});
  return h.replace(/\u0000(\d+)\u0001/g,(m,i)=>'<span class="ment">@'+esc(ns[+i])+'</span>')}
 function quote(p){if(!p.reply_to)return '';return '<button class="rq" onclick="jump('+p.reply_to+')">↩ <b>'+esc(p.reply_author||'A post')+'</b> '+esc(p.reply_body||'')+'</button>'}
-function postHTML(p){return '<div class="post'+(p.pinged?' pinged':'')+'" id="p'+p.id+'"><button class="avb" onclick="who('+p.id+')" aria-label="About '+esc(p.author)+'">'+Profile.html({av:p.av,url:p.avatar,name:p.author},36)+'</button>'+
- '<div class="pb"><div class="ph"><span class="who"><button class="nmb" onclick="who('+p.id+')">'+esc(p.author)+'</button>'+(p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time></span>'+
+function postHTML(p){return '<div class="post'+(p.pinged?' pinged':'')+(p.announce?' ann':'')+'" id="p'+p.id+'"><button class="avb" onclick="who('+p.id+')" aria-label="About '+esc(p.author)+'">'+Profile.html({av:p.av,url:p.avatar,name:p.author},36)+'</button>'+
+ '<div class="pb"><div class="ph"><span class="who"><button class="nmb" onclick="who('+p.id+')">'+esc(p.author)+'</button>'+(p.announce?'<span class="tag">Announcement</span>':p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time></span>'+
  (p.can_delete?'<button class="del" onclick="del('+p.id+')">Delete</button>':'')+'</div>'+quote(p)+'<div class="tx">'+body(p)+'</div>'+
- (Auth.ses()&&!p.mine?'<div class="acts"><button onclick="replyTo('+p.id+')">Reply</button></div>':'')+'</div></div>'}
+ (Auth.ses()&&(!p.mine||CANPIN)?'<div class="acts">'+(p.mine?'':'<button onclick="replyTo('+p.id+')">Reply</button>')+(CANPIN?'<button onclick="pin('+p.id+','+!p.pinned+')">'+(p.pinned?'Unpin':'Pin')+'</button>':'')+'</div>':'')+'</div></div>'}
+// the class secretary pins or unpins any post (pinned posts sit in the box at the top, for everyone)
+async function pin(id,on){try{await Auth.rpc('discussion_pin',{p_id:id,p_on:on},true);pingOthers();await load();if(on)scrollTo({top:0,behavior:'smooth'})}catch(e){tell(e.message||'Could not change the pin.')}}
 function jump(id){const e=$('p'+id);if(!e){tell('That post is further up. Tap Show earlier posts.');return}e.scrollIntoView({block:'center',behavior:'smooth'});e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash')}
-function drawList(stick){const L=$('list'),atEnd=innerHeight+scrollY>=document.body.scrollHeight-80;
- L.innerHTML=posts.length?posts.map(postHTML).join(''):'<p class="empty">'+(qid?'No posts about this question yet. Ask or explain it here!':'No posts yet. Start the conversation!')+'</p>';
+function drawList(stick){const L=$('list'),atEnd=innerHeight+scrollY>=document.body.scrollHeight-80,pinned=new Set(PINS.map(p=>p.id)),shown=posts.filter(p=>!pinned.has(p.id));
+ $('pins').hidden=!PINS.length;$('pins').innerHTML=PINS.length?'<h2>📌 Pinned</h2>'+PINS.map(postHTML).join(''):'';
+ L.innerHTML=shown.length?shown.map(postHTML).join(''):PINS.length?'<p class="empty">No other posts yet.</p>':'<p class="empty">'+(qid?'No posts about this question yet. Ask or explain it here!':'No posts yet. Start the conversation!')+'</p>';
  if(stick||atEnd)scrollTo(0,document.body.scrollHeight)}
 async function load(first){if(busy)return;busy=true;
- try{const rows=await Auth.rpc('discussion_list',{p_thread:thread,p_before:null},true);
-  const fresh=rows.slice().reverse();
+ try{const [rows,pins]=await Promise.all([Auth.rpc('discussion_list',{p_thread:thread,p_before:null},true),Auth.rpc('discussion_list',{p_thread:thread,p_before:null,p_pins:true},true).catch(()=>[])]);
+  const fresh=rows.slice().reverse(),psig=JSON.stringify((pins||[]).filter(p=>p.pinned).map(p=>[p.id,p.author,p.av])),pinsChanged=psig!==JSON.stringify(PINS.map(p=>[p.id,p.author,p.av]));PINS=(pins||[]).filter(p=>p.pinned);
   // keep earlier pages already loaded
   const ids=new Set(fresh.map(p=>p.id)),older=posts.filter(p=>!ids.has(p.id)&&p.id<(fresh[0]?fresh[0].id:Infinity));
-  const sig=l=>JSON.stringify(l.map(p=>[p.id,p.can_delete,p.author,p.av,p.avatar])),changed=sig(older.concat(fresh))!==sig(posts);
+  const sig=l=>JSON.stringify(l.map(p=>[p.id,p.can_delete,p.author,p.av,p.avatar,p.pinned])),changed=sig(older.concat(fresh))!==sig(posts)||pinsChanged;
   posts=older.concat(fresh);if(first){oldest=fresh.length?fresh[0].id:null;$('more').hidden=rows.length<100}
   if(first||changed)drawList(first);
   else document.querySelectorAll('.post time').forEach(t=>t.textContent=ago(t.getAttribute('datetime')));
@@ -131,6 +145,9 @@ async function loadMore(){if(oldest==null)return;$('more').disabled=true;
 async function send(){const t=$('msg'),b=t.value.trim(),btn=$('sendbtn');if(!b)return;
  btn.disabled=true;$('note').textContent='';$('note').className='';
  const ments=MENT.filter(m=>b.includes('@'+m.name)).map(m=>m.id);
+ const ann=GENERAL&&CANPIN&&$('annchk')&&$('annchk').checked;
+ if(ann){btn.disabled=true;const go=await ask('It is pinned at the top of General, shown as a banner on everyone\u2019s home page, and sent as a push notification to every phone that has them on.',{title:'Post this announcement?',ok:'Announce'});btn.disabled=false;if(!go)return;
+  btn.disabled=true;try{await Auth.rpc('discussion_announce',{p_body:b},true);t.value='';$('annchk').checked=false;annHint();grow();pingOthers();await load();scrollTo({top:0,behavior:'smooth'})}catch(e){tell(e.message||'Could not post the announcement.')}btn.disabled=false;return}
  try{await Auth.rpc('discussion_post',Object.assign({p_thread:thread,p_body:b},REPLY?{p_reply_to:REPLY.id}:{},ments.length?{p_mentions:ments}:{}),true);t.value='';MENT=[];REPLY=null;drawChip();grow();pingOthers();await load();drawList(true)}
  catch(e){$('note').textContent=/JWT|sign in|401/i.test(e.message)?'Your sign-in expired. Sign in again to post.':e.message;$('note').className='err';
   if(!(await Auth.token())){drawDock()}}
@@ -158,14 +175,17 @@ function mentionKey(e){if(!MQ||$('mlist').hidden||!MQ.hit.length)return false;
  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();MSEL=(MSEL+(e.key==='ArrowDown'?1:-1)+MQ.hit.length)%MQ.hit.length;mentionList();return true}
  if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();pickMention(MSEL);return true}if(e.key==='Escape'){$('mlist').hidden=true;MQ=null;return true}return false}
 function grow(){const t=$('msg');if(!t)return;t.style.height='auto';t.style.height=Math.min(160,t.scrollHeight)+'px';$('count').textContent=t.value.length>850?(1000-t.value.length)+' left':''}
+function annHint(){const c=$('annchk'),b=$('sendbtn');if(b)b.textContent=c&&c.checked?'Announce':'Post'}
 function drawDock(msg){const a=Auth.acc(),d=$('dock');if(!msg&&Auth.ended())msg='Your sign-in ended on this device. Sign in again to post.';
  if(!Auth.ses()||!a){d.innerHTML='<button class="gbtn" onclick="this.disabled=true;startSignIn()">'+G+(a?'Sign in again to post':'Sign in with Google to post')+'</button>'+(msg?'<div class="hint"><span class="err">'+esc(msg)+'</span></div>':'');return}
- d.innerHTML='<div class="rchip" id="rchip" hidden></div><div class="mlist" id="mlist" hidden role="listbox" aria-label="Classmates"></div>'+
+ d.innerHTML=(GENERAL&&CANPIN?'<label class="annrow"><input type="checkbox" id="annchk" onchange="annHint()"><span id="annhint"><b>Announcement</b>: pinned, on everyone\u2019s home page and pushed to their phones</span></label>':'')+'<div class="rchip" id="rchip" hidden></div><div class="mlist" id="mlist" hidden role="listbox" aria-label="Classmates"></div>'+
   '<div class="compose"><textarea id="msg" rows="1" maxlength="1000" placeholder="Write a message… (@ to tag someone)" oninput="grow();mentionList()" onclick="mentionList()" onkeydown="if(mentionKey(event))return;if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
   '<button class="btn primary" id="sendbtn" onclick="send()">Post</button></div><div class="hint"><span id="note">Posting as '+esc(Profile.me(a).name)+' · <button class="me" onclick="editMe()">Change</button></span><span id="count"></span></div>';drawChip()}
 (async function(){
  if(!/^[a-z0-9_-]{1,40}$/.test(course)||(qid&&!/^[a-z0-9_.-]{1,60}$/.test(qid))){$('list').innerHTML='<p class="empty">This discussion could not be found.</p>';return}
- $('back').href='reviewer.html?course='+encodeURIComponent(course);
+ $('back').href=GENERAL?'./':'reviewer.html?course='+encodeURIComponent(course);
+ if(GENERAL){$('back').textContent='← All courses';$('ttl').textContent='General discussion';document.title='General discussion · APMed \'33';
+  $('lede').textContent='For the whole class: anything that isn\u2019t about one course. Posts show your display name and picture, and classmates can tap them to see your Google account name, so keep it kind.'}
  if(qid){$('back').textContent='← Back to practice';$('back').onclick=e=>{if(history.length>1&&document.referrer.includes('reviewer.html')){e.preventDefault();history.back()}}}
  let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
  const c=list.find(x=>x.id===course),cl=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;
@@ -181,7 +201,7 @@ function drawDock(msg){const a=Auth.acc(),d=$('dock');if(!msg&&Auth.ended())msg=
  let msg='',done=null;try{done=await Auth.finish()}catch(e){msg=e.message}
  // signed in from the panel: go back to the course, which reopens the panel
  const ret=Q.get('return');if(done&&ret){try{const u=new URL(ret);if(u.origin===location.origin){location.replace(u.href);return}}catch(e){}}
- if(Auth.ses()){await Auth.token();if(Auth.ses())await Profile.refresh()}
+ if(Auth.ses()){await Auth.token();if(Auth.ses()){await Profile.refresh();try{CANPIN=(await Auth.rpc('discussion_can_pin',{},true))===true}catch(e){}}}
  drawDock(msg);
  await load(true);
  const hp=location.hash.match(/^#p(\d+)$/);if(hp)setTimeout(()=>jump(+hp[1]),300);

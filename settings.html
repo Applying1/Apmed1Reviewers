@@ -1,0 +1,96 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings · APMed '33</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+/* Settings for the whole site (Oct 29). Each course's study settings stay in its own Personalize page. */
+:root{--serif:"Source Serif 4",Georgia,serif}
+:root[data-palette="apmed"]{--accent-ink:#fff}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer}
+main{max-width:680px;margin:0 auto;padding:22px 16px 80px}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--mute);font-size:14px;font-weight:600;text-decoration:none}.back:hover{color:var(--text)}
+h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;color:var(--text);white-space:nowrap}
+.btn:hover{background:var(--raised)}.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 18px;margin:0 0 14px}
+.sec h2{font:600 17px/1.3 var(--serif);margin:14px 0 2px}.sec .d{margin:0 0 6px;color:var(--mute);font-size:13.5px}
+.row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.sec h2+.d+.row,.sec h2+.row{border-top:0}
+.row .t{flex:1 1 220px;min-width:0}.row .t b{display:block;font-size:14.5px;font-weight:600}.row .t span{display:block;color:var(--mute);font-size:13px}
+.sw{flex:none;position:relative;width:42px;height:24px;border-radius:12px;border:0;background:var(--line2);transition:background .15s;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px #0003}
+.sw[aria-checked="true"]{background:var(--accent)}.sw[aria-checked="true"]::after{transform:translateX(18px)}
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:3px;border:1px solid var(--line);border-radius:11px;background:var(--raised)}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:13.5px;color:var(--mute)}
+.seg button[aria-checked="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 2px #0001}
+.pals{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;width:100%;padding:0 0 12px}
+.pals button{display:flex;align-items:center;gap:8px;padding:6px 10px 6px 7px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font:600 12.5px var(--sans);color:var(--mute);text-align:left;white-space:nowrap;overflow:hidden}
+.pals button:hover:not(.on){color:var(--text);border-color:var(--line2)}.pals button.on{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 2px var(--accent-soft)}
+.pals i{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 1px #0003;flex:none}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 2px}.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.crs{list-style:none;margin:0 0 10px;padding:0}.crs li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px dashed var(--line);font-size:14px}.crs li:first-child{border-top:0}
+.crs a{color:var(--text);text-decoration:none;font-weight:600}.crs a:hover{color:var(--accent)}.crs small{color:var(--mute);font-size:12.5px;white-space:nowrap}
+.note{color:var(--faint);font-size:12.5px;margin:0 0 12px}
+</style></head><body>
+<main>
+ <a class="back" href="./">← All courses</a>
+ <h1>Settings</h1>
+ <section class="sec" id="acc"></section>
+ <section class="sec"><h2>Appearance</h2><p class="d">Saved on this device only, so your phone and laptop can look different.</p>
+  <div class="row"><div class="t"><b>Theme</b><span>Follow the device, or always light or dark.</span></div><span class="seg" id="theme" role="radiogroup" aria-label="Theme"></span></div>
+  <div class="row" style="padding-bottom:6px"><div class="t"><b>Colors</b></div></div><div class="pals" id="pals" role="radiogroup" aria-label="Colors"></div>
+ </section>
+ <section class="sec" id="goal"></section>
+ <section class="sec"><h2>Notifications</h2>
+  <div class="row"><div class="t"><b>What you hear about</b><span>Announcements, new courses and content, timetable changes, exam reminders, replies and push notifications on this device.</span></div><a class="btn" href="notifications.html#settings">Open</a></div>
+ </section>
+ <section class="sec" id="snd"></section>
+ <section class="sec" id="store"></section>
+ <p class="note">Each course's study settings (recall goal, flashcards, question order and more) are in that course's <b>Personalize</b> page. <a href="privacy.html">Privacy &amp; terms</a></p>
+</main>
+<script src="daily.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const get=k=>{try{return localStorage.getItem(k)}catch(e){return null}},set=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+const seg=(name,opts,cur,fn)=>opts.map(([v,t])=>'<button role="radio" aria-checked="'+(v===cur)+'" onclick="'+fn+'('+JSON.stringify(v).replace(/"/g,'&quot;')+')">'+t+'</button>').join('');
+const sw=(on,fn,label)=>'<button class="sw" role="switch" aria-checked="'+on+'" aria-label="'+esc(label)+'" onclick="'+fn+'"></button>';
+// account: signing in and the sync code live on the home page
+function drawAcc(){let a=null,code=null;try{a=JSON.parse(get('reviewer_account'));code=JSON.parse(get('reviewer_sync'))}catch(e){}
+ $('acc').innerHTML='<h2>Account</h2>'+(a&&code?'<div class="row"><div class="t"><b>'+esc(a.name||a.email||'Signed in')+'</b><span>'+esc(a.email||'')+(a.email?' · ':'')+'Your progress in every course follows this Google account.</span></div><a class="btn" href="./?sync=1">Manage</a></div>'
+  :code?'<div class="row"><div class="t"><b>Syncing with a code</b><span>Your progress is linked to another device with a private code.</span></div><a class="btn" href="./?sync=1">Manage</a></div>'
+  :'<div class="row"><div class="t"><b>Not signed in</b><span>Sign in to keep your progress on every device and to post in the discussions.</span></div><a class="btn primary" href="./?signin=1">Sign in with Google</a></div>')}
+function curTheme(){return get('reviewer_theme')||'auto'}
+function setTheme(t){const d=document.documentElement;if(t==='auto'){delete d.dataset.theme;set('reviewer_theme',null)}else{d.dataset.theme=t;set('reviewer_theme',t)}drawLook()}
+const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']],['ocean','Ocean',['#eef5fa','#0a6c9e','#5cc0ef']],['lavender','Lavender',['#f5f2fb','#6b46c1','#b9a2f5']],['coffee','Coffee',['#f6f0e8','#8a4b22','#e0a574']]];
+function setPal(p){const d=document.documentElement;if(p==='classic'){delete d.dataset.palette;set('reviewer_palette',null)}else{d.dataset.palette=p;set('reviewer_palette',p)}drawLook()}
+function drawLook(){$('theme').innerHTML=seg('theme',[['auto','Device'],['light','Light'],['dark','Dark']],curTheme(),'setTheme');const cur=get('reviewer_palette')||'classic';
+ $('pals').innerHTML=PALS.map(([v,t,c])=>'<button role="radio" aria-checked="'+(v===cur)+'" class="'+(v===cur?'on':'')+'" onclick="setPal(\''+v+'\')"><i style="background:linear-gradient(135deg,'+c[0]+' 0 50%,'+c[1]+' 50% 75%,'+c[2]+' 75%)"></i>'+esc(t)+'</button>').join('')}
+// daily goal + streak (site-wide, synced with the account)
+function drawGoal(){if(!window.Daily){$('goal').hidden=true;return}const o=Daily.data(),hid=Daily.hidden();
+ $('goal').innerHTML='<h2>Daily goal</h2><p class="d">Answers and cards from every course count. Synced with your account.</p>'+
+  '<div class="row"><div class="t"><b>Questions a day</b><span>Meet it every day to build your streak.</span></div><span class="seg" role="radiogroup" aria-label="Daily goal">'+seg('goal',[10,20,30,50,100].map(n=>[n,String(n)]),o.goal,'setGoal')+'</span></div>'+
+  '<div class="row"><div class="t"><b>Show the streak and goal</b><span>On the home page, in courses and as a pop-up when you reach it.</span></div>'+sw(!hid,'Daily.setHidden('+!hid+');drawGoal()','Show the streak and goal')+'</div>'}
+function setGoal(n){Daily.setGoal(n);drawGoal()}
+// sounds: the live quiz's music and effects (same switch as in the quiz)
+function drawSnd(){const on=get('reviewer_quiz_mute')!=='1';
+ $('snd').innerHTML='<h2>Sounds</h2><div class="row"><div class="t"><b>Live quiz music and sound effects</b><span>On this device. A phone on silent stays quiet.</span></div>'+sw(on,"set('reviewer_quiz_mute',"+(on?"'1'":'null')+");drawSnd()",'Live quiz sounds')+'</div>'}
+// storage used on this device, per course
+async function drawStore(){let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
+ const size=pre=>{let n=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(pre==null||k===pre||k.startsWith(pre+'_'))n+=2*(k.length+(localStorage.getItem(k)||'').length)}}catch(e){}return n};
+ const mb=n=>(n/1048576).toFixed(n<1048576?2:1)+' MB',all=size(null),cap=5*1048576;
+ const rows=list.filter(c=>!c.soon&&c.storageKey).map(c=>[c,size(c.storageKey)]).sort((a,b)=>b[1]-a[1]);
+ $('store').innerHTML='<h2>Storage on this device</h2><p class="d">'+mb(all)+' of about 5 MB used. Signed in, everything is also saved online.</p><div class="bar"><i style="width:'+Math.min(100,Math.max(1,100*all/cap))+'%"></i></div>'+
+  '<ul class="crs">'+rows.map(([c,n])=>'<li><a href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+esc(c.title)+'</a><small>'+(n?mb(n):'not started')+'</small></li>').join('')+'</ul>'}
+drawAcc();drawLook();drawGoal();drawSnd();drawStore();
+addEventListener('storage',()=>{drawAcc();drawLook();drawGoal();drawSnd()});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+<script src="update.js" defer></script>
+</body></html>

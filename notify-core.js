@@ -1,7 +1,8 @@
 /* Notifications shared by the home page, notifications.html and the reviewer engine.
    Feed: updates.json [{id, date, type, course?, title, text, link?}], newest id highest.
    Settings (localStorage 'reviewer_notify'): {types:{course,content,transes,schedule,feature}, pop, dpop, ddot}; missing = on.
-   Read state ('reviewer_notify_read'): {last} = highest feed id the person has caught up to. */
+   Read state ('reviewer_notify_read'): {last} = highest feed id the person has caught up to; ann = the newest announcement
+   (General discussion post id) closed on the home page. */
 (function () {
   const PK = 'reviewer_notify', RK = 'reviewer_notify_read';
   const TYPES = {
@@ -10,6 +11,7 @@
     transes: ['Transes and slides', 'New transes or slides to read'],
     schedule: ['Timetable changes', 'Cancelled, moved or added classes and exams'],
     feature: ['Site updates', 'New features and fixes'],
+    announce: ['Announcements', 'Messages from the class secretary, also pinned on the home page'],
   };
   const get = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d } catch (e) { return d } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch (e) { } };
@@ -26,6 +28,8 @@
     shown(f) { return (f || feed || []).filter(u => N.on(u.type)) },
     readUpTo() { return get(RK, {}).last || 0 },
     unread(f) { const r = N.readUpTo(); return N.shown(f).filter(u => u.id > r).length },
+    annSeen() { return get(RK, {}).ann || 0 },
+    annDone(id) { put(RK, Object.assign(get(RK, {}), { ann: Math.max(+id || 0, N.annSeen()) })) },
     markRead(f) { const top = Math.max(0, ...(f || feed || []).map(u => u.id)); put(RK, Object.assign(get(RK, {}), { last: top })); },
     // in-course pop-ups: 'reviewer_notify_read'.popped = highest id already shown as a pop-up
     popped() { return get(RK, {}).popped },

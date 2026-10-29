@@ -122,6 +122,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .tmore svg{transition:transform .2s}.tests.open .tmore svg{transform:rotate(180deg)}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:600;font-size:14px}
 /* Today: daily goal, streak, the week, and reviews due (daily.js) */
+.annc{display:flex;gap:12px;align-items:flex-start;margin:0 0 18px;padding:14px 14px 14px 16px;border-radius:16px;background:var(--accent-soft);border:1px solid var(--accent-line);box-shadow:var(--shadow)}.annc[hidden]{display:none}.annc .tic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink)}.annc .ab{flex:1;min-width:0}.annc .ak{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--accent)}.annc .ak span{font-weight:500;text-transform:none;letter-spacing:0;color:var(--mute)}.annc p{margin:3px 0 6px;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}.annc a{font-size:13.5px;font-weight:600;color:var(--accent);text-decoration:none}.annc .mx{flex:none;border:0;background:none;color:var(--mute);cursor:pointer;padding:4px;border-radius:8px}.annc .mx:hover{color:var(--text);background:var(--surface)}
 .today{margin:0 0 18px;padding:14px 16px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
 .today[hidden]{display:none}
 .today h2{display:flex;align-items:center;gap:8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);margin:0 0 12px}
@@ -226,15 +227,17 @@ html.introing body{overflow:hidden}
 <main>
  <div class="top">
   <div class="brand"><img src="icons/icon-192.png" alt="" width="40" height="40"><div><b>APMed '33 Reviewers</b><span>Practice, notes, and review</span></div></div>
-  <div class="acts"><a class="btn bell" id="bell" href="notifications.html" aria-label="Notifications" title="Notifications"><svg class="i" width="17" height="17" aria-hidden="true"><use href="icons.svg#i-bell"/></svg><span class="bdot" id="bdot" hidden></span></a><a class="btn" href="schedule.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>Timetable</a><button class="btn" id="syncbtn" onclick="openSync()" hidden>Sign in</button><button class="btn" id="theme" onclick="toggleTheme()">Theme</button></div>
+  <div class="acts"><a class="btn bell" id="bell" href="notifications.html" aria-label="Notifications" title="Notifications"><svg class="i" width="17" height="17" aria-hidden="true"><use href="icons.svg#i-bell"/></svg><span class="bdot" id="bdot" hidden></span></a><a class="btn" href="schedule.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>Timetable</a><button class="btn" id="syncbtn" onclick="openSync()" hidden>Sign in</button><button class="btn" id="theme" onclick="toggleTheme()">Theme</button><a class="btn" href="settings.html" aria-label="Settings" title="Settings"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-settings"/></svg></a></div>
  </div>
  <h1 id="hi">Pick a course</h1>
+ <section class="annc" id="annc" hidden aria-label="Announcement"></section>
  <div class="bkcard" id="bkcard" hidden></div>
  <a class="upnext" id="upnext" href="schedule.html" hidden></a>
  <a class="btn prevq" id="prevq" hidden></a>
  <section class="tests" id="tests" hidden aria-label="Tests coming up"></section>
  <section class="today" id="today" hidden aria-label="Today"></section>
  <nav class="tools" aria-label="Tools">
+  <a class="tool" id="gdtool" href="discuss.html?c=general" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg></span><span><b>General discussion</b><span id="gdsub">Talk with the whole class</span></span></a>
   <a class="tool" href="quiz.html"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Live quiz</b><span>Quiz your study group, live: everyone joins on their phone with a code</span></span></a>
  <a class="tool" id="cwtool" href="crossword.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crossword"/></svg></span><span><b>Daily crossword</b><span id="cwsub">A short puzzle on your next eval</span></span></a>
  <a class="tool" id="wdtool" href="apmeddle.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-letters"/></svg></span><span><b>APMed'le</b><span id="wdsub">Guess the term of the day</span></span></a>
@@ -247,7 +250,7 @@ html.introing body{overflow:hidden}
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <p class="note inst" id="install" hidden>Use this like an app, even offline. <button class="linkbtn" id="installbtn">Install app</button></p>
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
- <section class="colors" aria-label="Colors"><b>Colors</b><span id="pals"></span><small>Saved on this device only.</small></section>
+ <p class="note setl"><a href="settings.html">Settings</a>: colors, daily goal, notifications, sounds and storage.</p>
  <div class="class"><p class="legal"><a href="privacy.html">Privacy &amp; terms</a></p></div>
 </main>
 <div class="modal" id="sync" hidden onclick="if(event.target===this)closeSync()"><div class="box" role="dialog" aria-modal="true" aria-labelledby="synch">
@@ -345,7 +348,7 @@ function tryBox(step){const b=document.getElementById('try');try{if(step==='ask'
 tryBox('ask');
 // Colors picker on the home page: same setting as a course's Personalize → Appearance → Colors (per device).
 const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']],['ocean','Ocean',['#eef5fa','#0a6c9e','#5cc0ef']],['lavender','Lavender',['#f5f2fb','#6b46c1','#b9a2f5']],['coffee','Coffee',['#f6f0e8','#8a4b22','#e0a574']]];
-function drawPals(){let cur='classic';try{cur=localStorage.getItem('reviewer_palette')||'classic'}catch(e){}
+function drawPals(){if(!document.getElementById('pals'))return;let cur='classic';try{cur=localStorage.getItem('reviewer_palette')||'classic'}catch(e){}
  document.getElementById('pals').innerHTML='<span class="pals" role="radiogroup" aria-label="Colors">'+PALS.map(([v,t,c])=>'<button role="radio" aria-checked="'+(v===cur)+'" class="'+(v===cur?'on':'')+'" onclick="setPal('+(v==='classic'?'null':'\''+v+'\'')+');drawPals()"><i style="background:linear-gradient(135deg,'+c[0]+' 0 50%,'+c[1]+' 50% 75%,'+c[2]+' 75%)"></i>'+t+'</button>').join('')+'</span>'}
 drawPals();
 // Shown once to everyone (new and returning): Sign in & sync, and Discuss, which are easy to miss.
@@ -367,6 +370,17 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  // a warm-up on the topic, from the day before until class starts (only where the timetable links the topic to the course's questions)
  const crs=c.subj&&c.subj.course,hrs=(c.from-new Date())/36e5;
  if(crs&&c.preview&&!c.now&&hrs>0&&hrs<=40){const p=document.getElementById('prevq');p.href='reviewer.html?course='+encodeURIComponent(crs)+'#preview='+encodeURIComponent(c.preview);p.textContent='Warm up: 5 questions on '+(c.topic||'the next topic').replace(/ \(.*$/,'').slice(0,60);p.hidden=false}}catch(err){}})();
+// Announcements (the class secretary's, pinned in the General discussion): the newest one not closed yet, as a banner.
+// General discussion tile: the latest post. Both read without signing in.
+(async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c)return;Auth.cloud=Auth.cloud||c.cloud;
+ $('gdtool').hidden=false;
+ const [an,rec]=await Promise.all([Auth.rpc('discussion_announcements',{},!!Auth.ses()).catch(()=>[]),Auth.rpc('discussion_recent',{p_course:'general'},!!Auth.ses()).catch(()=>[])]);
+ const last=(rec||[])[0];if(last)$('gdsub').textContent=last.author.split(' ')[0]+': '+last.body.replace(/\s+/g,' ');
+ const a=(an||[]).find(x=>x.id>(window.Notify?Notify.annSeen():0));if(!a)return;const b=$('annc');
+ b.innerHTML='<span class="tic"><svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-megaphone"/></svg></span><div class="ab"><div class="ak">Announcement <span>· '+esc(a.author||'')+' · '+new Date(a.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'})+'</span></div><p>'+esc(a.body)+'</p><a href="discuss.html?c=general#p'+a.id+'">Open in General discussion →</a></div>'+
+  '<button class="mx" onclick="annClose('+a.id+')" aria-label="Close the announcement" title="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>';
+ b.hidden=false}catch(err){}})();
+function annClose(id){if(window.Notify)Notify.annDone(id);$('annc').hidden=true}
 // My attendance tile: for signed-in students (att_mine); not linked yet = a link to send a request. A missed day with
 // its chat still open comes first; the owner (class secretary) also gets the Class day tile.
 (async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c||!Auth.ses())return;Auth.cloud=c.cloud;
