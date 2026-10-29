@@ -37,6 +37,10 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
 .crs{list-style:none;margin:0 0 10px;padding:0}.crs li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px dashed var(--line);font-size:14px}.crs li:first-child{border-top:0}
 .crs a{color:var(--text);text-decoration:none;font-weight:600}.crs a:hover{color:var(--accent)}.crs small{color:var(--mute);font-size:12.5px;white-space:nowrap}
 .note{color:var(--faint);font-size:12.5px;margin:0 0 12px}
+.tiles{list-style:none;margin:0 0 10px;padding:0}.tiles li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px dashed var(--line)}.tiles li:first-child{border-top:0}
+.tiles .nm{flex:1;min-width:0;font-size:14px;font-weight:600}.tiles .nm small{display:block;font-weight:400;color:var(--mute);font-size:12.5px}.tiles li.off .nm{color:var(--faint)}
+.mv{flex:none;width:30px;height:30px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);color:var(--mute);display:grid;place-items:center;padding:0}.mv:disabled{opacity:.35;cursor:default}.mv:hover:not(:disabled){color:var(--text)}
+.sub{font-size:13px;font-weight:700;color:var(--mute);margin:12px 0 2px;text-transform:uppercase;letter-spacing:.4px}
 </style></head><body>
 <main>
  <a class="back" href="./">← All courses</a>
@@ -46,6 +50,7 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
   <div class="row"><div class="t"><b>Theme</b><span>Follow the device, or always light or dark.</span></div><span class="seg" id="theme" role="radiogroup" aria-label="Theme"></span></div>
   <div class="row" style="padding-bottom:6px"><div class="t"><b>Colors</b></div></div><div class="pals" id="pals" role="radiogroup" aria-label="Colors"></div>
  </section>
+ <section class="sec" id="home"></section>
  <section class="sec" id="goal"></section>
  <section class="sec"><h2>Notifications</h2>
   <div class="row"><div class="t"><b>What you hear about</b><span>Announcements, new courses and content, timetable changes, exam reminders, replies and push notifications on this device.</span></div><a class="btn" href="notifications.html#settings">Open</a></div>
@@ -72,6 +77,25 @@ const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMe
 function setPal(p){const d=document.documentElement;if(p==='classic'){delete d.dataset.palette;set('reviewer_palette',null)}else{d.dataset.palette=p;set('reviewer_palette',p)}drawLook()}
 function drawLook(){$('theme').innerHTML=seg('theme',[['auto','Device'],['light','Light'],['dark','Dark']],curTheme(),'setTheme');const cur=get('reviewer_palette')||'classic';
  $('pals').innerHTML=PALS.map(([v,t,c])=>'<button role="radio" aria-checked="'+(v===cur)+'" class="'+(v===cur?'on':'')+'" onclick="setPal(\''+v+'\')"><i style="background:linear-gradient(135deg,'+c[0]+' 0 50%,'+c[1]+' 50% 75%,'+c[2]+' 75%)"></i>'+esc(t)+'</button>').join('')}
+// Home page (this device, like the colors): which tiles show, in what order, compact tiles, courses first.
+// Saved as 'reviewer_home' = {layout: auto|compact|full, first, hide: [element ids], order: [tool ids]}; the home page reads it in its <head>.
+const SECTIONS=[['upnext','Next class','The class coming up, with a warm-up quiz before it'],['tests','Tests coming up','Countdowns to exams, evals and quizzes'],['today','Today','Your daily goal, streak and reviews due']];
+const TOOLS=[['gdtool','General discussion'],['qztool','Live quiz'],['cwtool','Daily crossword'],['wdtool','APMed\u2019le'],['atttool','My attendance'],['shoptool','Class shop'],['cdtool','Class day','Only the class secretary sees it']];
+function homeGet(){let h={};try{h=JSON.parse(get('reviewer_home'))||{}}catch(e){}h.hide=Array.isArray(h.hide)?h.hide:[];const ids=TOOLS.map(t=>t[0]);h.order=(Array.isArray(h.order)?h.order:[]).filter(x=>ids.includes(x));ids.forEach(x=>{if(!h.order.includes(x))h.order.push(x)});return h}
+function homePut(h){set('reviewer_home',JSON.stringify(h));drawHome()}
+function homeSet(k,v){const h=homeGet();h[k]=v;homePut(h)}
+function homeToggle(id){const h=homeGet();h.hide=h.hide.includes(id)?h.hide.filter(x=>x!==id):h.hide.concat(id);homePut(h)}
+function homeMove(id,d){const h=homeGet(),i=h.order.indexOf(id),j=i+d;if(i<0||j<0||j>=h.order.length)return;h.order.splice(i,1);h.order.splice(j,0,id);homePut(h)}
+function drawHome(){const h=homeGet(),up='<svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>',dn='<svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+ const row=(id,name,note,move,i)=>{const on=!h.hide.includes(id);return '<li class="'+(on?'':'off')+'"><span class="nm">'+esc(name)+(note?'<small>'+esc(note)+'</small>':'')+'</span>'+
+  (move?'<button class="mv" onclick="homeMove(\''+id+'\',-1)" aria-label="Move '+esc(name)+' up"'+(i===0?' disabled':'')+'>'+up+'</button><button class="mv" onclick="homeMove(\''+id+'\',1)" aria-label="Move '+esc(name)+' down"'+(i===TOOLS.length-1?' disabled':'')+'>'+dn+'</button>':'')+
+  sw(on,"homeToggle('"+id+"')",'Show '+name)+'</li>'};
+ $('home').innerHTML='<h2>Home page</h2><p class="d">Choose what the home page shows on this device. Hidden tiles are still there in Settings, ready to turn back on.</p>'+
+  '<div class="row"><div class="t"><b>Tile size</b><span>Compact: two small tiles a row, one line each. Auto is compact on phones.</span></div><span class="seg" role="radiogroup" aria-label="Tile size">'+seg('layout',[['auto','Auto'],['compact','Compact'],['full','Full']],h.layout||'auto',"homeSet.bind(null,'layout')")+'</span></div>'+
+  '<div class="row"><div class="t"><b>Courses first</b><span>Put your courses above the tiles, so lessons are one tap away.</span></div>'+sw(!!h.first,"homeSet('first',"+!h.first+")",'Courses first')+'</div>'+
+  '<p class="sub">Cards at the top</p><ul class="tiles">'+SECTIONS.map(([id,n,d])=>row(id,n,d,false)).join('')+'</ul>'+
+  '<p class="sub">Tiles</p><ul class="tiles">'+h.order.map((id,i)=>{const t=TOOLS.find(x=>x[0]===id);return row(id,t[1],t[2],true,i)}).join('')+'</ul>'+
+  '<p class="note">Tiles only show when they have something for you (for example My attendance once your account is linked).</p>'}
 // daily goal + streak (site-wide, synced with the account)
 function drawGoal(){if(!window.Daily){$('goal').hidden=true;return}const o=Daily.data(),hid=Daily.hidden();
  $('goal').innerHTML='<h2>Daily goal</h2><p class="d">Answers and cards from every course count. Synced with your account.</p>'+
@@ -88,8 +112,9 @@ async function drawStore(){let list=[];try{list=await (await fetch('courses.json
  const rows=list.filter(c=>!c.soon&&c.storageKey).map(c=>[c,size(c.storageKey)]).sort((a,b)=>b[1]-a[1]);
  $('store').innerHTML='<h2>Storage on this device</h2><p class="d">'+mb(all)+' of about 5 MB used. Signed in, everything is also saved online.</p><div class="bar"><i style="width:'+Math.min(100,Math.max(1,100*all/cap))+'%"></i></div>'+
   '<ul class="crs">'+rows.map(([c,n])=>'<li><a href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+esc(c.title)+'</a><small>'+(n?mb(n):'not started')+'</small></li>').join('')+'</ul>'}
-drawAcc();drawLook();drawGoal();drawSnd();drawStore();
-addEventListener('storage',()=>{drawAcc();drawLook();drawGoal();drawSnd()});
+drawAcc();drawLook();drawHome();drawGoal();drawSnd();drawStore();
+if(location.hash==='#home')setTimeout(()=>$('home').scrollIntoView({block:'start'}),50);
+addEventListener('storage',()=>{drawAcc();drawLook();drawHome();drawGoal();drawSnd()});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 <script src="update.js" defer></script>
