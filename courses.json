@@ -16,6 +16,7 @@
    "courses/iml/topic-2-card.webp",
    "courses/iml/topic-3-card.webp",
    "courses/iml/topic-4-card.webp",
+   "courses/iml.cards.json",
    "img/icons/iml.svg"
   ],
   "exam": {
@@ -52,6 +53,7 @@
    "courses/psych/chapter-10-card.webp",
    "courses/psych/chapter-11-card.webp",
    "courses/psych/chapter-12-card.webp",
+   "courses/psych.cards.json",
    "img/icons/psych.svg"
   ],
   "exam": {
@@ -119,6 +121,7 @@
    "courses/purcom/topic-2-card.webp",
    "courses/purcom/topic-3-card.webp",
    "courses/purcom/topic-4-card.webp",
+   "courses/purcom.cards.json",
    "img/icons/purcom.svg"
   ],
   "exam": {
@@ -173,6 +176,7 @@
    "courses/chem/topic-9-card.webp",
    "courses/chem/topic-10-card.webp",
    "courses/chem/topic-11-card.webp",
+   "courses/chem.cards.json",
    "img/icons/chem.svg"
   ],
   "exam": {
@@ -245,6 +249,7 @@
    "courses/pharma/topic-4-card.webp",
    "courses/pharma/topic-5-card.webp",
    "courses/pharma/topic-6-card.webp",
+   "courses/pharma.cards.json",
    "img/icons/pharma.svg"
   ],
   "exam": {
@@ -341,6 +346,7 @@
    "courses/nstp/topic-1-card.webp",
    "courses/nstp/topic-2-card.webp",
    "courses/nstp/topic-3-card.webp",
+   "courses/nstp.cards.json",
    "img/icons/nstp.svg"
   ],
   "exam": {
@@ -375,6 +381,7 @@
    "courses/botany/topic-3-card.webp",
    "courses/botany/topic-4-card.webp",
    "courses/botany/topic-5-card.webp",
+   "courses/botany.cards.json",
    "img/icons/botany.svg"
   ],
   "exam": {
@@ -419,6 +426,7 @@
   "extras": [],
   "assets": [
    "courses/mmw/topic-8-card.webp",
+   "courses/mmw.cards.json",
    "img/icons/mmw.svg"
   ],
   "exam": {

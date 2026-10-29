@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='97',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='98',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -108,6 +108,14 @@ const isCh=s=>String(s).startsWith('CH:');          // "CH:3" = the entire chapt
 const isX=s=>s==='ALL'||s==='MISSED'||s==='STAR'||s==='DUE'||s==='CLASS'||s==='CRAM'; // modes that mix every chapter
 const secCh=s=>isCh(s)?s.slice(3):chOf(s);
 const KEY=CONFIG.storageKey;
+// v98 flashcards: each card's memory, apart from state.concepts, in "<storageKey>_cards" = {v:1, c:{card id: [stability, difficulty,
+// due, last, reps, lapses, state, step]} (times in minutes), day:[study day, new, reviews, extra new]}. cards.js schedules; sync carries it as "fc".
+const FC_KEY=KEY+'_cards';
+let FC=(()=>{try{const o=JSON.parse(localStorage.getItem(FC_KEY));if(o&&o.v===1&&o.c&&typeof o.c==='object')return o}catch(e){}return {v:1,c:{},day:['',0,0,0]}})();
+// Storage missing or full: the cards keep working in memory, and the same warning as for answers comes up.
+function fcSave(){const put=()=>{try{localStorage.setItem(FC_KEY,JSON.stringify(FC));return true}catch(e){return false}};let ok=put();if(!ok){freeSpace();ok=put()}
+ if(ok===STORE_FULL){STORE_FULL=!ok;storeWarn()}
+ if(syncCode&&!syncHold&&cloudOn()){clearTimeout(syncT);syncT=setTimeout(syncNow,15000)}return ok}
 // Cloud (optional): CONFIG.cloud = {url, key} turns on class stats and device sync (see "cloud" further down).
 const CLOUD=CONFIG.cloud||{},cloudOn=()=>!!(CLOUD.url&&CLOUD.key),SYNC_KEY='reviewer_sync',CLASS_MIN=5,CLASS_TOP=20;
 const STATS_RESET=1792717361073; // class stats saved before this moment are refetched at once (bump to force a refresh)
@@ -179,10 +187,11 @@ const STAR_SVG='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stro
 const STAR_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">'+STAR_PATH+'</svg>';
 const MISS_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>';
 const CLOCK_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const FC_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-3"/></svg>';
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true,missTags:true};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true,missTags:true,cards:true,fcFour:false,fcRet:.88,fcNew:40,fcRev:150,fcDeck:null};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -248,9 +257,9 @@ const isDue=c=>{const k=state.concepts[c.id];return state.prefs.srs&&!!k.srs&&k.
 // Items mastered before spaced review existed get their first review a day from now.
 ALL_ITEMS.forEach(c=>{const k=state.concepts[c.id];if(k.right>=T()&&!k.srs)k.srs={lvl:0,due:Date.now()+DAY}});
 const TIMES={1:'once',2:'twice',3:'three times'};
-const VIEWS={dashboard:'dashView',study:'studyView',notes:'notesView',match:'matchView',exam:'examView',prefs:'prefsView'};
+const VIEWS={dashboard:'dashView',study:'studyView',cards:'cardsView',notes:'notesView',match:'matchView',exam:'examView',prefs:'prefsView'};
 const NOTES_ONLY=!!CONFIG.notesOnly;
-function pageOn(p){if(NOTES_ONLY&&p!=='notes'&&p!=='prefs')return false;return p==='notes'?!!NOTES_DATA&&state.prefs.notes:p==='match'?(MSETS.length>0||MIXUP.length>0)&&state.prefs.matching:p==='exam'?!!(state.prefs.exam||CHAL||state.exam&&state.exam.chal):!!VIEWS[p]}
+function pageOn(p){if(NOTES_ONLY&&p!=='notes'&&p!=='prefs')return false;return p==='notes'?!!NOTES_DATA&&state.prefs.notes:p==='match'?(MSETS.length>0||MIXUP.length>0)&&state.prefs.matching:p==='exam'?!!(state.prefs.exam||CHAL||state.exam&&state.exam.chal):p==='cards'?!!CONFIG.cards&&state.prefs.cards!==false:!!VIEWS[p]}
 let page=pageOn(state.page)?state.page:(NOTES_ONLY?'notes':'dashboard');
 if(NOTES_ONLY)document.body.classList.add('notesonly');
 let view=null;               // index into this section's answer log when reviewing; null = current question
@@ -657,6 +666,7 @@ function drawGrid(items){$('grid').innerHTML=(items||inSection(state.section)).m
 const PG={
  dashboard:['Dashboard','<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'],
  study:['Practice','<path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/>'],
+ cards:['Flashcards','<rect x="3" y="7" width="13" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-3"/>'],
  notes:['Notes','<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'],
  match:['Drills','<circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6h7M8.2 7.8l7.6 8.4"/>'],
  exam:['Mock exam','<path d="M9 3h6v4H9z"/><path d="M15 5h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3"/><path d="m9 14 2 2 4-4"/>'],
@@ -772,8 +782,15 @@ function draw(){
  drawSetSwitch();
  drawTheme();
  drawNewsDot();
- ({dashboard:drawDash,study:drawStudy,notes:drawNotes,match:drawMatch,exam:drawExam,prefs:drawPrefs})[page]();
+ ({dashboard:drawDash,study:drawStudy,cards:drawCards,notes:drawNotes,match:drawMatch,exam:drawExam,prefs:drawPrefs})[page]();
 }
+// v98: the Flashcards page; cards.js (scheduling + the card screen) loads the first time it opens.
+function drawCards(){document.title='Flashcards · '+CONFIG.title;if(window.Cards){Cards.draw();return}
+ const el=$('fcbody');if(!el.firstChild)el.innerHTML='<p class="desc">Loading the cards…</p>';if(drawCards.busy)return;drawCards.busy=1;
+ const s=document.createElement('script');s.src='cards.js';s.onload=()=>{if(page==='cards'&&window.Cards)Cards.draw()};
+ s.onerror=()=>{drawCards.busy=0;s.remove();el.innerHTML='<section class="panel"><h2>The flashcards could not be loaded</h2><p class="desc">Check your connection, then open this page again.</p></section>'};document.body.appendChild(s)}
+// cards due today from the saved card memory alone (the deck file isn't needed for the count)
+function fcDue(){const t=Date.now(),d=x=>Math.floor((x-new Date(x).getTimezoneOffset()*6e4-144e5)/864e5),td=d(t);let n=0;for(const id in FC.c){const a=FC.c[id];if(a[6]===2?d(a[2]*6e4)<=td:a[2]*6e4<=t)n++}return n}
 /* ---------- question banks: Main, plus one tab per extra set (e.g. a friend's) ---------- */
 function drawSetSwitch(){const el=$('setsw');el.hidden=BANKS.length<2;el.classList.toggle('many',BANKS.length>3);
  if(BANKS.length>1)setHTML(el,BANKS.map(b=>{const on=b.id===state.bank,n=bankItems(b).length;
@@ -788,6 +805,7 @@ function setPref(k,v){if(state.prefs[k]===v)return;state.prefs[k]=v;
  if(k==='mix'&&!v)state.pmatch=null;
  view=null;save();draw()}
 function setGoal(n){setPref('target',n)}
+const fcPref=k=>v=>setPref(k,v);   // Personalize → Flashcards buttons
 function setOrder(v){setPref('order',v)}
 function setTypeMode(v){setPref('typeMode',v)}
 function setMix(v){setPref('mix',v)}
@@ -895,6 +913,7 @@ function drawDash(){
   '<p class="sub">'+(when?'<span class="when">'+esc(nt.name)+' '+when+'</span> · ':'')+bn+'<b class="num">'+m+'</b> of <span class="num">'+BANK.length+'</span> '+ITEMS+' mastered '+(ex?'for '+esc(ex.name):'across '+esc(scopeLabel()))+' · <b class="num">'+secDone+'</b> of '+sectionKeys.length+' sections complete</p>'+
   '<div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'" aria-label="Overall mastery"><div class="fill" style="width:'+pct+'%"></div></div></div>'+
   '<div class="next"><div class="eyebrow">'+(secDone===sectionKeys.length?'All done':'Up next')+'</div><div class="t">'+esc(nx+' '+SECTION_NAMES[nx])+'</div><div class="m num">'+np.done+' of '+np.total+' '+ITEMS+' mastered</div>'+(secDone===sectionKeys.length?'<button class="btn primary" onclick="reviewAll()" title="Every '+ITEM+' once, shuffled. You keep your mastery unless you miss one.">Review pass · '+(ex?'all of '+esc(ex.name):'all '+unitsW)+'</button>':'<button class="btn primary" onclick="selectSection(\''+nx+'\')">'+(np.done?'Resume':'Start')+' section</button>')+(nt&&nt.at-Date.now()<4*DAY?'<button class="shuffle-link" onclick="openLastLook()">'+NOTE_SM+esc(nt.name)+' '+when+'? Read your last look</button>':'')+(nDue?'<button class="shuffle-link due" onclick="selectSection(\'DUE\')">'+CLOCK_SM+'Review '+nDue+' due today</button>':'')+(cramOn()?'<button class="shuffle-link cram" onclick="selectSection(\'CRAM\')">'+FLAME_SM+'Short on time? Cram mode · '+cramList().length+' highest-yield '+ITEMS+'</button>':'')+'<button class="shuffle-link" onclick="selectSection(\'ALL\')">'+SHUFFLE+'Or shuffle all '+unitsW+'</button>'+
+  (pageOn('cards')?'<button class="shuffle-link" onclick="setPage(\'cards\')">'+FC_SM+'Flashcards'+(fcDue()?' ('+fcDue()+' due)':'')+'</button>':'')+
   (pageOn('notes')?'<button class="shuffle-link" onclick="openNotes(\'all\')">'+NOTE_SM+'Read the high-yield notes</button>':'')+
   (state.prefs.stars&&nStar?'<button class="shuffle-link" onclick="selectSection(\'STAR\')">'+STAR_SM+'Review starred ('+nStar+')</button>':'')+(classOn()?'<button class="shuffle-link" onclick="selectSection(\'CLASS\')">'+CLASS_SM+'Class\'s most missed ('+classList().length+')</button>':'')+'</div>';
 
@@ -1643,7 +1662,7 @@ function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=new Uint8Array(1
 function prefSig(){return JSON.stringify([state.prefs,state.exSetup||null])}
 function syncPayload(){const c={};for(const id in state.concepts){const k=state.concepts[id];if(k.seen||k.star||k.lookups||k.srs)c[id]=[k.seen||0,k.right||0,k.wrong||0,k.lookups||0,k.hints||0,k.star?1:0,k.srs?k.srs.lvl:0,k.srs?k.srs.due:0,k.lucky||0]}
  let sum=null;try{sum=summaryObj()}catch(e){}
- return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},miss:state.missLog||[],name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,
+ return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},miss:state.missLog||[],name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,fc:FC.c,fcd:FC.day,
   prefs:state.prefs,exSetup:state.exSetup||null,prefsAt:state.prefsAt||0,
   cur:state.pmatch?null:{at:state.curAt||0,section:state.section,active:state.active,feedback:state.feedback,selected:state.selected,pass:state.pass||null,starDone:state.starDone||[],dueDone:state.dueDone||[],classDone:state.classDone||[]}}}
 function unpack(r){const c={};for(const id in r.c||{}){const x=r.c[id];c[id]={seen:x[0],right:x[1],wrong:x[2],lookups:x[3],hints:x[4],star:!!x[5],srs:x[7]?{lvl:x[6],due:x[7]}:null,lucky:x[8]||0,history:[]}}return Object.assign({},r,{concepts:c})}
@@ -1658,6 +1677,10 @@ function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r)
  if((r.exams||[]).length>(state.exams||[]).length){state.exams=r.exams;changed=true}
  for(const k in r.chalLog||{})if(!(state.chalLog||{})[k]){state.chalLog=state.chalLog||{};state.chalLog[k]=r.chalLog[k];changed=true}
  if(r.name&&!state.name){state.name=r.name;changed=true}
+ // flashcards: per card, the copy with the newer review wins; today's counts keep the higher number
+ if(r.fc&&typeof r.fc==='object'){let fc=false;for(const id in r.fc){const a=FC.c[id],b=r.fc[id];if(Array.isArray(b)&&b.length>=8&&(!a||b[3]>a[3])){FC.c[id]=b;fc=true}}
+  if(Array.isArray(r.fcd)&&Array.isArray(FC.day)&&r.fcd[0]===FC.day[0])for(let i=1;i<4;i++)if((r.fcd[i]||0)>(FC.day[i]||0)){FC.day[i]=r.fcd[i];fc=true}
+  if(fc){syncHold=true;fcSave();syncHold=false;changed=true}}
  // "Why did I miss it?" taps: one entry per answer (question + time); both devices' entries are kept
  if(Array.isArray(r.miss)&&r.miss.length){const seen=new Set((state.missLog||[]).map(e=>e[0]+'|'+e[2])),add=r.miss.filter(e=>Array.isArray(e)&&e.length>=3&&!seen.has(e[0]+'|'+e[2]));
   if(add.length){state.missLog=(state.missLog||[]).concat(add).sort((a,b)=>a[2]-b[2]).slice(-MISS_MAX);changed=true}}
@@ -1728,6 +1751,7 @@ function drawPrefs(){
   (cloudOn()?row('Class stats','A Class stats panel on the dashboard, a sidebar list of the '+CLASS_TOP+' '+ITEMS+' your class misses most, and how many classmates missed each '+ITEM+' after you answer it. Updates every 30 minutes.',sw(state.prefs.classmiss,"setPref('classmiss',"+!state.prefs.classmiss+")",'Class most missed')):'')+
   '</section>';
  h+='<section class="panel"><h2>Pages</h2>'+
+  (CONFIG.cards&&!NOTES_ONLY?row('Flashcards','Ready-made cards from the notes: flip, then tell it if you knew it. Each card comes back just before you would forget it.',sw(state.prefs.cards!==false,"setPref('cards',"+(state.prefs.cards===false)+")",'Show the Flashcards page')):'')+
   (NOTES_DATA?row('Notes','High-yield recognition notes to read before a mock exam, with a self-test mode.',sw(state.prefs.notes,"setPref('notes',"+!state.prefs.notes+")",'Show the Notes page')):'')+
   (MSETS.length||MIXUP.length?row('Drills',[MSETS.length?MSETS.length+' matching-type sets':'',MIXUP.length?MIXUP.length+' Don\'t mix up look-alike drills':''].filter(Boolean).join(' and ')+'.',sw(state.prefs.matching,"setPref('matching',"+!state.prefs.matching+")",'Show the Drills page')):'')+
   (window.Notify&&CONFIG.home?row('Notifications','Choose what you hear about: new courses and content, transes, timetable changes, comment pop-ups, red dots, and push notifications on this device.','<a class="btn" href="notifications.html#settings">Open settings</a>'):'')+
@@ -1736,6 +1760,11 @@ function drawPrefs(){
   (BANK.some(c=>c.dh)?row('Harder choices in practice','The Mock exam always uses look-alike choices, like the real test (e.g. every option about boy/girl and mother/father). Turn this on to get them in practice too.',sw(!!state.prefs.hardPractice,"setPref('hardPractice',"+!state.prefs.hardPractice+")",'Harder choices in practice')):'')+
   (CHART_DATA.length?row('Charts','A Charts button on Practice, Notes and the Mock exam that opens the reference '+(CHART_DATA.length>1?'charts':'chart')+' ('+CHART_DATA.map(c=>c.title.toLowerCase()).join(', ')+').',sw(state.prefs.charts,"setPref('charts',"+!state.prefs.charts+")",'Show the Charts button')):'')+
   row('Mock exam','A timed run with no hints or answers until the end, then your score by '+unitW+' and a review of your mistakes.',sw(state.prefs.exam,"setPref('exam',"+!state.prefs.exam+")",'Show the Mock exam page'))+'</section>';
+ if(pageOn('cards'))h+='<section class="panel"><h2>Flashcards</h2>'+
+  row('Grade buttons',state.prefs.fcFour?'Again, Hard, Good and Easy, like Anki.':'Again or Good: quick on a phone. Turn on four buttons for Hard and Easy too.',segHTML("fcPref('fcFour')",[[false,'2 buttons'],[true,'4 buttons']],!!state.prefs.fcFour,'Grade buttons'))+
+  row('How much to remember','The share of cards you should still know when each one comes back. Higher means more reviews a day.',segHTML("fcPref('fcRet')",[[.85,'85%'],[.88,'88%'],[.9,'90%'],[.95,'95%']],+state.prefs.fcRet||.88,'Target retention'))+
+  row('New cards a day','The most new cards a day in this course.',segHTML("fcPref('fcNew')",[[10,'10'],[20,'20'],[40,'40'],[80,'80']],+state.prefs.fcNew||40,'New cards a day'))+
+  row('Reviews a day','The most review cards a day in this course; the rest wait for the next day.',segHTML("fcPref('fcRev')",[[100,'100'],[150,'150'],[300,'300']],+state.prefs.fcRev||150,'Reviews a day'))+'</section>';
  h+='<section class="panel"><h2>Question banks</h2><p class="desc">Main is the full reviewer. Each extra bank is its own question set with its own progress. Sets you add are saved in this browser only; Export one to share it.</p>'+
   BANKS.map(b=>row(esc(b.name)+'<span class="pill set">'+bankItems(b).length+' '+ITEMS+'</span>',esc(b.desc||''),(b.user?'<button class="btn sm" onclick="openSetEditor(\''+b.id+'\')">Edit</button><button class="btn sm" onclick="exportSet(\''+b.id+'\')">Export</button>':'')+(b.id===state.bank?'<span class="pill">In use</span>':'<button class="btn sm" onclick="setBank(\''+b.id+'\')">Use</button>'))).join('')+
   row('Add a question set','Paste questions or upload a .txt or .csv file, like a set a classmate exported or one your group wrote in Google Sheets.','<button class="btn sm" onclick="openSetEditor()">Add a set</button>')+'</section>';
@@ -1759,6 +1788,11 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'98',date:'Oct 29, 2026',title:'Flashcards',items:[
+  'A new <b>Flashcards</b> page in each course, with cards made from the notes. It starts with the deck for your next exam.',
+  'Flip a card, then tap <b>Again</b> or <b>Good</b> (or swipe left or right). Each card comes back just before you would forget it.',
+  'Up to 40 new cards and 150 reviews a day. Change the limits, or turn on Hard and Easy buttons, in Personalize → Flashcards.',
+  'Your cards sync across devices when you are signed in.']},
  {v:'97',date:'Oct 29, 2026',title:'Replies and @mentions',items:[
   'Tap <b>Reply</b> under a post in the discussion: your post shows a quote of the one you answered.',
   'Type <b>@</b> to tag a classmate. They get a notification, and the post is highlighted for them.',
@@ -2318,6 +2352,7 @@ document.addEventListener('keydown',e=>{
  if(page==='match'){if(drillTab==='mix'?mixKey(e):M&&matchKey(e,'m'))e.preventDefault();return}
  if(page==='exam'){if(examKey(e))e.preventDefault();return}
  if(page==='notes'){notesKey(e);return}
+ if(page==='cards'){if(window.Cards&&Cards.key(e))e.preventDefault();return}
  if(page!=='study')return;
  const k=e.key;
  if(view==null&&state.pmatch){if(matchKey(e,'p'))e.preventDefault();return}

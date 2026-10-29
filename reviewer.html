@@ -1005,6 +1005,40 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
 .storewarn{position:fixed;z-index:45;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(560px,calc(100vw - 24px));display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:11px 14px;border-radius:12px;background:var(--bad-bg);color:var(--text);border:1px solid var(--bad);font-size:14px;line-height:1.45;box-shadow:0 10px 30px rgba(0,0,0,.18)}.storewarn span{flex:1 1 220px}
 .cprev{margin:-4px 0 14px;border:1px solid var(--line);border-radius:12px;padding:9px 12px;display:grid;gap:7px;font-size:14.5px;line-height:1.45}.cprev .cph{font:700 11px/1.2 var(--sans,inherit);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}.cprow{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:2px 12px;align-items:baseline}.cpl{color:var(--mute);font-size:13px}.cpa{min-width:0;overflow-wrap:anywhere}.cpa.mine{white-space:pre-line;font-family:ui-monospace,Consolas,monospace;font-size:13px}.cpy{color:var(--good);font-weight:700;margin-left:6px}.cpn{color:var(--bad);font-weight:700;margin-left:6px}.cpm{color:var(--mute);margin-left:6px;font-size:12px}@media (max-width:640px){.cprow{grid-template-columns:1fr}}
 .appver{margin:18px 4px 0;color:var(--mute);font-size:13px;font-variant-numeric:tabular-nums}
+/* v98 flashcards */
+.fcbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:4px 0 14px}
+.fcdeck{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);min-width:0;flex:1 1 220px}
+.fcdeck select{flex:1;min-width:0;max-width:340px;padding:8px 10px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--text);font:inherit;font-size:14px}
+.fcstat{display:flex;align-items:center;gap:14px;margin-left:auto}
+.fccounts{display:flex;gap:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.fccounts>span{display:flex;flex-direction:column;align-items:center;line-height:1.1;font-size:17px}
+.fccounts small{font-size:11px;font-weight:500;color:var(--mute)}
+.fccounts .cn{color:var(--accent)}.fccounts .cl{color:var(--bad)}.fccounts .cr{color:var(--good)}
+.fcring{position:relative;display:inline-grid;place-items:center;width:38px;height:38px}
+.fcring svg{position:absolute;inset:0;transform:rotate(-90deg)}.fcring circle{fill:none;stroke-width:4}
+.fcring .t{stroke:var(--line)}.fcring .f{stroke:var(--accent);stroke-linecap:round;transition:stroke-dasharray .3s var(--ease)}
+.fcring b{font-size:12px;font-variant-numeric:tabular-nums}
+.fccard{min-height:260px;display:flex;flex-direction:column;justify-content:center;gap:14px;text-align:center;cursor:pointer;user-select:none;touch-action:pan-y;transition:transform .15s,box-shadow .15s,border-color .15s;padding-bottom:26px}
+.fccard.flip{cursor:default;user-select:text}
+.fccard:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.fccard.sl{border-color:var(--bad-line)}.fccard.sr{border-color:var(--good-line)}
+.fctag{font-size:12.5px;color:var(--mute);display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
+.fcpill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.fcpill.l{background:var(--amber-bg,var(--hint-bg));color:var(--amber,var(--hint-ink))}
+.fcq{font-size:22px;line-height:1.4;font-weight:600;overflow-wrap:anywhere}
+.fca,.fcx{font-size:18px;line-height:1.5;border-top:1px solid var(--line);padding-top:14px;overflow-wrap:anywhere}
+.fcx{font-size:15px;color:var(--mute)}
+.fcz{color:var(--accent);font-weight:700}.fcz.q{background:var(--accent-soft);padding:0 8px;border-radius:6px}
+.fcbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:10px;margin-top:14px}
+.fcbtns.one{grid-template-columns:1fr}
+.fcbtns .btn{justify-content:center;padding:12px 10px}
+.fcg{flex-direction:column;gap:2px;line-height:1.2}.fcg small{font-size:12px;font-weight:500;color:var(--mute)}
+.fcg.g1{border-color:var(--bad-line);background:var(--bad-bg)}.fcg.g3{border-color:var(--good-line);background:var(--good-bg)}
+.fckeys{text-align:center;font-size:12.5px;color:var(--mute);margin-top:12px}
+.fcdone{text-align:center}.fcdone .btn{margin-top:6px}.fcdone .link{display:block;margin:12px auto 0}
+.fcnote{font-size:12.5px;color:var(--mute);margin-top:8px}
+@media (max-width:640px){.fcdeck{flex-basis:100%}.fcdeck select{max-width:none}.fcstat{margin-left:0;width:100%;justify-content:space-between}.fcq{font-size:19px}.fca{font-size:16.5px}.fccard{min-height:220px}.fckeys{display:none}}
+@media (prefers-reduced-motion:reduce){.fccard,.fcring .f{transition:none}}
 </style><style>.app.booting main>.view{display:none!important}.skel{display:grid;gap:14px;padding-top:6px}.skel i{display:block;border-radius:16px;background:linear-gradient(100deg,var(--line) 30%,var(--raised) 50%,var(--line) 70%);background-size:300% 100%;animation:skel 1.3s linear infinite}.skel .k1{height:30px;width:55%;border-radius:10px}.skel .k2{height:190px}.skel .k3{height:22px;width:35%;border-radius:8px;margin-top:6px}.skel .kg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.skel .kg i{height:96px}.skel .k4{height:240px}@media (max-width:640px){.skel .kg{grid-template-columns:1fr 1fr}}@keyframes skel{from{background-position:100% 0}to{background-position:-100% 0}}@media (prefers-reduced-motion:reduce){.skel i{animation:none}}</style></head><body>
 <div class="app booting" id="app">
  <aside class="side" id="side" aria-label="Navigation">
@@ -1092,6 +1126,14 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
     <span class="extimer" id="extimer" role="timer" aria-label="Time left" hidden></span>
    </div>
    <div id="exbody"></div>
+  </div>
+  <!-- Flashcards (v98; cards.js draws it) -->
+  <div class="view" id="cardsView" hidden>
+   <div class="top">
+    <button class="icon menu" onclick="toggleNav(true)" aria-label="Open navigation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <div style="min-width:0"><div class="crumb">Flashcards</div><h1>Flashcards</h1></div>
+   </div>
+   <div id="fcbody"></div>
   </div>
   <!-- Personalize -->
   <div class="view" id="prefsView" hidden>
