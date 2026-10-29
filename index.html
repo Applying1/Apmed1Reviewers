@@ -238,6 +238,7 @@ html.introing body{overflow:hidden}
  <a class="tool" id="cwtool" href="crossword.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crossword"/></svg></span><span><b>Daily crossword</b><span id="cwsub">A short puzzle on your next eval</span></span></a>
  <a class="tool" id="wdtool" href="apmeddle.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-letters"/></svg></span><span><b>APMed'le</b><span id="wdsub">Guess the term of the day</span></span></a>
  <a class="tool" id="atttool" href="attendance.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span><span><b>My attendance</b><span id="attsub">From the class tracker</span></span></a>
+ <a class="tool" id="cdtool" href="classday.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span><span><b>Class day</b><span>Post today's summary, answer questions (only you see this)</span></span></a>
  </nav>
  <div class="try" id="try" hidden></div>
  <div class="try" id="move" hidden></div>
@@ -364,11 +365,13 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  // a warm-up on the topic, from the day before until class starts (only where the timetable links the topic to the course's questions)
  const crs=c.subj&&c.subj.course,hrs=(c.from-new Date())/36e5;
  if(crs&&c.preview&&!c.now&&hrs>0&&hrs<=40){const p=document.getElementById('prevq');p.href='reviewer.html?course='+encodeURIComponent(crs)+'#preview='+encodeURIComponent(c.preview);p.textContent='Warm up: 5 questions on '+(c.topic||'the next topic').replace(/ \(.*$/,'').slice(0,60);p.hidden=false}}catch(err){}})();
-// My attendance tile: for signed-in students (att_mine); not linked yet = a link to send a request
+// My attendance tile: for signed-in students (att_mine); not linked yet = a link to send a request. A missed day with
+// its chat still open comes first; the owner (class secretary) also gets the Class day tile.
 (async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c||!Auth.ses())return;Auth.cloud=c.cloud;
- const a=await Auth.rpc('att_mine',{},true);if(!a)return;
+ const a=await Auth.rpc('att_mine',{},true);if(!a)return;if(a.owner)$('cdtool').hidden=false;
  if(!a.linked){$('attsub').textContent=a.request&&a.request.status==='pending'?'Request waiting for the class secretary':'Link your account to see your attendance';$('atttool').hidden=false;return}
- $('attsub').textContent=(a.pct?a.pct+' · ':'')+(a.present??0)+' present · '+(a.absent??0)+' absent'+(a.excused?' · '+a.excused+' excused':'');$('atttool').hidden=false}catch(e){}})();
+ const m=(a.missed||[]).find(x=>x.open),them=m&&(m.chat||[]).length&&m.chat[m.chat.length-1].o;
+ $('attsub').textContent=m?(them?'New reply about '+m.label:'You missed '+m.label+(m.notes?': see the class summary':'')):(a.pct?a.pct+' · ':'')+(a.present??0)+' present · '+(a.absent??0)+' absent'+(a.excused?' · '+a.excused+' excused':'');$('atttool').hidden=false}catch(e){}})();
 // Daily crossword tile: today's courses (nearest test first), "New" until the puzzle page is opened once
 (async function(){try{
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());

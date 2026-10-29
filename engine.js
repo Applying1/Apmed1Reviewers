@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='95',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='96',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1754,6 +1754,11 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'96',date:'Oct 29, 2026',title:'Missed a class?',items:[
+  'Open <b>My attendance</b> after a day you missed (Absent or Excused): the class secretary\'s summary of that day is right there, with deadlines, exam hints and what the teacher stressed.',
+  'You can ask the class secretary up to 5 questions about that day, on the day and the 2 days after. Only the two of you see the chat, and it\'s deleted after that.',
+  'Turn on <b>Attendance alerts</b> on that page to get a notification when the summary is posted or you get a reply.',
+  '<b>What happened in class</b> (a tab on My attendance) lists every class-day summary, for every linked classmate.']},
  {v:'95',date:'Oct 29, 2026',title:'Your profile',items:[
   'Pick a <b>display name</b> and a <b>picture</b> for the discussion: tap your picture at the top of the home page, then <b>Edit</b>. Classmates who tap your name can still see your Google account name.',
   'The home page shows just your picture on phones, so the top bar is less crowded. Your account menu also has quick links to attendance, notifications and privacy.',

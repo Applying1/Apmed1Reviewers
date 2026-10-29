@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>My attendance · APMed '33</title>
-<meta name="description" content="Your own attendance from the class tracker.">
+<meta name="description" content="Your own attendance, summaries of the days you missed, and what happened in class.">
 <meta name="robots" content="noindex">
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -45,14 +45,40 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 .req label{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--mute)}
 .req input{padding:9px 11px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:inherit;font-size:15px}
 .msg{min-height:1.2em;font-size:13.5px;margin:0 0 10px}.msg.bad{color:var(--bad)}.msg.ok{color:var(--good)}
+.tabs{margin:16px 0 4px}
+.seg{display:inline-flex;background:var(--raised);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;border-radius:8px;padding:6px 12px;font:600 13.5px var(--sans);color:var(--mute);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 2px #0000001a}
+.sh{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);margin:22px 0 8px}
+.miss{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--bad);border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.mh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}.mh b{font:600 17px/1.2 var(--serif)}
+.st{font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)}.st.e{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+.mute{color:var(--mute);font-size:13px}
+.chat{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line2);display:grid;gap:8px}
+.bub{max-width:88%;padding:8px 11px;border-radius:12px;font-size:14px;line-height:1.45;overflow-wrap:anywhere}.bub small{display:block;font-size:11.5px;color:var(--mute);margin-bottom:2px}
+.bub.me{justify-self:end;background:var(--accent-soft);border:1px solid var(--accent-line)}.bub.them{justify-self:start;background:var(--raised);border:1px solid var(--line)}
+.ask{display:flex;gap:8px;align-items:flex-end}.ask textarea{flex:1;min-width:0;padding:8px 10px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:inherit;font-size:15px;resize:vertical}
+.hint{margin:0;font-size:12.5px;color:var(--mute)}.chat .msg:empty{display:none}
+.alerts{display:flex;align-items:center;gap:14px;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 14px}
+.alerts b{display:block;font-size:14px}.alerts span{display:block;font-size:13px;color:var(--mute)}.alerts .msg{margin:4px 0 0}.alerts .msg:empty{display:none}
+.sw{flex:none;position:relative;width:42px;height:24px;border-radius:12px;border:0;background:var(--line2);transition:background .15s;padding:0;cursor:pointer}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px #0003}
+.sw[aria-checked="true"]{background:var(--accent)}.sw[aria-checked="true"]::after{transform:translateX(18px)}.sw:disabled{opacity:.45}
+.arch{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:10px}
+.arch summary{cursor:pointer;display:flex;gap:10px;align-items:baseline}.arch summary b{font:600 16px/1.3 var(--serif)}.arch[open] summary{margin-bottom:10px}
+.sub a{color:var(--accent);font-weight:600}
 </style></head><body>
 <main>
  <a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a>
  <h1>My attendance</h1>
  <p class="sub" id="sub">Loading…</p>
+ <div class="tabs"><span class="seg" id="tabs" role="group" aria-label="Show" hidden></span></div>
  <div id="body"></div>
 </main>
 <script src="auth.js"></script>
+<script src="notify-core.js"></script>
+<script src="push-client.js"></script>
+<script src="classnotes.js"></script>
 <script>
 // Your own row of the class attendance tracker (supabase_attendance.sql, att_mine). Shown only to signed-in students whose
 // account the class secretary has linked to their roll number. Nothing is saved on this device.
@@ -71,24 +97,59 @@ async function sendRequest(e){e.preventDefault();const roll=parseInt($('roll').v
  $('rgo').disabled=true;let r='';try{r=await Auth.rpc('att_request',{p_roll:roll,p_last:last},true)}catch(err){r='error'}
  if(r==='ok'){drawRequest({roll,status:'pending'});return false}
  $('rgo').disabled=false;m.className='msg bad';m.textContent=r==='mismatch'?'That roll number and last name don\'t match the class tracker. Check both, or message the class secretary.':r==='linked'?'Your account is already linked. Reload the page.':r==='slow down'?'Too many tries. Wait a minute.':'Couldn\'t send the request. Check your connection.';return false}
+// Days you missed (Absent or Excused): the class secretary's summary of that day and a short chat with them, open on the day
+// and the 2 days after (then deleted by the server). "What happened in class": every posted summary (att_archive).
+let A=null,TAB=location.hash==='#class'?'class':'me',ARCH=null;
+const md=s=>new Date(String(s).slice(0,10)+'T00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const wd=s=>new Date(String(s).slice(0,10)+'T00:00').toLocaleDateString('en-US',{weekday:'long'});
+const tm=s=>{const d=new Date(s);return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+', '+d.toLocaleDateString('en-US',{month:'short',day:'numeric'})};
+function draw(){const t=$('tabs');t.hidden=false;
+ t.innerHTML=[['me','My record'],['class','What happened in class']].map(([k,l])=>'<button aria-pressed="'+(TAB===k)+'" onclick="TAB=\''+k+'\';history.replaceState(null,\'\',\''+(k==='class'?'#class':'#')+'\');draw()">'+l+'</button>').join('');
+ if(TAB==='class')return drawClass();drawMe()}
+function missCard(m){const chat=m.chat||[],max=A.chatMax||5;
+ return '<section class="miss" id="m'+esc(m.day)+'"><div class="mh"><b>'+esc(m.label)+'</b><span class="st '+cls(m.status)+'">'+esc(m.status)+'</span>'+(m.open?'<span class="mute">Questions open until '+esc(md(m.closes))+'</span>':'')+'</div>'+
+  (m.notes?ClassNotes.html(m.notes):'<p class="mute">The class summary for this day isn\'t posted yet.'+(Push.attOn()?' You\'ll get a notification when it is.':'')+'</p>')+
+  (m.open||chat.length?'<div class="chat">'+(chat.length?chat.map(c=>'<div class="bub '+(c.o?'them':'me')+'"><small>'+(c.o?'Class secretary':'You')+' · '+esc(tm(c.at))+'</small>'+esc(c.b).replace(/\n/g,'<br>')+'</div>').join(''):'<p class="mute">Questions about this day? Ask the class secretary here.</p>')+
+   (m.open?(m.left>0?'<div class="ask"><textarea class="inp" id="t'+esc(m.day)+'" rows="2" maxlength="500" placeholder="Ask about this day…" aria-label="Your question"></textarea><button class="btn primary" onclick="sendQ(\''+esc(m.day)+'\',this)">Send</button></div>'+
+    '<p class="hint">'+m.left+' of '+max+' messages left. The chat is deleted after '+esc(md(m.closes))+'.</p>':'<p class="hint">You\'ve used all '+max+' messages for this day. The chat is deleted after '+esc(md(m.closes))+'.</p>'):'')+
+   '<p class="msg bad" id="e'+esc(m.day)+'"></p></div>':'')+'</section>'}
+async function sendQ(day,b){const t=$('t'+day),e=$('e'+day),v=t.value.trim();if(!v)return;b.disabled=true;e.textContent='';
+ try{await Auth.rpc('att_chat_send',{p_day:day,p_body:v},true);A=await Auth.rpc('att_mine',{},true);drawMe();const c=$('m'+day);if(c)c.scrollIntoView({block:'nearest'})}
+ catch(err){b.disabled=false;const m=String(err.message||'');e.textContent=/closed/.test(m)?'This chat has closed.':/no messages/.test(m)?'You\'ve used all your messages for this day.':/slow/.test(m)?'Too many messages at once. Wait a minute.':/not allowed/.test(m)?'You can only ask about a day you missed.':/1 to 500/.test(m)?'Keep it under 500 characters.':'Couldn\'t send. Check your connection.'}}
+function alertsRow(){if(!Push.supported())return '';
+ return '<div class="alerts"><div><b>Attendance alerts</b><span>A notification on this device when the summary of a day you missed is posted, or when the class secretary replies.</span><span class="msg bad" id="amsg"></span></div>'+
+  '<button class="sw" role="switch" aria-checked="'+Push.attOn()+'" aria-label="Attendance alerts" onclick="toggleAlerts(this)"></button></div>'}
+async function toggleAlerts(b){const on=b.getAttribute('aria-checked')!=='true';b.disabled=true;
+ try{await Push.attSet(on);b.setAttribute('aria-checked',String(on))}
+ catch(e){const m=String(e.message||'');$('amsg').textContent=m==='blocked'?'Notifications are blocked for this site. Allow them in your browser\'s site settings first.':m==='dismissed'?'':'Couldn\'t change it. Try again in a moment.'}
+ b.disabled=false}
+function drawMe(){const a=A,late=(a.days||[]).filter(d=>cls(d.s)==='l').length,weeks=[],miss=a.missed||[];
+ for(const d of a.days||[]){let w=weeks[weeks.length-1];if(!w||w.name!==d.w){w={name:d.w||'',days:[]};weeks.push(w)}w.days.push(d)}
+ $('body').innerHTML=(miss.length?'<h2 class="sh">Days you missed</h2>'+miss.map(missCard).join(''):'')+
+  '<div class="kpis"><div class="kpi main"><div class="k">Attendance</div><div class="v">'+esc(a.pct||'–')+'</div></div>'+
+  '<div class="kpi"><div class="k">Present</div><div class="v">'+(a.present??'–')+'</div></div>'+
+  '<div class="kpi"><div class="k">Absent</div><div class="v">'+(a.absent??'–')+'</div></div>'+
+  '<div class="kpi"><div class="k">Excused</div><div class="v">'+(a.excused??'–')+'</div></div></div>'+alertsRow()+
+  '<div class="legend"><span><i style="background:var(--good)"></i>Present</span>'+(late?'<span><i style="background:var(--accent)"></i>Late ('+late+')</span>':'')+'<span><i style="background:var(--warn)"></i>Excused</span><span><i style="background:var(--bad)"></i>Absent</span></div>'+
+  '<div class="weeks">'+weeks.slice().reverse().map(w=>'<section class="wk"><h2>'+esc(w.name||'Classes')+'</h2><div class="days">'+w.days.map(d=>'<span class="day '+cls(d.s)+'" title="'+esc(d.s)+'"><i></i>'+esc(d.d)+(cls(d.s)==='p'?'':' · '+esc(d.s))+'</span>').join('')+'</div></section>').join('')+'</div>'+
+  '<p class="foot">Only you can see your record and your questions. Something look wrong? Message the class secretary.</p>'}
+async function drawClass(){
+ if(!ARCH){$('body').innerHTML='<p class="sub" style="margin-top:16px">Loading…</p>';try{ARCH=await Auth.rpc('att_archive',{},true)||[]}catch(e){$('body').innerHTML='<div class="card"><p>Couldn\'t load the class summaries. Check your connection and try again.</p></div>';return}}
+ if(TAB!=='class')return;
+ $('body').innerHTML=ARCH.length?'<p class="foot">What was discussed and announced on each class day, from the class secretary\'s notes. Only classmates can see these.</p>'+
+  ARCH.map((d,i)=>'<details class="arch"'+(i?'':' open')+'><summary><b>'+esc(d.label)+'</b><span class="mute">'+esc(wd(d.day))+'</span></summary>'+ClassNotes.html(d.notes)+'</details>').join('')
+  :'<div class="card"><p>No class summaries yet. They show up here after each class day.</p></div>'}
 (async function(){
  try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
  if(!Auth.cloud){$('sub').textContent='';card('Attendance needs the online features, which aren\'t set up here.');return}
  if(!Auth.ses()){$('sub').textContent='';card('Sign in with the Google account you use for the reviewers to see your attendance.','<a class="btn primary" href="./?signin=1">Sign in with Google</a>');return}
+ Push.init(Auth.cloud);ClassNotes.style();
  let a=null;try{a=await Auth.rpc('att_mine',{},true)}catch(e){}
  if(!a){$('sub').textContent='';card('Couldn\'t load your attendance. Check your connection and try again.');return}
- if(!a.linked){$('sub').textContent='';drawRequest(a.request);return}
- const upd=a.updated?new Date(a.updated).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
- $('sub').innerHTML=esc(a.name)+' · from the class tracker'+(upd?', updated '+esc(upd):'');
- const late=(a.days||[]).filter(d=>cls(d.s)==='l').length,weeks=[];
- for(const d of a.days||[]){let w=weeks[weeks.length-1];if(!w||w.name!==d.w){w={name:d.w||'',days:[]};weeks.push(w)}w.days.push(d)}
- $('body').innerHTML='<div class="kpis"><div class="kpi main"><div class="k">Attendance</div><div class="v">'+esc(a.pct||'–')+'</div></div>'+
-  '<div class="kpi"><div class="k">Present</div><div class="v">'+(a.present??'–')+'</div></div>'+
-  '<div class="kpi"><div class="k">Absent</div><div class="v">'+(a.absent??'–')+'</div></div>'+
-  '<div class="kpi"><div class="k">Excused</div><div class="v">'+(a.excused??'–')+'</div></div></div>'+
-  '<div class="legend"><span><i style="background:var(--good)"></i>Present</span>'+(late?'<span><i style="background:var(--accent)"></i>Late ('+late+')</span>':'')+'<span><i style="background:var(--warn)"></i>Excused</span><span><i style="background:var(--bad)"></i>Absent</span></div>'+
-  '<div class="weeks">'+weeks.slice().reverse().map(w=>'<section class="wk"><h2>'+esc(w.name||'Classes')+'</h2><div class="days">'+w.days.map(d=>'<span class="day '+cls(d.s)+'" title="'+esc(d.s)+'"><i></i>'+esc(d.d)+(cls(d.s)==='p'?'':' · '+esc(d.s))+'</span>').join('')+'</div></section>').join('')+'</div>'+
-  '<p class="foot">Only you can see this. Something look wrong? Message the class secretary.</p>';
+ if(!a.linked){$('sub').innerHTML=a.owner?'<a href="classday.html">Class day (owner)</a>':'';drawRequest(a.request);return}
+ A=a;const upd=a.updated?new Date(a.updated).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+ $('sub').innerHTML=esc(a.name)+' · from the class tracker'+(upd?', updated '+esc(upd):'')+(a.owner?' · <a href="classday.html">Class day (owner)</a>':'');
+ draw();Push.attRefresh();
 })();
 </script>
 <script src="update.js" defer></script>

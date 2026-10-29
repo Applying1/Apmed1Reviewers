@@ -34,8 +34,21 @@
         const r = await P.reg(), n = await r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: P.b64(k) });
         await P.rpc('push_subscribe', { p_sub: n.toJSON(), p_prefs: P.prefs() });
         if (n.endpoint !== old) { try { await P.rpc('push_unsubscribe', { p_endpoint: old }) } catch (e) { } }
+        if (P.attOn() && window.Auth && Auth.ses()) { try { Auth.cloud = Auth.cloud || P.cloud; await Auth.rpc('push_claim', { p_endpoint: n.endpoint, p_on: true }, true) } catch (e) { } }
       } catch (e) { }
     },
+    // Attendance alerts (supabase_attendance2.sql): this device's subscription gets the signed-in account's attendance pushes
+    // (the summary of a day you missed, replies; for the owner, new questions and reminders). On/off is per device.
+    AK: 'reviewer_att_alerts',
+    attOn() { try { return localStorage.getItem(P.AK) === '1' } catch (e) { return false } },
+    async attSet(on) {
+      let s = await P.sub();
+      if (on && !s) { await P.turnOn(); s = await P.sub() }
+      if (s) { Auth.cloud = Auth.cloud || P.cloud; await Auth.rpc('push_claim', { p_endpoint: s.endpoint, p_on: !!on }, true) }
+      try { on ? localStorage.setItem(P.AK, '1') : localStorage.removeItem(P.AK) } catch (e) { }
+    },
+    // the subscription may have been renewed elsewhere (Notifications page): claim it again, quietly
+    async attRefresh() { try { if (P.attOn() && P.supported() && Notification.permission === 'granted') { const s = await P.sub(); if (s) await Auth.rpc('push_claim', { p_endpoint: s.endpoint, p_on: true }, true) } } catch (e) { } },
     async testDaily() { const s = await P.sub(); if (!s) throw new Error('off'); if (window.Daily) await Daily.digest(); const r = await fetch(P.fn(), { method: 'POST', headers: P.hdr(), body: JSON.stringify({ testdaily: s.endpoint }) }); if (!r.ok) throw new Error(r.status) },
     async testRem() { const s = await P.sub(); if (!s) return; const r = await fetch(P.fn(), { method: 'POST', headers: P.hdr(), body: JSON.stringify({ testrem: s.endpoint }) }); if (!r.ok) throw new Error(r.status) },
     async turnOn() {

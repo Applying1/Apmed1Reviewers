@@ -125,7 +125,7 @@ async function load(){try{ROWS=await rpc('contrib_mod_list',{p_pass:PASS,p_statu
    Google account (att_admin_list refuses everyone else, so other moderators never see this). Students send a request from
    My attendance (roll number + last name, checked against the tracker); approve it here. */
 async function attLoad(){ATT=null;if(!Auth.ses())return;Auth.cloud=Auth.cloud||CLOUD;try{ATT=await Auth.rpc('att_admin_list',{},true)}catch(e){ATT=null}}
-function attBtn(){if(!ATT)return '';const n=(ATT.requests||[]).filter(r=>r.status==='pending').length;return '<button class="btn" onclick="view=\'att\';draw()">Attendance links'+(n?'<b class="cnt">'+n+'</b>':'')+'</button>'}
+function attBtn(){if(!ATT)return '';const n=(ATT.requests||[]).filter(r=>r.status==='pending').length;return '<a class="btn" href="classday.html">Class day</a><button class="btn" onclick="view=\'att\';draw()">Attendance links'+(n?'<b class="cnt">'+n+'</b>':'')+'</button>'}
 function drawAtt(){if(!ATT){view='queue';return draw()}document.title='Attendance links';
  const pend=ATT.requests.filter(r=>r.status==='pending'),rej=ATT.requests.filter(r=>r.status!=='pending'),who=x=>esc(x.google||'(no name)')+(x.email?' <span class="mute">'+esc(x.email)+'</span>':'');
  $('app').innerHTML='<div class="top"><div><h1>Attendance links</h1><p class="sub">Which Google account sees which student\'s attendance. Tracker imported '+(ATT.imported?esc(ago(ATT.imported)):'never')+'.</p></div>'+

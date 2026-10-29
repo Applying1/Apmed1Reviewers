@@ -1,0 +1,199 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Class day · APMed '33</title>
+<meta name="description" content="The class secretary's page: class-day summaries, questions from absent classmates, attendance overview.">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:820px;margin:0 auto;padding:22px 16px 64px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18px 0 4px}
+h2{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);margin:24px 0 8px}
+.sub{margin:0;color:var(--mute);font-size:14px}
+.tabs{margin:16px 0 6px}
+.seg{display:inline-flex;background:var(--raised);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;border-radius:8px;padding:6px 12px;font-size:13.5px;font-weight:600;color:var(--mute)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 2px #0000001a}
+.cnt{display:inline-block;min-width:18px;margin-left:5px;padding:0 6px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:11.5px;text-align:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);white-space:nowrap;text-decoration:none}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.bad{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-top:12px;box-shadow:var(--shadow)}
+.inp{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:9px 11px;font-size:15px;outline:0}
+.inp:focus{border-color:var(--accent)}
+textarea.inp{resize:vertical;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row .sp{flex:1}
+.mute{color:var(--mute);font-size:13px}
+.msg{min-height:1.2em;font-size:13.5px;margin:8px 0 0}.msg:empty{display:none}.msg.bad{color:var(--bad)}.msg.ok{color:var(--good)}
+.nudge{padding:10px 13px;border-radius:12px;background:color-mix(in srgb,var(--warn) 13%,transparent);font-size:14px;margin-top:10px}
+.state{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--raised);color:var(--mute)}
+.state.pub{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.help{font-size:13.5px;color:var(--mute);margin-top:10px}.help summary{cursor:pointer;font-weight:600;color:var(--text)}.help code{background:var(--raised);padding:1px 5px;border-radius:5px}
+.prev{margin-top:12px;padding:14px 16px;border:1px dashed var(--line2);border-radius:12px;background:var(--bg)}
+.roster{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.rc{border:1px solid var(--line2);background:var(--bg);border-radius:99px;padding:4px 10px;font-size:13px}
+.rc[data-s="Absent"]{border-color:var(--bad);color:var(--bad);background:color-mix(in srgb,var(--bad) 9%,transparent);font-weight:600}
+.rc[data-s="Excused"]{border-color:var(--warn);color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,transparent);font-weight:600}
+.rc:disabled{cursor:default;opacity:1}
+.thread{border-left:4px solid var(--accent)}
+.th{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px}.th b{font-size:15px}
+.chat{display:grid;gap:8px}
+.bub{max-width:88%;padding:8px 11px;border-radius:12px;font-size:14px;line-height:1.45;overflow-wrap:anywhere}.bub small{display:block;font-size:11.5px;color:var(--mute);margin-bottom:2px}
+.bub.me{justify-self:end;background:var(--accent-soft);border:1px solid var(--accent-line)}.bub.them{justify-self:start;background:var(--raised);border:1px solid var(--line)}
+.ask{display:flex;gap:8px;align-items:flex-end;margin-top:10px}.ask textarea{flex:1;min-width:0;font-family:var(--sans);font-size:15px}
+.list .li{display:flex;gap:10px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);font-size:14px}.list .li:last-child{border-bottom:0}
+.list .li .sp{flex:1}
+.wk{display:grid;grid-template-columns:90px 1fr 120px;gap:10px;align-items:center;font-size:13.5px;padding:5px 0}
+.bar{height:10px;border-radius:99px;background:var(--raised);overflow:hidden;display:flex}.bar i{display:block;height:100%}
+.alerts{display:flex;align-items:center;gap:14px;justify-content:space-between}
+.alerts b{display:block;font-size:14px}.alerts span{display:block;font-size:13px;color:var(--mute)}
+.sw{flex:none;position:relative;width:42px;height:24px;border-radius:12px;border:0;background:var(--line2);transition:background .15s;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px #0003}
+.sw[aria-checked="true"]{background:var(--accent)}.sw[aria-checked="true"]::after{transform:translateX(18px)}.sw:disabled{opacity:.45}
+.empty{color:var(--mute);text-align:center;padding:30px 0}
+@media (max-width:520px){.wk{grid-template-columns:70px 1fr}.wk .mute{grid-column:1/-1}}
+</style></head><body>
+<main>
+ <a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a>
+ <h1>Class day</h1>
+ <p class="sub" id="sub">Loading…</p>
+ <div class="tabs"><span class="seg" id="tabs" role="group" aria-label="Show" hidden></span></div>
+ <div id="body"></div>
+</main>
+<script src="auth.js"></script>
+<script src="notify-core.js"></script>
+<script src="push-client.js"></script>
+<script src="classnotes.js"></script>
+<script>
+/* The class secretary's page (supabase_attendance2.sql). Only the owner's Google account gets anything: every call is
+   checked by the database (att_is_admin). Write = the day's summary + who missed it (ticks until the tracker is imported);
+   Questions = chats with classmates who missed a day (open on the day and 2 days after, then deleted);
+   Overview = who is absent today, recent days, weekly rates. "Tidy" asks Claude (classnotes Edge Function) to clean the notes. */
+const $=id=>document.getElementById(id),esc=ClassNotes.esc;
+const phToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const md=s=>new Date(String(s).slice(0,10)+'T00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+const tm=s=>{const d=new Date(s);return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+', '+d.toLocaleDateString('en-US',{month:'short',day:'numeric'})};
+const ago=t=>{const s=(Date.now()-Date.parse(t))/1000;return s<90?'just now':s<5400?Math.round(s/60)+' min ago':s<129600?Math.round(s/3600)+' h ago':Math.round(s/86400)+' days ago'};
+let OV=null,DAY=null,TAB=location.hash==='#inbox'?'inbox':location.hash==='#overview'?'overview':'write',CLASS_TODAY=null,TIDY=false,PREVIEW=false,DIRTY=false;
+
+function fnUrl(n){return Auth.cloud.url.replace(/\/+$/,'')+'/functions/v1/'+n}
+async function classToday(){try{const s=await (await fetch('schedule.json')).json(),t=phToday(),D=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+ const d=new Date(t+'T00:00Z'),w1=new Date(s.week1+'T00:00Z'),n=Math.floor((d-w1)/(7*864e5))+1,day=D[(d.getUTCDay()+6)%7],w=(s.weeks||{})[n]||{};
+ if((s.holidays||{})[t])return false;
+ return (s.classes||[]).some(c=>(((w.times||{})[c.id]||{}).day||c.day)===day&&!(w.cancel||[]).includes(c.id))||(w.extra||[]).some(e=>e.day===day)}catch(e){return null}}
+
+function tabs(){const n=(OV.threads||[]).reduce((k,t)=>k+(t.unseen||0),0),t=$('tabs');t.hidden=false;
+ t.innerHTML=[['write','Write'],['inbox','Questions'],['overview','Overview']].map(([k,l])=>'<button aria-pressed="'+(TAB===k)+'" onclick="go(\''+k+'\')">'+l+(k==='inbox'&&n?'<b class="cnt">'+n+'</b>':'')+'</button>').join('')}
+function go(k){if(TAB==='write'&&k!=='write'&&DIRTY&&!confirm('Leave without saving the notes?'))return;TAB=k;history.replaceState(null,'','#'+(k==='write'?'':k));draw()}
+function draw(){tabs();if(TAB==='inbox')return drawInbox();if(TAB==='overview')return drawOverview();drawWrite()}
+
+/* ---------- Write ---------- */
+function nudges(){const out=[],t=OV.today;
+ if(CLASS_TODAY&&!(OV.days||[]).some(d=>d.day===t&&d.published))out.push('Today\'s summary isn\'t posted yet.');
+ if((OV.notInSheet||[]).length)out.push((OV.notInSheet.length===1?OV.notInSheet[0]+' isn\'t':OV.notInSheet.length+' days with a summary ('+OV.notInSheet.join(', ')+') aren\'t')+' in the tracker import yet. Until then, students see those days only through your ticks below. Update the sheet, then ask Claude to "update attendance".');
+ return out.map(x=>'<div class="nudge">'+esc(x)+'</div>').join('')}
+async function loadDay(day){DAY=null;try{DAY=await Auth.rpc('att_admin_day',{p_day:day},true)}catch(e){}DIRTY=false}
+function drawWrite(){if(!DAY){$('body').innerHTML='<p class="empty">Couldn\'t load that day. Check your connection.</p>';return}
+ const sheet=DAY.sheet||{},inSheet=Object.keys(sheet).length>0,ticks=DAY.absent||{},pub=DAY.published;
+ const roster=(DAY.roster||[]).map(s=>{const st=inSheet?(/^(absent|excused)/i.test(sheet[s.roll]||'')?sheet[s.roll].replace(/^./,c=>c.toUpperCase()):''):(ticks[s.roll]||'');
+  return '<button class="rc" data-roll="'+s.roll+'" data-s="'+esc(st)+'"'+(inSheet?' disabled':' onclick="tick(this)"')+' title="'+esc(s.name)+'">#'+s.roll+' '+esc(short(s.name))+(st?' · '+esc(st):'')+'</button>'}).join('');
+ const missed=(DAY.roster||[]).filter(s=>inSheet?/^(absent|excused)/i.test(sheet[s.roll]||''):ticks[s.roll]).length;
+ $('body').innerHTML=nudges()+
+  '<div class="card"><div class="row"><label class="mute" for="day">Class day</label><input class="inp" type="date" id="day" style="width:auto" value="'+esc(DAY.day)+'" max="'+esc(OV.today)+'" onchange="pickDay(this.value)">'+
+   '<span class="state'+(pub?' pub':'')+'">'+(pub?'Published '+esc(ago(pub)):'Not published')+'</span><span class="sp"></span>'+
+   (DAY.notes||pub?'<button class="btn bad" onclick="delDay()">Delete</button>':'')+'</div>'+
+   '<textarea class="inp" id="notes" rows="14" style="margin-top:12px" placeholder="## Pharmacology&#10;Due: Oct 31 · lab report&#10;Exam: ch 5 only&#10;! diuretics will come out&#10;- discussed ACE inhibitors&#10;  - cough is the classic side effect" oninput="typed()">'+esc(DAY.notes)+'</textarea>'+
+   '<div class="row" style="margin-top:10px">'+(TIDY?'<button class="btn" id="tidy" onclick="tidy()">Tidy with Claude</button>':'')+'<button class="btn" id="pvb" onclick="PREVIEW=!PREVIEW;showPrev()">'+(PREVIEW?'Hide preview':'Preview')+'</button><span class="sp"></span>'+
+   (pub?'<button class="btn primary" id="save" onclick="save(true)">Save changes</button>':'<button class="btn" id="draft" onclick="save(false)">Save draft</button><button class="btn primary" id="save" onclick="save(true)">Publish</button>')+'</div>'+
+   '<p class="msg" id="wmsg"></p><div class="prev" id="prev" hidden></div>'+
+   '<details class="help"><summary>How to format</summary><p><code>## Subject</code> starts a subject · <code>- point</code> a bullet (two spaces before the dash for a sub-point) · <code>Due: Oct 31 · what</code> a deadline · <code>Exam: what\'s covered</code> an exam or quiz hint · <code>! line</code> something the teacher stressed · <code>**word**</code> bold. '+
+   (TIDY?'Type fast and messy, then <b>Tidy with Claude</b>: it fixes spelling, puts everything in this format and keeps every fact. Read it over before publishing.':'')+'</p></details></div>'+
+  '<div class="card"><b>Who missed this day</b> <span class="mute">'+missed+' student'+(missed===1?'':'s')+'</span>'+
+   '<p class="mute" style="margin:4px 0 0">'+(inSheet?'From the class tracker (imported). Change it in the sheet, then ask Claude to "update attendance".':'Not in the tracker import yet: tap a name to mark Absent, tap again for Excused, again to clear. These students see the summary and can ask you questions; the tracker replaces your ticks once it\'s imported.')+'</p>'+
+   '<div class="roster" id="roster">'+roster+'</div></div>';
+ showPrev()}
+const short=n=>{const p=String(n||'').split(',');return p.length>1?p[0].trim()+', '+p[1].trim().split(/\s+/)[0]:String(n||'').split(/\s+/).slice(-1)[0]};
+function typed(){DIRTY=true;if(PREVIEW)showPrev()}
+function showPrev(){const p=$('prev');if(!p)return;p.hidden=!PREVIEW;if($('pvb'))$('pvb').textContent=PREVIEW?'Hide preview':'Preview';if(PREVIEW)p.innerHTML=$('notes').value.trim()?ClassNotes.html($('notes').value):'<p class="mute">Nothing to preview yet.</p>'}
+function tick(b){const s=b.dataset.s,n=s===''?'Absent':s==='Absent'?'Excused':'';b.dataset.s=n;const nm=(DAY.roster.find(x=>x.roll==b.dataset.roll)||{}).name;b.textContent='#'+b.dataset.roll+' '+short(nm)+(n?' · '+n:'');DIRTY=true}
+function ticks(){const o={};document.querySelectorAll('#roster .rc:not([disabled])').forEach(b=>{if(b.dataset.s)o[b.dataset.roll]=b.dataset.s});return o}
+async function pickDay(d){if(!d)return;if(DIRTY&&!confirm('Switch days without saving?')){$('day').value=DAY.day;return}$('body').innerHTML='<p class="empty">Loading…</p>';await loadDay(d);drawWrite()}
+async function save(publish){const notes=$('notes').value,m=$('wmsg');
+ if(publish&&!notes.trim()){m.className='msg bad';m.textContent='Write the summary first.';return}
+ document.querySelectorAll('#save,#draft').forEach(b=>b.disabled=true);m.className='msg';m.textContent='Saving…';
+ try{const r=await Auth.rpc('att_admin_day_save',{p_day:DAY.day,p_notes:notes,p_absent:ticks(),p_publish:publish},true);
+  const was=DAY.published;await Promise.all([loadDay(DAY.day),refresh()]);drawWrite();
+  const w=$('wmsg');w.className='msg ok';w.textContent=publish?(was?'Saved.':'Published.')+(r&&r.notified?' '+r.notified+' account'+(r.notified===1?'':'s')+' of absent students will be notified.':''):'Draft saved. Only you can see it.'}
+ catch(e){document.querySelectorAll('#save,#draft').forEach(b=>b.disabled=false);m.className='msg bad';m.textContent='Couldn\'t save: '+e.message}}
+async function delDay(){if(!confirm('Delete the summary of '+md(DAY.day)+' and its questions? This can\'t be undone.'))return;
+ try{await Auth.rpc('att_admin_day_delete',{p_day:DAY.day},true);await Promise.all([loadDay(DAY.day),refresh()]);drawWrite();const w=$('wmsg');w.className='msg ok';w.textContent='Deleted.'}catch(e){$('wmsg').className='msg bad';$('wmsg').textContent='Couldn\'t delete: '+e.message}}
+async function tidy(){const ta=$('notes'),b=$('tidy'),m=$('wmsg'),before=ta.value;if(before.trim().length<10){m.className='msg bad';m.textContent='Type your notes first.';return}
+ b.disabled=true;b.textContent='Tidying…';m.className='msg';m.textContent='';
+ try{const tok=await Auth.token(),h={'Content-Type':'application/json',apikey:Auth.cloud.key,Authorization:'Bearer '+tok};
+  const r=await fetch(fnUrl('classnotes'),{method:'POST',headers:h,body:JSON.stringify({notes:before,day:DAY.day})}),j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.text)throw new Error(j.error==='limit'?'That\'s today\'s limit of '+(j.perDay||6)+' tidies.':j.error==='busy'?'Claude is busy. Try again in a minute.':j.error==='not allowed'?'Only the class secretary\'s account can use this.':'Couldn\'t tidy ('+(j.detail||j.error||r.status)+').');
+  ta.value=j.text;DIRTY=true;PREVIEW=true;showPrev();TIDY_UNDO=before;m.className='msg ok';m.innerHTML='Tidied. Read it over, then publish. <button class="btn" style="padding:3px 10px;font-size:12.5px" onclick="undoTidy()">Undo</button>'}
+ catch(e){m.className='msg bad';m.textContent=e.message}
+ b.disabled=false;b.textContent='Tidy with Claude'}
+let TIDY_UNDO=null;function undoTidy(){if(TIDY_UNDO==null)return;$('notes').value=TIDY_UNDO;TIDY_UNDO=null;showPrev();$('wmsg').textContent=''}
+
+/* ---------- Questions ---------- */
+function drawInbox(){const th=OV.threads||[];
+ $('body').innerHTML=th.length?'<p class="mute" style="margin:6px 0 0">Classmates who missed a day can ask you up to 5 questions about it, on the day and the 2 days after. Chats are deleted after that.</p>'+
+  th.map(t=>'<div class="card thread"><div class="th"><b>#'+t.roll+' '+esc(t.name)+'</b><span class="mute">about '+esc(md(t.day))+' · closes after '+esc(md(t.closes))+'</span>'+(t.unseen?'<b class="cnt">'+t.unseen+' new</b>':'')+'</div>'+
+   '<div class="chat">'+t.msgs.map(c=>'<div class="bub '+(c.o?'me':'them')+'"><small>'+(c.o?'You':esc(short(t.name)))+' · '+esc(tm(c.at))+'</small>'+esc(c.b).replace(/\n/g,'<br>')+'</div>').join('')+'</div>'+
+   '<div class="ask"><textarea class="inp" rows="2" maxlength="1500" id="r'+t.roll+'_'+esc(t.day)+'" placeholder="Reply…" aria-label="Reply"></textarea><button class="btn primary" onclick="reply('+t.roll+',\''+esc(t.day)+'\',this)">Send</button></div><p class="msg bad" id="m'+t.roll+'_'+esc(t.day)+'"></p></div>').join('')
+  :'<p class="empty">No questions right now. When a classmate who missed a day asks something, it shows up here'+(Push.attOn()?' and you get a notification.':'. Turn on alerts in Overview to get a notification.')+'</p>';
+ const unseen=th.filter(t=>t.unseen);if(unseen.length){unseen.forEach(t=>{Auth.rpc('att_admin_seen',{p_roll:t.roll,p_day:t.day},true).catch(()=>{});t.unseen=0});setTimeout(tabs,1500)}}
+async function reply(roll,day,b){const id=roll+'_'+day,t=$('r'+id),v=t.value.trim();if(!v)return;b.disabled=true;
+ try{await Auth.rpc('att_admin_reply',{p_roll:roll,p_day:day,p_body:v},true);await refresh();drawInbox()}
+ catch(e){b.disabled=false;$('m'+id).textContent=/closed/.test(e.message)?'This chat has closed.':'Couldn\'t send: '+e.message}}
+
+/* ---------- Overview ---------- */
+function drawOverview(){const ab=OV.absentToday||[],days=OV.days||[],weeks=OV.weeks||[];
+ $('body').innerHTML=
+  '<h2>Absent today · '+esc(md(OV.today))+'</h2><div class="card list">'+(ab.length?ab.map(s=>'<div class="li"><b>#'+s.roll+'</b><span>'+esc(s.name)+'</span><span class="sp"></span><span class="mute">'+esc(s.status)+'</span></div>').join(''):'<p class="mute" style="margin:0">No one is marked absent today (from the tracker or your ticks).</p>')+'</div>'+
+  '<h2>Class days with notes</h2><div class="card list">'+(days.length?days.map(d=>'<div class="li"><b>'+esc(md(d.day))+'</b><span class="state'+(d.published?' pub':'')+'">'+(d.published?'Published':'Draft')+'</span><span class="mute">'+d.missed+' missed</span><span class="sp"></span><button class="btn" style="padding:5px 11px;font-size:13px" onclick="openDay(\''+esc(d.day)+'\')">Open</button></div>').join(''):'<p class="mute" style="margin:0">None yet.</p>')+'</div>'+
+  '<h2>By week (from the tracker)</h2><div class="card">'+(weeks.length?weeks.slice().reverse().map(w=>{const tot=w.present+w.late+w.absent+w.excused||1,pc=x=>(100*x/tot).toFixed(1)+'%';
+   return '<div class="wk"><b>'+esc(w.week||'?')+'</b><div class="bar" title="present '+w.present+', late '+w.late+', excused '+w.excused+', absent '+w.absent+'"><i style="width:'+pc(w.present)+';background:var(--good)"></i><i style="width:'+pc(w.late)+';background:var(--accent)"></i><i style="width:'+pc(w.excused)+';background:var(--warn)"></i><i style="width:'+pc(w.absent)+';background:var(--bad)"></i></div>'+
+    '<span class="mute">'+Math.round(100*(w.present+w.late)/tot)+'% present · '+w.absent+' absent'+(w.excused?' · '+w.excused+' excused':'')+'</span></div>'}).join('')+
+   '<p class="mute" style="margin:8px 0 0">Tracker imported '+(OV.imported?esc(ago(OV.imported)):'never')+(OV.lastSheetDay?'; its last recorded day is '+esc(md(OV.lastSheetDay)):'')+'.</p>':'<p class="mute" style="margin:0">No tracker data yet.</p>')+'</div>'+
+  (Push.supported()?'<h2>Alerts</h2><div class="card alerts"><div><b>Alerts on this device</b><span>New questions from classmates, a reminder at 6 PM when today\'s summary isn\'t posted, and when the tracker import falls behind.</span><span class="msg bad" id="amsg"></span></div><button class="sw" role="switch" aria-checked="'+Push.attOn()+'" aria-label="Alerts on this device" onclick="toggleAlerts(this)"></button></div>':'')+
+  '<p class="mute" style="margin-top:18px">Only your account can open this page; every request is checked by the database. Students see only their own days, and the summaries under My attendance → What happened in class.</p>'}
+async function openDay(d){TAB='write';history.replaceState(null,'','#');$('body').innerHTML='<p class="empty">Loading…</p>';tabs();await loadDay(d);drawWrite()}
+async function toggleAlerts(b){const on=b.getAttribute('aria-checked')!=='true';b.disabled=true;
+ try{await Push.attSet(on);b.setAttribute('aria-checked',String(on))}catch(e){$('amsg').textContent=e.message==='blocked'?'Notifications are blocked for this site. Allow them in the browser\'s site settings first.':e.message==='dismissed'?'':'Couldn\'t change it. Try again.'}
+ b.disabled=false}
+
+async function refresh(){try{OV=await Auth.rpc('att_admin_overview',{},true)}catch(e){}}
+addEventListener('beforeunload',e=>{if(DIRTY&&TAB==='write'){e.preventDefault();e.returnValue=''}});
+(async function(){
+ try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
+ if(!Auth.cloud){$('sub').textContent='The online features aren\'t set up here.';return}
+ if(!Auth.ses()){$('sub').innerHTML='Sign in with the class secretary\'s Google account. <a class="btn primary" href="./?signin=1" style="margin-left:6px">Sign in</a>';return}
+ Push.init(Auth.cloud);ClassNotes.style();
+ try{OV=await Auth.rpc('att_admin_overview',{},true)}catch(e){$('sub').textContent=/not allowed/.test(e.message)?'This page is only for the class secretary\'s account.':'Couldn\'t load. Check your connection and try again.';return}
+ $('sub').textContent='Only your account sees this page. Summaries go to classmates who missed the day, and to everyone under What happened in class.';
+ const [ct,tok]=await Promise.all([classToday(),Auth.token()]);CLASS_TODAY=ct;
+ try{const r=await fetch(fnUrl('classnotes'),{headers:{apikey:Auth.cloud.key,Authorization:'Bearer '+tok}});TIDY=r.ok&&!!(await r.json()).ok}catch(e){TIDY=false}
+ await loadDay(OV.today);draw();Push.attRefresh();
+})();
+</script>
+<script src="update.js" defer></script>
+</body></html>
