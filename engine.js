@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='100',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='101',APP_DATE='Oct 29, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -565,7 +565,7 @@ function cardHTML(){
   const nextIsLive=view+1>=liveIdx();
   return '<div class="review-note"><span>Earlier answer · '+(view+1)+' of '+secLog().length+(isX(s)?' in this '+(s==='ALL'?'shuffle':'review'):isCh(s)?' in this '+unitW:' in this section')+'</span><button class="link" onclick="goLive()">Back to current question</button></div>'+
    '<div class="qhead"><span class="kind">'+kindName(e.q.kind)+'</span><span class="mastery">'+flagBtn("flagQ('log')")+'</span></div>'+
-   caseHTML(e.q.cid)+'<p class="prompt">'+stemHTML(e.q.stem)+'</p>'+figHTML(e.q.cid)+(e.fb&&e.fb.self?selfHTML(e.q,e.fb):e.q.typed&&e.fb&&e.fb.typed!=null?typedHTML(e.fb,e.q):choicesHTML(e.q,e.sel,e.fb))+feedbackHTML(e.q.why!=null?e.q:Object.assign({},e.q,{why:(byId[e.q.cid]||{}).why||''}),e.fb,0,1)+
+   caseHTML(e.q.cid)+'<p class="prompt">'+stemHTML(e.q.stem)+'</p>'+figHTML(e.q.cid)+(e.fb&&e.fb.self?selfHTML(e.q,e.fb):(e.q.typed||isWr(byId[e.q.cid]))&&e.fb&&e.fb.typed!=null?typedHTML(e.fb,e.q):isWr(byId[e.q.cid])?wrPast(e.q,e.fb):choicesHTML(e.q,e.sel,e.fb))+feedbackHTML(e.q.why!=null?e.q:Object.assign({},e.q,{why:(byId[e.q.cid]||{}).why||''}),e.fb,0,1)+
    '<div class="actions">'+backBtn()+'<span class="aux"></span><button class="btn primary" id="go" onclick="goForward()">'+(nextIsLive?'Return to current':'Forward')+' <kbd>→</kbd></button></div>';
  }
  // A matching set mixed into practice (Personalize → Mix matching into practice)
@@ -629,12 +629,20 @@ function chChips(keys,cur,fn){if(keys.length<2)return '';const isN=k=>/^\d/.test
    :nums.map(k=>b(k,esc(UNIT)+' '+esc(k)+'<span class="chn"> · '+esc(CH_NAMES[k]||'')+'</span>',esc(UNIT+' '+k+' · '+(CH_NAMES[k]||'')),' named')).join(''))}
 // A run of underscores in a question is a blank to fill in: draw it as one solid line.
 function stemHTML(s){return esc(s).replace(/_{2,}/g,'<span class="blank" role="img" aria-label="blank"></span>')}
+// v101: sections built like the real test (CONFIG.testSecs) are tagged; when the timetable's next test for this course is
+// 3 days away or less, a box above the lessons points to them and to the mock quiz.
+const TEST_SECS=(CONFIG.testSecs||[]).filter(k=>SECTION_NAMES[k]);
+function testKind(){const t=nextTest(),nm=String(t&&t.name||'');return /long quiz/i.test(nm)?'long quiz':/quiz/i.test(nm)?'quiz':/eval/i.test(nm)?'evals':/exam/i.test(nm)?'exam':'test'}
+function testSoonHTML(){if(!TEST_SECS.length)return '';const t=nextTest();if(!t||t.at-Date.now()>3.5*DAY)return '';const k=testKind(),w=whenAt(t.at);
+ return '<div class="tsoon"><b>'+esc(k.charAt(0).toUpperCase()+k.slice(1))+' '+esc(w)+'</b><span>Practice these first: they are built like the '+esc(k)+'.</span>'+
+  TEST_SECS.map(sec=>{const p=progress(sec);return '<button class="sec" onclick="selectSection(\''+sec+'\')"><span class="no">'+sec+'</span><span class="nm">'+esc(SECTION_NAMES[sec])+'</span><span class="ct">'+p.done+'/'+p.total+'</span></button>'}).join('')+
+  (pageOn('exam')&&EX_PRESETS.length?'<button class="link" onclick="setPage(\'exam\');exPreset(0)">Take a mock '+esc(k)+' →</button>':'')+'</div>'}
 function navHTML(){if(NOTES_ONLY)return '';
  const study=page==='study',ap=progress('ALL'),aOn=state.section==='ALL'&&study;
- return '<button class="sec mixed '+(aOn?'on':'')+'" '+(aOn?'aria-current="page" ':'')+'onclick="selectSection(\'ALL\')"><span class="no">'+SHUFFLE+'</span><span class="nm">All '+unitsW+', shuffled</span><span class="ct">'+ap.done+'/'+ap.total+'</span></button>'+focusNav(study)+chapters.map(ch=>{const secs=sectionKeys.filter(k=>chOf(k)===ch),cp=chProgress(ch),wOn=state.section==='CH:'+ch&&study;
+ return testSoonHTML()+'<button class="sec mixed '+(aOn?'on':'')+'" '+(aOn?'aria-current="page" ':'')+'onclick="selectSection(\'ALL\')"><span class="no">'+SHUFFLE+'</span><span class="nm">All '+unitsW+', shuffled</span><span class="ct">'+ap.done+'/'+ap.total+'</span></button>'+focusNav(study)+chapters.map(ch=>{const secs=sectionKeys.filter(k=>chOf(k)===ch),cp=chProgress(ch),wOn=state.section==='CH:'+ch&&study;
   return '<details class="ch'+(secs.some(x=>x.length>4)?' wide':'')+'" '+(openCh.has(ch)?'open':'')+' ontoggle="chToggle(this,\''+ch+'\')"><summary>'+CHEV+'<span class="nm">'+ch+' · '+esc(CH_NAMES[ch])+'</span><span class="ct">'+secs.filter(completed).length+'/'+secs.length+'</span><span class="mini"><i style="width:'+(100*cp.done/cp.total)+'%"></i></span></summary><div class="secs">'+
   '<button class="sec whole '+(wOn?'on ':'')+(cp.done===cp.total?'done':'')+'" '+(wOn?'aria-current="page" ':'')+'onclick="selectSection(\'CH:'+ch+'\')" title="Every '+ITEM+' in this '+unitW+', mixed into one quiz"><span class="no">'+LAYERS_SM+'</span><span class="nm">Entire '+unitW+'</span><span class="ct">'+(cp.done===cp.total?'✓':cp.done+'/'+cp.total)+'</span></button>'+
-  secs.map(sec=>{let p=progress(sec),done=p.done===p.total,on=sec===state.section&&study;return '<button class="sec '+(on?'on ':'')+(done?'done':'')+'" '+(on?'aria-current="page" ':'')+'onclick="selectSection(\''+sec+'\')"><span class="no">'+sec+'</span><span class="nm">'+esc(SECTION_NAMES[sec])+'</span><span class="ct">'+(done?'✓':p.done+'/'+p.total)+'</span></button>'}).join('')+'</div></details>'}).join('');
+  secs.map(sec=>{let p=progress(sec),done=p.done===p.total,on=sec===state.section&&study;return '<button class="sec '+(on?'on ':'')+(done?'done':'')+'" '+(on?'aria-current="page" ':'')+'onclick="selectSection(\''+sec+'\')"><span class="no">'+sec+'</span><span class="nm">'+esc(SECTION_NAMES[sec])+(TEST_SECS.includes(sec)?'<span class="tqtag">Like the '+esc(nextTest()?testKind():'test')+'</span>':'')+'</span><span class="ct">'+(done?'✓':p.done+'/'+p.total)+'</span></button>'}).join('')+'</div></details>'}).join('');
 }
 
 function drawStudy(){
@@ -1808,6 +1816,10 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'101',date:'Oct 29, 2026',title:'Clearer problem solving',items:[
+  'Problem text is larger, and every part of a written problem shows the <b>whole worked solution</b>: variables, objective, constraints, intercepts, shading, how each corner is solved, and the value at every corner.',
+  'Going back to an earlier written answer shows what you wrote, never multiple choice.',
+  'Sections built like the real quiz are tagged <b>Like the quiz</b>, and in the days before it a box at the top of the lessons points to them.']},
  {v:'100',date:'Oct 29, 2026',title:'Your own flashcards',items:[
   '<b>My cards:</b> write your own flashcards in Flashcards → My cards. Type {{c1::word}} to make a fill-in-the-blank card.',
   'After a wrong answer in Practice, tap <b>+ Flashcard</b> to turn that question into a card.',
@@ -2097,7 +2109,7 @@ function loadTimetable(){if(CONFIG.timetable===false||!CONFIG.home||!/^https?:$/
  const add=(src,ok,cb)=>{if(ok())return cb();const el=document.createElement('script');el.src=src;el.onload=cb;el.onerror=()=>{};document.head.appendChild(el)};
  add('schedule-core.js',()=>typeof Sched!=='undefined',()=>add('reminders-core.js',()=>!!window.Remind,()=>{if(typeof Sched==='undefined'||!window.Remind)return;
   Sched.load().then(()=>{const subj=Sched.data.subjects||{},id=courseId(),t=Remind.list(6).find(a=>(subj[a.subject]||{}).course===id);
-   NEXT_TEST=t?{name:t.label,at:+t.from}:null;srsPull();if(page==='dashboard')drawDash()}).catch(()=>{})}))}
+   NEXT_TEST=t?{name:t.label,at:+t.from}:null;srsPull();if(TEST_SECS.length)setHTML($('nav'),navHTML());if(page==='dashboard')drawDash()}).catch(()=>{})}))}
 // Missing a mastered item sends it back to practice: one more correct answer masters it again.
 function masteryDown(k){if(k.right>=T()){k.right=T()-1;k.srs=null}else if(state.prefs.strict)k.right=Math.max(0,(k.right||0)-1)}
 // v70: a missed question comes back after 4-6 other questions in practice
@@ -2160,6 +2172,8 @@ function wrBox(c,id,val,extra){const multi=c.wr.t==='cons'||c.wr.t==='pts';
  return '<div class="typein wr"><textarea id="'+id+'" class="typed wrin" rows="'+(c.wr.t==='cons'?4:2)+'" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+esc(WR_PH[c.wr.t])+'" aria-label="Your answer"'+(extra||'')+'>'+esc(val||'')+'</textarea>'+
   '<div class="wrfoot"><span>'+esc(WR_TIP[c.wr.t])+(multi?' Ctrl+Enter checks it.':'')+'</span>'+wrKeys()+'</div></div>'}
 // v70: the earlier parts of a problem stay in view: the answer key for each, marked with how you did on it just now
+// v101: an earlier written answer saved without its text shows the answer key, never A/B/C
+function wrPast(q,fb){const a=(q.choices.find(x=>x.correct)||{}).label||'';return '<div class="typein done wr '+(fb&&fb.correct?'ok':'bad')+'"><span class="yl">Answer</span><b class="wrout">'+ansHTML(a)+'</b></div>'}
 const partTitle=p=>p.wr?({obj:'Objective function',cons:'Constraints',pts:'Corner points',opt:'Optimal value'})[p.wr.t]:(String(p.q).match(/·\s*([^.?,(]+)/)||[])[1]||p.term;
 function casePrev(cid){const c=byId[cid];if(!c||!c.case||!(c.part>1))return '';const parts=ALL_ITEMS.filter(x=>x.case===c.case&&x.part<c.part).sort((a,b)=>a.part-b.part);if(!parts.length)return '';
  const lastOf=id=>{for(let i=state.log.length-1;i>=0&&i>=state.log.length-12;i--){const e=state.log[i];if(e&&e.q&&e.q.cid===id)return e}return null};
