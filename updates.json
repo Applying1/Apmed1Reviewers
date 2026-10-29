@@ -623,5 +623,5 @@
   "link": "index.html"
  },
  {"id": 75, "date": "2026-10-29", "type": "feature", "title": "Display names and profile pictures", "text": "Tap your picture at the top of the home page, then Edit, to pick a display name and a picture for the discussion. On phones the top bar now shows just your picture. If your sign-in ends on a device, the home page tells you and offers Sign in again.", "link": "index.html?sync"},
- {"id": 76, "date": "2026-10-29", "type": "feature", "title": "APMed'dle is here", "text": "A new word every day from the subject with the nearest eval. A wheel picks the subject, you get 6 tries, and it keeps its own streak.", "link": "apmeddle.html"}
+ {"id": 76, "date": "2026-10-29", "type": "feature", "title": "APMed'le is here", "text": "A new word every day from the subject with the nearest eval. A wheel picks the subject, you get 6 tries, and it keeps its own streak.", "link": "apmeddle.html"}
 ]

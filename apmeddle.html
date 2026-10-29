@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>APMed'dle · APMed '33</title>
+<title>APMed'le · APMed '33</title>
 <meta name="description" content="One word a day from the subject with the nearest eval. Six tries.">
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -120,7 +120,7 @@ h1 em{font-style:normal;color:var(--accent)}
  <p class="note" id="none" hidden></p>
 </main>
 <div class="dlg" id="how" hidden onclick="if(event.target===this)closeHow()"><div class="dbox" role="dialog" aria-modal="true" aria-labelledby="howh">
- <h2 id="howh">How to play APMed'dle</h2>
+ <h2 id="howh">How to play APMed'le</h2>
  <ul><li>Guess today's term in <b>6 tries</b>. Each guess is a real word (English or from our courses) with the same number of letters.</li>
   <li>After each guess the tiles show how close you are:</li></ul>
  <div class="ex"><span class="tile h">A</span>In the word, right spot</div>
@@ -130,14 +130,14 @@ h1 em{font-style:normal;color:var(--accent)}
   <li>One word a day for the whole class, from the subject with the nearest eval. A new word comes at midnight.</li></ul>
  <div class="row2"><button class="btn primary" onclick="closeHow()">Let's play</button></div>
 </div></div>
-<div class="dlg" id="stats" hidden onclick="if(event.target===this)closeStats()"><div class="dbox" role="dialog" aria-modal="true" aria-labelledby="sth"><h2 id="sth">Your APMed'dle</h2><div id="stbody"></div>
+<div class="dlg" id="stats" hidden onclick="if(event.target===this)closeStats()"><div class="dbox" role="dialog" aria-modal="true" aria-labelledby="sth"><h2 id="sth">Your APMed'le</h2><div id="stbody"></div>
  <div class="row2"><button class="btn" onclick="closeStats()">Close</button></div></div></div>
 <div class="toast" id="toast" role="status"></div>
 <script src="schedule-core.js"></script>
 <script src="reminders-core.js"></script>
 <script src="auth.js"></script>
 <script>
-// APMed'dle: one word a day for the class. Words: apmeddle/days.json (built by tools/make_apmeddle.py from apmeddle_src/);
+// APMed'le: one word a day for the class. Words: apmeddle/days.json (built by tools/make_apmeddle.py from apmeddle_src/);
 // allowed guesses: apmeddle/w<length>.txt. Progress: localStorage 'reviewer_apmeddle' =
 // {v:1, how, g:{<date>:{r:[guesses], w:1 won, c:1 clue used, s:1 wheel seen, t0, t1: first/last guess ms, u: changed}}}.
 // Site-wide; syncs with the courses' sync code (row "_apmeddle"). The streak counts consecutive days won.
