@@ -163,9 +163,9 @@ function drawSettings(){const s=A.settings,dl=s.deadline?new Date(s.deadline):nu
   '<p class="mute" style="margin:2px 0 0 26px">Until then, only managers can see it; classmates see a locked "Coming soon" tile.</p>'+
   '<label class="f">Orders close at (optional)<input class="inp" type="datetime-local" id="sd" value="'+(dl?loc(dl):'')+'"></label>'+
   '<label class="f">Title<input class="inp" id="st" maxlength="80" value="'+esc(s.title)+'"></label>'+
-  '<label class="f">Intro (shown at the top)<textarea class="inp" id="si" rows="4" maxlength="2000">'+esc(s.intro)+'</textarea></label>'+
-  '<label class="f">How to pay (GCash number, cash…)<textarea class="inp" id="sp" rows="3" maxlength="600">'+esc(s.pay_note)+'</textarea></label>'+
-  '<label class="f">Pickup (where and when)<textarea class="inp" id="sk" rows="2" maxlength="600">'+esc(s.pickup_note)+'</textarea></label>'+
+  '<label class="f">Intro (shown at the top)<textarea class="inp" id="si" rows="4" maxlength="2000" placeholder="For example: A small sticker launch to share my art :3 Each sticker is ₱5.">'+esc(s.intro)+'</textarea></label>'+
+  '<label class="f">How to pay: your GCash number and name, or cash<textarea class="inp" id="sp" rows="3" maxlength="600" placeholder="For example: GCash 0917 123 4567 (your name), then type the reference number in your order. Or cash when you pick up.">'+esc(s.pay_note)+'</textarea></label>'+
+  '<label class="f">Pickup: where and when buyers get their stickers<textarea class="inp" id="sk" rows="2" maxlength="600" placeholder="For example: Room 204 after class, Tue and Thu. I\'ll message you when yours are ready.">'+esc(s.pickup_note)+'</textarea></label>'+
   '<label class="f">Most of one sticker per order<input class="inp" id="sm" inputmode="numeric" value="'+s.max_qty+'"></label>'+
   '<p class="msg" id="sm2"></p><div class="row" style="margin-top:12px"><span class="sp"></span><a class="btn" href="shop.html" target="_blank">See the shop</a><button class="btn primary" onclick="saveSettings()">Save</button></div></div>'+
   (Push.supported()?'<div class="card row"><div style="flex:1"><b>Order alerts on this device</b><p class="mute" style="margin:2px 0 0">A notification for each new order.</p></div><button class="btn" id="alb" onclick="alerts()">'+(Push.attOn()?'On':'Turn on')+'</button></div>':'')}
