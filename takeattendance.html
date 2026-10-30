@@ -86,7 +86,7 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
  <div class="tables" id="tables"></div>
  <div class="doors">Doors</div>
 </section>
-<p class="help" id="moveHelp" hidden>Pick a table next to a name to move them there. Seats stay on this device until you reset them. <button class="btn small" id="resetSeats">Reset seats</button></p>
+<p class="help" id="moveHelp" hidden>Pick a table next to a name to move them there. Moves are saved to the cloud and show on the class seating page right away. <button class="btn small" id="resetSeats">Reset seats</button></p>
 
 <section class="out">
  <h2>Send to the tracker</h2>
@@ -105,7 +105,7 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 <script>
 // Owner tool. Each day starts from the tracker's marks (att_admin_marks, the hourly sheet import); taps are kept on this
 // device as changes on top of the sheet until they're pasted back. The tracker's roll numbers decide the paste order.
-// Tables follow the class's usual groups (Oct 30, same as att_seats); "Move people" overrides a seat on this device.
+// Tables follow the class's usual groups (Oct 30, same as att_seats); "Move people" saves to att_seats through att_set_seats (owner only), so seating.html follows.
 const TABLES=[
  [[25,'Gotera'],[43,'Retuerto'],[50,'Yap'],[19,'De la Cruz'],[18,'Dado'],[24,'Galvez'],[26,'Hocamis']],
  [[30,'Labrague'],[27,'Improso'],[28,'Jimlani'],[23,'Fusingan'],[46,'Suelan'],[6,'Apion'],[10,'Bagnol']],
@@ -118,10 +118,12 @@ const TABLES=[
 const ROLLS=50,WORD={P:'Present',A:'Absent',L:'Late',E:'Excused'},NEXT={'':'P',P:'A',A:'L',L:'E',E:''};
 const NAME={},HOME={};TABLES.forEach((t,i)=>t.forEach(([r,n])=>{NAME[r]=n;HOME[r]=i}));
 const $=id=>document.getElementById(id);
-const KEY='apmed_att_take',SEATS='apmed_att_seats',SHEETK='apmed_att_sheet';
+const KEY='apmed_att_take',SEATS='apmed_att_seats2',LEGACY='apmed_att_seats',SHEETK='apmed_att_sheet';
 function load(k){try{return JSON.parse(localStorage.getItem(k)||'{}')||{}}catch(e){return {}}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-let ALL=load(KEY),SEAT=load(SEATS),SHEET=load(SHEETK),moving=false,cloudOk=null;
+// Seats live in the cloud (att_seats, shared with seating.html); ARR = rolls per table in seat order, cached here for offline use
+function loadArr(){try{const a=JSON.parse(localStorage.getItem(SEATS));return Array.isArray(a)&&a.length===8?a:null}catch(e){return null}}
+let ALL=load(KEY),ARR=loadArr(),SHEET=load(SHEETK),moving=false,cloudOk=null;
 // First names come from att_seating() (owner only gets roll numbers), cached here so the switch works offline in class
 let FIRST=load('apmed_att_first'),firstOn=false;try{firstOn=localStorage.getItem('apmed_att_names')==='first'}catch(e){}
 const label=r=>firstOn&&FIRST[r]?FIRST[r]:NAME[r];
@@ -133,7 +135,19 @@ async function getFirst(){
  if(!await cloud())throw new Error('Sign in with your Google account first.');
  const S=await Auth.rpc('att_seating',{},true),f={};S.tables.forEach(t=>t.people.forEach(p=>{if(p.roll)f[p.roll]=p.first}));
  if(!Object.keys(f).length)throw new Error("First names are only for the owner's account.");
- FIRST=f;save('apmed_att_first',f)}
+ FIRST=f;save('apmed_att_first',f);
+ const a=Array.from({length:8},()=>[]);S.tables.forEach(t=>{if(t.t>=1&&t.t<=8)t.people.forEach(p=>{if(p.roll&&NAME[p.roll])a[t.t-1].push(p.roll)})});
+ if(a.reduce((n,t)=>n+t.length,0)===Object.keys(NAME).length){ARR=a;save(SEATS,ARR);await migrateLegacy()}}
+// Moves made before seats synced (kept on this device) are sent to the cloud once
+async function migrateLegacy(){
+ let old=null;try{old=JSON.parse(localStorage.getItem(LEGACY)||'null')}catch(e){}
+ if(!old||typeof old!=='object'){try{localStorage.removeItem(LEGACY)}catch(e){}return}
+ const a=curArr().map(t=>t.slice());
+ Object.keys(old).forEach(k=>{const r=+k,v=old[k];if(NAME[r]&&v>=0&&v<8&&v!==seatOf(r,a)){a.forEach(t=>{const i=t.indexOf(r);if(i>=0)t.splice(i,1)});a[v].push(r)}});
+ try{await pushSeats(a);ARR=a;save(SEATS,ARR);localStorage.removeItem(LEGACY);toast('Your earlier seat moves are now saved for everyone.')}catch(e){}}
+function homeArr(){return TABLES.map(t=>t.map(x=>x[0]))}
+function curArr(){return ARR||homeArr()}
+async function pushSeats(a){const flat=[];a.forEach((t,i)=>t.forEach(r=>flat.push([r,i+1])));await Auth.rpc('att_set_seats',{p_seats:flat},true)}
 function nameBtn(){$('nameBtn').setAttribute('aria-pressed',firstOn);$('nameBtn').textContent=firstOn?'Surnames':'First names'}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 $('day').value=today();
@@ -195,11 +209,11 @@ async function refresh(){
  catch(e){toast('Couldn\'t update: '+(e.message||'offline'))}
  await loadSheet();drawSync()}
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
-function seatOf(r){const s=SEAT[r];return s>=0&&s<8?s:HOME[r]}
+function seatOf(r,a){a=a||curArr();for(let t=0;t<8;t++)if(a[t].includes(r))return t;return HOME[r]}
 function draw(){
  const box=$('tables');box.innerHTML='';
  for(let t=0;t<8;t++){
-  const ppl=Object.keys(NAME).map(Number).filter(r=>seatOf(r)===t).sort((a,b)=>(HOME[a]-HOME[b])||TABLES[HOME[a]].findIndex(x=>x[0]===a)-TABLES[HOME[b]].findIndex(x=>x[0]===b));
+  const ppl=curArr()[t].filter(r=>NAME[r]);
   const done=ppl.filter(r=>eff(r)).length,el=document.createElement('div');
   el.className='tb'+(ppl.length&&done===ppl.length?' done':'');
   el.innerHTML='<div class="th"><b>Table '+(t+1)+'</b><span>'+done+'/'+ppl.length+'</span></div>';
@@ -207,7 +221,12 @@ function draw(){
    const s=eff(r),b=document.createElement(moving?'div':'button');
    b.className='st '+s+(changed(r)?' chg':'');
    b.innerHTML='<span class="nm">'+label(r)+'</span>'+(moving?'<select aria-label="Table for '+NAME[r]+'">'+[1,2,3,4,5,6,7,8].map(n=>'<option value="'+(n-1)+'"'+(n-1===t?' selected':'')+'>T'+n+'</option>').join('')+'</select>':'<span class="tag" title="'+(s?WORD[s]:'Not marked')+'">'+(s||'')+'</span>');
-   if(moving)b.querySelector('select').onchange=e=>{const v=+e.target.value;if(v===HOME[r])delete SEAT[r];else SEAT[r]=v;save(SEATS,SEAT);draw()};
+   if(moving)b.querySelector('select').onchange=async e=>{const v=+e.target.value;
+    if(!await cloud()){toast('Sign in as the owner to move people.');return draw()}
+    const a=curArr().map(x=>x.filter(y=>y!==r));a[v].push(r);
+    try{await pushSeats(a);ARR=a;save(SEATS,ARR);toast('Moved. Everyone sees the new seats.')}
+    catch(err){toast(/not allowed/.test(err.message)?'Only the owner can move people.':"Couldn't save the move. Check your connection.")}
+    draw()};
    else{b.title=(firstOn?NAME[r]:FIRST[r]||'')+' · roll '+r+(changed(r)?' · sheet says '+(WORD[sheet()[r]]||'nothing'):'');
     b.onclick=()=>{let n=NEXT[s];if(!n&&sheet()[r])n='P';setMark(r,n);store();draw()}}
    el.appendChild(b)});
@@ -246,7 +265,11 @@ $('nameBtn').onclick=async()=>{
  firstOn=!firstOn;try{localStorage.setItem('apmed_att_names',firstOn?'first':'last')}catch(e){}nameBtn();draw()};
 getFirst().then(draw,()=>{});   // keep the saved names current (nicknames live in att_seats.nick)
 nameBtn();
-$('resetSeats').onclick=()=>{SEAT={};save(SEATS,SEAT);draw()};
+$('resetSeats').onclick=async()=>{
+ if(!confirm('Put everyone back at the usual tables? This changes the seating page for the whole class.'))return;
+ if(!await cloud())return toast('Sign in as the owner first.');
+ try{const a=homeArr();await pushSeats(a);ARR=a;save(SEATS,ARR);toast('Seats reset for everyone.')}catch(e){toast("Couldn't reset. Check your connection.")}
+ draw()};
 draw();loadSheet();
 </script>
 </body></html>
