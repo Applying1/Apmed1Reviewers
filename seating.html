@@ -1,0 +1,106 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>November Seating Arrangement · APMed '33</title>
+<meta name="description" content="The class table groups for November.">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+[hidden]{display:none!important}
+body{font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:1180px;margin:0 auto;padding:22px 16px 64px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+.hero{margin:14px 0 0;padding:22px 22px 20px;border-radius:20px;border:1px solid var(--accent-line);background:linear-gradient(135deg,var(--accent-soft),color-mix(in srgb,var(--accent-2) 14%,var(--surface)));position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-40px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%)}
+.kick{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:600 clamp(26px,4vw,36px)/1.15 var(--serif);letter-spacing:-.4px;margin:4px 0 6px}
+.sub{margin:0;color:var(--mute);font-size:14px}
+.you{display:inline-flex;align-items:center;gap:10px;margin-top:14px;padding:8px 14px 8px 8px;border-radius:99px;background:var(--surface);border:1px solid var(--accent-line);font-weight:600;font-size:14px;cursor:pointer;position:relative;z-index:1}
+.you .n{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--h);color:#fff;font-weight:700}
+.find{margin:18px 0 0;display:flex;gap:8px;align-items:center}
+.find input{flex:1;max-width:340px;background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:9px 12px;font-size:15px;outline:0}
+.find input:focus{border-color:var(--accent)}
+.find span{font-size:13px;color:var(--mute)}
+.room{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow)}
+.screen{position:relative;max-width:760px;margin:0 auto;padding:12px;border-radius:12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:linear-gradient(180deg,var(--accent-soft),transparent);border:1.5px solid var(--accent-line)}
+.screen::after{content:"";position:absolute;left:10%;right:10%;bottom:-14px;height:14px;background:radial-gradient(ellipse at top,color-mix(in srgb,var(--accent) 18%,transparent),transparent 70%)}
+.podium{width:90px;margin:16px auto 18px;padding:3px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);border:1.5px solid var(--line2);border-radius:7px}
+.tables{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px;direction:rtl}
+.tables>*{direction:ltr}
+.tb{--h:#6366f1;position:relative;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:12px 10px 10px;overflow:hidden;transition:transform .2s var(--ease),box-shadow .2s}
+.tb::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:var(--h)}
+.tb.mine{border-color:var(--h);box-shadow:0 0 0 3px color-mix(in srgb,var(--h) 25%,transparent)}
+.th{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.th .n{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--h);color:#fff;font-weight:700;font-size:14px;flex:none}
+.th b{font-size:14px}.th span{margin-left:auto;font-size:12px;color:var(--faint);font-weight:600}
+.pp{display:flex;align-items:center;gap:9px;padding:6px;border-radius:11px;transition:opacity .2s,background .2s}
+.pp .pfa{background:var(--h);color:#fff;font-weight:700;font-size:13px}
+.pp div{min-width:0;line-height:1.2}
+.pp b{display:block;font-size:13.5px;font-weight:600;overflow-wrap:break-word}
+.pp small{display:block;font-size:12px;color:var(--mute)}
+.pp.me{background:color-mix(in srgb,var(--h) 14%,var(--surface))}
+.pp.me b::after{content:"You";margin-left:6px;padding:0 6px;border-radius:99px;background:var(--h);color:#fff;font-size:10.5px;font-weight:700;vertical-align:1px}
+.pp.dim{opacity:.25}.pp.hit{background:var(--accent-soft)}
+.doors{display:flex;justify-content:space-around;margin-top:18px;padding-top:12px;border-top:2px dashed var(--line2);color:var(--faint);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.card{margin-top:20px;padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.card p{margin:0 0 12px;color:var(--mute)}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;color:inherit}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.foot{margin:12px 2px 0;font-size:12.5px;color:var(--faint)}
+@media (max-width:1200px){.tables{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:560px){.tables{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.room{padding:12px 10px}.tb{padding:11px 7px 8px}.pp{gap:7px;padding:5px 4px}.pp .pfa{--s:28px!important}.hero{padding:18px 16px}}
+@media (prefers-reduced-motion:reduce){.tb,.pp{transition:none}}
+</style></head><body>
+<main>
+ <a class="back" href="attendance.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>My attendance</a>
+ <section class="hero">
+  <div class="kick">APMed '33 · Class groups</div>
+  <h1 id="title">November Seating Arrangement</h1>
+  <p class="sub" id="sub">Loading…</p>
+  <button class="you" id="you" hidden></button>
+ </section>
+ <div id="body"></div>
+</main>
+<script src="auth.js"></script>
+<script src="profile.js"></script>
+<script>
+// Class table groups from att_seating() (supabase_seating.sql): only signed-in students with linked attendance (and the owner).
+// Table 1 sits by the right wall, the projector screens are at the front, the doors at the back.
+const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const HUE=['#6366f1','#0ea5e9','#14b8a6','#22a35a','#d99a06','#f97316','#e5484d','#c026d3'];
+function card(t,btn){$('body').innerHTML='<div class="card"><p>'+t+'</p>'+(btn||'')+'</div>'}
+function draw(S){
+ $('title').textContent=S.title||'November Seating Arrangement';
+ const n=S.tables.reduce((a,t)=>a+t.people.length,0);
+ $('sub').textContent=n+' classmates at '+S.tables.length+' tables. We don\'t have fixed seats, just these table groups.';
+ const mine=S.tables.find(t=>t.people.some(p=>p.me));
+ if(mine){const y=$('you');y.style.setProperty('--h',HUE[(mine.t-1)%8]);y.innerHTML='<span class="n">'+mine.t+'</span>You\'re at Table '+mine.t;y.hidden=false;
+  y.onclick=()=>{const el=document.querySelector('.tb.mine');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}}
+ $('body').innerHTML='<div class="find"><input id="q" type="search" placeholder="Find a classmate" aria-label="Find a classmate" autocomplete="off"><span id="qn"></span></div>'+
+  '<section class="room" aria-label="Classroom"><div class="screen">Projector screens</div><div class="podium">Podium</div><div class="tables">'+
+  S.tables.map(t=>'<div class="tb'+(t===mine?' mine':'')+'" style="--h:'+HUE[(t.t-1)%8]+'"><div class="th"><span class="n">'+t.t+'</span><b>Table '+t.t+'</b><span>'+t.people.length+'</span></div>'+
+   t.people.map(p=>'<div class="pp'+(p.me?' me':'')+'" data-q="'+esc((p.first+' '+p.last).toLowerCase())+'">'+Profile.html({name:p.first},32)+'<div><b>'+esc(p.first)+'</b><small>'+esc(p.last)+'</small></div></div>').join('')+'</div>').join('')+
+  '</div><div class="doors"><span>Door</span><span>Door</span></div></section><p class="foot">Shown only to classmates whose attendance is linked.</p>';
+ $('q').oninput=e=>{const v=e.target.value.trim().toLowerCase();let hit=0,first=null;
+  document.querySelectorAll('.pp').forEach(el=>{const m=!v||el.dataset.q.includes(v);el.classList.toggle('dim',!m);el.classList.toggle('hit',!!v&&m);if(v&&m){hit++;first=first||el}});
+  $('qn').textContent=v?(hit?hit+' found':'No match'):'';if(hit===1)first.scrollIntoView({behavior:'smooth',block:'nearest'})};
+}
+(async function(){
+ try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
+ if(!Auth.cloud){$('sub').textContent='';card('The seating arrangement needs the online features, which aren\'t set up here.');return}
+ if(!Auth.ses()){$('sub').textContent='';card('Sign in with the Google account you use for the reviewers to see the seating arrangement.','<a class="btn primary" href="./?signin=1">Sign in with Google</a>');return}
+ let S=null;try{S=await Auth.rpc('att_seating',{},true)}catch(e){
+  $('sub').textContent='';
+  if(/not allowed/.test(e.message))card('The seating arrangement is for classmates whose attendance is linked. Link yours on My attendance first.','<a class="btn primary" href="attendance.html">My attendance</a>');
+  else card('Couldn\'t load the seating arrangement. Check your connection and try again.');return}
+ draw(S);
+})();
+</script>
+<script src="update.js" defer></script>
+</body></html>

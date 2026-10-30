@@ -20,7 +20,7 @@ main{max-width:1180px;margin:0 auto;padding:22px 16px 64px}
 h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18px 0 4px}
 .sub{margin:0;color:var(--mute);font-size:14px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);white-space:nowrap}
+.btn{text-decoration:none;color:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);white-space:nowrap}
 .btn:hover{background:var(--raised)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.small{padding:4px 10px;font-size:12.5px;border-radius:8px}
@@ -72,7 +72,9 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 
 <div class="bar"><div class="row">
  <input class="inp" type="date" id="day" aria-label="Class day">
+ <button class="btn" id="nameBtn" aria-pressed="false">First names</button>
  <button class="btn" id="moveBtn" aria-pressed="false">Move people</button>
+ <a class="btn" href="seating.html">Seating page</a>
  <div class="chips" id="chips"></div></div></div>
 
 <section class="room" aria-label="Classroom">
@@ -95,6 +97,7 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 </section>
 </main>
 <div class="toast" id="toast" role="status"></div>
+<script src="auth.js"></script>
 <script>
 // Owner tool: marks stay on this device only (nothing is sent to the cloud). The tracker's roll numbers decide the paste order.
 // Tables follow the class's usual groups (Oct 30); "Move people" overrides a seat on this device.
@@ -114,6 +117,16 @@ const KEY='apmed_att_take',SEATS='apmed_att_seats';
 function load(k){try{return JSON.parse(localStorage.getItem(k)||'{}')||{}}catch(e){return {}}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 let ALL=load(KEY),SEAT=load(SEATS),moving=false;
+// First names come from att_seating() (owner only gets roll numbers), cached here so the switch works offline in class
+let FIRST=load('apmed_att_first'),firstOn=false;try{firstOn=localStorage.getItem('apmed_att_names')==='first'}catch(e){}
+const label=r=>firstOn&&FIRST[r]?FIRST[r]:NAME[r];
+async function getFirst(){
+ try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
+ if(!Auth.cloud||!Auth.ses())throw new Error('Sign in with your Google account first.');
+ const S=await Auth.rpc('att_seating',{},true),f={};S.tables.forEach(t=>t.people.forEach(p=>{if(p.roll)f[p.roll]=p.first}));
+ if(!Object.keys(f).length)throw new Error("First names are only for the owner's account.");
+ FIRST=f;save('apmed_att_first',f)}
+function nameBtn(){$('nameBtn').setAttribute('aria-pressed',firstOn);$('nameBtn').textContent=firstOn?'Surnames':'First names'}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 $('day').value=today();
 function marks(){return ALL[$('day').value]||(ALL[$('day').value]={})}
@@ -132,9 +145,9 @@ function draw(){
   ppl.forEach(r=>{
    const s=m[r]||'',b=document.createElement(moving?'div':'button');
    b.className='st '+s;
-   b.innerHTML='<span class="nm">'+NAME[r]+'</span>'+(moving?'<select aria-label="Table for '+NAME[r]+'">'+[1,2,3,4,5,6,7,8].map(n=>'<option value="'+(n-1)+'"'+(n-1===t?' selected':'')+'>T'+n+'</option>').join('')+'</select>':'<span class="tag" title="'+(s?WORD[s]:'Not marked')+'">'+(s||'')+'</span>');
+   b.innerHTML='<span class="nm">'+label(r)+'</span>'+(moving?'<select aria-label="Table for '+NAME[r]+'">'+[1,2,3,4,5,6,7,8].map(n=>'<option value="'+(n-1)+'"'+(n-1===t?' selected':'')+'>T'+n+'</option>').join('')+'</select>':'<span class="tag" title="'+(s?WORD[s]:'Not marked')+'">'+(s||'')+'</span>');
    if(moving)b.querySelector('select').onchange=e=>{const v=+e.target.value;if(v===HOME[r])delete SEAT[r];else SEAT[r]=v;save(SEATS,SEAT);draw()};
-   else{b.title='Roll '+r;b.onclick=()=>{const n=NEXT[s];if(n)m[r]=n;else delete m[r];store();draw()}}
+   else{b.title=(firstOn?NAME[r]:FIRST[r]||'')+' · roll '+r;b.onclick=()=>{const n=NEXT[s];if(n)m[r]=n;else delete m[r];store();draw()}}
    el.appendChild(b)});
   if(!moving&&ppl.length){const a=document.createElement('button');a.className='btn small all';a.textContent=done===ppl.length?'Clear table':'All here';
    a.onclick=()=>{if(done===ppl.length)ppl.forEach(r=>delete m[r]);else ppl.forEach(r=>{if(!m[r])m[r]='P'});store();draw()};el.appendChild(a)}
@@ -151,17 +164,22 @@ $('copySheet').onclick=async()=>{
  toast(await copy(lines.join('\n'))?'Copied 50 marks. Paste on roll 1 in the tracker.':'Couldn\'t copy. Try Download for Excel.')};
 $('copyList').onclick=async()=>{
  const m=marks(),d=new Date($('day').value+'T12:00'),head=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
- const grp=k=>Object.keys(m).filter(r=>m[r]===k).map(Number).sort((a,b)=>NAME[a].localeCompare(NAME[b])).map(r=>NAME[r]);
+ const grp=k=>Object.keys(m).filter(r=>m[r]===k).map(Number).sort((a,b)=>label(a).localeCompare(label(b))).map(r=>label(r));
  const parts=[['A','Absent'],['L','Late'],['E','Excused']].map(([k,w])=>{const g=grp(k);return g.length?w+' ('+g.length+'): '+g.join(', '):''}).filter(Boolean);
  toast(await copy('Attendance, '+head+'\n'+(parts.length?parts.join('\n'):'Everyone present'))?'Copied the list.':'Couldn\'t copy.')};
 $('csv').onclick=()=>{
- const m=marks(),rows=[['Roll','Name','Table',$('day').value]];
- for(let r=1;r<=ROLLS;r++)rows.push([r,NAME[r],seatOf(r)+1,m[r]?WORD[m[r]]:'']);
+ const m=marks(),rows=[['Roll','Surname','First name','Table',$('day').value]];
+ for(let r=1;r<=ROLLS;r++)rows.push([r,NAME[r],FIRST[r]||'',seatOf(r)+1,m[r]?WORD[m[r]]:'']);
  const blob=new Blob(['﻿'+rows.map(x=>x.map(v=>/[",\n]/.test(v)?'"'+String(v).replace(/"/g,'""')+'"':v).join(',')).join('\r\n')],{type:'text/csv'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='attendance-'+$('day').value+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $('clear').onclick=()=>{if(!Object.keys(marks()).length)return;if(confirm('Clear every mark for this day?')){delete ALL[$('day').value];store();draw()}};
 $('day').onchange=draw;
 $('moveBtn').onclick=()=>{moving=!moving;$('moveBtn').setAttribute('aria-pressed',moving);$('moveBtn').textContent=moving?'Done moving':'Move people';$('moveHelp').hidden=!moving;draw()};
+$('nameBtn').onclick=async()=>{
+ if(!firstOn&&!Object.keys(FIRST).length){$('nameBtn').disabled=true;try{await getFirst()}catch(e){toast(e.message||"Couldn't load first names.");$('nameBtn').disabled=false;return}$('nameBtn').disabled=false}
+ firstOn=!firstOn;try{localStorage.setItem('apmed_att_names',firstOn?'first':'last')}catch(e){}nameBtn();draw()};
+if(firstOn)getFirst().then(draw,()=>{});
+nameBtn();
 $('resetSeats').onclick=()=>{SEAT={};save(SEATS,SEAT);draw()};
 draw();
 </script>

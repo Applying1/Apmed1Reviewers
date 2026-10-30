@@ -743,5 +743,13 @@
   "title": "More MMW word problems",
   "text": "8 new Linear Programming word problems in the teacher's style (2 constraints each, maximize and minimize), with full written parts and step-by-step solutions.",
   "link": "reviewer.html?course=mmw"
+ },
+ {
+  "id": 90,
+  "date": "2026-10-30",
+  "type": "feature",
+  "title": "November Seating Arrangement",
+  "text": "See the class table groups for November, with your own table highlighted and a search box to find a classmate. Open it from My attendance (needs your attendance linked).",
+  "link": "seating.html"
  }
 ]
