@@ -166,7 +166,7 @@ function ownerPanel(){if(!ATT)return '';const n=linkN(),s=SYNC||{},bad=s.note&&!
   (s.ready?' · '+(s.auto?'checks the sheet every hour':'hourly check off'):' · not automatic yet')+'</p></div></div>'+
   (bad?'<div class="warn">Last check '+esc(ago(s.sync_at))+': '+esc(s.note)+'</div>':'')+
   '<div class="acts2">'+(s.ready?'<button class="btn primary" id="syncbtn" onclick="attSync(this)"><svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-rotate-cw"/></svg>Update attendance now</button>':'<button class="btn primary" onclick="go(\'sync\')">Set up one-tap update</button>')+
-  '<button class="btn" onclick="go(\'att\')">Link requests'+(n?'<b class="cnt">'+n+'</b>':'')+'</button><a class="btn" href="classday.html">Class day</a>'+
+  '<button class="btn" onclick="go(\'att\')">Link requests'+(n?'<b class="cnt">'+n+'</b>':'')+'</button><a class="btn" href="classday.html">Class day</a><a class="btn" href="takeattendance.html">Take attendance</a>'+
   (s.ready?'<span class="sp"></span><button class="link" onclick="go(\'sync\')">Update settings</button>':'')+'</div></section>'}
 function go(v){view=v;history.replaceState(null,'',location.pathname+(v==='sync'?'#sync':v==='att'?'#links':''));draw();scrollTo(0,0)}
 async function attSync(btn){if(btn){btn.disabled=true;btn.lastChild.textContent='Updating…'}let r=null;

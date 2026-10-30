@@ -1,0 +1,168 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Take attendance · APMed '33</title>
+<meta name="description" content="Take attendance table by table, then paste the marks into the tracker.">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+[hidden]{display:none!important}
+body{font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:1180px;margin:0 auto;padding:22px 16px 64px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18px 0 4px}
+.sub{margin:0;color:var(--mute);font-size:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);white-space:nowrap}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.small{padding:4px 10px;font-size:12.5px;border-radius:8px}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--text)}
+.inp{background:var(--surface);border:1px solid var(--line2);border-radius:10px;padding:7px 10px;font-size:15px}
+/* Status colors: Present / Late / Absent / Excused, as in the tracker */
+:root{--p:var(--good);--l:var(--warn);--a:var(--bad);--e:var(--accent)}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 10px;margin-top:10px;border-bottom:1px solid var(--line)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:3px 10px;font-size:13px;font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line2)}
+.dot.P{background:var(--p)}.dot.L{background:var(--l)}.dot.A{background:var(--a)}.dot.E{background:var(--e)}
+/* The room: screens at the front, Table 1 on the right, doors at the back */
+.room{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.screen{border:2px solid var(--line2);border-radius:10px;text-align:center;padding:10px;font-weight:600;color:var(--mute);letter-spacing:.06em;text-transform:uppercase;font-size:12.5px;max-width:760px;margin:0 auto}
+.podium{width:84px;height:16px;border:2px solid var(--line2);border-radius:5px;margin:8px auto 14px}
+.tables{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;direction:rtl}
+.tables>*{direction:ltr}
+.doors{margin-top:16px;border:2px dashed var(--line2);border-radius:10px;text-align:center;padding:6px;color:var(--faint);font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.tb{background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0;transition:border-color .2s}
+.tb.done{border-color:var(--good)}
+.th{display:flex;align-items:baseline;justify-content:space-between;gap:4px;padding:2px 2px 0}
+.th b{font-size:14px}
+.th span{font-size:12px;color:var(--mute);font-weight:600}
+.tb.done .th span{color:var(--good)}
+.st{display:flex;align-items:center;gap:6px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 8px;font-size:13px;font-weight:600;min-height:38px;transition:background .15s,border-color .15s}
+.st .nm{flex:1;min-width:0;overflow-wrap:break-word;line-height:1.25}
+.st .tag{flex:none;width:20px;height:20px;display:grid;place-items:center;font-size:11px;font-weight:700;border-radius:50%;color:var(--faint);border:1px dashed var(--line2)}
+.st.P{border-color:color-mix(in srgb,var(--p) 45%,transparent);background:color-mix(in srgb,var(--p) 12%,var(--surface))}
+.st.L{border-color:color-mix(in srgb,var(--l) 55%,transparent);background:color-mix(in srgb,var(--l) 14%,var(--surface))}
+.st.A{border-color:color-mix(in srgb,var(--a) 55%,transparent);background:color-mix(in srgb,var(--a) 14%,var(--surface))}
+.st.E{border-color:color-mix(in srgb,var(--e) 50%,transparent);background:color-mix(in srgb,var(--e) 12%,var(--surface))}
+.st.P .tag{color:var(--p);border:1px solid currentColor}.st.L .tag{color:var(--l);border:1px solid currentColor}
+.st.A .tag{color:var(--a);border:1px solid currentColor}.st.E .tag{color:var(--e);border:1px solid currentColor}
+.st select{flex:none;max-width:76px;font-size:12px;border:1px solid var(--line2);border-radius:7px;background:var(--bg);padding:2px}
+.all{margin-top:auto}
+.help{margin:12px 2px 0;color:var(--mute);font-size:13px}
+.out{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)}
+.out h2{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);margin:0 0 8px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+@media (max-width:1200px){.tables{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:560px){.tables{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.room{padding:12px 10px}.chips{margin-left:0}}
+</style></head><body>
+<main>
+<a class="back" href="moderate.html"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Moderate</a>
+<h1>Take attendance</h1>
+<p class="sub">Go table by table. Tap “All here”, then tap anyone who isn't: each tap changes Present → Absent → Late → Excused.</p>
+
+<div class="bar"><div class="row">
+ <input class="inp" type="date" id="day" aria-label="Class day">
+ <button class="btn" id="moveBtn" aria-pressed="false">Move people</button>
+ <div class="chips" id="chips"></div></div></div>
+
+<section class="room" aria-label="Classroom">
+ <div class="screen">Projector screens</div>
+ <div class="podium" aria-hidden="true"></div>
+ <div class="tables" id="tables"></div>
+ <div class="doors">Doors</div>
+</section>
+<p class="help" id="moveHelp" hidden>Pick a table next to a name to move them there. Seats stay on this device until you reset them. <button class="btn small" id="resetSeats">Reset seats</button></p>
+
+<section class="out">
+ <h2>Send to the tracker</h2>
+ <div class="row">
+  <button class="btn primary" id="copySheet">Copy for the sheet</button>
+  <button class="btn" id="copyList">Copy absent and late list</button>
+  <button class="btn" id="csv">Download for Excel</button>
+  <button class="btn" id="clear">Clear this day</button>
+ </div>
+ <p class="help">“Copy for the sheet” copies 50 marks in roll order (1 to 50). In the tracker, click this day's cell on roll 1's row and paste: each mark lands in its own row. The site picks it up on the next hourly update (or tap Update attendance now on the Moderate page).</p>
+</section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script>
+// Owner tool: marks stay on this device only (nothing is sent to the cloud). The tracker's roll numbers decide the paste order.
+// Tables follow the class's usual groups (Oct 30); "Move people" overrides a seat on this device.
+const TABLES=[
+ [[25,'Gotera'],[43,'Retuerto'],[50,'Yap'],[19,'De la Cruz'],[18,'Dado'],[24,'Galvez'],[26,'Hocamis']],
+ [[30,'Labrague'],[27,'Improso'],[28,'Jimlani'],[23,'Fusingan'],[46,'Suelan'],[6,'Apion'],[10,'Bagnol']],
+ [[1,'Acelar'],[13,'Cang'],[44,'Rivera'],[20,'Dumagan'],[42,'Ramos'],[7,'Araral'],[12,'Bernaldez']],
+ [[47,'Usman A.'],[16,'Cunanan'],[11,'Batawi'],[22,'Fernandez'],[5,'Apilat'],[15,'Cortel']],
+ [[38,'Pacatang'],[48,'Usman M.'],[9,'Arrosas'],[8,'Aro'],[36,'Navarro'],[14,'Castillon']],
+ [[29,'Kionisala'],[49,'Viola'],[31,'Madarang'],[40,'Pedere'],[33,'Mahinay']],
+ [[3,'Alivio'],[32,'Magnaye'],[41,'Ragay'],[17,'Dacillo'],[4,'Amper'],[2,'Acob']],
+ [[37,'Oani'],[34,'Mañago'],[35,'Masicap'],[39,'Pantaleon'],[45,'Sacal'],[21,'Estrella']]];
+const ROLLS=50,WORD={P:'Present',A:'Absent',L:'Late',E:'Excused'},NEXT={'':'P',P:'A',A:'L',L:'E',E:''};
+const NAME={},HOME={};TABLES.forEach((t,i)=>t.forEach(([r,n])=>{NAME[r]=n;HOME[r]=i}));
+const $=id=>document.getElementById(id);
+const KEY='apmed_att_take',SEATS='apmed_att_seats';
+function load(k){try{return JSON.parse(localStorage.getItem(k)||'{}')||{}}catch(e){return {}}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let ALL=load(KEY),SEAT=load(SEATS),moving=false;
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+$('day').value=today();
+function marks(){return ALL[$('day').value]||(ALL[$('day').value]={})}
+function store(){
+ // keep the last 40 days so storage never fills up
+ const ds=Object.keys(ALL).filter(d=>Object.keys(ALL[d]).length).sort();while(ds.length>40)delete ALL[ds.shift()];
+ save(KEY,ALL)}
+function seatOf(r){const s=SEAT[r];return s>=0&&s<8?s:HOME[r]}
+function draw(){
+ const m=marks(),box=$('tables');box.innerHTML='';
+ for(let t=0;t<8;t++){
+  const ppl=Object.keys(NAME).map(Number).filter(r=>seatOf(r)===t).sort((a,b)=>(HOME[a]-HOME[b])||TABLES[HOME[a]].findIndex(x=>x[0]===a)-TABLES[HOME[b]].findIndex(x=>x[0]===b));
+  const done=ppl.filter(r=>m[r]).length,el=document.createElement('div');
+  el.className='tb'+(ppl.length&&done===ppl.length?' done':'');
+  el.innerHTML='<div class="th"><b>Table '+(t+1)+'</b><span>'+done+'/'+ppl.length+'</span></div>';
+  ppl.forEach(r=>{
+   const s=m[r]||'',b=document.createElement(moving?'div':'button');
+   b.className='st '+s;
+   b.innerHTML='<span class="nm">'+NAME[r]+'</span>'+(moving?'<select aria-label="Table for '+NAME[r]+'">'+[1,2,3,4,5,6,7,8].map(n=>'<option value="'+(n-1)+'"'+(n-1===t?' selected':'')+'>T'+n+'</option>').join('')+'</select>':'<span class="tag" title="'+(s?WORD[s]:'Not marked')+'">'+(s||'')+'</span>');
+   if(moving)b.querySelector('select').onchange=e=>{const v=+e.target.value;if(v===HOME[r])delete SEAT[r];else SEAT[r]=v;save(SEATS,SEAT);draw()};
+   else{b.title='Roll '+r;b.onclick=()=>{const n=NEXT[s];if(n)m[r]=n;else delete m[r];store();draw()}}
+   el.appendChild(b)});
+  if(!moving&&ppl.length){const a=document.createElement('button');a.className='btn small all';a.textContent=done===ppl.length?'Clear table':'All here';
+   a.onclick=()=>{if(done===ppl.length)ppl.forEach(r=>delete m[r]);else ppl.forEach(r=>{if(!m[r])m[r]='P'});store();draw()};el.appendChild(a)}
+  box.appendChild(el)}
+ const c={P:0,L:0,A:0,E:0};let left=0;for(let r=1;r<=ROLLS;r++){if(m[r])c[m[r]]++;else left++}
+ $('chips').innerHTML=['P','L','A','E'].map(k=>'<span class="chip"><i class="dot '+k+'"></i>'+WORD[k]+' '+c[k]+'</span>').join('')+(left?'<span class="chip"><i class="dot"></i>Not marked '+left+'</span>':'');
+}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),2200)}
+async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
+function unmarked(){const m=marks();let n=0;for(let r=1;r<=ROLLS;r++)if(!m[r])n++;return n}
+$('copySheet').onclick=async()=>{
+ const n=unmarked();if(n&&!confirm(n+' '+(n===1?'person is':'people are')+' not marked yet. Their cells will be pasted blank. Copy anyway?'))return;
+ const m=marks(),lines=[];for(let r=1;r<=ROLLS;r++)lines.push(m[r]?WORD[m[r]]:'');
+ toast(await copy(lines.join('\n'))?'Copied 50 marks. Paste on roll 1 in the tracker.':'Couldn\'t copy. Try Download for Excel.')};
+$('copyList').onclick=async()=>{
+ const m=marks(),d=new Date($('day').value+'T12:00'),head=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+ const grp=k=>Object.keys(m).filter(r=>m[r]===k).map(Number).sort((a,b)=>NAME[a].localeCompare(NAME[b])).map(r=>NAME[r]);
+ const parts=[['A','Absent'],['L','Late'],['E','Excused']].map(([k,w])=>{const g=grp(k);return g.length?w+' ('+g.length+'): '+g.join(', '):''}).filter(Boolean);
+ toast(await copy('Attendance, '+head+'\n'+(parts.length?parts.join('\n'):'Everyone present'))?'Copied the list.':'Couldn\'t copy.')};
+$('csv').onclick=()=>{
+ const m=marks(),rows=[['Roll','Name','Table',$('day').value]];
+ for(let r=1;r<=ROLLS;r++)rows.push([r,NAME[r],seatOf(r)+1,m[r]?WORD[m[r]]:'']);
+ const blob=new Blob(['﻿'+rows.map(x=>x.map(v=>/[",\n]/.test(v)?'"'+String(v).replace(/"/g,'""')+'"':v).join(',')).join('\r\n')],{type:'text/csv'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='attendance-'+$('day').value+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('clear').onclick=()=>{if(!Object.keys(marks()).length)return;if(confirm('Clear every mark for this day?')){delete ALL[$('day').value];store();draw()}};
+$('day').onchange=draw;
+$('moveBtn').onclick=()=>{moving=!moving;$('moveBtn').setAttribute('aria-pressed',moving);$('moveBtn').textContent=moving?'Done moving':'Move people';$('moveHelp').hidden=!moving;draw()};
+$('resetSeats').onclick=()=>{SEAT={};save(SEATS,SEAT);draw()};
+draw();
+</script>
+</body></html>
