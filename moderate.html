@@ -194,17 +194,41 @@ function drawSync(){if(!ATT||!SYNC){view='queue';return ME?draw():drawLogin()}do
   (s.sync_at?'<p class="help">Last check '+esc(ago(s.sync_at))+': '+esc(s.note||'')+'</p>':'')+'</div>'+
   '<details class="help card"><summary>Is this safe?</summary><ul><li>The script only answers when the request carries the key in the code above. The key is kept in the database where only you (and the update function) can read it.</li>'+
   '<li>It sends what the update needs: the tracker\'s names and attendance marks, to this site\'s database, which already holds them.</li>'+
+  '<li>It can also write: only Present, Absent, Late or Excused, only into one existing day column, and only when your own account taps <b>Save to tracker</b> on Take attendance.</li>'+
   '<li>To switch it off: in Apps Script, <b>Deploy → Manage deployments → Archive</b>. Changing the code? Deploy a <b>new version</b> of the same deployment so the URL stays.</li></ul></details>'}
-function gasCode(key){return "// APMed '33: lets the site read this attendance tracker when the owner taps \"Update attendance\".\n"+
- "// Deploy as a Web app: Execute as Me, Who has access: Anyone. It only answers requests that carry this key.\n"+
- "const KEY = '"+key+"';\n"+
- "function doGet(e) {\n"+
- "  const out = o => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);\n"+
- "  if (!e || !e.parameter || e.parameter.key !== KEY) return out({ error: 'key' });\n"+
- "  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');\n"+
- "  const rows = Math.min(Math.max(sh.getLastRow() - 2, 1), 58), cols = Math.max(sh.getLastColumn() - 1, 1);\n"+
- "  return out({ values: sh.getRange(3, 2, rows, cols).getDisplayValues() });   // B3 onward, like the Sheets connector\n"+
- "}\n"}
+function gasCode(key){return [
+ "// APMed '33: lets the site read this attendance tracker (\"Update attendance\") and write the marks taken on Take attendance.",
+ "// Deploy as a Web app: Execute as Me, Who has access: Anyone. It only answers requests that carry this key.",
+ "const KEY = '"+key+"';",
+ "const out = o => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);",
+ "function doGet(e) {",
+ "  if (!e || !e.parameter || e.parameter.key !== KEY) return out({ error: 'key' });",
+ "  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');",
+ "  const rows = Math.min(Math.max(sh.getLastRow() - 2, 1), 58), cols = Math.max(sh.getLastColumn() - 1, 1);",
+ "  return out({ values: sh.getRange(3, 2, rows, cols).getDisplayValues() });   // B3 onward, like the Sheets connector",
+ "}",
+ "// Writes {day: 'Oct 30', marks: {roll: 'Present' | 'Absent' | 'Late' | 'Excused'}} into that day's column, one cell per roll.",
+ "function doPost(e) {",
+ "  let p = {};",
+ "  try { p = JSON.parse(e.postData.contents); } catch (x) { return out({ error: 'bad request' }); }",
+ "  if (p.key !== KEY) return out({ error: 'key' });",
+ "  const OK = { Present: 1, Absent: 1, Late: 1, Excused: 1 };",
+ "  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');",
+ "  const lock = LockService.getScriptLock(); lock.waitLock(20000);",
+ "  try {",
+ "    const head = sh.getRange(4, 2, 1, Math.max(sh.getLastColumn() - 1, 1)).getDisplayValues()[0].map(h => String(h).trim());",
+ "    const cols = head.map((h, j) => h === p.day && j >= 6 ? j : -1).filter(j => j >= 0);   // day columns start at H",
+ "    if (cols.length !== 1) return out({ error: cols.length ? 'day twice' : 'no day' });",
+ "    const rolls = sh.getRange(5, 2, Math.max(sh.getLastRow() - 4, 1), 1).getDisplayValues().map(r => String(r[0]).trim());",
+ "    let written = 0; const missing = [];",
+ "    Object.keys(p.marks || {}).forEach(r => {",
+ "      const i = rolls.indexOf(String(r)), v = p.marks[r];",
+ "      if (i < 0 || !OK[v]) { missing.push(r); return; }",
+ "      sh.getRange(5 + i, 2 + cols[0]).setValue(v); written++;",
+ "    });",
+ "    return out({ ok: true, written: written, missing: missing });",
+ "  } finally { lock.releaseLock(); }",
+ "}"].join('\n')+'\n'}
 async function syncSave(){const u=$('gurl').value.trim();if(!u)return toast('Paste the Web app URL first.');
  try{await Auth.rpc('att_sync_set',{p_url:u,p_auto:null},true)}catch(e){return tell(e.message,{title:'Not saved'})}
  await attLoad();toast('Saved. Testing…');view='queue';history.replaceState(null,'',location.pathname);await attSync()}

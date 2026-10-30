@@ -37,16 +37,17 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 .room{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
 .screen{border:2px solid var(--line2);border-radius:10px;text-align:center;padding:10px;font-weight:600;color:var(--mute);letter-spacing:.06em;text-transform:uppercase;font-size:12.5px;max-width:760px;margin:0 auto}
 .podium{width:84px;height:16px;border:2px solid var(--line2);border-radius:5px;margin:8px auto 14px}
-.tables{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;direction:rtl}
+.tables{display:grid;grid-template-columns:repeat(8,minmax(126px,1fr));gap:10px;direction:rtl;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:6px;scrollbar-width:thin}
+.tables>.tb{scroll-snap-align:start}
 .tables>*{direction:ltr}
 .doors{margin-top:16px;border:2px dashed var(--line2);border-radius:10px;text-align:center;padding:6px;color:var(--faint);font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
-.tb{background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0;transition:border-color .2s}
+.tb{background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;gap:6px;min-width:0;transition:border-color .2s}
 .tb.done{border-color:var(--good)}
 .th{display:flex;align-items:baseline;justify-content:space-between;gap:4px;padding:2px 2px 0}
 .th b{font-size:14px}
 .th span{font-size:12px;color:var(--mute);font-weight:600}
 .tb.done .th span{color:var(--good)}
-.st{display:flex;align-items:center;gap:6px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 8px;font-size:13px;font-weight:600;min-height:38px;transition:background .15s,border-color .15s}
+.st{display:flex;align-items:center;gap:5px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 6px 7px 8px;font-size:13px;font-weight:600;min-height:38px;transition:background .15s,border-color .15s}
 .st .nm{flex:1;min-width:0;overflow-wrap:break-word;line-height:1.25}
 .st .tag{flex:none;width:20px;height:20px;display:grid;place-items:center;font-size:11px;font-weight:700;border-radius:50%;color:var(--faint);border:1px dashed var(--line2)}
 .st.P{border-color:color-mix(in srgb,var(--p) 45%,transparent);background:color-mix(in srgb,var(--p) 12%,var(--surface))}
@@ -64,13 +65,12 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 .out h2{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);margin:0 0 8px}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.on{opacity:1}
-@media (max-width:1200px){.tables{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media (max-width:560px){.tables{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.room{padding:12px 10px}.chips{margin-left:0}}
+@media (max-width:560px){.room{padding:12px 10px}.chips{margin-left:0}}
 </style></head><body>
 <main>
 <a class="back" href="moderate.html"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Moderate</a>
 <h1>Take attendance</h1>
-<p class="sub">Each day starts from the tracker. Go table by table and tap anyone who isn't there: each tap changes Present → Absent → Late → Excused. A dashed outline means the sheet doesn't have that change yet.</p>
+<p class="sub">Each day starts from the tracker. Go table by table and tap anyone who isn't there: each tap changes Present → Absent → Late → Excused. A dashed outline means the sheet doesn't have that change yet; Save to tracker writes it in.</p>
 
 <div class="bar"><div class="row">
  <input class="inp" type="date" id="day" aria-label="Class day">
@@ -91,12 +91,13 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 <section class="out">
  <h2>Send to the tracker</h2>
  <div class="row">
-  <button class="btn primary" id="copySheet">Copy for the sheet</button>
+  <button class="btn primary" id="saveSheet">Save to tracker</button>
+  <button class="btn" id="copySheet">Copy for the sheet</button>
   <button class="btn" id="copyList">Copy absent and late list</button>
   <button class="btn" id="csv">Download for Excel</button>
   <button class="btn" id="clear">Undo my changes</button>
  </div>
- <p class="help">“Copy for the sheet” copies 50 marks in roll order (1 to 50). In the tracker, click this day's cell on roll 1's row and paste: each mark lands in its own row. The site picks it up on the next hourly update (or tap Update attendance now on the Moderate page).</p>
+ <p class="help">“Save to tracker” writes your changes (the dashed ones) straight into this day's column of the tracker. If that doesn't work, “Copy for the sheet” copies 50 marks in roll order (1 to 50). In the tracker, click this day's cell on roll 1's row and paste: each mark lands in its own row. The site picks it up on the next hourly update (or tap Update attendance now on the Moderate page).</p>
 </section>
 </main>
 <div class="toast" id="toast" role="status"></div>
@@ -163,9 +164,29 @@ function drawSync(){
  const s=SHEET[day()],n=Object.keys(s?s.m:{}).length,ch=Object.keys(marks()).filter(changed).length;
  if(!s){if(cloudOk)syncLine('Loading the tracker…');return}
  syncLine((n?'<b>From the tracker</b> ('+esc(s.label)+'): '+n+' marked':'<b>The tracker has no marks for '+esc(s.label)+' yet.</b>')+' · updated '+esc(ago(s.at))+
-  (ch?' · <span class="chg">'+ch+' change'+(ch>1?'s':'')+' not in the sheet yet</span>':'')+
+  (ch?' · <span class="chg">'+ch+' change'+(ch>1?'s':'')+' not in the sheet yet</span> <button class="btn small primary" id="save2">Save to tracker</button>':'')+
   ' <button class="btn small" id="refresh">Update from sheet</button>');
- $('refresh').onclick=refresh}
+ $('refresh').onclick=refresh;if(ch)$('save2').onclick=saveSheet}
+// Writes my changes into the day's column through attsync {write} (the owner's Apps Script doPost), then re-reads the sheet
+async function saveSheet(){
+ const d=day(),m=marks(),out={};Object.keys(m).filter(changed).forEach(r=>out[r]=WORD[m[r]]);
+ const n=Object.keys(out).length;if(!n)return toast('Nothing to save: the tracker already matches.');
+ const lbl=(SHEET[d]&&SHEET[d].label)||new Date(d+'T12:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+ if(!confirm('Write '+n+' mark'+(n>1?'s':'')+" into the tracker's "+lbl+' column?'))return;
+ const bs=[$('saveSheet'),$('save2')].filter(Boolean);bs.forEach(b=>{b.disabled=true;b.textContent='Saving…'});
+ let r=null;
+ try{if(!await cloud())throw new Error('signin');const tok=await Auth.token();if(!tok)throw new Error('signin');
+  const res=await fetch(Auth.cloud.url.replace(/\/+$/,'')+'/functions/v1/attsync',{method:'POST',headers:{'Content-Type':'application/json',apikey:Auth.cloud.key,Authorization:'Bearer '+tok},body:JSON.stringify({write:{day:lbl,marks:out}})});
+  r=await res.json().catch(()=>({error:'server '+res.status}))}
+ catch(e){r={error:e.message==='signin'?'signin':'offline'}}
+ bs.forEach(b=>{b.disabled=false;b.textContent='Save to tracker'});
+ const why={signin:'Sign in as the owner first (home page).',offline:'No connection. Your changes are kept; try again or use Copy for the sheet.',
+  'old script':"The tracker's Apps Script needs the new code first: Moderate → Attendance links → Update settings → Copy code, paste it in Apps Script, then Deploy → Manage deployments → edit → New version.",
+  'no day':'The tracker has no '+lbl+' column. Add the date in row 4 first, or use Copy for the sheet.','day twice':'The tracker has two '+lbl+' columns. Fix that first.',
+  key:"The key in the Apps Script doesn't match. Copy the code again from Moderate → Update settings.",access:"The Apps Script Web app isn't open to “Anyone”.",'not allowed':"Only the owner's account can save to the tracker."}[r&&r.error];
+ if(!r||r.error){alert(why||("Couldn't save: "+((r&&r.error)||'unknown')));return}
+ toast('Saved '+(r.written||0)+' mark'+(r.written===1?'':'s')+' to the tracker.'+(r.missing&&r.missing.length?' Not found: roll '+r.missing.join(', ')+'.':''));
+ await loadSheet();draw()}
 async function refresh(){
  const b=$('refresh');b.disabled=true;b.textContent='Updating…';
  try{const tok=await Auth.token();if(!tok)throw new Error('Your sign-in ended. Sign in again on the home page.');
@@ -202,6 +223,7 @@ function draw(){
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),2600)}
 async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
 function unmarked(){let n=0;for(let r=1;r<=ROLLS;r++)if(!eff(r))n++;return n}
+$('saveSheet').onclick=saveSheet;
 $('copySheet').onclick=async()=>{
  const n=unmarked();if(n&&!confirm(n+' '+(n===1?'person is':'people are')+' not marked yet. Their cells will be pasted blank. Copy anyway?'))return;
  const lines=[];for(let r=1;r<=ROLLS;r++)lines.push(eff(r)?WORD[eff(r)]:'');
