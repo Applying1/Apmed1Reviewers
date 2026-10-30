@@ -235,6 +235,20 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
 .iskip{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:4;border:1px solid var(--line2);background:var(--surface);color:var(--mute);border-radius:999px;padding:7px 16px;font:600 13px var(--sans);cursor:pointer}
 html.introing .brand img,html.introing .brand b,html.introing .brand span{visibility:hidden}
 html.introing body{overflow:hidden}
+/* Jorts Battle popup (Nov 4, 2026): shown at most 3 times per device, see the script at the end of the page */
+.jorts{position:fixed;inset:0;z-index:900;display:grid;place-items:center;padding:16px;background:#0f172a99;opacity:0;transition:opacity .25s}
+.jorts.on{opacity:1}
+.jorts .jbox{width:100%;max-width:380px;max-height:94vh;overflow-y:auto;background:var(--surface);border:1px solid var(--line2);border-radius:20px;padding:12px 12px 16px;text-align:center;transform:scale(.7) rotate(-4deg);transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+.jorts.on .jbox{transform:none}
+.jorts img{display:block;width:100%;height:auto;border-radius:12px}
+.jorts h2{font-size:19px;line-height:1.2;margin:12px 6px 4px;color:var(--text)}
+.jorts p{margin:4px 8px 0;font-size:14px;color:var(--mute)}
+.jorts .jw{display:inline-block;animation:jwob 1.6s ease-in-out infinite}
+@keyframes jwob{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg) scale(1.15)}}
+.jorts .jrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.jorts button{font:inherit;font-size:14px;padding:9px 14px;border-radius:12px;border:1px solid var(--line2);background:var(--surface);color:var(--text);cursor:pointer}
+.jorts button.yes{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+@media (prefers-reduced-motion:reduce){.jorts,.jorts .jbox{transition:none}.jorts .jw{animation:none}}
 </style></head><body>
 <main>
  <div class="top">
@@ -243,6 +257,7 @@ html.introing body{overflow:hidden}
  </div>
  <h1 id="hi">Pick a course</h1>
  <section class="annc" id="annc" hidden aria-label="Announcement"></section>
+ <section class="annc" id="jbanner" hidden aria-label="Jorts Battle"><span class="tic" aria-hidden="true" style="font-size:19px">🩳</span><div class="ab"><div class="ak">Pinned <span>· Wednesday, Nov 4</span></div><p style="-webkit-line-clamp:3">APMed '33 FIRST EVER JORTS BATTLE. Knee-length confidence only.</p><a href="#" id="jbopen">See the poster →</a></div><button class="mx" id="jbx" aria-label="Close the Jorts Battle card" title="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></section>
  <div class="bkcard" id="bkcard" hidden></div>
  <a class="upnext" id="upnext" href="schedule.html" hidden></a>
  <a class="btn prevq" id="prevq" hidden></a>
@@ -646,6 +661,31 @@ if(window.Daily)Daily.digest();
    A($('.ibg'),[{opacity:1},{opacity:0}],{duration:600,delay:250});A($('.iveil')||ov,[{backgroundColor:getComputedStyle(ov).backgroundColor},{backgroundColor:'transparent'}],{duration:700,delay:200});
    $('.iskip').remove();setTimeout(()=>finish(),900)},4150);
  })})();
+</script>
+<script>
+// Jorts Battle popup: a joke for the class. Shown at most 3 times per device (one counter for the whole site), only until
+// Nov 4, 2026, and only after the welcome intro is gone. Works without storage (then it shows once per visit).
+(function(){
+ const KEY='reviewer_jorts_v1',BK='reviewer_jorts_banner',MAX=3;let n=0,gone=false;try{n=+localStorage.getItem(KEY)||0;gone=localStorage.getItem(BK)==='1'}catch(e){}
+ if(Date.now()>new Date(2026,10,5).getTime())return;
+ let wait2=0;
+ function show(force){
+  if(document.querySelector('.jorts'))return;
+  if(!force&&document.querySelector('.modal:not([hidden])')){if(wait2++<90)setTimeout(show,1000);return}   // another popup is open: try again later
+  if(!force)try{localStorage.setItem(KEY,String(n+1))}catch(e){}
+  const o=document.createElement('div');o.className='jorts';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','APMed \'33 first ever Jorts Battle');
+  o.innerHTML='<div class="jbox"><img src="img/jorts-battle.jpg" alt="Poster: APMed 33 Jorts Battle, November 4, 2026, Wednesday" width="480" height="600">'+
+   '<h2>APMed \'33 FIRST EVER JORTS BATTLE <span class="jw">🩳</span></h2><p><b>Wednesday, November 4.</b> Knee-length confidence only. Long pants will be judged by the vibes.</p>'+
+   '<div class="jrow"><button type="button" class="yes">I\'m in 🩳</button><button type="button" class="no">I only own trousers</button></div></div>';
+  const close=()=>{o.classList.remove('on');setTimeout(()=>{o.remove();removeEventListener('keydown',k)},260)};
+  const k=e=>{if(e.key==='Escape')close()};
+  o.onclick=e=>{if(e.target===o)close()};o.querySelector('.yes').onclick=()=>{try{localStorage.setItem(KEY,String(MAX))}catch(e){}close()};o.querySelector('.no').onclick=close;
+  addEventListener('keydown',k);document.body.appendChild(o);setTimeout(()=>o.classList.add('on'),40);o.querySelector('.yes').focus()}
+ let tries=0;(function wait(){if(document.documentElement.classList.contains('introing')&&tries++<60)return setTimeout(wait,400);if(n<MAX)setTimeout(show,1800)})();   // after the features popup has had its turn
+ // Pinned card under the announcement (until Nov 4, closable); its link reopens the poster
+ const jb=document.getElementById('jbanner');
+ if(jb&&!gone){jb.hidden=false;document.getElementById('jbopen').onclick=e=>{e.preventDefault();show(true)};document.getElementById('jbx').onclick=()=>{jb.hidden=true;try{localStorage.setItem(BK,'1')}catch(e){}}}
+})();
 </script>
 <script src="update.js" defer></script>
 </body></html>
