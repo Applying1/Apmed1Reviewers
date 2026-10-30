@@ -57,6 +57,8 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 .st.A .tag{color:var(--a);border:1px solid currentColor}.st.E .tag{color:var(--e);border:1px solid currentColor}
 .st select{flex:none;max-width:76px;font-size:12px;border:1px solid var(--line2);border-radius:7px;background:var(--bg);padding:2px}
 .all{margin-top:auto}
+.sync{margin:8px 0 0;font-size:13px;color:var(--mute)}.sync:empty{display:none}.sync .btn{margin-left:4px}.sync .chg{color:var(--warn);font-weight:600}
+.st.chg{outline:2px dashed var(--warn);outline-offset:-2px}
 .help{margin:12px 2px 0;color:var(--mute);font-size:13px}
 .out{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)}
 .out h2{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);margin:0 0 8px}
@@ -68,14 +70,15 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 <main>
 <a class="back" href="moderate.html"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Moderate</a>
 <h1>Take attendance</h1>
-<p class="sub">Go table by table. Tap “All here”, then tap anyone who isn't: each tap changes Present → Absent → Late → Excused.</p>
+<p class="sub">Each day starts from the tracker. Go table by table and tap anyone who isn't there: each tap changes Present → Absent → Late → Excused. A dashed outline means the sheet doesn't have that change yet.</p>
 
 <div class="bar"><div class="row">
  <input class="inp" type="date" id="day" aria-label="Class day">
  <button class="btn" id="nameBtn" aria-pressed="false">First names</button>
  <button class="btn" id="moveBtn" aria-pressed="false">Move people</button>
  <a class="btn" href="seating.html">Seating page</a>
- <div class="chips" id="chips"></div></div></div>
+ <div class="chips" id="chips"></div></div>
+ <p class="sync" id="sync"></p></div>
 
 <section class="room" aria-label="Classroom">
  <div class="screen">Projector screens</div>
@@ -91,7 +94,7 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
   <button class="btn primary" id="copySheet">Copy for the sheet</button>
   <button class="btn" id="copyList">Copy absent and late list</button>
   <button class="btn" id="csv">Download for Excel</button>
-  <button class="btn" id="clear">Clear this day</button>
+  <button class="btn" id="clear">Undo my changes</button>
  </div>
  <p class="help">“Copy for the sheet” copies 50 marks in roll order (1 to 50). In the tracker, click this day's cell on roll 1's row and paste: each mark lands in its own row. The site picks it up on the next hourly update (or tap Update attendance now on the Moderate page).</p>
 </section>
@@ -99,8 +102,9 @@ h1{font:600 clamp(24px,3vw,30px)/1.2 var(--serif);letter-spacing:-.3px;margin:18
 <div class="toast" id="toast" role="status"></div>
 <script src="auth.js"></script>
 <script>
-// Owner tool: marks stay on this device only (nothing is sent to the cloud). The tracker's roll numbers decide the paste order.
-// Tables follow the class's usual groups (Oct 30); "Move people" overrides a seat on this device.
+// Owner tool. Each day starts from the tracker's marks (att_admin_marks, the hourly sheet import); taps are kept on this
+// device as changes on top of the sheet until they're pasted back. The tracker's roll numbers decide the paste order.
+// Tables follow the class's usual groups (Oct 30, same as att_seats); "Move people" overrides a seat on this device.
 const TABLES=[
  [[25,'Gotera'],[43,'Retuerto'],[50,'Yap'],[19,'De la Cruz'],[18,'Dado'],[24,'Galvez'],[26,'Hocamis']],
  [[30,'Labrague'],[27,'Improso'],[28,'Jimlani'],[23,'Fusingan'],[46,'Suelan'],[6,'Apion'],[10,'Bagnol']],
@@ -113,74 +117,114 @@ const TABLES=[
 const ROLLS=50,WORD={P:'Present',A:'Absent',L:'Late',E:'Excused'},NEXT={'':'P',P:'A',A:'L',L:'E',E:''};
 const NAME={},HOME={};TABLES.forEach((t,i)=>t.forEach(([r,n])=>{NAME[r]=n;HOME[r]=i}));
 const $=id=>document.getElementById(id);
-const KEY='apmed_att_take',SEATS='apmed_att_seats';
+const KEY='apmed_att_take',SEATS='apmed_att_seats',SHEETK='apmed_att_sheet';
 function load(k){try{return JSON.parse(localStorage.getItem(k)||'{}')||{}}catch(e){return {}}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-let ALL=load(KEY),SEAT=load(SEATS),moving=false;
+let ALL=load(KEY),SEAT=load(SEATS),SHEET=load(SHEETK),moving=false,cloudOk=null;
 // First names come from att_seating() (owner only gets roll numbers), cached here so the switch works offline in class
 let FIRST=load('apmed_att_first'),firstOn=false;try{firstOn=localStorage.getItem('apmed_att_names')==='first'}catch(e){}
 const label=r=>firstOn&&FIRST[r]?FIRST[r]:NAME[r];
-async function getFirst(){
+async function cloud(){
+ if(cloudOk!==null)return cloudOk;
  try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
- if(!Auth.cloud||!Auth.ses())throw new Error('Sign in with your Google account first.');
+ return cloudOk=!!(Auth.cloud&&Auth.ses())}
+async function getFirst(){
+ if(!await cloud())throw new Error('Sign in with your Google account first.');
  const S=await Auth.rpc('att_seating',{},true),f={};S.tables.forEach(t=>t.people.forEach(p=>{if(p.roll)f[p.roll]=p.first}));
  if(!Object.keys(f).length)throw new Error("First names are only for the owner's account.");
  FIRST=f;save('apmed_att_first',f)}
 function nameBtn(){$('nameBtn').setAttribute('aria-pressed',firstOn);$('nameBtn').textContent=firstOn?'Surnames':'First names'}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 $('day').value=today();
-function marks(){return ALL[$('day').value]||(ALL[$('day').value]={})}
+const day=()=>$('day').value;
+function marks(){return ALL[day()]||(ALL[day()]={})}          // my changes for the day
+function sheet(){return (SHEET[day()]||{}).m||{}}              // the tracker's marks for the day (letters)
+const eff=r=>marks()[r]||sheet()[r]||'';
+const changed=r=>!!marks()[r]&&marks()[r]!==(sheet()[r]||'');
+function setMark(r,v){const m=marks();if(!v||v===(sheet()[r]||''))delete m[r];else m[r]=v}
 function store(){
  // keep the last 40 days so storage never fills up
  const ds=Object.keys(ALL).filter(d=>Object.keys(ALL[d]).length).sort();while(ds.length>40)delete ALL[ds.shift()];
- save(KEY,ALL)}
+ save(KEY,ALL);
+ const ss=Object.keys(SHEET).sort();while(ss.length>40)delete SHEET[ss.shift()];save(SHEETK,SHEET)}
+function ago(t){const m=Math.round((Date.now()-new Date(t))/60000);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+async function loadSheet(){
+ const d=day();
+ if(!await cloud()){syncLine('Sign in as the owner to start each day from the tracker. Until then, marks start blank.');return}
+ try{const r=await Auth.rpc('att_admin_marks',{p_day:d},true),m={};
+  Object.entries(r.marks||{}).forEach(([k,v])=>{const c=String(v).trim().charAt(0).toUpperCase();if(WORD[c])m[k]=c});
+  SHEET[d]={m,at:r.imported,label:r.label};
+  const mine=ALL[d]||{};Object.keys(mine).forEach(k=>{if(mine[k]===m[k])delete mine[k]});   // already in the sheet
+  store()}
+ catch(e){if(d===day())syncLine(/not allowed/.test(e.message)?'Only the owner\'s account can read the tracker here.':'Couldn\'t reach the tracker. Showing the last copy on this phone.');return}
+ if(d===day())draw()}
+function syncLine(t){$('sync').innerHTML=t}
+function drawSync(){
+ const s=SHEET[day()],n=Object.keys(s?s.m:{}).length,ch=Object.keys(marks()).filter(changed).length;
+ if(!s){if(cloudOk)syncLine('Loading the tracker…');return}
+ syncLine((n?'<b>From the tracker</b> ('+esc(s.label)+'): '+n+' marked':'<b>The tracker has no marks for '+esc(s.label)+' yet.</b>')+' · updated '+esc(ago(s.at))+
+  (ch?' · <span class="chg">'+ch+' change'+(ch>1?'s':'')+' not in the sheet yet</span>':'')+
+  ' <button class="btn small" id="refresh">Update from sheet</button>');
+ $('refresh').onclick=refresh}
+async function refresh(){
+ const b=$('refresh');b.disabled=true;b.textContent='Updating…';
+ try{const tok=await Auth.token();if(!tok)throw new Error('Your sign-in ended. Sign in again on the home page.');
+  const res=await fetch(Auth.cloud.url.replace(/\/+$/,'')+'/functions/v1/attsync',{method:'POST',headers:{'Content-Type':'application/json',apikey:Auth.cloud.key,Authorization:'Bearer '+tok},body:'{}'});
+  const r=await res.json().catch(()=>({error:'server '+res.status}));if(r.error)throw new Error(r.error)}
+ catch(e){toast('Couldn\'t update: '+(e.message||'offline'))}
+ await loadSheet();drawSync()}
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 function seatOf(r){const s=SEAT[r];return s>=0&&s<8?s:HOME[r]}
 function draw(){
- const m=marks(),box=$('tables');box.innerHTML='';
+ const box=$('tables');box.innerHTML='';
  for(let t=0;t<8;t++){
   const ppl=Object.keys(NAME).map(Number).filter(r=>seatOf(r)===t).sort((a,b)=>(HOME[a]-HOME[b])||TABLES[HOME[a]].findIndex(x=>x[0]===a)-TABLES[HOME[b]].findIndex(x=>x[0]===b));
-  const done=ppl.filter(r=>m[r]).length,el=document.createElement('div');
+  const done=ppl.filter(r=>eff(r)).length,el=document.createElement('div');
   el.className='tb'+(ppl.length&&done===ppl.length?' done':'');
   el.innerHTML='<div class="th"><b>Table '+(t+1)+'</b><span>'+done+'/'+ppl.length+'</span></div>';
   ppl.forEach(r=>{
-   const s=m[r]||'',b=document.createElement(moving?'div':'button');
-   b.className='st '+s;
+   const s=eff(r),b=document.createElement(moving?'div':'button');
+   b.className='st '+s+(changed(r)?' chg':'');
    b.innerHTML='<span class="nm">'+label(r)+'</span>'+(moving?'<select aria-label="Table for '+NAME[r]+'">'+[1,2,3,4,5,6,7,8].map(n=>'<option value="'+(n-1)+'"'+(n-1===t?' selected':'')+'>T'+n+'</option>').join('')+'</select>':'<span class="tag" title="'+(s?WORD[s]:'Not marked')+'">'+(s||'')+'</span>');
    if(moving)b.querySelector('select').onchange=e=>{const v=+e.target.value;if(v===HOME[r])delete SEAT[r];else SEAT[r]=v;save(SEATS,SEAT);draw()};
-   else{b.title=(firstOn?NAME[r]:FIRST[r]||'')+' · roll '+r;b.onclick=()=>{const n=NEXT[s];if(n)m[r]=n;else delete m[r];store();draw()}}
+   else{b.title=(firstOn?NAME[r]:FIRST[r]||'')+' · roll '+r+(changed(r)?' · sheet says '+(WORD[sheet()[r]]||'nothing'):'');
+    b.onclick=()=>{let n=NEXT[s];if(!n&&sheet()[r])n='P';setMark(r,n);store();draw()}}
    el.appendChild(b)});
-  if(!moving&&ppl.length){const a=document.createElement('button');a.className='btn small all';a.textContent=done===ppl.length?'Clear table':'All here';
-   a.onclick=()=>{if(done===ppl.length)ppl.forEach(r=>delete m[r]);else ppl.forEach(r=>{if(!m[r])m[r]='P'});store();draw()};el.appendChild(a)}
+  const mine=ppl.some(r=>marks()[r]);
+  if(!moving&&ppl.length&&(done<ppl.length||mine)){const a=document.createElement('button');a.className='btn small all';
+   a.textContent=done<ppl.length?'All here':'Undo changes';
+   a.onclick=()=>{if(done<ppl.length)ppl.forEach(r=>{if(!eff(r))setMark(r,'P')});else ppl.forEach(r=>delete marks()[r]);store();draw()};el.appendChild(a)}
   box.appendChild(el)}
- const c={P:0,L:0,A:0,E:0};let left=0;for(let r=1;r<=ROLLS;r++){if(m[r])c[m[r]]++;else left++}
+ const c={P:0,L:0,A:0,E:0};let left=0;for(let r=1;r<=ROLLS;r++){const s=eff(r);if(s)c[s]++;else left++}
  $('chips').innerHTML=['P','L','A','E'].map(k=>'<span class="chip"><i class="dot '+k+'"></i>'+WORD[k]+' '+c[k]+'</span>').join('')+(left?'<span class="chip"><i class="dot"></i>Not marked '+left+'</span>':'');
+ drawSync();
 }
-function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),2200)}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),2600)}
 async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
-function unmarked(){const m=marks();let n=0;for(let r=1;r<=ROLLS;r++)if(!m[r])n++;return n}
+function unmarked(){let n=0;for(let r=1;r<=ROLLS;r++)if(!eff(r))n++;return n}
 $('copySheet').onclick=async()=>{
  const n=unmarked();if(n&&!confirm(n+' '+(n===1?'person is':'people are')+' not marked yet. Their cells will be pasted blank. Copy anyway?'))return;
- const m=marks(),lines=[];for(let r=1;r<=ROLLS;r++)lines.push(m[r]?WORD[m[r]]:'');
+ const lines=[];for(let r=1;r<=ROLLS;r++)lines.push(eff(r)?WORD[eff(r)]:'');
  toast(await copy(lines.join('\n'))?'Copied 50 marks. Paste on roll 1 in the tracker.':'Couldn\'t copy. Try Download for Excel.')};
 $('copyList').onclick=async()=>{
- const m=marks(),d=new Date($('day').value+'T12:00'),head=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
- const grp=k=>Object.keys(m).filter(r=>m[r]===k).map(Number).sort((a,b)=>label(a).localeCompare(label(b))).map(r=>label(r));
+ const d=new Date(day()+'T12:00'),head=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}),all=Array.from({length:ROLLS},(_,i)=>i+1);
+ const grp=k=>all.filter(r=>eff(r)===k).sort((a,b)=>label(a).localeCompare(label(b))).map(r=>label(r));
  const parts=[['A','Absent'],['L','Late'],['E','Excused']].map(([k,w])=>{const g=grp(k);return g.length?w+' ('+g.length+'): '+g.join(', '):''}).filter(Boolean);
  toast(await copy('Attendance, '+head+'\n'+(parts.length?parts.join('\n'):'Everyone present'))?'Copied the list.':'Couldn\'t copy.')};
 $('csv').onclick=()=>{
- const m=marks(),rows=[['Roll','Surname','First name','Table',$('day').value]];
- for(let r=1;r<=ROLLS;r++)rows.push([r,NAME[r],FIRST[r]||'',seatOf(r)+1,m[r]?WORD[m[r]]:'']);
+ const rows=[['Roll','Surname','First name','Table',day()]];
+ for(let r=1;r<=ROLLS;r++)rows.push([r,NAME[r],FIRST[r]||'',seatOf(r)+1,eff(r)?WORD[eff(r)]:'']);
  const blob=new Blob(['﻿'+rows.map(x=>x.map(v=>/[",\n]/.test(v)?'"'+String(v).replace(/"/g,'""')+'"':v).join(',')).join('\r\n')],{type:'text/csv'});
- const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='attendance-'+$('day').value+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
-$('clear').onclick=()=>{if(!Object.keys(marks()).length)return;if(confirm('Clear every mark for this day?')){delete ALL[$('day').value];store();draw()}};
-$('day').onchange=draw;
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='attendance-'+day()+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('clear').onclick=()=>{if(!Object.keys(marks()).length)return toast('No changes to undo for this day.');if(confirm('Undo every change for this day? Marks go back to what the tracker says.')){delete ALL[day()];store();draw()}};
+$('day').onchange=()=>{draw();loadSheet()};
 $('moveBtn').onclick=()=>{moving=!moving;$('moveBtn').setAttribute('aria-pressed',moving);$('moveBtn').textContent=moving?'Done moving':'Move people';$('moveHelp').hidden=!moving;draw()};
 $('nameBtn').onclick=async()=>{
  if(!firstOn&&!Object.keys(FIRST).length){$('nameBtn').disabled=true;try{await getFirst()}catch(e){toast(e.message||"Couldn't load first names.");$('nameBtn').disabled=false;return}$('nameBtn').disabled=false}
  firstOn=!firstOn;try{localStorage.setItem('apmed_att_names',firstOn?'first':'last')}catch(e){}nameBtn();draw()};
-if(firstOn)getFirst().then(draw,()=>{});
+getFirst().then(draw,()=>{});   // keep the saved names current (nicknames live in att_seats.nick)
 nameBtn();
 $('resetSeats').onclick=()=>{SEAT={};save(SEATS,SEAT);draw()};
-draw();
+draw();loadSheet();
 </script>
 </body></html>

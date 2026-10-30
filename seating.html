@@ -31,7 +31,7 @@ h1{font:600 clamp(26px,4vw,36px)/1.15 var(--serif);letter-spacing:-.4px;margin:4
 .screen{position:relative;max-width:760px;margin:0 auto;padding:12px;border-radius:12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:linear-gradient(180deg,var(--accent-soft),transparent);border:1.5px solid var(--accent-line)}
 .screen::after{content:"";position:absolute;left:10%;right:10%;bottom:-14px;height:14px;background:radial-gradient(ellipse at top,color-mix(in srgb,var(--accent) 18%,transparent),transparent 70%)}
 .podium{width:90px;margin:16px auto 18px;padding:3px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);border:1.5px solid var(--line2);border-radius:7px}
-.tables{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px;direction:rtl}
+.tables{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;direction:rtl}
 .tables>*{direction:ltr}
 .tb{--h:#6366f1;position:relative;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:12px 10px 10px;overflow:hidden;transition:transform .2s var(--ease),box-shadow .2s}
 .tb::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:var(--h)}
@@ -53,7 +53,6 @@ h1{font:600 clamp(26px,4vw,36px)/1.15 var(--serif);letter-spacing:-.4px;margin:4
 .btn{display:inline-flex;align-items:center;gap:6px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;color:inherit}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .foot{margin:12px 2px 0;font-size:12.5px;color:var(--faint)}
-@media (max-width:1200px){.tables{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (max-width:560px){.tables{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.room{padding:12px 10px}.tb{padding:11px 7px 8px}.pp{gap:7px;padding:5px 4px}.pp .pfa{--s:28px!important}.hero{padding:18px 16px}}
 @media (prefers-reduced-motion:reduce){.tb,.pp{transition:none}}
 </style></head><body>
