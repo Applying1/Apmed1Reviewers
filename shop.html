@@ -142,8 +142,8 @@ body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px)
 .pickday{margin:8px 0 0;font:500 14.5px Fredoka,var(--sans);color:var(--ink2);background:color-mix(in srgb,var(--sky) 40%,var(--surface));border-radius:12px;padding:6px 12px;display:inline-block}
 .sheet.det{max-width:440px;text-align:left}
 .sheet.det h3 .x{border:0;background:var(--raised);width:32px;height:32px;border-radius:50%;font-size:22px;line-height:1;color:var(--mute)}
-.dpic{background:color-mix(in srgb,var(--c) 24%,var(--surface));border-radius:20px;aspect-ratio:1;max-height:46vh;display:grid;place-items:center;overflow:hidden;margin-bottom:12px}
-.dpic img{width:100%;height:100%;object-fit:contain;padding:12%;transform:rotate(var(--r,0deg));filter:drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 5px 6px #0000002e)}
+.dpic{background:color-mix(in srgb,var(--c) 24%,var(--surface));border-radius:20px;aspect-ratio:1;width:min(100%,46vh);margin:0 auto 12px;position:relative;display:grid;place-items:center;overflow:hidden;cursor:zoom-in}
+.dpic img{position:absolute;inset:0;box-sizing:border-box;width:100%;height:100%;object-fit:contain;padding:10%;transform:rotate(var(--r,0deg));filter:drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 5px 6px #0000002e)}
 .dpic .none{color:var(--faint);font-size:14px}
 .dmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.dmeta b{font:600 20px Fredoka,var(--sans);color:var(--ink2)}.dmeta .fav{margin-left:auto}
 .dmeta .dc{background:color-mix(in srgb,var(--c) 40%,var(--surface));border-color:transparent;color:var(--ink2);cursor:default}
@@ -468,17 +468,19 @@ function drawShop(){const s=D.settings,cats=D.catalogs.filter(c=>D.items.some(i=
    '<div class="grid">'+its.map(card).join('')+'</div></section>'}).join('')}
 /* sticker detail sheet: big picture, the seller's description and the same Add / quantity / bell controls as the card */
 let DET=null;
-function detail(id){const it=item(+id);if(!it)return;DET=it.id;let m=$('detail');if(!m){m=document.createElement('div');m.id='detail';m.className='modal';m.onclick=e=>{if(e.target===m)closeDetail()};document.body.appendChild(m);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&DET!=null&&!document.querySelector('.dlgwrap'))closeDetail()})}
+function detail(id){const it=item(+id);if(!it)return;DET=it.id;let m=$('detail');if(!m){m=document.createElement('div');m.id='detail';m.className='modal';m.onclick=e=>{if(e.target===m)closeDetail()};document.body.appendChild(m);document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;const z=document.querySelector('.zoom');if(z){z.remove();return}if(DET!=null&&!document.querySelector('.dlgwrap'))closeDetail()})}
  m.hidden=false;drawDetail()}
 function closeDetail(){DET=null;const m=$('detail');if(m)m.hidden=true}
 function drawDetail(){const it=DET==null?null:item(DET),m=$('detail');if(!it||!m)return;const fav=FAV.includes(it.id),cat=(D.catalogs.find(c=>c.id===it.catalog)||{}).name||'';
  m.innerHTML='<div class="sheet det" role="dialog" aria-modal="true" aria-label="'+esc(it.name)+'" style="--c:'+hue(it.catalog)+'"><h3><span>'+esc(it.name)+'</span><button class="x" onclick="closeDetail()" aria-label="Close">×</button></h3>'+
-  '<div class="dpic">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="" style="--r:'+tilt(it.id)+'deg">':'<span class="none">No photo</span>')+'</div>'+
+  '<div class="dpic"'+(it.image?' onclick="zoomFull('+it.id+')" role="button" aria-label="See '+esc(it.name)+' full size"':'')+'>'+(it.image?'<img src="'+esc(img(it.image))+'" alt="" style="--r:'+tilt(it.id)+'deg">':'<span class="none">No photo</span>')+'</div>'+
   '<div class="dmeta"><span class="chip dc">'+esc(cat)+'</span><b>'+peso(it.price)+'</b>'+(it.left==null||it.left===0?'':'<span class="mute">'+it.left+' left</span>')+(it.loves>=3?'<span class="loves">♥ '+it.loves+'</span>':'')+
   '<button class="fav" aria-pressed="'+fav+'" onclick="toggleFav('+it.id+')" aria-label="'+(fav?'Remove from favorites':'Add to favorites')+'">'+HEART+'</button></div>'+
   (it.blurb?'<p class="dtxt">'+esc(it.blurb)+'</p>':'')+(D.settings.item_note?'<p class="dtxt mute">'+esc(D.settings.item_note)+'</p>':'')+
   '<div class="dbuy">'+buyCtl(it)+'</div></div>'}
 function zoom(id){detail(id)}
+/* tap the picture inside the sheet for the full-size view; tap or Esc to come back */
+function zoomFull(id){const it=item(+id);if(!it||!it.image)return;const z=document.createElement('div');z.className='zoom';z.innerHTML='<img src="'+esc(img(it.image))+'" alt=""><b>'+esc(it.name)+' · '+peso(it.price)+'</b>';z.onclick=()=>z.remove();document.body.appendChild(z)}
 function review(){tab('cart')}
 const BASKET='<svg width="46" height="46" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 10h14l-1.6 8.2a2 2 0 0 1-2 1.6H8.6a2 2 0 0 1-2-1.6L5 10z"/><path d="M8.5 10 12 4l3.500 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="14.500" r="1" fill="#fff"/><circle cx="14" cy="14.500" r="1" fill="#fff"/></svg>';
 const FAVNOTE=()=>Auth.ses()?'<p class="msg">Your hearts follow you on every device you sign in on.</p>'
