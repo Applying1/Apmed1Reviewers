@@ -253,9 +253,9 @@ function editItem(id,cat){const i=A.items.find(x=>x.id===id)||{name:'',price_cen
   '<label class="chk"><input type="checkbox" id="ia"'+(i.active?' checked':'')+'> Show in the shop</label><p class="msg bad" id="em"></p>'+
   '<div class="row" style="margin-top:14px">'+(id?'<button class="btn bad" onclick="saveItem('+id+',true)">Delete</button>':'')+'<span class="sp"></span><button class="btn" onclick="$(\'modal\').hidden=true">Cancel</button><button class="btn primary" id="isave" onclick="saveItem('+(id||'null')+')">Save</button></div>')}
 // resize to at most 800 px and encode as WebP (JPEG where WebP isn't supported), then upload to the "shop" bucket
-async function shrink(file){const bmp=await createImageBitmap(file),k=Math.min(1,800/Math.max(bmp.width,bmp.height)),c=document.createElement('canvas');c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
- c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);let b=await new Promise(r=>c.toBlob(r,'image/webp',.86));if(!b||b.type!=='image/webp')b=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));return b}
-async function upload(file){const b=await shrink(file),ext=b.type==='image/webp'?'webp':'jpg',path='items/'+crypto.randomUUID()+'.'+ext,tok=await Auth.token();
+async function shrink(file,png){const bmp=await createImageBitmap(file),k=Math.min(1,(png?1000:800)/Math.max(bmp.width,bmp.height)),c=document.createElement('canvas');c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
+ c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);if(png)return await new Promise(r=>c.toBlob(r,'image/png'));let b=await new Promise(r=>c.toBlob(r,'image/webp',.86));if(!b||b.type!=='image/webp')b=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));return b}
+async function upload(file,png){const b=await shrink(file,png),ext=b.type==='image/png'?'png':b.type==='image/webp'?'webp':'jpg',path='items/'+crypto.randomUUID()+'.'+ext,tok=await Auth.token();
  const r=await fetch(Auth.base()+'/storage/v1/object/shop/'+path,{method:'POST',headers:{apikey:Auth.cloud.key,Authorization:'Bearer '+tok,'Content-Type':b.type,'x-upsert':'false'},body:b});
  if(!r.ok){let m='';try{m=(await r.json()).message}catch(e){}throw new Error('upload failed'+(m?': '+m:''))}return path}
 async function pickPhoto(inp){const f=inp.files[0];if(!f)return;$('pv').textContent='Uploading…';$('isave').disabled=true;
@@ -269,7 +269,9 @@ async function bulk(cat,inp){const files=[...inp.files];if(!files.length)return;
  toast('Added '+files.length+' sticker'+(files.length===1?'':'s')+'. Check their names and prices.');await reload()}
 
 /* ---------- Settings ---------- */
-function drawSettings(){const s=A.settings,dl=s.deadline?new Date(s.deadline):null,loc=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,16);
+let QR='';
+async function pickQr(inp){const f=inp.files[0];if(!f)return;$('qrp').textContent='Uploading…';try{QR=await upload(f,true);$('qrp').innerHTML='<img src="'+esc(img(QR))+'" alt="GCash QR">';$('qrx').hidden=false}catch(e){$('qrp').textContent='Failed: '+e.message}}
+function drawSettings(){const s=A.settings;QR=s.pay_qr||'';const dl=s.deadline?new Date(s.deadline):null,loc=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,16);
  $('body').innerHTML='<div class="card"><label class="chk" style="margin-top:0;font-weight:600"><input type="checkbox" id="so"'+(s.open?' checked':'')+'> The shop is open for orders</label>'+
   '<label class="chk" style="font-weight:600"><input type="checkbox" id="sl"'+(s.launched?' checked':'')+'> Launched: everyone can see the shop</label>'+
   '<p class="mute" style="margin:2px 0 0 26px">Until then, only managers can see it; classmates see a locked "Coming soon" tile.</p>'+
@@ -280,6 +282,8 @@ function drawSettings(){const s=A.settings,dl=s.deadline?new Date(s.deadline):nu
   '<label class="f">Intro (shown at the top)<textarea class="inp" id="si" rows="4" maxlength="2000" placeholder="For example: A small sticker launch to share my art :3 Each sticker is ₱5.">'+esc(s.intro)+'</textarea></label>'+
   '<label class="f">How to pay: your GCash number and name, or cash<textarea class="inp" id="sp" rows="3" maxlength="600" placeholder="For example: GCash 0917 123 4567 (your name), then type the reference number in your order. Or cash when you pick up.">'+esc(s.pay_note)+'</textarea></label>'+
   '<label class="f">Pickup: where and when buyers get their stickers<textarea class="inp" id="sk" rows="2" maxlength="600" placeholder="For example: Room 204 after class, Tue and Thu. I\'ll message you when yours are ready.">'+esc(s.pickup_note)+'</textarea></label>'+
+  '<label class="f">GCash QR code (optional; buyers can scan it)</label><div class="row" style="align-items:flex-start;gap:14px"><div class="prev" id="qrp" style="width:140px;height:140px">'+(QR?'<img src="'+esc(img(QR))+'" alt="GCash QR">':'No QR yet')+'</div>'+
+  '<div style="flex:1;min-width:150px"><label class="btn" style="cursor:pointer;margin-top:8px">Choose QR picture<input type="file" accept="image/*" hidden onchange="pickQr(this)"></label> <button class="btn bad" id="qrx" onclick="QR=\'\';$(\'qrp\').textContent=\'No QR yet\';this.hidden=true"'+(QR?'':' hidden')+'>Remove</button><p class="mute">Use the QR from the GCash app (Receive Money → QR). It shows to buyers when they pay. Tap Save below to keep it.</p></div></div>'+
   '<label class="f">Schools / pickup places buyers can choose (one per line; buyers must pick one)<textarea class="inp" id="spl" rows="4" maxlength="1500" placeholder="For example:&#10;DMSF Main Gate&#10;Library Lobby">'+esc(s.pickup_places||'')+'</textarea></label>'+
   '<label class="f">Shown on every sticker (size, material)<input class="inp" id="sn" maxlength="200" placeholder="For example: 5 cm die-cut, waterproof vinyl" value="'+esc(s.item_note||'')+'"></label>'+
   '<label class="f">Class-fund goal in ₱ (empty = no progress bar)<input class="inp" id="sg" inputmode="decimal" placeholder="For example: 1000" value="'+(s.fund_goal_cents==null?'':s.fund_goal_cents/100)+'"></label>'+
@@ -290,7 +294,7 @@ function drawSettings(){const s=A.settings,dl=s.deadline?new Date(s.deadline):nu
   (Push.supported()?'<div class="card row"><div style="flex:1"><b>Order alerts on this device</b><p class="mute" style="margin:2px 0 0">A notification for each new order.</p></div><button class="btn" id="alb" onclick="alerts()">'+(Push.attOn()?'On':'Turn on')+'</button></div>':'')}
 async function saveSettings(){const d=$('sd').value,gv=$('sg').value.trim(),goal=gv===''?'':Math.round(parseFloat(gv)*100);
  if(goal!==''&&(isNaN(goal)||goal<0)){$('sm2').className='msg bad';$('sm2').textContent='Type the goal as a number, like 1000.';return}
- try{await Auth.rpc('shop_admin_settings',{p:{open:$('so').checked,launched:$('sl').checked,guest_ok:$('sgu').checked,deadline:d?new Date(d).toISOString():'',title:$('st').value,intro:$('si').value,pay_note:$('sp').value,pickup_note:$('sk').value,pickup_places:$('spl').value,max_qty:+$('sm').value||50,item_note:$('sn').value,fund_goal:goal,pickup_days:[...document.querySelectorAll('.pd')].reduce((a,i)=>{if(i.value.trim())a[i.dataset.school]=i.value.trim();return a},{})}},true);
+ try{await Auth.rpc('shop_admin_settings',{p:{open:$('so').checked,launched:$('sl').checked,guest_ok:$('sgu').checked,deadline:d?new Date(d).toISOString():'',title:$('st').value,intro:$('si').value,pay_note:$('sp').value,pickup_note:$('sk').value,pickup_places:$('spl').value,max_qty:+$('sm').value||50,item_note:$('sn').value,pay_qr:QR,fund_goal:goal,pickup_days:[...document.querySelectorAll('.pd')].reduce((a,i)=>{if(i.value.trim())a[i.dataset.school]=i.value.trim();return a},{})}},true);
   await reload();$('sm2').className='msg ok';$('sm2').textContent='Saved.'}catch(e){$('sm2').className='msg bad';$('sm2').textContent=e.message}}
 async function alerts(){const b=$('alb');b.disabled=true;try{await Push.attSet(!Push.attOn());toast(Push.attOn()?'Order alerts are on for this device.':'Order alerts are off.')}catch(e){toast(e.message==='blocked'?'Notifications are blocked for this site in your browser settings.':'Couldn\'t change it.')}b.disabled=false;b.textContent=Push.attOn()?'On':'Turn on'}
 
