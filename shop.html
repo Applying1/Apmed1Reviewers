@@ -307,6 +307,23 @@ body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px)
 .gtitle{font:600 17px Fredoka,var(--sans);color:var(--ink2);margin:22px 2px 0}
 .st.held{background:color-mix(in srgb,#ffd27a 40%,var(--surface));color:var(--ink2)}
 .testtag{margin:0 0 12px;display:inline-block;padding:5px 12px;border-radius:99px;background:color-mix(in srgb,var(--pink) 14%,var(--surface));font-size:12.5px;color:var(--mute)}.testtag b{color:var(--ink2);margin-right:4px}
+/* ---- v8 (Nov 1): bundle deals strip and study coupons ---- */
+.deals{margin:4px 0 18px;padding:14px;border-radius:20px;background:color-mix(in srgb,#ffd27a 22%,var(--surface));border:2px dashed color-mix(in srgb,#e8a93a 60%,transparent)}
+.deals h2{margin:0 0 2px;font:600 20px Fredoka,var(--sans);color:var(--ink2)}.deals>p{margin:0 0 10px;font-size:14px;color:var(--mute)}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.dcard{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.dcard .dt{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.dcard .dt b{font:600 17px Fredoka,var(--sans);color:var(--ink2)}
+.dcard .pr{display:flex;align-items:baseline;gap:8px}.dcard .pr s{color:var(--mute);font-size:14px}.dcard .pr b{font:600 22px Fredoka,var(--sans);color:var(--ink2)}
+.dcard .save{font:700 12.5px var(--sans);padding:2px 9px;border-radius:99px;background:color-mix(in srgb,var(--good) 18%,var(--surface));color:var(--good)}
+.dthumbs{display:flex;gap:4px;overflow:hidden}.dthumbs img{width:44px;height:44px;object-fit:contain;border-radius:8px;background:var(--raised)}
+.dcard .btn{align-self:flex-start}.dcard .inc{font-size:13.5px;color:var(--good);font-weight:600}
+.cpcard{margin:0 0 18px;padding:14px 16px;border-radius:20px;background:color-mix(in srgb,var(--pink) 12%,var(--surface));border:2px solid color-mix(in srgb,var(--pink) 45%,transparent)}
+.cpcard b.t{display:block;font:600 18px Fredoka,var(--sans);color:var(--ink2)}.cpcard p{margin:4px 0 0;font-size:14px}
+.cpcard .meter{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 2px;font-size:13.5px}.cpcard .meter span{display:flex;flex-direction:column;gap:3px;min-width:140px}
+.cpcard .meter i{display:block;height:8px;border-radius:99px;background:var(--raised);overflow:hidden}.cpcard .meter i em{display:block;height:100%;background:var(--pink)}
+.cpcard .btn{margin-top:10px}.cpcard .gold{margin-top:8px;font-size:13px;color:var(--mute)}
+.cpbox{margin:10px 0 4px;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--pink) 10%,var(--surface));border:1px dashed color-mix(in srgb,var(--pink) 55%,transparent);display:flex;flex-direction:column;gap:6px;font-size:14px}
+.cpbox>b{font:600 16px Fredoka,var(--sans);color:var(--ink2)}.cpopt{display:flex;align-items:center;gap:8px;cursor:pointer}.cpopt b{margin-left:auto;color:var(--good)}
 </style></head><body>
 <main>
  <a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a>
@@ -374,7 +391,45 @@ function dealHint(L){for(const b of (D.bundles||[])){
   else{const its=D.items.filter(i=>i.catalog===b.catalog),miss=its.filter(i=>!CART[i.id]);
    if(its.length>=2&&miss.length&&miss.length<its.length&&miss.length<=2&&miss.every(i=>i.left!==0))return 'Add '+miss.map(i=>i.name).join(' and ')+' to complete “'+b.name+'”.'}}
  return ''}
-function addSet(cat){D.items.filter(i=>i.catalog===cat&&i.left!==0&&!CART[i.id]).forEach(i=>CART[i.id]=1);saveCart();drawShop();drawBar()}
+/* Study coupons (Nov 1, supabase_shop_coupons.sql): 2 coupons = one bundle free, 1 golden coupon = every bundle free.
+   The server checks everything again (shop_order p_coupon); this only shows the choice and the total. */
+let COUP=null,CPN='';
+async function loadCoup(){if(!Auth.ses()){COUP=null;return}try{COUP=await Auth.rpc('shop_coupons_me',{},true)}catch(e){COUP=null}}
+function cpOpts(L){if(!COUP||!COUP.on)return [];const ids=dealsFor(L).deals.map(d=>d.id),B=D.bundles||[],o=[];
+ if(COUP.basic>=2)B.filter(b=>ids.includes(b.id)).forEach(b=>o.push({k:'b'+b.id,save:b.price,label:'2 coupons: '+b.name+' free'}));
+ if(COUP.golden>=1&&B.length&&B.every(b=>ids.includes(b.id)))o.push({k:'golden',save:B.reduce((a,b)=>a+b.price,0),label:'Golden coupon: '+B.map(b=>b.name).join(' + ')+' free'});
+ return o}
+function cpSave(L,t){const o=cpOpts(L).find(x=>x.k===CPN);if(!o){CPN='';return 0}return Math.min(o.save,t)}
+function bundleItems(b){return b.kind==='set'?D.items.filter(i=>i.catalog===b.catalog):[]}
+function inCart(b){const its=bundleItems(b);return its.length>0&&its.every(i=>CART[i.id])}
+function bundleBtn(b){const its=bundleItems(b);if(!its.length||!D.settings.open)return '';if(inCart(b))return '<span class="inc">✓ In your cart</span>';
+ return its.some(i=>i.left===0)?'<span class="mute">A sticker in this set is sold out</span>':'<button class="btn mini primary" onclick="addSet('+b.catalog+')">+ Add the bundle</button>'}
+/* "Bundle deals" strip at the top of the shop: what each bundle has, the usual price crossed out, and one tap to add it */
+function dealsStrip(){const B=D.bundles||[];if(!B.length)return '';
+ return '<section class="deals" aria-label="Bundle deals"><h2>🏷 Bundle deals</h2><p>Cheaper together. Add a whole set and the deal price is used automatically.</p><div class="dgrid">'+B.map(b=>{const its=bundleItems(b),full=its.reduce((a,i)=>a+i.price,0);
+  return '<div class="dcard"><div class="dt"><b>'+esc(b.name)+'</b><span class="mute">'+(b.kind==='set'?'all '+its.length+' from '+esc(catOf(b.catalog)):'any '+b.qty+' stickers'+(b.catalog==null?'':' from '+esc(catOf(b.catalog))))+'</span></div>'+
+   (its.length?'<div class="dthumbs">'+its.slice(0,8).map(i=>i.image?'<img src="'+esc(img(i.image))+'" alt="'+esc(i.name)+'" loading="lazy">':'').join('')+'</div>':'')+
+   '<div class="pr">'+(full>b.price?'<s>'+peso(full)+'</s>':'')+'<b>'+peso(b.price)+'</b>'+(full>b.price?'<span class="save">Save '+peso(full-b.price)+'</span>':'')+'</div>'+bundleBtn(b)+'</div>'}).join('')+'</div></section>'}
+/* coupon card: the starter offer with the buyer's progress and a Claim button, or the coupons they have */
+function couponCard(){const B=D.bundles||[];if(!B.length)return '';const c=COUP,gold='<p class="gold">🌟 Golden coupons: every Sunday, classmates who studied 4 or more days that week can win one (it makes every bundle free).</p>';
+ if(!Auth.ses())return '<div class="cpcard"><b class="t">🎟 Free bundle for the first 25</b><p>Answer 50 questions with 5 right in a row, then claim 2 coupons here (2 coupons = a bundle of your choice, free).</p><button class="btn mini" onclick="goSignIn(\'shop.html\')">Sign in to claim</button>'+gold+'</div>';
+ if(!c||!c.on)return '';
+ if(c.basic>0||c.golden>0)return '<div class="cpcard"><b class="t">🎟 You have '+[c.golden?c.golden+' golden coupon'+(c.golden>1?'s':''):'',c.basic?c.basic+' coupon'+(c.basic>1?'s':''):''].filter(Boolean).join(' and ')+'</b><p>'+
+  (c.golden?'A golden coupon makes every bundle free. ':'')+(c.basic>=2?'2 coupons make one bundle of your choice free. ':c.basic?'You need 2 coupons for a free bundle. ':'')+'Add the bundle to your cart and choose the coupon in the cart.</p>'+gold+'</div>';
+ if(c.claimed)return '<div class="cpcard"><b class="t">🎟 Coupons used</b><p>Thanks for studying! Keep going: golden coupons are drawn every Sunday.</p>'+gold+'</div>';
+ const left=Math.max(0,c.cap-c.taken);if(!left)return '<div class="cpcard"><b class="t">🎟 All '+c.cap+' starter coupons are taken</b>'+gold+'</div>';
+ const ok=c.answered>=c.need&&c.run>=c.run_need,bar=(v,n)=>'<i><em style="width:'+Math.min(100,Math.round(v*100/n))+'%"></em></i>';
+ return '<div class="cpcard"><b class="t">🎟 Free bundle for the first '+c.cap+' · '+left+' left</b><p>Answer '+c.need+' questions and get '+c.run_need+' right in a row to claim 2 coupons (2 coupons = a bundle of your choice, free).</p>'+
+  '<div class="meter"><span>Answered '+Math.min(c.answered,c.need)+' of '+c.need+bar(c.answered,c.need)+'</span><span>Best run '+Math.min(c.run,c.run_need)+' of '+c.run_need+' in a row'+bar(c.run,c.run_need)+'</span></div>'+
+  (!c.linked?'<p>First link your account to the class: home page → <b>My attendance</b>.</p>':ok?'<button class="btn primary" id="cpclaim" onclick="claimCp()">Claim my 2 coupons</button>':'<p class="mute">Study in any course on this site (signed in). Your numbers update when your progress syncs.</p>')+'<p class="msg bad" id="cpmsg"></p>'+gold+'</div>'}
+async function claimCp(){const b=$('cpclaim');if(b)b.disabled=true;
+ try{COUP=await Auth.rpc('shop_coupon_claim',{},true);drawShop();await ask('You got 2 coupons! 🎟','Add a bundle to your cart, then choose “2 coupons” in the cart. That bundle is free.',{ok:'Nice!',cancel:null,danger:false})}
+ catch(e){if(b)b.disabled=false;const m=$('cpmsg');if(m)m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t claim. Check your connection.'}}
+/* coupon choice in the cart */
+function couponBox(L){if(!COUP||!COUP.on||!(COUP.basic>=2||COUP.golden>=1))return '';const o=cpOpts(L),t0=L.reduce((a,x)=>a+x.q*x.it.price,0)-dealsFor(L).disc;
+ if(!o.length){const B=(D.bundles||[]).filter(b=>!inCart(b)&&bundleItems(b).length);return '<div class="cpbox"><b>🎟 You have coupons</b><span>Add a whole bundle to use them:</span>'+B.map(b=>'<div>'+esc(b.name)+' '+bundleBtn(b)+'</div>').join('')+'</div>'}
+ return '<div class="cpbox" role="radiogroup" aria-label="Use a coupon"><b>🎟 Use a coupon?</b>'+[{k:'',label:'Not this time',save:0}].concat(o).map(x=>'<label class="cpopt"><input type="radio" name="cpn"'+(CPN===x.k?' checked':'')+' onchange="CPN=\''+x.k+'\';drawReview();drawBar()"> '+esc(x.label)+(x.save?' <b>−'+peso(Math.min(x.save,t0))+'</b>':'')+'</label>').join('')+'</div>'}
+function addSet(cat){D.items.filter(i=>i.catalog===cat&&i.left!==0&&!CART[i.id]).forEach(i=>CART[i.id]=1);saveCart();drawShop();drawBar();if(!$('cart').hidden)drawReview()}
 /* "Tell me when it's back" on a sold-out sticker (shop_wait): the seller restocking it sends one push to this account's
    devices that have alerts on; the wait is then forgotten. */
 async function toggleWait(id){
@@ -438,7 +493,7 @@ function tab(t){for(const k of ['shop','cart','orders']){$('t-'+k).setAttribute(
  if(D&&!(D.soon&&!D.manager))$('tools').hidden=t!=='shop';
  history.replaceState(null,'',t==='shop'?'#':'#'+t);drawBar();if(t==='orders')return loadOrders();if(t==='cart'){CS='manage';drawReview()}}
 function cartLines(){return Object.entries(CART).map(([id,q])=>({it:item(id),q})).filter(x=>x.it&&x.q>0)}
-function drawBar(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),dl=dealsFor(L),t=L.reduce((a,x)=>a+x.q*x.it.price,0)-dl.disc;
+function drawBar(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),dl=dealsFor(L),t0=L.reduce((a,x)=>a+x.q*x.it.price,0)-dl.disc,t=t0-cpSave(L,t0);
  $('bar').hidden=!n||$('shop').hidden;$('tot').innerHTML=n+' sticker'+(n===1?'':'s')+(dl.disc?' · deal −'+peso(dl.disc):'')+'<b>'+peso(t)+'</b>';
  $('cartn').textContent=n;$('cartbtn').classList.toggle('has',n>0);$('t-cart').textContent='Cart'+(n?' ('+n+')':'')}
 function maxFor(it){const m=D.settings.max_qty||50;return it.left==null?m:Math.min(m,it.left)}
@@ -480,7 +535,7 @@ function drawShop(){const s=D.settings,cats=D.catalogs.filter(c=>D.items.some(i=
  if(q||FILTER==='fav'||FILTER==='loved'){let list=D.items.filter(i=>FILTER==='all'||(FILTER==='fav'?FAV.includes(i.id):FILTER==='loved'?i.loves>=3:i.catalog===FILTER));list=searchItems(list,q);if(FILTER==='loved')list=list.slice().sort((a,b)=>(b.loves||0)-(a.loves||0)||a.name.localeCompare(b.name));
   $('shop').innerHTML=list.length?'<p class="rescount">'+list.length+' sticker'+(list.length===1?'':'s')+(q?' for “'+esc(q)+'”':FILTER==='loved'?' · Most loved stickers':' you hearted')+'</p><div class="grid">'+list.map(card).join('')+'</div>'
    :'<p class="empty">'+(q?'No stickers match “'+esc(q)+'”. Try a character, a song or what it looks like.':'Tap the heart on a sticker to save it here.')+'</p>';return}
- $('shop').innerHTML=cats.filter(c=>FILTER==='all'||FILTER===c.id).map(c=>{const its=D.items.filter(i=>i.catalog===c.id);return '<section class="cat" style="--c:'+hue(c.id)+'"><div class="ch"><h2>'+esc(c.name)+'</h2>'+(c.to_fund?'<span class="fund">♡ class fund</span>':'')+'<span class="n">'+its.length+' sticker'+(its.length===1?'':'s')+'</span>'+
+ $('shop').innerHTML=(FILTER==='all'?couponCard()+dealsStrip():'')+cats.filter(c=>FILTER==='all'||FILTER===c.id).map(c=>{const its=D.items.filter(i=>i.catalog===c.id);return '<section class="cat" style="--c:'+hue(c.id)+'"><div class="ch"><h2>'+esc(c.name)+'</h2>'+(c.to_fund?'<span class="fund">♡ class fund</span>':'')+'<span class="n">'+its.length+' sticker'+(its.length===1?'':'s')+'</span>'+
    (D.bundles||[]).filter(b=>b.catalog===c.id).map(b=>'<span class="dealchip">🏷 '+esc(b.name)+'</span>'+(b.kind==='set'&&s.open&&its.some(i=>i.left!==0&&!CART[i.id])?'<button class="setbtn" onclick="addSet('+c.id+')">+ Add the whole set</button>':'')).join('')+(c.blurb?'<p>'+esc(c.blurb)+'</p>':'')+'</div>'+
    '<div class="grid">'+its.map(card).join('')+'</div></section>'}).join('')}
 /* sticker detail sheet: big picture, the seller's description and the same Add / quantity / bell controls as the card */
@@ -511,7 +566,8 @@ const TRASH='<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
 /* the subtotal and each deal used, above the total (nothing when no deal applies) */
 function dealLines(L){const dl=dealsFor(L);if(!dl.disc)return '';
  return '<div class="dline sub"><span>Stickers</span><span>'+peso(L.reduce((a,x)=>a+x.q*x.it.price,0))+'</span></div>'+
-  dl.deals.map(d=>'<div class="dline"><span>🏷 '+esc(d.name)+(d.n>1?' ×'+d.n:'')+'</span><span>−'+peso(d.save)+'</span></div>').join('')}
+  dl.deals.map(d=>'<div class="dline"><span>🏷 '+esc(d.name)+(d.n>1?' ×'+d.n:'')+'</span><span>−'+peso(d.save)+'</span></div>').join('')+
+  (()=>{const t0=L.reduce((a,x)=>a+x.q*x.it.price,0)-dl.disc,s=cpSave(L,t0),o=cpOpts(L).find(x=>x.k===CPN);return s&&o?'<div class="dline"><span>🎟 '+esc(o.label)+'</span><span>−'+peso(s)+'</span></div>':''})()}
 /* step 1: manage the cart (grouped by catalog, quantity, remove); step 2: checkout after Continue */
 function manageView(L,t,n){
  const groups=D.catalogs.map(c=>({c,rows:L.filter(x=>x.it.catalog===c.id)})).filter(g=>g.rows.length);
@@ -519,7 +575,7 @@ function manageView(L,t,n){
   g.rows.map(({it,q})=>'<div class="citem"><div class="cimg">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'</div><div class="cinfo"><b>'+esc(it.name)+'</b><span class="cp">'+peso(it.price)+(q>1?' × '+q+' = '+peso(it.price*q):'')+'</span>'+
    '<div class="cact"><div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>'+
    '<button class="trash" onclick="setQty('+it.id+',0)" aria-label="Remove '+esc(it.name)+' from the cart">'+TRASH+'</button></div></div></div>').join('')).join('')+
-  '<div class="cfoot">'+dealLines(L)+'<div class="sum"><span>'+n+' sticker'+(n===1?'':'s')+'</span><span>'+peso(t)+'</span></div>'+
+  '<div class="cfoot">'+couponBox(L)+dealLines(L)+'<div class="sum"><span>'+n+' sticker'+(n===1?'':'s')+'</span><span>'+peso(t)+'</span></div>'+
   (dealHint(L)?'<p class="dhint">🏷 '+esc(dealHint(L))+'</p>':'')+
   '<button class="btn primary big" id="cont" onclick="setCS(\'checkout\')">Continue '+peso(t)+'</button>'+
   '<div class="cmore"><button class="linkbtn" onclick="tab(\'shop\')">+ Add more stickers</button><button class="linkbtn" onclick="clearCart()">Clear cart</button></div></div></div>'}
@@ -546,7 +602,7 @@ const GLOGO='<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
 function goSignIn(to){try{localStorage.setItem('reviewer_after_signin',JSON.stringify({to:to||'shop.html#cart',at:Date.now()}))}catch(e){}location.href='./?signin=1'}
 function signPanel(why){return '<div class="gsign"><b>'+(why==='order'?'Sign in with Google to order':'Sign in with Google to see your orders')+'</b><ul><li>Your order counts right away</li><li>See it and its status on any device</li><li>Get a notification when it\'s paid and ready</li><li>Cancel it or add your GCash reference yourself</li></ul>'+
  '<button class="btn primary big gbtn" onclick="goSignIn()">'+GLOGO+' Continue with Google</button><p class="gsmall">Your cart stays as it is. It takes a few seconds.</p></div>'}
-function drawReview(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0)-dealsFor(L).disc,favN=FAV.filter(id=>item(id)).length;let ct='',nmv={};try{ct=localStorage.getItem(CT)||'';nmv=JSON.parse(localStorage.getItem(CN)||'{}')||{}}catch(e){}
+function drawReview(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t0=L.reduce((a,x)=>a+x.q*x.it.price,0)-dealsFor(L).disc,t=t0-cpSave(L,t0),favN=FAV.filter(id=>item(id)).length;let ct='',nmv={};try{ct=localStorage.getItem(CT)||'';nmv=JSON.parse(localStorage.getItem(CN)||'{}')||{}}catch(e){}
  const keep=$('ccontact')?{c:$('ccontact').value,n:$('cnote').value,r:$('cref')?$('cref').value:'',f:$('cfirst').value,l:$('clast').value,s:$('cschool').value}:null;
  if(!L.length)CS='manage';
  let h='<h2 class="ctitle">Your Cart</h2><span class="seg wide" role="group" aria-label="Cart sections"><button aria-pressed="'+(CV==='sum')+'" onclick="setCV(\'sum\')">Order Summary'+(n?' ('+n+')':'')+'</button><button aria-pressed="'+(CV==='fav')+'" onclick="setCV(\'fav\')">Favorites'+(favN?' ('+favN+')':'')+'</button></span>';
@@ -568,10 +624,10 @@ async function place(){const b=$('place'),m=$('omsg'),contact=$('ccontact').valu
    saveGuest(g.id,g.code);try{localStorage.setItem(CT,contact);localStorage.setItem(CN,JSON.stringify({f:fn,l:ln,s:school}))}catch(e){}CART={};saveCart();CS='manage';GUEST=0;await load();await tab('orders');
    const f=$('orders').querySelector('.ord');if(f)f.insertAdjacentHTML('beforebegin','<div class="gcode"><b>Order #'+g.id+' is waiting for the seller to accept it.</b>Your order code is <code>'+esc(g.code)+'</code>. Take a screenshot: you need the order number and this code to check or cancel your order on another device.</div>');payNow(g.id)}
   catch(e){b.disabled=false;m.className='msg bad';m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t place the order. Check your connection.';load().then(()=>{drawShop();drawBar()})}return}
- try{const id=await Auth.rpc('shop_order',{p_items:cartLines().map(x=>({id:x.it.id,qty:x.q})),p_contact:ck.url||contact,p_note:$('cnote').value.trim(),p_pay_ref:ref,p_first:fn,p_last:ln,p_method:PM,p_school:school},true);
+ try{const id=await Auth.rpc('shop_order',{p_items:cartLines().map(x=>({id:x.it.id,qty:x.q})),p_contact:ck.url||contact,p_note:$('cnote').value.trim(),p_pay_ref:ref,p_first:fn,p_last:ln,p_method:PM,p_school:school,p_coupon:CPN},true);CPN='';loadCoup();
   try{localStorage.setItem(CT,contact);localStorage.setItem(CN,JSON.stringify({f:fn,l:ln,s:school}))}catch(e){}CART={};saveCart();CS='manage';await load();ORDERS=null;await tab('orders');
   const f=$('orders').querySelector('.ord');if(f)f.insertAdjacentHTML('beforebegin','<p class="msg ok">Order #'+id+' placed! The seller will message you. You\'ll see updates here.</p>');payNow(id)}
- catch(e){b.disabled=false;m.className='msg bad';m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t place the order. Check your connection.';load().then(()=>{drawShop();drawBar()})}}
+ catch(e){b.disabled=false;m.className='msg bad';m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t place the order. Check your connection.';Promise.all([load(),loadCoup()]).then(()=>{drawShop();drawBar()})}}
 /* Orders placed without signing in: this device keeps [{id, code}] ('reviewer_shop_guest'); the order number + code
    show the order (shop_guest_find), cancel it or add the GCash reference. Anyone can also look one up with the Find box. */
 const GK='reviewer_shop_guest';
@@ -584,7 +640,7 @@ const RC={};
 function orderHTML(o){const g=!!o.guest;RC[o.id]=o;
  return '<div class="ord"><div class="h"><b>Order #'+o.id+'</b><span class="st '+esc(o.status)+'">'+esc(OLBL[o.status]||o.status)+'</span><span>'+(o.method==='cash'?'Cash':'GCash')+' · '+new Date(o.at).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span></div>'+
   (g?'<p class="gsmall" style="margin:4px 0 0">Placed without signing in · code <code>'+esc(codeOf(o.id))+'</code></p>':'')+
-  '<ul>'+(o.items||[]).map(x=>'<li>'+x.qty+' × '+esc(x.name)+'</li>').join('')+'</ul><div class="h"><b>'+peso(o.total)+'</b>'+(o.discount?'<span>🏷 '+esc((o.deals||[]).map(d=>d.name+(d.n>1?' ×'+d.n:'')).join(', ')||'Deal')+' −'+peso(o.discount)+'</span>':'')+(o.seller_note?'<span>Seller: '+esc(o.seller_note)+'</span>':'')+'</div>'+
+  '<ul>'+(o.items||[]).map(x=>'<li>'+x.qty+' × '+esc(x.name)+'</li>').join('')+'</ul><div class="h"><b>'+peso(o.total)+'</b>'+(o.discount?'<span>🏷 '+esc((o.deals||[]).map(d=>d.name+(d.n>1?' ×'+d.n:'')).join(', ')||'Deal')+' −'+peso(o.discount)+'</span>':'')+(o.coupon?'<span>🎟 '+esc(o.coupon)+' −'+peso(o.sponsor||0)+'</span>':'')+(o.seller_note?'<span>Seller: '+esc(o.seller_note)+'</span>':'')+'</div>'+
   ((o.status==='paid'||o.status==='ready')&&(D.settings.pickup_days||{})[o.school]?'<p class="pickday">📍 Pickup: '+esc(D.settings.pickup_days[o.school])+'</p>':'')+
   (o.status==='held'?'<p class="gsmall">The seller will check your profile link and accept your order. Then pay as shown here.</p>':'')+payBox(o)+
   (o.status!=='cancelled'?'<button class="btn" style="margin:10px 8px 0 0;padding:7px 12px;font-size:13.5px" onclick="receipt('+o.id+')">Save receipt</button>':'')+
@@ -615,12 +671,13 @@ async function receipt(id){const o=RC[id];if(!o)return;
   if(o.school){y+=42;text('Pickup: '+o.school,30,500,MUTE,'left',y)}
   y+=34;x.fillStyle='#ffd3e1';x.fillRect(pad,y,W-2*pad,4);
   // lines: shrink the type when there are many, and say how many are left out
-  const items=o.items||[],deals=(o.deals||[]),dl=deals.length&&o.discount,footTop=H-130,reserve=(dl?50:0)+150,avail=footTop-reserve-y-30;
+  const items=o.items||[],deals=(o.deals||[]),dl=deals.length&&o.discount,footTop=H-130,reserve=(dl?50:0)+(o.coupon?50:0)+150,avail=footTop-reserve-y-30;
   let fs=Math.max(20,Math.min(36,Math.floor(avail/(Math.max(1,items.length)*1.45)))),maxN=Math.floor(avail/(fs*1.45)),show=items.slice(0,maxN),more=items.length-show.length;
   y+=18;
   show.forEach(it=>{y+=fs*1.45;x.font=F(500,fs);x.fillStyle=INK;x.textAlign='left';x.fillText(fit(it.qty+' × '+it.name,W-2*pad-200),pad,y);x.textAlign='right';x.fillStyle=MUTE;x.fillText(peso(it.qty*it.price),right,y)});
   if(more>0){y+=fs*1.45;x.font=F(500,fs);x.fillStyle=MUTE;x.textAlign='left';x.fillText('+ '+more+' more sticker line'+(more===1?'':'s'),pad,y)}
   if(dl){y+=54;text('🏷 '+deals.map(d=>d.name+(d.n>1?' ×'+d.n:'')).join(', ')+' −'+peso(o.discount),30,500,PINK,'left',y)}
+  if(o.coupon){y+=50;text(fit('🎟 '+o.coupon+' −'+peso(o.sponsor||0),W-2*pad),30,500,PINK,'left',y)}
   y+=30;x.fillStyle='#ffd3e1';x.fillRect(pad,y,W-2*pad,4);
   y+=84;text('Total',46,500,INK,'left',y);text(peso(o.total),64,600,INK,'right',y);
   y+=56;text((o.method==='cash'?'Cash':'GCash')+(o.pay_ref?' · ref '+o.pay_ref:''),30,500,MUTE,'left',y);
@@ -640,6 +697,7 @@ async function loadOrders(){const el=$('orders'),signed=!!Auth.ses();
 /* what the buyer still has to do: the amount and the seller's GCash details, and a place to type the reference number after paying */
 const PHONE=/(?:\+?63|0)\s?9\d{2}[\s-]?\d{3}[\s-]?\d{4}/;
 function payBox(o){if(o.status!=='placed'&&o.status!=='held')return '';const s=D.settings,amt=peso(o.total);
+ if(!o.total)return '<div class="paybox"><b>Nothing to pay 🎟</b><span>Your coupon covers this order. Just pick it up.</span></div>';
  if(o.method==='cash')return '<div class="paybox"><b>Pay '+amt+' in cash when you pick up.</b>'+(s.pickup_note?'<span>'+esc(s.pickup_note)+'</span>':'')+'</div>';
  const num=(PHONE.exec(s.pay_note||'')||[''])[0].replace(/[\s-]/g,'');
  return '<div class="paybox"><b>Pay '+amt+' by GCash</b>'+(s.pay_note?'<span>'+esc(s.pay_note)+'</span>':s.pay_qr?'':'<span>The seller will message you her GCash details.</span>')+(s.pay_qr?'<div class="qrwrap">'+qrHTML()+'</div>':'')+
@@ -647,7 +705,7 @@ function payBox(o){if(o.status!=='placed'&&o.status!=='held')return '';const s=D
   (o.pay_ref?'<span class="ok">✓ Reference sent: '+esc(o.pay_ref)+'. The seller will mark it paid.</span>'
    :'<div class="refrow"><input id="ref'+o.id+'" inputmode="numeric" maxlength="30" placeholder="GCash reference number" aria-label="GCash reference number"><button class="btn mini" onclick="sendRef('+o.id+','+!!o.guest+')">Send reference</button></div><p class="msg" id="rm'+o.id+'"></p>')+'</div>'}
 /* right after ordering: a big "Pay now" card with the amount, the seller's GCash note and number, copy button and QR (cash orders skip it) */
-function payNow(id){const o=RC[id];if(!o||o.method==='cash')return;const s=D.settings,num=(PHONE.exec(s.pay_note||'')||[''])[0].replace(/[\s-]/g,''),old=$('paynow');if(old)old.remove();
+function payNow(id){const o=RC[id];if(!o||o.method==='cash'||!o.total)return;const s=D.settings,num=(PHONE.exec(s.pay_note||'')||[''])[0].replace(/[\s-]/g,''),old=$('paynow');if(old)old.remove();
  const m=document.createElement('div');m.className='modal dlgwrap';m.id='paynow';
  m.innerHTML='<div class="sheet paysheet" role="dialog" aria-modal="true" aria-label="Pay for your order"><h3>🎉 Order #'+o.id+' placed</h3>'+
   '<div class="paybig"><span>Send</span><b>'+peso(o.total)+'</b><span>by GCash</span></div>'+
@@ -687,7 +745,8 @@ async function load(){D=await Auth.rpc('shop_catalog',{},!!Auth.ses());WAIT=Arra
     :'<b>♡ '+peso(got)+' of '+peso(g)+'</b> <span>for the APMed \'33 class fund</span><div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pc+'"><i style="width:'+pc+'%"></i></div>'}}
  (D.bundles||[]).filter(b=>b.catalog==null).forEach(b=>$('fundnote').insertAdjacentHTML('afterend','<span class="dealchip">🏷 '+esc(b.name)+'</span>'));
  $('mgr').hidden=!D.manager;$('tools').hidden=false;applyView();drawChips();drawShop();drawBar();if(location.hash==='#orders')tab('orders');else if(location.hash==='#cart')tab('cart');
- pullFavs().then(ch=>{if(ch){drawChips();drawShop();if(!$('cart').hidden)drawReview()}});   /* hearts from your other devices */
+ pullFavs().then(ch=>{if(ch){drawChips();drawShop();if(!$('cart').hidden)drawReview()}});
+ loadCoup().then(()=>{if(COUP){drawShop();drawBar();if(!$('cart').hidden)drawReview()}});   /* hearts from your other devices */
 })();
 </script>
 <script src="update.js" defer></script>

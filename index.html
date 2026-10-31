@@ -497,6 +497,7 @@ async function modTile(){try{const m=await Auth.rpc('mod_counts',{},true),n=(m.l
 (async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c)return;Auth.cloud=Auth.cloud||c.cloud;
  const d=await Auth.rpc('shop_catalog',{},!!Auth.ses()),t=$('shoptool');if(!d)return;
  if(d.soon&&!d.manager){t.hidden=false;return}
+ if(!d.soon&&d.settings.open&&window.shopPoster)shopPoster(d);
  if(!d.settings.open&&!d.manager)return;
  t.href='shop.html';t.classList.remove('locked');t.removeAttribute('aria-disabled');$('shopname').textContent=d.settings.title||'Shop';
  $('shopsub').textContent=(d.soon?'Testing (not launched) · ':'')+(d.settings.open?(d.items.length+' items · orders open'+(d.settings.deadline?' until '+new Date(d.settings.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')):'Not open yet (you manage it)');t.hidden=false}catch(e){}})();
@@ -830,6 +831,25 @@ if(window.Daily)Daily.digest();
  const jb=document.getElementById('jbanner');
  if(jb&&!gone){jb.hidden=false;document.getElementById('jbopen').onclick=e=>{e.preventDefault();show(true)};document.getElementById('jbx').onclick=()=>{jb.hidden=true;try{localStorage.setItem(BK,'1')}catch(e){}}}
 })();
+// Sticker shop launch poster (Nov 1, 2026): called by the shop tile once the shop is launched and open. At most 3 times per
+// device, never on the same visit as another popup (waits for the welcome intro, the features spotlight and the Jorts poster).
+// "Open the shop" stops it for good. Works without storage (then once per visit).
+window.shopPoster=function(d){
+ const KEY='reviewer_shop_poster_v1',MAX=3;let n=0;try{n=+localStorage.getItem(KEY)||0}catch(e){}
+ if(n>=MAX||shopPoster.done)return;shopPoster.done=1;let tries=0;
+ (function wait(){const busy=document.documentElement.classList.contains('introing')||document.querySelector('.jorts,.modal:not([hidden])');
+  if(busy){if(tries++<120)setTimeout(wait,1000);return}
+  setTimeout(()=>{if(document.querySelector('.jorts,.modal:not([hidden])'))return wait();show()},1200)})();
+ function show(){try{localStorage.setItem(KEY,String(n+1))}catch(e){}
+  const o=document.createElement('div');o.className='jorts';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','The class sticker shop is open');
+  o.innerHTML='<div class="jbox"><img src="img/shop-poster.webp" alt="Poster: Diary ng Stickerholic, stickers for 5 pesos, pre-order only" width="800" height="1000">'+
+   '<h2>The sticker shop is open! <span class="jw">✨</span></h2><p><b>₱5 stickers</b>, and the Chiikawa and Med bundles help the class fund.</p>'+
+   '<p style="margin-top:6px">🎟 The first 25 who answer 50 questions with 5 right in a row get a <b>free bundle</b>.</p>'+
+   '<div class="jrow"><button type="button" class="yes">Open the shop</button><button type="button" class="no">Later</button></div></div>';
+  const close=()=>{o.classList.remove('on');setTimeout(()=>{o.remove();removeEventListener('keydown',k)},260)};
+  const k=e=>{if(e.key==='Escape')close()};
+  o.onclick=e=>{if(e.target===o)close()};o.querySelector('.yes').onclick=()=>{try{localStorage.setItem(KEY,String(MAX))}catch(e){}location.href='shop.html'};o.querySelector('.no').onclick=close;
+  addEventListener('keydown',k);document.body.appendChild(o);setTimeout(()=>o.classList.add('on'),40);o.querySelector('.yes').focus()}};
 </script>
 <script src="update.js" defer></script>
 </body></html>
