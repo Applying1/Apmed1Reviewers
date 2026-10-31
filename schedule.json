@@ -250,10 +250,35 @@
    },
    "notes": [
     "Holidays: All Saints' Day (Sun, Nov 1), All Souls' Day (Mon, Nov 2) and Institutional Family Day (Tue, Nov 3). No Pharmacology class on Tuesday.",
+    "Botany (class and Evals) moves to Friday, Nov 6 at 10:00 AM. NSTP moves temporarily to Thursday, Nov 5, 4:00-7:00 PM.",
     "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
    ],
    "cancel": [
-    "pharma"
+    "pharma",
+    "botany-lec",
+    "nstp"
+   ],
+   "extra": [
+    {
+     "day": "Fri",
+     "start": "10:00",
+     "end": "13:00",
+     "subject": "botany",
+     "kind": "Moved",
+     "topic": "Evals (Flower, Fruits and Seeds · Plant Kingdom) · Herbal Medicine",
+     "where": "Moved from Wednesday",
+     "teacher": "Dr. Claire Frances Miyake"
+    },
+    {
+     "day": "Thu",
+     "start": "16:00",
+     "end": "19:00",
+     "subject": "nstp",
+     "kind": "Moved",
+     "topic": "Ch. 9: Recreation, Physical Fitness & Wellness · Ch. 10: The Social Menace of Drug Addiction",
+     "where": "Moved from Friday (temporary)",
+     "teacher": "Prof. Anna Liza Mones"
+    }
    ]
   },
   "16": {

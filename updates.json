@@ -799,5 +799,13 @@
   "title": "Badges for good study habits",
   "text": "Earn badges for practicing, fixing mistakes, streaks and the daily games. Your earlier progress counts too. Tap Badges on the home page.",
   "link": "badges.html"
+ },
+ {
+  "id": 97,
+  "date": "2026-10-31",
+  "type": "schedule",
+  "title": "Botany and NSTP moved next week",
+  "text": "Botany class and Evals: Friday, Nov 6 at 10:00 AM. NSTP (temporary): Thursday, Nov 5, 4:00-7:00 PM.",
+  "link": "schedule.html"
  }
 ]
