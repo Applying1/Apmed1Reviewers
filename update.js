@@ -52,3 +52,6 @@
   setInterval(() => { if (document.visibilityState === 'visible') check(true) }, 15 * 60e3);
   setTimeout(() => check(true), 20000);   // once shortly after opening, past GitHub's few-minute lag
 })();
+
+/* the "here now" ping for the owner's Site stats (here.js) */
+(function () { if (window.top === window) { const s = document.createElement("script"); s.src = "here.js"; document.head.appendChild(s); } })();

@@ -71,8 +71,8 @@ function draw(){
  $('view').innerHTML=
   (s.owner?'<div class="card"><div class="row"><div class="t"><b>Let everyone see these numbers</b><span>'+(s.public?'Everyone can open this page from Settings.':'Only you can see this page now.')+'</span></div>'+
    '<button class="sw" role="switch" aria-checked="'+!!s.public+'" aria-label="Let everyone see these numbers" onclick="flip()"></button></div></div>':'')+
-  '<div class="card"><h2>People</h2><div class="kpis">'+k(s.today,'devices today')+k(s.week,'devices this week')+k(s.month,'devices in 30 days')+k(s.studying,'studying right now')+'</div>'+
-  '<p class="note">A device counts once a day when it opens the home page or a course'+(since?' (counting since '+esc(since)+')':'')+'. One person with a phone and a laptop counts twice.</p></div>'+
+  '<div class="card"><h2>People</h2><div class="kpis">'+(s.here!=null?k(s.here,'on the site right now'):'')+k(s.today,'devices today')+k(s.week,'devices this week')+k(s.month,'devices in 30 days')+k(s.studying,'studying right now')+'</div>'+
+  '<p class="note">'+(s.here!=null?'"On the site right now" is every device with a page of the site open and visible in the last 3 minutes, studying or just looking (only you see this one). ':'')+'A device counts once a day when it opens the home page or a course'+(since?' (counting since '+esc(since)+')':'')+'. One person with a phone and a laptop counts twice.</p></div>'+
   '<div class="card"><h2>Accounts and activity</h2><div class="kpis">'+k(s.accounts,'Google accounts')+k(s.synced_week,'synced progress this week')+k(s.answers_today,'answers today')+k(s.answers_week,'answers this week')+k(s.duels,'duels played')+k(s.push,'devices with notifications')+'</div></div>'+
   '<div class="card"><h2>Last 14 days</h2><div class="chart" aria-hidden="true">'+ser.map(x=>'<div class="c" title="'+esc(x.day)+': '+x.devices+' devices, '+x.answers+' answers"><i style="height:'+(100*x.devices/mx*.62)+'%"></i><i class="a" style="height:'+(100*x.answers/ma*.36)+'%"></i></div>').join('')+'</div>'+
   '<div class="days" aria-hidden="true">'+ser.map(x=>'<span>'+new Date(x.day+'T12:00:00').getDate()+'</span>').join('')+'</div>'+
