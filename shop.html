@@ -142,6 +142,10 @@ body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px)
 .pickday{margin:8px 0 0;font:500 14.5px Fredoka,var(--sans);color:var(--ink2);background:color-mix(in srgb,var(--sky) 40%,var(--surface));border-radius:12px;padding:6px 12px;display:inline-block}
 .qrwrap{display:flex;flex-direction:column;gap:6px;margin-top:8px;align-items:flex-start}.qrbtn{border:0;background:none;padding:0;cursor:zoom-in}
 .payqr{width:160px;height:160px;object-fit:contain;background:#fff;border-radius:14px;padding:6px;box-shadow:0 2px 8px #0000001a}.qrhint{font-size:13px!important;color:var(--mute);white-space:normal!important}
+.paysheet{text-align:center;max-width:400px}.paysheet h3{display:block;font:600 22px/1.2 Fredoka,var(--sans);color:var(--ink2);margin:0 0 6px}
+.paybig{display:flex;flex-direction:column;align-items:center;margin:6px 0 10px;color:var(--mute);font-size:14px}.paybig b{font:600 44px/1.1 Fredoka,var(--sans);color:var(--ink2)}
+.paynote{white-space:pre-line;font:500 17px Fredoka,var(--sans);color:var(--ink2);background:color-mix(in srgb,var(--sky) 40%,var(--surface));border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.paysheet .btn{margin:6px auto 2px}.paysheet p.mute{margin:10px 0 0;font-size:13.5px}.paysheet .qrwrap{margin:8px 0 0}
 .sheet.det{max-width:440px;text-align:left}
 .sheet.det h3 .x{border:0;background:var(--raised);width:32px;height:32px;border-radius:50%;font-size:22px;line-height:1;color:var(--mute)}
 .dpic{background:color-mix(in srgb,var(--c) 24%,var(--surface));border-radius:20px;aspect-ratio:1;width:min(100%,46vh);margin:0 auto 12px;position:relative;display:grid;place-items:center;overflow:hidden;cursor:zoom-in}
@@ -523,7 +527,7 @@ function checkoutView(L,t,n,keep,nmv,ct){
  const s=D.settings,PL=s.places||[],signed=!!Auth.ses(),guest=!signed&&GUEST&&s.guest;
  return '<div class="cpanel"><button class="linkbtn" onclick="setCS(\'manage\')">← Back to cart</button>'+
   '<div style="padding-top:8px">'+dealLines(L)+'</div><div class="sum" style="padding:4px 0 0"><span>'+n+' sticker'+(n===1?'':'s')+'</span><span>'+peso(t)+'</span></div>'+
-  (s.pay_note||s.pay_qr?'<div class="note"><b>How to pay</b>'+esc(s.pay_note||'')+(s.pay_qr?'<div class="qrwrap">'+qrHTML()+'</div>':'')+'</div>':'')+(s.pickup_note?'<div class="note"><b>Pickup</b>'+esc(s.pickup_note)+'</div>':'')+
+  (s.pay_note||s.pay_qr?'<div class="note"><b>💳 Paying by GCash?</b>You\'ll see the GCash number'+(s.pay_qr?' and QR code':'')+' right after you tap Place order.</div>':'')+(s.pickup_note?'<div class="note"><b>Pickup</b>'+esc(s.pickup_note)+'</div>':'')+
   (!signed&&!guest?signPanel('order')+(s.guest?'<button class="linkbtn guestlink" onclick="GUEST=1;drawReview()">No Google account? Order without signing in</button>':''):
    (guest?'<div class="gnote"><b>Ordering without signing in</b>The seller checks your order before it counts, so it doesn\'t hold stickers until she accepts it. You\'ll get an order code to check or cancel it, and no notifications. <button class="linkbtn" onclick="goSignIn()">Sign in with Google instead</button></div>':'')+
    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f">First name<input id="cfirst" maxlength="40" autocomplete="given-name" value="'+esc(keep?keep.f:(nmv.f||''))+'"></label>'+
@@ -562,11 +566,11 @@ async function place(){const b=$('place'),m=$('omsg'),contact=$('ccontact').valu
  b.disabled=true;m.className='msg';m.textContent='Placing your order…';
  if(guest){try{const g=await Auth.rpc('shop_guest_order',{p_items:cartLines().map(x=>({id:x.it.id,qty:x.q})),p_contact:ck.url||contact,p_first:fn,p_last:ln,p_method:PM,p_school:school,p_note:$('cnote').value.trim(),p_pay_ref:ref},false);
    saveGuest(g.id,g.code);try{localStorage.setItem(CT,contact);localStorage.setItem(CN,JSON.stringify({f:fn,l:ln,s:school}))}catch(e){}CART={};saveCart();CS='manage';GUEST=0;await load();await tab('orders');
-   const f=$('orders').querySelector('.ord');if(f)f.insertAdjacentHTML('beforebegin','<div class="gcode"><b>Order #'+g.id+' is waiting for the seller to accept it.</b>Your order code is <code>'+esc(g.code)+'</code>. Take a screenshot: you need the order number and this code to check or cancel your order on another device.</div>')}
+   const f=$('orders').querySelector('.ord');if(f)f.insertAdjacentHTML('beforebegin','<div class="gcode"><b>Order #'+g.id+' is waiting for the seller to accept it.</b>Your order code is <code>'+esc(g.code)+'</code>. Take a screenshot: you need the order number and this code to check or cancel your order on another device.</div>');payNow(g.id)}
   catch(e){b.disabled=false;m.className='msg bad';m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t place the order. Check your connection.';load().then(()=>{drawShop();drawBar()})}return}
  try{const id=await Auth.rpc('shop_order',{p_items:cartLines().map(x=>({id:x.it.id,qty:x.q})),p_contact:ck.url||contact,p_note:$('cnote').value.trim(),p_pay_ref:ref,p_first:fn,p_last:ln,p_method:PM,p_school:school},true);
   try{localStorage.setItem(CT,contact);localStorage.setItem(CN,JSON.stringify({f:fn,l:ln,s:school}))}catch(e){}CART={};saveCart();CS='manage';await load();ORDERS=null;await tab('orders');
-  const f=$('orders').querySelector('.ord');if(f)f.insertAdjacentHTML('beforebegin','<p class="msg ok">Order #'+id+' placed! The seller will message you. You\'ll see updates here.</p>')}
+  const f=$('orders').querySelector('.ord');if(f)f.insertAdjacentHTML('beforebegin','<p class="msg ok">Order #'+id+' placed! The seller will message you. You\'ll see updates here.</p>');payNow(id)}
  catch(e){b.disabled=false;m.className='msg bad';m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t place the order. Check your connection.';load().then(()=>{drawShop();drawBar()})}}
 /* Orders placed without signing in: this device keeps [{id, code}] ('reviewer_shop_guest'); the order number + code
    show the order (shop_guest_find), cancel it or add the GCash reference. Anyone can also look one up with the Find box. */
@@ -642,6 +646,19 @@ function payBox(o){if(o.status!=='placed'&&o.status!=='held')return '';const s=D
   (num?'<button class="btn mini" onclick="copyNum(this,\''+num+'\')">Copy number</button>':'')+
   (o.pay_ref?'<span class="ok">✓ Reference sent: '+esc(o.pay_ref)+'. The seller will mark it paid.</span>'
    :'<div class="refrow"><input id="ref'+o.id+'" inputmode="numeric" maxlength="30" placeholder="GCash reference number" aria-label="GCash reference number"><button class="btn mini" onclick="sendRef('+o.id+','+!!o.guest+')">Send reference</button></div><p class="msg" id="rm'+o.id+'"></p>')+'</div>'}
+/* right after ordering: a big "Pay now" card with the amount, the seller's GCash note and number, copy button and QR (cash orders skip it) */
+function payNow(id){const o=RC[id];if(!o||o.method==='cash')return;const s=D.settings,num=(PHONE.exec(s.pay_note||'')||[''])[0].replace(/[\s-]/g,''),old=$('paynow');if(old)old.remove();
+ const m=document.createElement('div');m.className='modal dlgwrap';m.id='paynow';
+ m.innerHTML='<div class="sheet paysheet" role="dialog" aria-modal="true" aria-label="Pay for your order"><h3>🎉 Order #'+o.id+' placed</h3>'+
+  '<div class="paybig"><span>Send</span><b>'+peso(o.total)+'</b><span>by GCash</span></div>'+
+  (s.pay_note?'<div class="paynote">'+esc(s.pay_note)+'</div>':'<p class="mute">The seller will message you her GCash details.</p>')+
+  (num?'<button class="btn mini" onclick="copyNum(this,\''+num+'\')">Copy number</button>':'')+
+  (s.pay_qr?'<div class="qrwrap" style="align-items:center">'+qrHTML()+'</div>':'')+
+  (o.status==='held'?'<p class="mute">The seller checks your profile link first. You can pay now or after she accepts.</p>':'')+
+  '<p class="mute">After paying, find this order under <b>My orders</b> and type the GCash reference number so the seller can mark it paid.</p>'+
+  '<button class="btn primary" onclick="$(\'paynow\').remove()">Got it</button></div>';
+ m.onclick=e=>{if(e.target===m)m.remove()};document.body.appendChild(m);
+ if(!payNow.k){payNow.k=1;document.addEventListener('keydown',e=>{if(e.key==='Escape'){const p=$('paynow');if(p)p.remove()}})}}
 function copyNum(b,n){const done=()=>{b.textContent='Copied!';setTimeout(()=>b.textContent='Copy number',1800)};
  try{navigator.clipboard.writeText(n).then(done,()=>{b.textContent=n})}catch(e){b.textContent=n}}
 async function sendRef(id,g){const i=$('ref'+id),m=$('rm'+id),v=i.value.replace(/\s/g,'');
