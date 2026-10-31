@@ -263,11 +263,14 @@ function drawSettings(){const s=A.settings,dl=s.deadline?new Date(s.deadline):nu
   '<label class="f">Pickup: where and when buyers get their stickers<textarea class="inp" id="sk" rows="2" maxlength="600" placeholder="For example: Room 204 after class, Tue and Thu. I\'ll message you when yours are ready.">'+esc(s.pickup_note)+'</textarea></label>'+
   '<label class="f">Schools / pickup places buyers can choose (one per line; buyers must pick one)<textarea class="inp" id="spl" rows="4" maxlength="1500" placeholder="For example:&#10;DMSF Main Gate&#10;Library Lobby">'+esc(s.pickup_places||'')+'</textarea></label>'+
   '<label class="f">Shown on every sticker (size, material)<input class="inp" id="sn" maxlength="200" placeholder="For example: 5 cm die-cut, waterproof vinyl" value="'+esc(s.item_note||'')+'"></label>'+
+  '<label class="f">Class-fund goal in ₱ (empty = no progress bar)<input class="inp" id="sg" inputmode="decimal" placeholder="For example: 1000" value="'+(s.fund_goal_cents==null?'':s.fund_goal_cents/100)+'"></label>'+
+  '<p class="mute" style="margin:2px 0 0">The bar counts paid orders only. Everyone who opens the shop sees the total raised.</p>'+
   '<label class="f">Most of one sticker per order<input class="inp" id="sm" inputmode="numeric" value="'+s.max_qty+'"></label>'+
   '<p class="msg" id="sm2"></p><div class="row" style="margin-top:12px"><span class="sp"></span><a class="btn" href="shop.html" target="_blank">See the shop</a><button class="btn primary" onclick="saveSettings()">Save</button></div></div>'+
   (Push.supported()?'<div class="card row"><div style="flex:1"><b>Order alerts on this device</b><p class="mute" style="margin:2px 0 0">A notification for each new order.</p></div><button class="btn" id="alb" onclick="alerts()">'+(Push.attOn()?'On':'Turn on')+'</button></div>':'')}
-async function saveSettings(){const d=$('sd').value;
- try{await Auth.rpc('shop_admin_settings',{p:{open:$('so').checked,launched:$('sl').checked,guest_ok:$('sgu').checked,deadline:d?new Date(d).toISOString():'',title:$('st').value,intro:$('si').value,pay_note:$('sp').value,pickup_note:$('sk').value,pickup_places:$('spl').value,max_qty:+$('sm').value||50,item_note:$('sn').value}},true);
+async function saveSettings(){const d=$('sd').value,gv=$('sg').value.trim(),goal=gv===''?'':Math.round(parseFloat(gv)*100);
+ if(goal!==''&&(isNaN(goal)||goal<0)){$('sm2').className='msg bad';$('sm2').textContent='Type the goal as a number, like 1000.';return}
+ try{await Auth.rpc('shop_admin_settings',{p:{open:$('so').checked,launched:$('sl').checked,guest_ok:$('sgu').checked,deadline:d?new Date(d).toISOString():'',title:$('st').value,intro:$('si').value,pay_note:$('sp').value,pickup_note:$('sk').value,pickup_places:$('spl').value,max_qty:+$('sm').value||50,item_note:$('sn').value,fund_goal:goal}},true);
   await reload();$('sm2').className='msg ok';$('sm2').textContent='Saved.'}catch(e){$('sm2').className='msg bad';$('sm2').textContent=e.message}}
 async function alerts(){const b=$('alb');b.disabled=true;try{await Push.attSet(!Push.attOn());toast(Push.attOn()?'Order alerts are on for this device.':'Order alerts are off.')}catch(e){toast(e.message==='blocked'?'Notifications are blocked for this site in your browser settings.':'Couldn\'t change it.')}b.disabled=false;b.textContent=Push.attOn()?'On':'Turn on'}
 
