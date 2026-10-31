@@ -6,7 +6,7 @@
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const NAMES = { upnext: 'Next class', tests: 'Tests coming up', today: 'Today', classnow: 'Class', gdtool: 'General discussion', qztool: 'Live quiz', cwtool: 'Daily crossword',
-    wdtool: 'APMed’le', atttool: 'My attendance', shoptool: 'Class shop', cdtool: 'Class day', modtool: 'Moderator' };
+    wdtool: 'APMed’le', sttool: 'Sort It', atttool: 'My attendance', shoptool: 'Class shop', cdtool: 'Class day', modtool: 'Moderator' };
   const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const X = '<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-x"/></svg>';
   const GRIP = '<svg width="10" height="16" viewBox="0 0 10 16" aria-hidden="true"><g fill="currentColor"><circle cx="2.5" cy="3" r="1.5"/><circle cx="7.5" cy="3" r="1.5"/><circle cx="2.5" cy="8" r="1.5"/><circle cx="7.5" cy="8" r="1.5"/><circle cx="2.5" cy="13" r="1.5"/><circle cx="7.5" cy="13" r="1.5"/></g></svg>';

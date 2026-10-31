@@ -1,0 +1,266 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sort It · APMed '33</title>
+<meta name="description" content="A daily sorting game from the subject with the nearest eval: put each term in its group.">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:620px;margin:0 auto;padding:14px 16px calc(24px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:8px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+.sp{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:disabled{opacity:.45;cursor:default}
+.btn.icon{width:36px;height:36px;padding:0;font-weight:700}
+h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 2px;text-align:center}
+h1 em{font-style:normal;color:var(--accent)}
+.sub{margin:0;color:var(--mute);font-size:14px;text-align:center}
+.sub b{color:var(--text)}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:8px 0 0;min-height:26px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:2px 10px;border-radius:999px}
+.chip img{width:18px;height:18px}
+.chip.mute{color:var(--mute);background:var(--surface);border-color:var(--line)}
+.note{margin:18px 0 0;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--mute);font-size:14px;text-align:center}
+/* groups */
+.bins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0 0}
+.bins.n3 .bin:last-child{grid-column:1/-1}
+.bin{display:flex;flex-direction:column;min-height:112px;padding:10px;border-radius:16px;background:var(--surface);border:1.5px solid var(--line);text-align:left;transition:border-color .15s,background .15s,transform .15s}
+.bin h3{margin:0 0 8px;font:700 13px/1.2 var(--sans);letter-spacing:.3px;text-transform:uppercase;color:var(--mute)}
+.bin .bi{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.bins.pick .bin{border-style:dashed;border-color:var(--accent-line);cursor:pointer}
+.bins.pick .bin:hover,.bin.over{border-color:var(--accent);background:var(--accent-soft)}
+/* items */
+.it{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:7px 11px;border-radius:11px;border:1px solid var(--line2);background:var(--surface);font:600 13.5px/1.25 var(--sans);text-align:left;box-shadow:0 1px 0 var(--line2);touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.it.sel{border-color:var(--accent);background:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 3px var(--accent-soft)}
+.it.ok{border-color:color-mix(in oklab,var(--good,#22a06b) 50%,var(--line));background:color-mix(in oklab,var(--good,#22a06b) 12%,var(--surface));cursor:default;touch-action:auto;box-shadow:none}
+.it.ok::after{content:"✓";color:var(--good,#22a06b);font-weight:800}
+.it.bad{animation:shake .45s;border-color:var(--bad,#c0392b);background:color-mix(in oklab,var(--bad,#c0392b) 12%,var(--surface))}
+.it.ghost{position:fixed;left:0;top:0;z-index:40;pointer-events:none;box-shadow:0 12px 28px #0003;scale:1.05}
+.it.lift{opacity:.3}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.tray{margin:14px 0 0;padding:12px;border-radius:16px;border:1.5px dashed var(--line2);min-height:64px}
+.tray.over{border-color:var(--accent);background:var(--accent-soft)}
+.tray .lab{display:block;margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--faint)}
+.tray .bi{display:flex;flex-wrap:wrap;gap:7px}
+.tray .empty{font-size:13px;color:var(--faint)}
+.act{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0 0}
+.act .btn{min-width:150px}
+.act .m{font-size:13px;color:var(--mute)}
+/* result */
+.end{margin:16px 0 0;padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);text-align:center}
+.end h2{margin:0;font:700 19px/1.3 var(--sans)}
+.end .streak{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-weight:700;color:var(--accent)}
+.end .row2{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+.end .next{margin:10px 0 0;font-size:12.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+.why{margin:14px 0 0;text-align:left}
+.why h3{margin:12px 0 4px;font:700 13px/1.2 var(--sans);text-transform:uppercase;letter-spacing:.3px;color:var(--mute)}
+.why p{margin:3px 0;font-size:14px}.why p b{font-weight:600}.why p span{color:var(--mute)}
+/* dialogs */
+.dlg{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.45)}
+.dbox{width:min(420px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--surface);border:1px solid var(--line2);border-radius:18px;padding:20px 20px 18px;box-shadow:0 20px 50px #0004;font-size:14.5px}
+.dbox h2{margin:0 0 10px;font:600 20px/1.3 var(--serif)}
+.dbox ul{margin:0 0 14px;padding-left:18px;color:var(--mute)}
+.dbox li{margin:3px 0}
+.dbox .row2{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin:0 0 6px}
+.stats b{display:block;font:800 24px/1.1 var(--sans)}
+.stats span{font-size:11.5px;color:var(--mute)}
+.toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:380px){.bins{grid-template-columns:1fr}.bins.n3 .bin:last-child{grid-column:auto}.bin{min-height:84px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<main>
+ <div class="top"><a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a><span class="sp"></span>
+  <button class="btn icon" onclick="openHow()" aria-label="How to play">?</button><button class="btn icon" onclick="openStats()" aria-label="Your stats"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-trophy"/></svg></button></div>
+ <h1>Sort <em>It</em></h1>
+ <p class="sub" id="sub">Put each term in its group.</p>
+ <div class="chips" id="chips"></div>
+ <div id="game" hidden>
+  <div class="bins" id="bins"></div>
+  <div class="tray" id="tray" data-tray="1"></div>
+  <div class="act" id="act"></div>
+  <section class="end" id="end" hidden aria-live="polite"></section>
+ </div>
+ <p class="note" id="none" hidden></p>
+</main>
+<div class="dlg" id="how" hidden onclick="if(event.target===this)closeHow()"><div class="dbox" role="dialog" aria-modal="true" aria-labelledby="howh">
+ <h2 id="howh">How to play Sort It</h2>
+ <ul><li>Put every term in its group: <b>tap a term, then tap a group</b>. You can also drag it.</li>
+  <li>Changed your mind? Tap a term in a group to pick it up again.</li>
+  <li>When the tray is empty, tap <b>Check</b>. Right ones lock in ✓; wrong ones jump back to the tray.</li>
+  <li>Sort everything in one check for a perfect day. Afterward you see <b>why</b> each term belongs where it does.</li>
+  <li>One set a day for the whole class, from the subject with the nearest eval. A new set comes at midnight.</li></ul>
+ <div class="row2"><button class="btn primary" onclick="closeHow()">Let's sort</button></div>
+</div></div>
+<div class="dlg" id="stats" hidden onclick="if(event.target===this)closeStats()"><div class="dbox" role="dialog" aria-modal="true" aria-labelledby="sth"><h2 id="sth">Your Sort It</h2><div id="stbody"></div>
+ <div class="row2"><button class="btn" onclick="closeStats()">Close</button></div></div></div>
+<div class="toast" id="toast" role="status"></div>
+<script src="schedule-core.js"></script>
+<script src="reminders-core.js"></script>
+<script src="auth.js"></script>
+<script>
+// Sort It: one sorting set a day for the class. Sets: sortit/days.json (built by tools/make_sortit.py from sortit_src/).
+// Progress: localStorage 'reviewer_sortit' = {v:1, how, g:{<date>:{p:{item:group placed}, ok:[locked items], c checks, m mistakes,
+// h:['10110…' per check], d:1 done, t0, t1, u: changed}}}. Site-wide; syncs with the courses' sync code (row "_sortit").
+const KEY='reviewer_sortit';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ic=n=>'<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function manila(d=new Date()){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)}catch(e){return d.toISOString().slice(0,10)}}
+function shift(day,n){const d=new Date(day+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}
+const niceDate=day=>new Date(day+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const TODAY=manila();
+let S=(()=>{let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}return s&&s.v===1&&s.g&&typeof s.g==='object'?s:{v:1,g:{}}})();
+function save(){const cut=shift(TODAY,-400);for(const d in S.g)if(d<cut)delete S.g[d];try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),ms||2000)}
+
+let D=null,G=null,ANS=[],ORDER=[],sel=null,COURSES=[],TEST=null,busy=false;
+const course=id=>COURSES.find(c=>c.id===id)||{id,title:id};
+const short=t=>String(t).replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,'');
+const key=(date,i)=>{const d=date.replace(/-/g,'').split('').map(Number);return d[i%d.length]*3+i};
+const fresh=g=>Object.assign({p:{},ok:[],c:0,m:0,h:[]},g||{});
+
+async function boot(){
+ let data=null;
+ try{data=await (await fetch('sortit/days.json')).json()}catch(e){}
+ try{COURSES=(await (await fetch('courses.json')).json()).filter(c=>!c.soon);const cl=COURSES.find(c=>c.cloud&&c.cloud.url);if(cl)Auth.cloud=cl.cloud}catch(e){}
+ await pull();
+ D=((data&&data.days)||[]).find(d=>d.date===TODAY)||null;
+ if(!D){$('none').hidden=false;$('none').textContent='Today\'s set isn\'t out yet. Check back later.';if(!S.how)openHow();return}
+ const nb=D.bins.length;ANS=D.items.map((it,i)=>((it.b-key(D.date,i))%nb+nb*99)%nb);
+ // the same shuffled order for everyone today
+ let seed=[...TODAY].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,11);const rnd=()=>(seed=(seed*1103515245+12345)>>>0)/4294967296;
+ ORDER=D.items.map((_,i)=>i).sort(()=>rnd()-.5);
+ G=S.g[TODAY]=fresh(S.g[TODAY]);
+ try{await Sched.load();TEST=Remind.list(14).find(a=>a.subj&&a.subj.course===D.course)||null}catch(e){}
+ show();if(!S.how)openHow();
+}
+function show(){
+ const c=course(D.course);
+ $('sub').innerHTML='<b>'+esc(D.title)+'</b> · '+D.items.length+' terms, '+D.bins.length+' groups';
+ $('chips').innerHTML='<span class="chip">'+(c.image?'<img src="'+esc(c.image)+'" alt="">':'')+esc(short(c.title))+'</span>'+(TEST?'<span class="chip mute">'+esc(TEST.label||'Test')+' '+esc(/^(Today|Tomorrow)$/.test(Sched.when(TEST.date))?Sched.when(TEST.date).toLowerCase():'on '+Sched.when(TEST.date))+'</span>':'');
+ $('game').hidden=false;draw();if(G.d)drawEnd();
+}
+const placedIn=b=>ORDER.filter(i=>G.p[i]===b);
+const loose=()=>ORDER.filter(i=>G.p[i]==null);
+function chip(i){const ok=G.ok.includes(i);return '<button class="it'+(ok?' ok':'')+(sel===i?' sel':'')+'" data-i="'+i+'"'+(ok?' aria-disabled="true"':'')+' aria-pressed="'+(sel===i)+'">'+esc(D.items[i].t)+'</button>'}
+function draw(){
+ const nb=D.bins.length;
+ $('bins').className='bins n'+nb+(sel!=null?' pick':'');
+ $('bins').innerHTML=D.bins.map((n,b)=>'<div class="bin" data-bin="'+b+'" role="button" tabindex="'+(sel!=null?0:-1)+'" aria-label="'+esc(n)+(sel!=null?', put the term here':'')+'"><h3>'+esc(n)+'</h3><div class="bi">'+placedIn(b).map(chip).join('')+'</div></div>').join('');
+ const l=loose();
+ $('tray').innerHTML=G.d?'':'<span class="lab">'+(l.length?'Terms to sort':'Tray')+'</span><div class="bi">'+(l.length?l.map(chip).join(''):'<span class="empty">All placed. Tap Check, or move a term.</span>')+'</div>';
+ $('tray').hidden=!!G.d;
+ $('act').innerHTML=G.d?'':'<button class="btn primary" id="check" '+(l.length||busy?'disabled':'')+' onclick="check()">'+ic('check')+'Check</button>'+(G.c?'<span class="m">'+G.c+' check'+(G.c>1?'s':'')+' · '+G.m+' mistake'+(G.m===1?'':'s')+'</span>':'');
+}
+function pick(i){if(G.d||busy||G.ok.includes(i))return;sel=sel===i?null:i;draw();if(sel!=null){const b=document.querySelector('.bin');if(b&&matchMedia('(pointer:fine)').matches)b.focus({preventScroll:true})}}
+function place(i,b){if(G.d||busy||i==null||G.ok.includes(i))return;if(b==null)delete G.p[i];else G.p[i]=b;if(!G.t0)G.t0=Date.now();G.u=Date.now();sel=null;save();push();draw()}
+function check(){
+ if(busy||G.d||loose().length)return;
+ const row=D.items.map((_,i)=>G.ok.includes(i)||G.p[i]===ANS[i]?'1':'0').join(''),wrong=D.items.map((_,i)=>i).filter(i=>row[i]==='0');
+ G.c++;G.m+=wrong.length;G.h.push(row);D.items.forEach((_,i)=>{if(row[i]==='1'&&!G.ok.includes(i))G.ok.push(i)});
+ const now=Date.now();G.u=now;if(!wrong.length){G.d=1;G.t1=now}save();push(true);
+ if(!wrong.length){draw();toast(G.c===1?'Perfect! All sorted in one check.':'All sorted!',2400);drawEnd();return}
+ busy=true;draw();
+ wrong.forEach(i=>{const e=document.querySelector('.it[data-i="'+i+'"]');if(e)e.classList.add('bad')});
+ toast(wrong.length+' not in the right group',1800);
+ setTimeout(()=>{wrong.forEach(i=>delete G.p[i]);busy=false;save();draw()},RM?0:700);
+}
+
+// ---------- drag (mouse, pen or finger): drop on a group, or back on the tray ----------
+let drag=null;
+document.addEventListener('pointerdown',e=>{const it=e.target.closest('.it[data-i]');if(!it||G&&G.d||busy||it.classList.contains('ok')||e.button>0)return;
+ // a finger holds for a moment first, so a swipe over the terms still scrolls the page
+ drag={i:+it.dataset.i,el:it,x:e.clientX,y:e.clientY,on:false,id:e.pointerId,armed:e.pointerType==='mouse'};if(!drag.armed)drag.t=setTimeout(()=>{if(drag)drag.armed=true},200)});
+document.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;
+ if(!drag.on){const far=Math.hypot(e.clientX-drag.x,e.clientY-drag.y);if(!drag.armed){if(far>8){clearTimeout(drag.t);drag=null}return}if(far<5)return;drag.on=true;const r=drag.el.getBoundingClientRect();drag.ox=drag.x-r.left;drag.oy=drag.y-r.top;
+  const g=drag.el.cloneNode(true);g.classList.add('ghost');g.classList.remove('sel');document.body.appendChild(g);drag.g=g;drag.el.classList.add('lift');sel=null;document.querySelector('#bins').classList.remove('pick')}
+ e.preventDefault();drag.g.style.transform='translate('+(e.clientX-drag.ox)+'px,'+(e.clientY-drag.oy)+'px)';
+ document.querySelectorAll('.over').forEach(x=>x.classList.remove('over'));const t=document.elementFromPoint(e.clientX,e.clientY),z=t&&t.closest('.bin,.tray');if(z)z.classList.add('over')},{passive:false});
+function endDrag(e,cancel){if(!drag||(e&&e.pointerId!==drag.id))return;const d=drag;drag=null;clearTimeout(d.t);if(!d.on)return;
+ d.g.remove();document.querySelectorAll('.over').forEach(x=>x.classList.remove('over'));d.el.classList.remove('lift');
+ if(cancel){draw();return}const t=document.elementFromPoint(e.clientX,e.clientY),b=t&&t.closest('.bin'),tr=t&&t.closest('.tray');
+ d.el.dataset.dragged='1';if(b)place(d.i,+b.dataset.bin);else if(tr)place(d.i,null);else draw()}
+document.addEventListener('pointerup',e=>endDrag(e));document.addEventListener('pointercancel',e=>endDrag(e,true));
+document.addEventListener('touchmove',e=>{if(drag&&drag.armed)e.preventDefault()},{passive:false});
+// taps: a term picks it up; a group (or the tray) puts it down
+document.addEventListener('click',e=>{if(!G||G.d||!$('how').hidden||!$('stats').hidden)return;const it=e.target.closest('.it[data-i]');
+ if(it){if(it.dataset.dragged){delete it.dataset.dragged;return}const i=+it.dataset.i;if(sel!=null&&sel!==i&&it.closest('.bin')){place(sel,+it.closest('.bin').dataset.bin);return}pick(i);return}
+ const b=e.target.closest('.bin');if(b&&sel!=null){place(sel,+b.dataset.bin);return}
+ if(e.target.closest('.tray')&&sel!=null&&G.p[sel]!=null){place(sel,null)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('how').hidden)closeHow();else if(!$('stats').hidden)closeStats();else if(sel!=null){sel=null;draw()}return}
+ if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('bin')&&sel!=null){e.preventDefault();place(sel,+e.target.dataset.bin)}});
+
+// ---------- result, streak, stats ----------
+function done(){return Object.keys(S.g).filter(d=>S.g[d].d===1).sort()}
+function streak(){const w=new Set(done());let d=w.has(TODAY)?TODAY:shift(TODAY,-1),n=0;while(w.has(d)){n++;d=shift(d,-1)}return n}
+function best(){let b=0,run=0,prev='';for(const d of done()){run=prev&&shift(prev,1)===d?run+1:1;b=Math.max(b,run);prev=d}return b}
+function drawEnd(){
+ const n=streak(),b=$('end');
+ b.innerHTML='<h2>'+(G.c===1?'Perfect: sorted in one check':'Sorted in '+G.c+' checks · '+G.m+' mistake'+(G.m===1?'':'s'))+'</h2>'+
+  (n?'<div class="streak">'+ic('flame')+n+'-day streak</div>':'')+
+  '<div class="row2"><button class="btn primary" onclick="share()">'+ic('share')+'Share</button>'+
+  '<a class="btn" href="reviewer.html?course='+encodeURIComponent(D.course)+'#preview='+encodeURIComponent(D.sec)+'">Practice 5 questions</a>'+
+  '<a class="btn" href="discuss.html?c='+encodeURIComponent(D.course)+'">'+ic('message-circle')+'Discuss</a></div>'+
+  '<div class="why"><h3 style="margin-top:4px">Why each one goes there</h3>'+D.bins.map((name,bi)=>'<h3>'+esc(name)+'</h3>'+D.items.map((it,i)=>[it,i]).filter(([,i])=>ANS[i]===bi).map(([it])=>'<p><b>'+esc(it.t)+'</b> <span>· '+esc(it.w)+'</span></p>').join('')).join('')+'</div>'+
+  '<p class="next" id="next"></p>';
+ b.hidden=false;tickNext();
+}
+function tickNext(){const e=$('next');if(!e)return;const now=new Date(),mid=new Date(shift(TODAY,1)+'T00:00:00+08:00'),s=Math.max(0,Math.round((mid-now)/1000));
+ if(!s){location.reload();return}e.textContent='Next set in '+Math.floor(s/3600)+'h '+String(Math.floor(s%3600/60)).padStart(2,'0')+'m';clearTimeout(tickNext.t);tickNext.t=setTimeout(tickNext,30000)}
+function share(){
+ const grid=G.h.map(r=>[...r].map(x=>x==='1'?'🟪':'🟧').join('')).join('\n');
+ const t='Sort It · '+niceDate(TODAY)+' · '+short(course(D.course).title)+'\n'+(G.c===1?'Perfect, 1 check':G.c+' checks')+(streak()>1?' · '+streak()+'-day streak':'')+'\n'+grid+'\n'+location.origin+location.pathname;
+ if(navigator.share)navigator.share({text:t}).catch(()=>{});
+ else (navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied. Paste it in the group chat.'),()=>toast('Could not copy here.'));
+}
+function openStats(){
+ const days=done(),perfect=days.filter(d=>S.g[d].c===1);
+ $('stbody').innerHTML='<div class="stats"><div><b>'+days.length+'</b><span>Sorted</span></div><div><b>'+(days.length?Math.round(perfect.length*100/days.length):0)+'%</b><span>Perfect</span></div><div><b>'+streak()+'</b><span>Streak</span></div><div><b>'+best()+'</b><span>Best streak</span></div></div>';
+ $('stats').hidden=false}
+function closeStats(){$('stats').hidden=true}
+function openHow(){$('how').hidden=false;$('how').querySelector('.btn').focus()}
+function closeHow(){$('how').hidden=true;if(!S.how){S.how=1;save();push()}}
+
+// ---------- sync between devices (the courses' sync code; one row "_sortit") ----------
+// Per day: a finished set beats an unfinished one (the earlier finish when both are), otherwise the one with more checks, then the newer.
+const syncCode=()=>{try{return (JSON.parse(localStorage.getItem('reviewer_sync'))||{}).code||''}catch(e){return ''}};
+const cloudOn=()=>!!(Auth.cloud&&syncCode());
+function better(a,b){if(!a)return b;if(!b)return a;if(!!a.d!==!!b.d)return a.d?a:b;if(a.d)return (a.t1||0)<=(b.t1||0)?a:b;
+ if((a.c||0)!==(b.c||0))return (a.c||0)>(b.c||0)?a:b;return (b.u||0)>(a.u||0)?b:a}
+function merge(r){let any=false,cur=false;if(!r||r.v!==1||!r.g||typeof r.g!=='object')return {any,cur};
+ for(const d in r.g){const a=S.g[d],b=r.g[d];if(!b||typeof b!=='object'||!/^\d{4}-\d{2}-\d{2}$/.test(d))continue;
+  if(better(a,b)!==a){S.g[d]=fresh(b);any=true;if(d===TODAY)cur=true}}
+ if(r.how&&!S.how){S.how=1;any=true}
+ if(any)save();return {any,cur}}
+let pushT=0,pulling=null;
+function pull(){if(!cloudOn())return Promise.resolve(null);if(pulling)return pulling;
+ pulling=Promise.race([Auth.rpc('sync_get',{p_code:syncCode(),p_course:'_sortit'}),new Promise(r=>setTimeout(()=>r(null),3000))])
+  .then(rows=>{const row=Array.isArray(rows)?rows[0]:rows;return row&&row.data?merge(row.data):null}).catch(()=>null).finally(()=>{pulling=null});
+ return pulling}
+function refresh(m){if(m&&m.cur&&D&&!$('game').hidden){G=S.g[TODAY];sel=null;draw();if(G.d)drawEnd()}}
+function push(now){clearTimeout(pushT);if(!cloudOn())return;
+ const go=()=>pull().then(m=>{refresh(m);return Auth.rpc('sync_put',{p_code:syncCode(),p_course:'_sortit',p_data:{v:1,g:S.g,how:S.how||0}})}).catch(()=>{});
+ if(now)go();else pushT=setTimeout(go,3000)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)push(true);else if(G)pull().then(refresh)});
+boot();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+<script src="dialog.js"></script>
+<script src="update.js" defer></script>
+</body></html>

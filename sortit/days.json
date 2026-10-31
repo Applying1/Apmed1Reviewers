@@ -1,0 +1,480 @@
+{
+"v": 1,
+"days": [
+{
+"date": "2026-10-31",
+"course": "botany",
+"sec": "5-3",
+"topic": "Lesson 5: Flower, Fruits and Seeds · Fruits and Fleshy Fruits",
+"title": "Which fleshy fruit?",
+"bins": [
+"Drupe",
+"Berry",
+"Pepo"
+],
+"items": [
+{
+"t": "Cherry",
+"b": 0,
+"w": "One seed in a stony endocarp, with a fleshy mesocarp."
+},
+{
+"t": "Peach",
+"b": 1,
+"w": "Stony pit (endocarp) around one seed: a drupe."
+},
+{
+"t": "Plum",
+"b": 2,
+"w": "Like cherry and peach: one seed, stony endocarp."
+},
+{
+"t": "Coconut",
+"b": 0,
+"w": "A drupe with a fibrous mesocarp (the husk)."
+},
+{
+"t": "Grape",
+"b": 2,
+"w": "The whole ovary wall is juicy: a berry."
+},
+{
+"t": "Banana",
+"b": 0,
+"w": "Botanically a berry: juicy ovary wall."
+},
+{
+"t": "Tomato",
+"b": 1,
+"w": "A berry: fleshy ovary wall with many seeds."
+},
+{
+"t": "Gooseberry",
+"b": 2,
+"w": "A true berry, as the name says (juicy ovary wall)."
+},
+{
+"t": "Watermelon",
+"b": 1,
+"w": "A pepo: a berry with a hard rind."
+},
+{
+"t": "Squash",
+"b": 2,
+"w": "Hard rind around a fleshy inside: pepo."
+},
+{
+"t": "Pumpkin",
+"b": 0,
+"w": "Pepo, like squash and watermelon."
+},
+{
+"t": "Cucumber",
+"b": 1,
+"w": "A pepo: hard rind (gourd family)."
+}
+]
+},
+{
+"date": "2026-11-01",
+"course": "psych",
+"sec": "11-1",
+"topic": "Chapter 11: Personality: Theory and Measurement · The Psychodynamic Perspective",
+"title": "Whose idea is it?",
+"bins": [
+"Freud",
+"Jung",
+"Adler",
+"Rogers"
+],
+"items": [
+{
+"t": "Id, ego and superego",
+"b": 2,
+"w": "Freud's three structures of the mind."
+},
+{
+"t": "Psychosexual stages",
+"b": 1,
+"w": "Freud: oral, anal, phallic, latency, genital."
+},
+{
+"t": "Repression",
+"b": 0,
+"w": "Freud: the automatic ejection of anxiety-evoking ideas."
+},
+{
+"t": "Collective unconscious",
+"b": 2,
+"w": "Jung: a store of human experience we all share."
+},
+{
+"t": "Archetypes",
+"b": 0,
+"w": "Jung: inherited images in the collective unconscious."
+},
+{
+"t": "Analytical psychology",
+"b": 1,
+"w": "The name of Jung's school."
+},
+{
+"t": "Inferiority complex",
+"b": 0,
+"w": "Adler: feeling inferior drives the striving for superiority."
+},
+{
+"t": "Creative self",
+"b": 0,
+"w": "Adler: we shape our own personality."
+},
+{
+"t": "Individual psychology",
+"b": 0,
+"w": "The name of Adler's school."
+},
+{
+"t": "Unconditional positive regard",
+"b": 0,
+"w": "Rogers: valued as a person, whatever the behavior."
+},
+{
+"t": "Congruence",
+"b": 3,
+"w": "Rogers: the self-concept close to the self-ideal."
+},
+{
+"t": "Conditions of worth",
+"b": 0,
+"w": "Rogers: standards others use to judge our value."
+}
+]
+},
+{
+"date": "2026-11-02",
+"course": "botany",
+"sec": "6-1",
+"topic": "Lesson 6: Plant Kingdom · Plant Characteristics and Classification",
+"title": "Which plant group?",
+"bins": [
+"Thallophyta",
+"Bryophyta",
+"Pteridophyta",
+"Gymnosperms"
+],
+"items": [
+{
+"t": "Spirogyra",
+"b": 2,
+"w": "An alga: a thallus with no true roots, stems or leaves."
+},
+{
+"t": "Ulva",
+"b": 1,
+"w": "Sea lettuce, an alga eaten as food."
+},
+{
+"t": "Fucus",
+"b": 0,
+"w": "A brown alga: thallophyte."
+},
+{
+"t": "Marchantia",
+"b": 2,
+"w": "A liverwort: bryophyte, no vascular tissue."
+},
+{
+"t": "Funaria",
+"b": 0,
+"w": "A moss: bryophyte."
+},
+{
+"t": "Sphagnum",
+"b": 1,
+"w": "Peat moss: bryophyte."
+},
+{
+"t": "Selaginella",
+"b": 0,
+"w": "A heterosporous pteridophyte (seedless vascular)."
+},
+{
+"t": "Equisetum",
+"b": 3,
+"w": "Horsetail: seedless vascular plant."
+},
+{
+"t": "Pteris",
+"b": 0,
+"w": "A fern: pteridophyte."
+},
+{
+"t": "Cycas",
+"b": 0,
+"w": "A cycad: naked seeds in cones."
+},
+{
+"t": "Pinus",
+"b": 3,
+"w": "Pine, a conifer: naked seeds."
+},
+{
+"t": "Ephedra",
+"b": 0,
+"w": "A gymnosperm with naked seeds."
+}
+]
+},
+{
+"date": "2026-11-03",
+"course": "psych",
+"sec": "12-3",
+"topic": "Chapter 12: Stress, Health, and Coping · Stress and the Body",
+"title": "Which stage of the GAS?",
+"bins": [
+"Alarm",
+"Resistance",
+"Exhaustion"
+],
+"items": [
+{
+"t": "Fight or flight",
+"b": 0,
+"w": "The alarm reaction is the fight-or-flight response."
+},
+{
+"t": "Sympathetic arousal",
+"b": 1,
+"w": "Alarm: the sympathetic nervous system fires up."
+},
+{
+"t": "Adrenaline released",
+"b": 2,
+"w": "In the alarm reaction the adrenal medulla releases adrenaline (book)."
+},
+{
+"t": "Prolonged arousal",
+"b": 1,
+"w": "Resistance: arousal stays high while the body adapts."
+},
+{
+"t": "Immune system suppressed",
+"b": 2,
+"w": "Resistance: long arousal weakens the immune system."
+},
+{
+"t": "Also the adaptation stage",
+"b": 0,
+"w": "Selye also called the resistance stage the adaptation stage."
+},
+{
+"t": "Parasympathetic may dominate",
+"b": 2,
+"w": "Exhaustion: the parasympathetic system may take over."
+},
+{
+"t": "Diseases of adaptation",
+"b": 0,
+"w": "Exhaustion is when diseases of adaptation appear."
+}
+]
+},
+{
+"date": "2026-11-04",
+"course": "botany",
+"sec": "5-4",
+"topic": "Lesson 5: Flower, Fruits and Seeds · Dry Fruits",
+"title": "Fleshy, or dry and opens?",
+"bins": [
+"Fleshy",
+"Dry, splits open",
+"Dry, stays closed"
+],
+"items": [
+{
+"t": "Drupe",
+"b": 0,
+"w": "Fleshy, with a stony endocarp."
+},
+{
+"t": "Berry",
+"b": 1,
+"w": "Fleshy: juicy ovary wall."
+},
+{
+"t": "Hesperidium",
+"b": 2,
+"w": "Fleshy with a leathery rind (orange, lemon)."
+},
+{
+"t": "Pome",
+"b": 0,
+"w": "Fleshy accessory fruit (apple, pear)."
+},
+{
+"t": "Legume",
+"b": 2,
+"w": "Dry dehiscent: opens along both sutures (pea, bean)."
+},
+{
+"t": "Follicle",
+"b": 0,
+"w": "Dry dehiscent: opens along one suture."
+},
+{
+"t": "Capsule",
+"b": 1,
+"w": "Dry dehiscent, from several carpels."
+},
+{
+"t": "Silique",
+"b": 2,
+"w": "Dry dehiscent: long, 2 carpels (mustard)."
+},
+{
+"t": "Achene",
+"b": 1,
+"w": "Dry indehiscent: one seed attached at one point."
+},
+{
+"t": "Samara",
+"b": 2,
+"w": "Dry indehiscent and winged (maple, elm)."
+},
+{
+"t": "Caryopsis",
+"b": 0,
+"w": "Dry indehiscent: the grain (seed coat fused to pericarp)."
+},
+{
+"t": "Acorn",
+"b": 1,
+"w": "A nut: dry indehiscent with a very hard wall."
+}
+]
+},
+{
+"date": "2026-11-05",
+"course": "pharma",
+"sec": "7-4",
+"topic": "Lesson 7: Anti-Inflammatory Drugs · Specific NSAIDs",
+"title": "What's in the box?",
+"bins": [
+"Paracetamol",
+"Propionic acid",
+"Fenamate"
+],
+"items": [
+{
+"t": "Neozep",
+"b": 0,
+"w": "Paracetamol + phenylephrine."
+},
+{
+"t": "Bioflu",
+"b": 1,
+"w": "Paracetamol + phenylephrine + chlorphenamine."
+},
+{
+"t": "Tuseran",
+"b": 2,
+"w": "Paracetamol + dextromethorphan + phenylpropanolamine."
+},
+{
+"t": "Saridon",
+"b": 0,
+"w": "Paracetamol + caffeine."
+},
+{
+"t": "Advil",
+"b": 2,
+"w": "Ibuprofen, a propionic acid (\"pro\" drug)."
+},
+{
+"t": "Medicol",
+"b": 0,
+"w": "Ibuprofen: propionic acid."
+},
+{
+"t": "Flanax",
+"b": 1,
+"w": "Naproxen, a propionic acid."
+},
+{
+"t": "Ponstan",
+"b": 0,
+"w": "Mefenamic acid, a fenamate."
+},
+{
+"t": "Dolfenal",
+"b": 1,
+"w": "Mefenamic acid: fenamate."
+}
+]
+},
+{
+"date": "2026-11-06",
+"course": "pharma",
+"sec": "7-1",
+"topic": "Lesson 7: Anti-Inflammatory Drugs · Inflammation, Prostanoids, Pain and Fever",
+"title": "COX-1, COX-2 or LOX?",
+"bins": [
+"COX-1",
+"COX-2",
+"LOX"
+],
+"items": [
+{
+"t": "Constitutive (always on)",
+"b": 0,
+"w": "COX-1 is constitutive: the housekeeping enzyme."
+},
+{
+"t": "GI mucosal protection",
+"b": 1,
+"w": "COX-1 keeps the stomach lining protected."
+},
+{
+"t": "Renal blood flow",
+"b": 2,
+"w": "COX-1 housekeeping includes kidney blood flow."
+},
+{
+"t": "Makes TXA2 (platelets)",
+"b": 0,
+"w": "Thromboxane A2 comes from COX-1."
+},
+{
+"t": "Inducible",
+"b": 2,
+"w": "COX-2 shows up when called: inducible by inflammation."
+},
+{
+"t": "Prostanoids in cancer",
+"b": 0,
+"w": "COX-2 makes prostanoids for inflammation and cancer."
+},
+{
+"t": "Blocked by celecoxib",
+"b": 1,
+"w": "Coxibs are COX-2 selective."
+},
+{
+"t": "Makes leukotrienes",
+"b": 0,
+"w": "L for LOX and leukotrienes."
+},
+{
+"t": "Allergy and asthma",
+"b": 1,
+"w": "Leukotrienes from LOX drive allergy and asthma."
+},
+{
+"t": "Blocked by montelukast",
+"b": 2,
+"w": "Montelukast blocks leukotrienes."
+}
+]
+}
+]
+}

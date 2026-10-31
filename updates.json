@@ -775,5 +775,13 @@
   "title": "Study together: Class goal and Studying now",
   "text": "The new Class card on the home page counts the class's answers before the next test and shows how many are studying right now (just numbers, never names). Tap Focus 25 min to join in.",
   "link": "index.html"
+ },
+ {
+  "id": 94,
+  "date": "2026-10-31",
+  "type": "feature",
+  "title": "New daily game: Sort It",
+  "text": "Put 8 to 14 terms in their groups (theorists, fruit types, drug brands...), then see why each one goes there. One set a day from the nearest eval, next to APMed'le on the home page.",
+  "link": "sortit.html"
  }
 ]
