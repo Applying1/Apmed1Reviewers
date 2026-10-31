@@ -84,7 +84,7 @@ function drawLook(){$('theme').innerHTML=seg('theme',[['auto','Device'],['light'
 // Saved as 'reviewer_home' = {layout: auto|compact|full, first, hide: [element ids], order: [tool ids], top: [card ids], courses: [course ids], hideC: [course ids]};
 // the home page reads it in its <head> (HomeLayout) and its Customize mode (homeedit.js) edits the same object.
 const SECTIONS=[['upnext','Next class','The class coming up, with a warm-up quiz before it'],['tests','Tests coming up','Countdowns to exams, evals and quizzes'],['today','Today','Your daily goal, streak and reviews due'],['classnow','Class','The class goal before the next test, who is studying now, a focus timer']];
-const TOOLS=[['gdtool','General discussion'],['qztool','Live quiz'],['cwtool','Daily crossword'],['wdtool','APMed’le'],['sttool','Sort It'],['atttool','My attendance'],['shoptool','Class shop'],['cdtool','Class day','Only the class secretary sees it'],['modtool','Moderator','Only the site owner sees it']];
+const TOOLS=[['gdtool','General discussion'],['qztool','Live quiz'],['cwtool','Daily crossword'],['wdtool','APMed’le'],['sttool','Sort It'],['dutool','Duels'],['atttool','My attendance'],['shoptool','Class shop'],['cdtool','Class day','Only the class secretary sees it'],['modtool','Moderator','Only the site owner sees it']];
 let CRS=null;fetch('courses.json').then(r=>r.json()).then(l=>{CRS=l.map(c=>[c.id,c.title,c.soon?'Not available yet':''])}).catch(()=>{}).then(()=>{if(CRS)drawHome()});
 const HLISTS={order:()=>TOOLS,top:()=>SECTIONS,courses:()=>CRS};
 function homeGet(){let h={};try{h=JSON.parse(get('reviewer_home'))||{}}catch(e){}if(typeof h!=='object'||Array.isArray(h))h={};

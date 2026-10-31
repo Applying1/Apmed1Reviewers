@@ -783,5 +783,13 @@
   "title": "New daily game: Sort It",
   "text": "Put 8 to 14 terms in their groups (theorists, fruit types, drug brands...), then see why each one goes there. One set a day from the nearest eval, next to APMed'le on the home page.",
   "link": "sortit.html"
+ },
+ {
+  "id": 95,
+  "date": "2026-10-31",
+  "type": "feature",
+  "title": "Duels: challenge a classmate",
+  "text": "Pick a course, answer 7 questions, then send the link. Your classmate plays the same questions and you both see who won, question by question. Tap Duels on the home page (sign in first).",
+  "link": "duel.html"
  }
 ]

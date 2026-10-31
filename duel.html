@@ -1,0 +1,285 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duels · APMed '33</title>
+<meta name="description" content="Challenge a classmate to the same 7 questions. Play when you like; see who wins.">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+a{color:inherit}
+button,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:620px;margin:0 auto;padding:14px 16px calc(28px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:8px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+.sp{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;padding:9px 16px;font-weight:600;font-size:14.5px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07);background:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.wide{width:100%}
+h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 2px;text-align:center}
+h1 em{font-style:normal;color:var(--accent)}
+.sub{margin:0 0 16px;color:var(--mute);font-size:14px;text-align:center}
+.card{margin:0 0 14px;padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.card h2{margin:0 0 10px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute)}
+.card p{margin:0 0 12px;color:var(--mute);font-size:14px}
+label.f{display:block;margin:0 0 10px;font-size:13px;font-weight:600;color:var(--mute)}
+label.f select{display:block;width:100%;margin-top:5px;padding:9px 10px;border-radius:11px;border:1px solid var(--line2);background:var(--bg);font-size:14.5px;font-weight:500;color:var(--text)}
+.err{margin:8px 0 0;color:var(--bad,#c0392b);font-size:13.5px}
+/* list */
+.list{display:grid;gap:8px}
+.row{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;cursor:pointer;text-align:left;width:100%}
+.row:hover{border-color:var(--accent-line)}
+.row .w{flex:1;min-width:0}.row b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row .w>span{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{flex:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--raised);color:var(--mute);white-space:nowrap}
+.pill.turn{background:var(--accent);color:var(--accent-ink)}.pill.win{background:color-mix(in oklab,var(--good,#22a06b) 18%,var(--surface));color:var(--good,#22a06b)}
+.pill.lose{background:color-mix(in oklab,var(--bad,#c0392b) 12%,var(--surface));color:var(--bad,#c0392b)}
+.empty{color:var(--faint);font-size:14px;text-align:center;padding:10px 0}
+.qm{display:inline-grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;border:1.5px dashed var(--line2);color:var(--faint);font-weight:700}
+/* versus */
+.vs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;text-align:center}
+.vs .p{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.vs .p b{font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vs .p .sc{font:800 30px/1 var(--sans);font-variant-numeric:tabular-nums}
+.vs .p .t{font-size:12px;color:var(--mute)}
+.vs .x{font:800 15px/1 var(--sans);color:var(--faint)}
+.vs .p.won .sc{color:var(--accent)}
+.banner{margin:14px 0 0;text-align:center;font:700 18px/1.3 var(--sans)}
+.what{margin:12px 0 0;text-align:center;color:var(--mute);font-size:13.5px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0 0}
+.grid{display:grid;grid-template-columns:auto repeat(var(--n),1fr);gap:4px;margin:14px 0 0;font-size:12px;align-items:center}
+.grid span{text-align:center;font-weight:700;color:var(--mute)}
+.grid i{display:grid;place-items:center;height:26px;border-radius:7px;font-style:normal;font-weight:800;font-size:13px}
+.grid i.y{background:color-mix(in oklab,var(--good,#22a06b) 18%,var(--surface));color:var(--good,#22a06b)}
+.grid i.n{background:color-mix(in oklab,var(--bad,#c0392b) 12%,var(--surface));color:var(--bad,#c0392b)}
+.grid i.q{background:var(--raised);color:var(--faint)}
+.grid .nm{text-align:left;padding-right:6px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+/* play */
+.bar{display:flex;align-items:center;gap:10px;margin:6px 0 12px;font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.dots{flex:1;display:flex;gap:4px}.dots i{flex:1;height:6px;border-radius:99px;background:var(--line)}.dots i.y{background:var(--good,#22a06b)}.dots i.n{background:var(--bad,#c0392b)}.dots i.c{background:var(--accent)}
+.q{margin:0 0 14px;font:600 17px/1.45 var(--sans)}
+.blank{display:inline-block;width:56px;border-bottom:2px solid currentColor;vertical-align:-2px;opacity:.6}
+.ch{display:grid;gap:8px}
+.ch button{display:flex;gap:10px;align-items:flex-start;width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid var(--line2);background:var(--surface);text-align:left;font-size:15px;line-height:1.4}
+.ch button:hover:not(:disabled){border-color:var(--accent)}
+.ch button .l{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:7px;background:var(--raised);font:700 12.5px/1 var(--sans);color:var(--mute)}
+.ch button.right{border-color:var(--good,#22a06b);background:color-mix(in oklab,var(--good,#22a06b) 10%,var(--surface))}
+.ch button.right .l{background:var(--good,#22a06b);color:#fff}
+.ch button.wrong{border-color:var(--bad,#c0392b);background:color-mix(in oklab,var(--bad,#c0392b) 8%,var(--surface))}
+.ch button.wrong .l{background:var(--bad,#c0392b);color:#fff}
+.ch button:disabled{cursor:default}
+.fb{margin:12px 0 0;padding:12px 14px;border-radius:13px;background:var(--raised);font-size:14px}
+.fb b{display:block;margin-bottom:3px}.fb p{margin:4px 0 0;color:var(--mute)}
+.next{margin:14px 0 0}
+.rev{margin:10px 0 0}
+.rev details{border-top:1px solid var(--line);padding:9px 0}
+.rev summary{cursor:pointer;font-size:14px;font-weight:600;display:flex;gap:8px;align-items:baseline}
+.rev summary em{font-style:normal;flex:none}
+.rev .a{margin:6px 0 0;font-size:14px}.rev .a span{color:var(--mute)}
+.toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<main>
+ <div class="top"><a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a><span class="sp"></span></div>
+ <h1>Du<em>e</em>ls</h1>
+ <p class="sub" id="sub">Challenge a classmate to the same 7 questions.</p>
+ <div id="view"><p class="empty">Loading…</p></div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script src="auth.js"></script>
+<script src="profile.js"></script>
+<script src="schedule-core.js"></script>
+<script src="reminders-core.js"></script>
+<script>
+// Duels (Oct 31): a classmate challenges another to the same 7 questions from a course; both play when they like.
+// Cloud: supabase_duels.sql (duel_create / duel_get / duel_join / duel_submit / duel_mine; signed-in only). The page picks
+// the questions (from courses/<id>.json, same rules as the mock exam: no typed, picture or true/false items, no hidden
+// sections) and reports each answer right or wrong. Your picks are kept on this device ('reviewer_duels') for the review.
+const N=7,LOCAL='reviewer_duels';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ic=n=>'<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
+const stem=s=>esc(s).replace(/_{2,}/g,'<span class="blank" role="img" aria-label="blank"></span>');
+const short=t=>String(t).replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,'');
+function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),ms||2200)}
+const LS={get(){try{return JSON.parse(localStorage.getItem(LOCAL))||{}}catch(e){return LS.mem||{}}},put(o){LS.mem=o;try{localStorage.setItem(LOCAL,JSON.stringify(o))}catch(e){}}};
+function local(code){return LS.get()[code]||{}}
+function setLocal(code,v){const o=LS.get();o[code]=Object.assign(o[code]||{},v);const ks=Object.keys(o);if(ks.length>60)ks.sort((a,b)=>(o[a].at||0)-(o[b].at||0)).slice(0,ks.length-60).forEach(k=>delete o[k]);LS.put(o)}
+
+let COURSES=[];const BANKS={};
+const rpc=(fn,body)=>Auth.rpc(fn,body||{},true);
+// questions a duel may use: multiple choice with 3+ wrong choices, no typed/picture/numeric/case items, no true/false
+// statements, nothing retired or hidden, no extra (friend) bank items
+const FIGS=['fig','afig','cap','case','parts','num','solfig','img','chart','mol','graph'];
+function eligible(c,cfg){const hid=new Set([...((cfg.challengeSkip||{}).sections||[]),...Object.keys(cfg.optionalSections||{})]);
+ return c.bank.filter(x=>Array.isArray(x.d)&&x.d.length>=2&&x.a&&!x.type&&!x.retired&&!x.xo&&!x.extra&&x.kind!=='statement'&&x.kind!=='joke'&&!FIGS.some(k=>k in x)&&!hid.has(x.section))}
+async function bank(id){if(!BANKS[id])BANKS[id]=fetch('courses/'+encodeURIComponent(id)+'.json').then(r=>{if(!r.ok)throw new Error('This course could not be loaded.');return r.json()}).catch(e=>{delete BANKS[id];throw e});return BANKS[id]}
+const course=id=>COURSES.find(c=>c.id===id)||{id,title:id};
+const score=r=>r?[...r].filter(x=>x==='1').length:0;
+const who=(p,size)=>p?Profile.html({av:p.av,url:p.url,name:p.name},size||36):'<span class="qm" aria-hidden="true">?</span>';
+const link=code=>new URL('duel.html?d='+code,location.href).href;
+function result(d){if(!d.b||!d.a.done||!d.b.done||d.a.res==null||d.b.res==null)return null;
+ const sa=score(d.a.res),sb=score(d.b.res);let w=sa>sb?'a':sb>sa?'b':(d.a.secs<d.b.secs?'a':d.b.secs<d.a.secs?'b':'');return {sa,sb,w,byTime:sa===sb&&!!w}}
+function status(d){const me=d.me,other=me==='a'?'b':'a',r=result(d);
+ if(r)return r.w===''?['Draw','']:r.w===me?['You won '+(me==='a'?r.sa+'–'+r.sb:r.sb+'–'+r.sa),'win']:['You lost '+(me==='a'?r.sa+'–'+r.sb:r.sb+'–'+r.sa),'lose'];
+ if(!d[me].done)return ['Your turn','turn'];
+ if(!d.b)return d.open?['Waiting for a classmate','']:['Nobody took it',''];
+ return ['Waiting for '+d[other].name,''];
+}
+
+// ---------- start: sign in, then the list or one duel ----------
+async function boot(){
+ try{COURSES=(await (await fetch('courses.json')).json()).filter(c=>!c.soon&&!c.notesOnly);const cl=COURSES.find(c=>c.cloud&&c.cloud.url);if(cl)Auth.cloud=cl.cloud}catch(e){}
+ if(!Auth.cloud){$('view').innerHTML='<div class="card"><p>Duels need the class cloud, which isn\'t set up here.</p></div>';return}
+ let msg='';try{await Auth.finish()}catch(e){msg=e.message}
+ const code=new URLSearchParams(location.search).get('d');
+ if(!Auth.ses()){signedOut(code,msg);return}
+ if(code)openDuel(code);else home();
+}
+function signedOut(code,msg){
+ $('view').innerHTML='<div class="card"><h2>'+ic('users')+' Sign in to duel</h2><p>'+(code?'A classmate challenged you! Sign in with Google to accept. Your name and picture show to the other player.':'Duels use your Google sign-in, so your classmate knows who challenged them.')+'</p>'+
+  '<button class="btn primary wide" onclick="Auth.signIn(location.href)">Sign in with Google</button>'+(msg?'<p class="err">'+esc(msg)+'</p>':'')+'</div>';
+}
+
+// ---------- the list + new duel ----------
+async function home(){
+ history.replaceState(null,'','duel.html');$('sub').textContent='Challenge a classmate to the same '+N+' questions.';
+ $('view').innerHTML='<div class="card" id="new"><h2>'+ic('zap')+' New duel</h2><p>You play first, then send the link to a classmate (or the group chat). The first to open it plays the same questions.</p>'+
+  '<label class="f">Course<select id="nc">'+COURSES.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.title)+'</option>').join('')+'</select></label>'+
+  '<label class="f">Questions from<select id="ns"><option>Loading…</option></select></label>'+
+  '<button class="btn primary wide" id="go" disabled onclick="create()">'+ic('zap')+'Start a duel</button><p class="err" id="nerr" hidden></p></div>'+
+  '<div class="card"><h2>'+ic('trophy')+' Your duels</h2><div class="list" id="mine"><p class="empty">Loading…</p></div></div>';
+ // default: the course with the nearest test
+ try{await Sched.load();const t=Remind.list(3).find(a=>a.subj&&COURSES.some(c=>c.id===a.subj.course));if(t)$('nc').value=t.subj.course}catch(e){}
+ $('nc').onchange=scopes;scopes();
+ rpc('duel_mine').then(list=>{const box=$('mine');if(!box)return;list=list||[];
+  box.innerHTML=list.length?list.map(d=>{const me=d.me,o=d[me==='a'?'b':'a'],[st,cls]=status(d);
+   return '<button class="row" onclick="openDuel(\''+d.code+'\')">'+who(o)+'<span class="w"><b>'+(o?esc(o.name):'Open challenge')+'</b><span>'+esc(short(course(d.course).title))+(d.scope?' · '+esc(d.scope):'')+'</span></span><span class="pill '+cls+'">'+esc(st)+'</span></button>'}).join('')
+   :'<p class="empty">No duels yet. Start one above.</p>'}).catch(e=>{const box=$('mine');if(box)box.innerHTML='<p class="empty">'+esc(e.message)+'</p>'});
+}
+async function scopes(){
+ const id=$('nc').value,sel=$('ns');sel.innerHTML='<option>Loading…</option>';$('go').disabled=true;
+ try{const c=await bank(id),cfg=c.config,el=eligible(c,cfg),ex=(cfg.exams||[]).find(e=>e.id===cfg.activeExam);
+  const inEx=e=>x=>(e.sections||[]).includes(x.section)||(e.chapters||[]).includes(String(x.section).split('-')[0]);
+  const opts=[];if(ex){const n=el.filter(inEx(ex)).length;if(n>=N)opts.push(['ex',ex.name,n])}
+  Object.keys(cfg.chapters||{}).forEach(ch=>{const n=el.filter(x=>String(x.section).split('-')[0]===ch).length;if(n>=N&&!/\(draft\)/i.test(cfg.chapters[ch]))opts.push(['ch:'+ch,(cfg.unit||'Chapter')+' '+ch+': '+cfg.chapters[ch],n])});
+  if(el.length>=N)opts.push(['all','Whole course',el.length]);
+  sel.innerHTML=opts.length?opts.map(o=>'<option value="'+esc(o[0])+'">'+esc(o[1])+' ('+o[2]+' questions)</option>').join(''):'<option value="">Not enough questions yet</option>';
+  $('go').disabled=!opts.length}
+ catch(e){sel.innerHTML='<option value="">'+esc(e.message)+'</option>'}
+}
+async function create(){
+ const id=$('nc').value,sc=$('ns').value,err=$('nerr');err.hidden=true;$('go').disabled=true;
+ try{const c=await bank(id),cfg=c.config,el=eligible(c,cfg),ex=(cfg.exams||[]).find(e=>e.id===cfg.activeExam);let pool=el,label='Whole course';
+  if(sc==='ex'&&ex){pool=el.filter(x=>(ex.sections||[]).includes(x.section)||(ex.chapters||[]).includes(String(x.section).split('-')[0]));label=ex.name}
+  else if(sc.startsWith('ch:')){const ch=sc.slice(3);pool=el.filter(x=>String(x.section).split('-')[0]===ch);label=(cfg.unit||'Chapter')+' '+ch}
+  const pick=pool.slice();for(let i=pick.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pick[i],pick[j]]=[pick[j],pick[i]]}
+  const d=await rpc('duel_create',{p_course:id,p_scope:label,p_qids:pick.slice(0,N).map(x=>x.id)});
+  play(d)}
+ catch(e){err.textContent=e.message;err.hidden=false;$('go').disabled=false}
+}
+
+// ---------- one duel ----------
+let DUEL=null;
+async function openDuel(code){
+ history.replaceState(null,'','duel.html?d='+encodeURIComponent(code));
+ $('view').innerHTML='<p class="empty">Loading…</p>';
+ try{DUEL=await rpc('duel_get',{p_code:code});showDuel()}
+ catch(e){$('view').innerHTML='<div class="card"><p>'+esc(e.message)+'</p><button class="btn" onclick="home()">Your duels</button></div>'}
+}
+function showDuel(){
+ const d=DUEL,me=d.me,c=course(d.course),r=result(d);
+ $('sub').innerHTML=esc(short(c.title))+(d.scope?' · '+esc(d.scope):'')+' · '+d.qids.length+' questions';
+ const side=(k)=>{const p=d[k];if(!p)return '<div class="p">'+who(null,56)+'<b>'+(d.open?'Anyone':'Nobody')+'</b><span class="t">'+(d.open?'open challenge':'closed')+'</span></div>';
+  const seen=p.res!=null,won=r&&r.w===k;
+  return '<div class="p'+(won?' won':'')+'">'+who(p,56)+'<b>'+esc(p.name)+(me===k?' (you)':'')+'</b><span class="sc">'+(seen?score(p.res)+'<small style="font-size:.5em;color:var(--mute)">/'+d.qids.length+'</small>':p.done?'✓':'–')+'</span><span class="t">'+(seen&&p.secs?fmtT(p.secs):p.done?'played':'not yet')+'</span></div>'};
+ let h='<div class="card"><div class="vs">'+side('a')+'<span class="x">VS</span>'+side('b')+'</div>';
+ if(r){const mine=me==='a'?r.sa:r.sb,theirs=me==='a'?r.sb:r.sa;
+  h+='<p class="banner">'+(r.w===''?'It\'s a draw!':me&&r.w===me?'You win'+(r.byTime?' on time':'')+'! 🎉':me?d[r.w].name+' wins'+(r.byTime?' on time':''):d[r.w].name+' wins')+'</p>';
+  h+=gridHTML(d)}
+ else if(!me){h+=d.open?'<p class="what"><b>'+esc(d.a.name)+'</b> challenges you to '+d.qids.length+' questions. You\'ll see their score after you play.</p><div class="acts"><button class="btn primary" onclick="accept()">'+ic('zap')+'Accept and play</button></div>'
+   :'<p class="what">This duel already has two players.</p><div class="acts"><button class="btn primary" onclick="home()">Start your own duel</button></div>'}
+ else if(!d[me].done){h+='<div class="acts"><button class="btn primary" onclick="play(DUEL)">'+ic('play')+(local(d.code).p?'Keep playing':'Play now')+'</button></div>'}
+ else{h+='<p class="what">'+(d.b?'Waiting for <b>'+esc(d[me==='a'?'b':'a'].name)+'</b> to play. You\'ll both see the result here.':'Now send the link to a classmate. The first to open it plays the same questions.')+'</p>'+
+   (d.open?'<div class="acts"><button class="btn primary" onclick="shareLink()">'+ic('share')+'Send the link</button><button class="btn" onclick="copyLink()">'+ic('copy')+'Copy link</button></div>':'')}
+ h+='</div>';
+ if(me&&d[me].done)h+='<div class="card"><h2>'+ic('check')+' Your answers</h2><div class="rev" id="rev"><p class="empty">Loading…</p></div></div>';
+ h+='<div class="acts"><button class="btn" onclick="home()">'+ic('list')+'Your duels</button>'+(r&&me?'<button class="btn" onclick="rematch()">'+ic('rotate-cw')+'Rematch</button>':'')+'</div>';
+ $('view').innerHTML=h;
+ if(me&&d[me].done)review();
+}
+const fmtT=s=>s>=60?Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s':s+'s';
+function gridHTML(d){const n=d.qids.length,cell=x=>'<i class="'+(x==='1'?'y':x==='0'?'n':'q')+'">'+(x==='1'?'✓':x==='0'?'✗':'·')+'</i>';
+ return '<div class="grid" style="--n:'+n+'"><span></span>'+d.qids.map((_,i)=>'<span>'+(i+1)+'</span>').join('')+
+  ['a','b'].map(k=>'<span class="nm">'+esc(d[k].name)+'</span>'+[...d[k].res].map(cell).join('')).join('')+'</div>'}
+async function review(){
+ const d=DUEL,box=$('rev');try{const c=await bank(d.course),by=Object.fromEntries(c.bank.map(x=>[x.id,x])),L=local(d.code),res=d[d.me].res||'';
+  box.innerHTML=d.qids.map((id,i)=>{const q=by[id];if(!q)return '<details><summary><em>·</em>Question '+(i+1)+' was removed from the course</summary></details>';
+   const ok=res[i]==='1',pick=(L.p||[])[i],wrongWhy=!ok&&pick&&q.dw&&q.dw[pick]?q.dw[pick]:'';
+   return '<details'+(ok?'':' open')+'><summary><em>'+(ok?'✓':'✗')+'</em><span>'+stem(q.q)+'</span></summary><p class="a"><b>'+esc(q.a)+'</b>'+(q.why?' <span>· '+esc(q.why)+'</span>':'')+'</p>'+
+    (!ok&&pick?'<p class="a"><span>You picked: '+esc(pick)+(wrongWhy?' · '+esc(wrongWhy):'')+'</span></p>':'')+'</details>'}).join('')+
+   '<div class="acts"><a class="btn" href="reviewer.html?course='+encodeURIComponent(d.course)+'">'+ic('book-open')+'Practice in the course</a></div>'}
+ catch(e){box.innerHTML='<p class="empty">'+esc(e.message)+'</p>'}
+}
+async function accept(){try{DUEL=await rpc('duel_join',{p_code:DUEL.code});if(DUEL.me)play(DUEL);else showDuel()}catch(e){toast(e.message)}}
+function shareLink(){const u=link(DUEL.code),t=DUEL.a.name+' challenges you to a '+short(course(DUEL.course).title)+' duel ('+DUEL.qids.length+' questions). Beat my score: ';
+ if(navigator.share)navigator.share({text:t,url:u}).catch(()=>{});else copyLink()}
+function copyLink(){const u=link(DUEL.code);(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Link copied. Paste it in the group chat.'),()=>window.ask?ask('Copy this link:',{title:'Duel link',alert:true,copy:u,ok:'Done'}):toast(u,6000))}
+async function rematch(){const d=DUEL;try{const c=await bank(d.course),el=eligible(c,c.config),prev=new Set(d.qids);let pool=el.filter(x=>!prev.has(x.id));
+  const sec=new Set(d.qids.map(id=>(c.bank.find(x=>x.id===id)||{}).section));const same=pool.filter(x=>sec.has(x.section));if(same.length>=N)pool=same;
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+  play(await rpc('duel_create',{p_course:d.course,p_scope:d.scope,p_qids:pool.slice(0,N).map(x=>x.id)}))}catch(e){toast(e.message)}}
+
+// ---------- playing: one question at a time, choices reshuffled, the answer and why right after ----------
+let P=null;
+async function play(d){
+ DUEL=d;history.replaceState(null,'','duel.html?d='+encodeURIComponent(d.code));
+ $('view').innerHTML='<p class="empty">Loading the questions…</p>';
+ let c;try{c=await bank(d.course)}catch(e){$('view').innerHTML='<div class="card"><p>'+esc(e.message)+'</p></div>';return}
+ const by=Object.fromEntries(c.bank.map(x=>[x.id,x])),L=local(d.code);
+ P={qs:d.qids.map(id=>by[id]||null),res:(L.r||'').split(''),picks:L.p||[],i:0,spent:L.s||0,t0:Date.now(),code:d.code};
+ P.i=P.res.length;
+ // a question that no longer exists counts as 'x' for both players
+ while(P.i<P.qs.length&&!P.qs[P.i]){P.res[P.i]='x';P.picks[P.i]=null;P.i++}
+ if(P.i>=P.qs.length)return finish();
+ ask1();
+}
+function ask1(){const q=P.qs[P.i],n=P.qs.length;
+ const ch=[q.a,...q.d.slice(0,3)];for(let i=ch.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ch[i],ch[j]]=[ch[j],ch[i]]}P.ch=ch;P.t0=Date.now();
+ $('view').innerHTML='<div class="card"><div class="bar"><span>'+(P.i+1)+' / '+n+'</span><span class="dots">'+P.qs.map((_,k)=>'<i class="'+(P.res[k]==='1'?'y':P.res[k]==='0'?'n':k===P.i?'c':'')+'"></i>').join('')+'</span></div>'+
+  '<p class="q">'+stem(q.q)+'</p><div class="ch" id="ch">'+ch.map((x,k)=>'<button data-k="'+k+'"><span class="l">'+'ABCD'[k]+'</span><span>'+esc(x)+'</span></button>').join('')+'</div><div id="fb"></div></div>';
+ $('ch').onclick=e=>{const b=e.target.closest('button');if(b&&!b.disabled)answer(+b.dataset.k)};
+}
+function answer(k){const q=P.qs[P.i],ok=P.ch[k]===q.a,btns=[...document.querySelectorAll('#ch button')];
+ P.spent+=Math.min(300,Math.round((Date.now()-P.t0)/1000));P.res[P.i]=ok?'1':'0';P.picks[P.i]=P.ch[k];
+ setLocal(P.code,{r:P.res.join(''),p:P.picks,s:P.spent,at:Date.now()});
+ btns.forEach((b,j)=>{b.disabled=true;if(P.ch[j]===q.a)b.classList.add('right');else if(j===k)b.classList.add('wrong')});
+ const last=P.i===P.qs.length-1||P.qs.slice(P.i+1).every(x=>!x);
+ $('fb').innerHTML='<div class="fb"><b>'+(ok?'Correct!':'Not quite.')+'</b>'+(!ok&&q.dw&&q.dw[P.ch[k]]?'<p>'+esc(q.dw[P.ch[k]])+'</p>':'')+(q.why?'<p>'+esc(q.why)+'</p>':'')+'</div>'+
+  '<button class="btn primary wide next" id="nx">'+(last?'See the result':'Next question')+'</button>';
+ $('nx').onclick=()=>{P.i++;while(P.i<P.qs.length&&!P.qs[P.i]){P.res[P.i]='x';P.i++}if(P.i>=P.qs.length)finish();else ask1()};$('nx').focus({preventScroll:true});
+}
+async function finish(){
+ const res=P.qs.map((_,i)=>P.res[i]||'x').join(''),secs=Math.max(1,Math.min(7200,P.spent||1));
+ $('view').innerHTML='<p class="empty">Saving your score…</p>';
+ try{DUEL=await rpc('duel_submit',{p_code:P.code,p_res:res,p_secs:secs});setLocal(P.code,{done:1});showDuel();if(DUEL.open&&DUEL.me==='a')toast('Done! Now send the link to a classmate.',3000)}
+ catch(e){if(/already played/i.test(e.message)){openDuel(P.code);return}
+  $('view').innerHTML='<div class="card"><p>Your score couldn\'t be saved: '+esc(e.message)+'</p><button class="btn primary" onclick="finish()">Try again</button></div>'}
+}
+boot();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+<script src="dialog.js"></script>
+<script src="update.js" defer></script>
+</body></html>
