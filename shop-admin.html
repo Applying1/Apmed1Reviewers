@@ -4,7 +4,7 @@
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
 <script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
 <link rel="stylesheet" href="ui.css">
 <style>
@@ -64,11 +64,67 @@ label.f{display:block;margin-top:10px;font-size:13px;font-weight:600;color:var(-
 .prev{width:120px;height:120px;border-radius:12px;background:var(--raised);display:grid;place-items:center;overflow:hidden;color:var(--faint);font-size:12px;margin-top:8px}.prev img{width:100%;height:100%;object-fit:contain}
 .empty{color:var(--mute);text-align:center;padding:30px 0}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
+
+/* ---- friendlier look (Oct 31): same pastel sticker paper and Fredoka as her shop ---- */
+:root{--paper:#e9f3fb;--dot:#c5dff0;--pink:#ff6f9f;--ink2:#1e3a5a;--sky:#aed4eb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0e1925;--dot:#182a3d;--ink2:#e6f1fa;--sky:#27465f}}
+:root[data-theme="dark"]{--paper:#0e1925;--dot:#182a3d;--ink2:#e6f1fa;--sky:#27465f}
+body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px) 0 0/18px 18px;font-size:15.5px}
+main{max-width:900px;padding-bottom:90px}
+.hero{margin-top:10px;background:var(--surface);border-radius:26px;padding:18px 20px 16px;box-shadow:0 0 0 3px #fff8,0 10px 30px #0000001a;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-56px;top:-56px;width:110px;height:110px;border-radius:50%;background:color-mix(in srgb,var(--pink) 22%,transparent)}
+.hero h1{font:600 clamp(26px,6vw,34px)/1.1 Fredoka,var(--sans);color:var(--ink2);margin:0 0 4px;position:relative}
+.hero .sub{position:relative;font-size:14.5px}
+.hero .row{margin-top:12px;position:relative}
+.pill{display:inline-flex;align-items:center;gap:6px;font:600 13.5px Fredoka,var(--sans);padding:4px 12px;border-radius:99px;background:var(--raised);color:var(--mute)}
+.pill.on{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.tabs{position:sticky;top:0;z-index:15;margin:14px -16px 0;padding:10px 16px 8px;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(8px)}
+.tabs .seg{display:flex;background:var(--surface);border:2px solid var(--sky);border-radius:99px;padding:4px;gap:4px;box-shadow:0 2px 8px #0000000d}
+.tabs .seg button{flex:1;border-radius:99px;padding:9px 6px;font:500 15.5px Fredoka,var(--sans);white-space:nowrap}
+.tabs .seg button[aria-pressed="true"]{background:var(--pink);color:#2b1220;box-shadow:none}
+.tabs .seg b{background:var(--ink2);color:var(--paper)}
+.tabs .seg button[aria-pressed="true"] b{background:#2b1220;color:#fff}
+@media (max-width:420px){.tabs .seg button{font-size:14px;padding:9px 2px}}
+h2{font:600 19px/1.2 Fredoka,var(--sans);letter-spacing:0;text-transform:none;color:var(--ink2);margin:30px 2px 8px}
+.card{border:0;border-radius:22px;padding:16px 18px;box-shadow:0 1px 0 color-mix(in srgb,var(--sky) 60%,transparent),0 8px 22px #00000010}
+.btn{border-radius:99px;padding:9px 16px;font:500 15px Fredoka,var(--sans);border:2px solid var(--sky);background:var(--surface)}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--pink);border-color:var(--pink);color:#2b1220;font-weight:600}
+.btn.primary:hover{filter:brightness(1.05);background:var(--pink)}
+.btn.bad{border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
+.inp,textarea.inp,select.inp{border:2px solid var(--sky);border-radius:14px;padding:10px 12px;background:var(--surface)}
+.inp:focus{border-color:var(--pink)}
+label.f{font-size:13.5px}
+.kpis{gap:12px;margin-top:6px}
+.kpi{border:0;border-radius:20px;padding:13px 15px;box-shadow:0 1px 0 color-mix(in srgb,var(--sky) 60%,transparent),0 6px 16px #0000000d}
+.kpi .k{font:500 14px Fredoka,var(--sans)}.kpi .v{font:600 26px/1.15 Fredoka,var(--sans);color:var(--ink2)}
+.kpi.fund{background:color-mix(in srgb,var(--pink) 16%,var(--surface));border:0}
+.seg button{font-family:Fredoka,var(--sans)}
+.row>.seg{background:none;border:0;padding:0;gap:6px}.row>.seg button{background:var(--surface);border:2px solid var(--sky);border-radius:99px;padding:5px 13px;font:500 14.5px Fredoka,var(--sans)}.row>.seg button[aria-pressed="true"]{background:var(--ink2);border-color:var(--ink2);color:var(--paper);box-shadow:none}
+.ord{border-left:6px solid var(--sky)}
+.ord.s-placed{border-left-color:#ffd27a}.ord.s-held{border-left-color:#cba6ff}.ord.s-paid{border-left-color:#86dbb8}.ord.s-ready{border-left-color:#a3b0ff}.ord.s-done{border-left-color:#bfc9d3}.ord.s-cancelled{border-left-color:var(--bad);opacity:.75}
+.ord .h b{font:600 17px Fredoka,var(--sans);color:var(--ink2)}
+.ord ul{list-style:none;padding:0;margin:10px 0;display:flex;flex-wrap:wrap;gap:6px}
+.ord li{background:var(--raised);border-radius:99px;padding:3px 12px;font-size:14px}
+.st{font:600 12.5px Fredoka,var(--sans);padding:2px 10px}
+.st.placed{background:#ffd27a55;color:var(--text)}.st.held{background:#cba6ff55;color:var(--text)}
+.grid{gap:14px}
+.it{border:0;border-radius:20px;box-shadow:0 1px 0 color-mix(in srgb,var(--sky) 60%,transparent),0 6px 16px #0000000f;background:var(--surface)}
+.it .pic{margin:8px 8px 0;border-radius:14px}
+.it .pic img{padding:10%}
+.it .ib b{font:500 15px Fredoka,var(--sans);color:var(--ink2)}
+.it .ib button{border-radius:99px}
+.prt{font-size:14.5px}.prt th{font-family:Fredoka,var(--sans);font-weight:500;color:var(--mute)}
+.empty{padding:40px 10px;font-size:15px}
+.sheet{border-radius:26px 26px 0 0}.sheet h3{font:600 22px/1.2 Fredoka,var(--sans);color:var(--ink2)}
+.sheet .btn.primary{padding:10px 20px;font-size:16px}
+.toast{background:var(--ink2);color:var(--paper);border-radius:99px;padding:11px 20px;font-family:Fredoka,var(--sans);font-weight:500}
 </style></head><body>
 <main>
  <a class="back" href="shop.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>The shop</a>
- <h1>Manage the shop</h1>
+ <div class="hero"><h1>Manage the shop 🛍️</h1>
  <p class="sub" id="sub">Loading…</p>
+ <div class="row" id="herow" hidden><span class="pill" id="state"></span><span class="sp"></span><a class="btn" href="shop.html" target="_blank">👀 See the shop</a></div></div>
  <div class="tabs"><span class="seg" id="tabs" role="group" aria-label="Show" hidden></span></div>
  <div id="body"></div>
 </main>
@@ -98,27 +154,27 @@ let A=null,TAB=location.hash.slice(1)||'orders',OF='placed';
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
 async function reload(){A=await Auth.rpc('shop_admin_get',{},true);draw()}
 function go(t){TAB=t;history.replaceState(null,'','#'+t);draw()}
-function draw(){const w=A.orders.filter(o=>o.status==='placed'||o.status==='held').length,t=$('tabs');t.hidden=false;
- t.innerHTML=[['orders','Orders'],['stickers','Stickers'],['settings','Settings']].concat(A.owner?[['managers','Managers']]:[]).map(([k,l])=>'<button aria-pressed="'+(TAB===k)+'" onclick="go(\''+k+'\')">'+l+(k==='orders'&&w?'<b>'+w+'</b>':'')+'</button>').join('');
+function draw(){$('herow').hidden=false;const sp=$('state');sp.className='pill'+(A.settings.open?' on':'');sp.textContent=A.settings.open?'🟢 Open for orders':'⏸️ Orders are closed';const w=A.orders.filter(o=>o.status==='placed'||o.status==='held').length,t=$('tabs');t.hidden=false;
+ t.innerHTML=[['orders','🧾 Orders'],['stickers','🎨 Stickers'],['settings','⚙️ Settings']].concat(A.owner?[['managers','👥 Managers']]:[]).map(([k,l])=>'<button aria-pressed="'+(TAB===k)+'" onclick="go(\''+k+'\')">'+l+(k==='orders'&&w?'<b>'+w+'</b>':'')+'</button>').join('');
  ({orders:drawOrders,stickers:drawStickers,settings:drawSettings,managers:drawManagers}[TAB]||drawOrders)()}
 
 /* ---------- Orders ---------- */
 function drawOrders(){const live=A.orders.filter(o=>o.status!=='cancelled'&&o.status!=='held'),paid=live.filter(o=>o.status!=='placed'),sum=(l,k)=>l.reduce((a,o)=>a+o[k],0);
  const list=A.orders.filter(o=>OF==='all'||o.status===OF),cnt=s=>A.orders.filter(o=>o.status===s).length;
  const print={};live.forEach(o=>(o.items||[]).forEach(x=>{const k=x.catalog+' · '+x.name;print[k]=(print[k]||0)+x.qty}));
- $('body').innerHTML='<div class="kpis"><div class="kpi"><div class="k">Orders</div><div class="v">'+live.length+'</div></div><div class="kpi"><div class="k">Waiting for payment</div><div class="v">'+peso(sum(live.filter(o=>o.status==='placed'),'total_cents'))+'</div></div>'+
-  '<div class="kpi"><div class="k">Paid</div><div class="v">'+peso(sum(paid,'total_cents'))+'</div></div><div class="kpi fund"><div class="k">Class fund (paid)</div><div class="v">'+peso(sum(paid,'fund_cents'))+'</div></div></div>'+
+ $('body').innerHTML='<div class="kpis"><div class="kpi"><div class="k">🧾 Orders</div><div class="v">'+live.length+'</div></div><div class="kpi"><div class="k">⏳ Waiting for payment</div><div class="v">'+peso(sum(live.filter(o=>o.status==='placed'),'total_cents'))+'</div></div>'+
+  '<div class="kpi"><div class="k">💸 Paid</div><div class="v">'+peso(sum(paid,'total_cents'))+'</div></div><div class="kpi fund"><div class="k">♡ Class fund (paid)</div><div class="v">'+peso(sum(paid,'fund_cents'))+'</div></div></div>'+
   '<div class="row" style="margin-top:16px"><span class="seg" role="group" aria-label="Status">'+(cnt('held')?[['held','Guests to check']]:[]).concat([['placed','Waiting'],['paid','Paid'],['ready','Ready'],['done','Picked up'],['cancelled','Cancelled'],['all','All']]).map(([k,l])=>'<button aria-pressed="'+(OF===k)+'" onclick="OF=\''+k+'\';drawOrders()">'+l+(k!=='all'&&cnt(k)?' ('+cnt(k)+')':'')+'</button>').join('')+'</span>'+
   '<span class="sp"></span><button class="btn" onclick="reload()">Refresh</button><button class="btn" onclick="csv()">Download CSV</button></div>'+
-  (list.length?list.map(o=>'<div class="card ord"><div class="h"><b>#'+o.id+' '+esc(o.buyer)+'</b><span class="st '+esc(o.status)+'">'+esc(LBL[o.status])+'</span>'+(o.guest?'<span class="st">No sign-in</span>':'')+'<span class="mute">'+new Date(o.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span></div>'+
+  (list.length?list.map(o=>'<div class="card ord s-'+esc(o.status)+'"><div class="h"><b>#'+o.id+' '+esc(o.buyer)+'</b><span class="st '+esc(o.status)+'">'+esc(LBL[o.status])+'</span>'+(o.guest?'<span class="st">No sign-in</span>':'')+'<span class="mute">'+new Date(o.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span></div>'+
    '<div class="mute">'+contact(o.contact)+(o.email?' · '+esc(o.email):'')+(o.school?' · '+esc(o.school):'')+'</div>'+
    '<ul>'+(o.items||[]).map(x=>'<li>'+x.qty+' × '+esc(x.name)+' <span class="mute">('+esc(x.catalog)+')</span></li>').join('')+'</ul>'+
    '<div class="h"><b>'+peso(o.total_cents)+'</b>'+(o.discount_cents?'<span class="mute">after '+esc((o.deals||[]).map(d=>d.name+(d.n>1?' ×'+d.n:'')).join(', ')||'a deal')+' (−'+peso(o.discount_cents)+')</span>':'')+(o.fund_cents?'<span class="mute">'+peso(o.fund_cents)+' to the class fund</span>':'')+'<span class="mute"><b>'+(o.pay_method==='cash'?'Cash':'GCash')+'</b></span>'+(o.pay_ref?'<span class="mute">GCash ref: '+esc(o.pay_ref)+'</span>':'')+'</div>'+
    (o.note?'<p class="mute" style="margin:6px 0 0">Note: '+esc(o.note)+'</p>':'')+
    '<div class="row" style="margin-top:10px"><input class="inp" style="flex:1;min-width:160px" id="n'+o.id+'" maxlength="300" placeholder="Note to the buyer (optional)" value="'+esc(o.seller_note)+'">'+
    (o.status==='held'?'<p class="mute" style="margin:6px 0 0;flex-basis:100%">Ordered without signing in. Open their profile link above to check who it is, then Accept (it then holds the stickers) or Cancel.</p>':'')+({held:[['accept','Accept'],['cancelled','Cancel']],placed:[['paid','Mark paid'],['cancelled','Cancel']],paid:[['ready','Ready for pickup']],ready:[['done','Picked up']],done:[],cancelled:[['placed','Reopen']]}[o.status]||[]).map(([s,l])=>'<button class="btn'+(s==='cancelled'?' bad':s==='placed'?'':' primary')+'" onclick="setStatus('+o.id+',\''+s+'\')">'+l+'</button>').join('')+'</div></div>').join('')
-   :'<p class="empty">No orders here.</p>')+
-  '<h2>Print list (orders not cancelled)</h2><div class="card">'+(Object.keys(print).length?'<table class="prt"><tr><th>Sticker</th><th class="n">How many</th></tr>'+Object.entries(print).sort().map(([k,n])=>'<tr><td>'+esc(k)+'</td><td class="n">'+n+'</td></tr>').join('')+'</table>':'<p class="mute" style="margin:0">Nothing ordered yet.</p>')+'</div>'}
+   :'<p class="empty">🎈 No orders here yet.</p>')+
+  '<h2>🖨️ What to make (print list)</h2><div class="card">'+(Object.keys(print).length?'<table class="prt"><tr><th>Sticker</th><th class="n">How many</th></tr>'+Object.entries(print).sort().map(([k,n])=>'<tr><td>'+esc(k)+'</td><td class="n">'+n+'</td></tr>').join('')+'</table>':'<p class="mute" style="margin:0">Nothing ordered yet.</p>')+'</div>'}
 function contact(c){c=String(c||'');if(/^https?:\/\//i.test(c))return '<a href="'+esc(c)+'" target="_blank" rel="noopener">'+esc(c.replace(/^https?:\/\/(www\.)?/,''))+'</a>';return esc(c)}
 async function setStatus(id,s){if(s==='accept'){try{await Auth.rpc('shop_admin_accept',{p_id:id},true);toast('Accepted. It now holds the stickers.');await reload()}catch(e){toast('Couldn\'t accept: '+e.message)}return}
  try{await Auth.rpc('shop_admin_status',{p_id:id,p_status:s,p_note:$('n'+id).value.trim()},true);toast(s==='paid'?'Marked paid. The buyer gets a notification.':s==='ready'?'Marked ready. The buyer gets a notification.':'Saved.');await reload()}catch(e){toast('Couldn\'t save: '+e.message)}}
@@ -225,7 +281,7 @@ async function mgr(email,add){if(!add&&!await ask('Remove this manager?',email+'
  if(!Auth.ses()){$('sub').innerHTML='Sign in with Google first. <a class="btn primary" href="./?signin=1" style="margin-left:6px">Sign in</a>';return}
  Push.init(Auth.cloud);
  try{A=await Auth.rpc('shop_admin_get',{},true)}catch(e){$('sub').textContent=/not allowed/.test(e.message)?'This page is only for the shop\'s managers.':'Couldn\'t load. Check your connection and try again.';return}
- $('sub').textContent='Only managers see this page. Buyers pay you directly; mark their orders here.';draw();Push.attRefresh();
+ $('sub').textContent='Hi! Only managers see this page. Buyers pay you directly; mark their orders here as they come in.';draw();Push.attRefresh();
 })();
 </script>
 <script src="update.js" defer></script>
