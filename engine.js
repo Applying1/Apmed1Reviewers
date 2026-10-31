@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='102',APP_DATE='Oct 30, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='103',APP_DATE='Oct 31, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -896,7 +896,11 @@ function drawLastLook(){const el=$('lastlook');if(!el)return;const {src,list}=ll
   '</div>'}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('llopen'))closeLastLook()});
 /* ---------- v71: daily goal and streak, across every course on this device (site/daily.js) ---------- */
-function dailyAdd(n){if(!n||!window.Daily||!CONFIG.home)return;try{const g=Daily.add(n);if(g&&!(Daily.hidden&&Daily.hidden()))setTimeout(()=>{toast('Daily goal reached: '+g.goal+' questions'+(g.streak>1?' · '+g.streak+'-day streak':''));celebrate('section')},650)}catch(e){}}
+function dailyAdd(n){if(n&&window.ClassNow&&CONFIG.home&&state.prefs.crowd)ClassNow.ping(courseId());if(!n||!window.Daily||!CONFIG.home)return;try{const g=Daily.add(n);if(g&&!(Daily.hidden&&Daily.hidden()))setTimeout(()=>{toast('Daily goal reached: '+g.goal+' questions'+(g.streak>1?' · '+g.streak+'-day streak':''));celebrate('section')},650)}catch(e){}}
+// v103: how many classmates answered in this course in the last 3 minutes (only with class stats on; you are not counted)
+function cnNow(){if(!window.ClassNow||!CONFIG.home||!state.prefs.crowd)return;ClassNow.now().then(s=>{const h=$('hero');if(!s||!h)return;const id=courseId(),n=(s.by[id]||0)-(s.me&&s.here===id?1:0);let e=$('cnnow');
+ if(n<1){if(e)e.remove();return}if(!e){e=document.createElement('p');e.id='cnnow';e.className='cnnow';h.firstElementChild.appendChild(e)}
+ e.innerHTML='<i></i>'+n+' classmate'+(n>1?'s are':' is')+' studying this course right now'})}
 function dailyTile(tile){const d=window.Daily&&CONFIG.home&&!(Daily.hidden&&Daily.hidden())?Daily.now():null;if(!d)return '';
  return tile(ICON.flame,'Today',d.today+'<small>/'+d.goal+'</small>',d.met?(d.streak>1?d.streak+'-day streak':'Goal done today'):d.streak?d.streak+'-day streak · keep it going':'Daily goal: '+d.goal+' questions')}
 function mastered(){return BANK.filter(isM).length}
@@ -938,6 +942,7 @@ function drawDash(){
   (pageOn('notes')?'<button class="shuffle-link" onclick="openNotes(\'all\')">'+NOTE_SM+'Read the high-yield notes</button>':'')+
   (state.prefs.stars&&nStar?'<button class="shuffle-link" onclick="selectSection(\'STAR\')">'+STAR_SM+'Review starred ('+nStar+')</button>':'')+(classOn()?'<button class="shuffle-link" onclick="selectSection(\'CLASS\')">'+CLASS_SM+'Class\'s most missed ('+classList().length+')</button>':'')+'</div>';
 
+ cnNow();
  const tile=(ic,k,v,d)=>'<div class="kpi"><div class="k">'+ic+k+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div></div>';
  $('kpis').innerHTML=
   tile(ICON.target,'Accuracy',Math.round(100*state.correct/Math.max(1,att))+'<small>%</small>',state.correct+' right · '+state.wrong+' wrong')+
@@ -1801,7 +1806,7 @@ function drawPrefs(){
   row('Colors','Classic indigo, the APMed \'33 palette, or a popular theme. Each has a light and a dark version that follows Dark mode. Applies to every course and the home page on this device.',palHTML(document.documentElement.dataset.palette||'classic')).replace('class="prow"','class="prow stack"')+(CONFIG.home?row('Welcome animation','Play the intro on the home page again.','<button class="btn sm" onclick="replayIntro()">Replay</button>'):'')+
   row('Your name','Used to greet you on the dashboard. Saved only in this browser.','<input class="txt" id="pname" maxlength="40" placeholder="Your name" aria-label="Your name" autocomplete="given-name" value="'+esc(state.name||'')+'" onchange="setName(this.value)">')+'</section>';
  h+='<section class="panel"><h2>Your data</h2>'+syncRowHTML(row)+
-  (cloudOn()?row('Share anonymous answer stats','Sends only which '+ITEMS+' were answered right or wrong, with no name and no device ID, so the class can see its most missed '+ITEMS+'.',sw(state.prefs.crowd,"setPref('crowd',"+!state.prefs.crowd+")",'Share anonymous answer stats')):'')+
+  (cloudOn()?row('Share anonymous answer stats','Sends only which '+ITEMS+' were answered right or wrong, with no name and no device ID, so the class can see its most missed '+ITEMS+'. It also adds you to the class\'s "studying now" number (a random code for this device, kept 1 hour, never a name).',sw(state.prefs.crowd,"setPref('crowd',"+!state.prefs.crowd+")",'Share anonymous answer stats')):'')+
   (()=>{const u=storageUse();return row('Storage on this device','This course uses '+mbs(u.mine)+'; all courses together '+mbs(u.all)+' of about 5 MB.'+(STORE_FULL?' <b>Full: new answers aren\'t being saved.</b>':''),'<button class="btn sm" onclick="freeUp()">Free up space</button>')})()+
   row('Export progress','Download a backup of your answers as a JSON file.','<button class="btn sm" onclick="exportProgress()">Export</button>')+
   row('Import progress','Load a file you exported, for example to move your answers from the file version to the website or to another browser. It replaces the progress saved here.','<button class="btn sm" onclick="importProgress()">Import</button>')+
@@ -1816,6 +1821,10 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'103',date:'Oct 31, 2026',title:'Study together',items:[
+  'The dashboard shows how many classmates are studying this course right now (just a number, never names).',
+  'On the home page, the new Class card shows how many answers the class has sent before the next test, the next milestone, and who is studying now. Start a 25-minute focus timer there; a small chip shows the time left while you study.',
+  'Turning off Share anonymous answer stats in Personalize also keeps you out of these counts.']},
  {v:'102',date:'Oct 30, 2026',title:'Quiz box only for quizzes',items:[
   'The box that points to the quiz-style sections now shows only before quizzes, not before exams or evals.']},
  {v:'101',date:'Oct 29, 2026',title:'Clearer problem solving',items:[

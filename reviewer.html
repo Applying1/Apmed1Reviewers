@@ -232,6 +232,7 @@ kbd{font:600 11px/1 var(--sans);padding:3px 5px;border-radius:5px;background:#00
 .hero .big small{font-size:.4em;font-weight:600;color:var(--mute);letter-spacing:0;margin-left:4px}
 .hero .sub{color:var(--mute);margin:8px 0 16px;font-size:14.5px}
 .hero .sub b{color:var(--text);font-weight:600}
+.hero .cnnow{display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:13.5px;color:var(--mute)}.hero .cnnow i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--good,#22a06b);box-shadow:0 0 0 3px color-mix(in oklab,var(--good,#22a06b) 25%,transparent);animation:cnp 2s ease-in-out infinite}@keyframes cnp{50%{opacity:.45}}@media (prefers-reduced-motion:reduce){.hero .cnnow i{animation:none}}
 .hero .track{height:8px}
 .next{min-width:240px;max-width:300px;padding:16px 18px;border-radius:var(--r-md);background:var(--raised)}
 .next .eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
@@ -1206,7 +1207,7 @@ c. Euphrates</pre>
  const id=new URLSearchParams(location.search).get('course');
  if(!id||!/^[a-z0-9_-]+$/i.test(id)){location.replace('./');return}
  // download the app code while the course loads (one wait instead of two on slow data)
- ['engine.js','live.js','notify-core.js','push-client.js','daily.js'].forEach(src=>{const l=document.createElement('link');l.rel='preload';l.as='script';l.href=src;document.head.appendChild(l)});
+ ['engine.js','live.js','notify-core.js','push-client.js','daily.js','classnow.js'].forEach(src=>{const l=document.createElement('link');l.rel='preload';l.as='script';l.href=src;document.head.appendChild(l)});
  let d;
  try{const r=await fetch('courses/'+id+'.json');if(!r.ok)throw new Error(r.status);d=await r.json()}
  catch(e){document.getElementById('app').classList.remove('booting');document.getElementById('main').innerHTML='<div class="panel" style="margin-top:40px"><h2>This course could not be loaded</h2><p class="desc">Check your connection and reload, or go back to <a href="./">all courses</a>.</p></div>';return}
@@ -1216,6 +1217,7 @@ c. Euphrates</pre>
  const nc=document.createElement('script');nc.src='notify-core.js';nc.async=false;document.body.appendChild(nc);
  const pc=document.createElement('script');pc.src='push-client.js';pc.async=false;pc.onload=()=>{if(d.config.cloud&&window.Push){Push.init(d.config.cloud);setTimeout(()=>Push.heal(),3000)}};document.body.appendChild(pc);
  const dy=document.createElement('script');dy.src='daily.js';dy.async=false;document.body.appendChild(dy);
+ const cn=document.createElement('script');cn.src='classnow.js';cn.async=false;cn.onload=()=>{if(d.config.cloud&&window.ClassNow)ClassNow.init(d.config.cloud,id.toLowerCase())};document.body.appendChild(cn);
  const au=document.createElement('script');au.src='auth.js';au.async=false;document.body.appendChild(au);
  const up=document.createElement('script');up.src='update.js';document.body.appendChild(up);
  const s=document.createElement('script');s.src='engine.js';s.async=false;s.onload=s.onerror=()=>{document.getElementById('app').classList.remove('booting');const k=document.getElementById('skel');if(k)k.remove()};document.body.appendChild(s);

@@ -767,5 +767,13 @@
   "title": "Arrange your home page",
   "text": "Tap Customize home under the tiles, then drag the cards, tiles and courses into any order (on a phone: hold, then drag). Tap \u00d7 to hide one; hidden ones wait at the bottom, ready to come back.",
   "link": "index.html"
+ },
+ {
+  "id": 93,
+  "date": "2026-10-31",
+  "type": "feature",
+  "title": "Study together: Class goal and Studying now",
+  "text": "The new Class card on the home page counts the class's answers before the next test and shows how many are studying right now (just numbers, never names). Tap Focus 25 min to join in.",
+  "link": "index.html"
  }
 ]

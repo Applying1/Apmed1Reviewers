@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="ui.css">
 <script>/* home layout (this device): hidden cards, tiles and courses, their order, compact tiles, courses first.
  Edited in Settings → Home page and by Customize on this page (homeedit.js). Works without storage (kept in memory). */
-window.HomeLayout=(function(){const K='reviewer_home',TOP=['upnext','tests','today'],ok=x=>/^[a-z]+$/.test(x),okc=x=>/^[a-z0-9_-]+$/.test(x);let mem=null;
+window.HomeLayout=(function(){const K='reviewer_home',TOP=['upnext','tests','today','classnow'],ok=x=>/^[a-z]+$/.test(x),okc=x=>/^[a-z0-9_-]+$/.test(x);let mem=null;
  const norm=h=>{if(!h||typeof h!=='object'||Array.isArray(h))h={};['hide','order','top','courses','hideC'].forEach(k=>{h[k]=Array.isArray(h[k])?h[k].filter(x=>typeof x==='string'):[]});return h};
  function get(){if(mem)return norm(JSON.parse(JSON.stringify(mem)));let h=null;try{h=JSON.parse(localStorage.getItem(K))}catch(e){}return norm(h)}
  function css(h){let c='';h.hide.filter(ok).forEach(id=>{c+='#'+id+'{display:none!important}'});if(h.hide.includes('upnext'))c+='#prevq{display:none!important}';
@@ -221,6 +221,24 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .htray>span{flex:none;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--faint)}
 .htray button{flex:none;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:99px;border:1px dashed var(--accent-line);background:var(--accent-soft);color:var(--text);font:600 12.5px/1 var(--sans);cursor:pointer;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.hed.hhold,.hed.hnew{transition:none;animation:none}}
+/* Class card (classnow.js): class goal before the next test, studying now, focus timer */
+.classnow{margin:0 0 18px;padding:14px 16px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.classnow[hidden]{display:none}
+.classnow h2{display:flex;align-items:center;gap:8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);margin:0 0 12px}
+.cg .cgt{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;font-size:14.5px}.cg .cgt b{font-size:22px;letter-spacing:-.3px}
+.cg .cgt .s{font-size:12.5px;color:var(--mute)}
+.cg .cgb{position:relative;height:10px;margin:9px 0 7px;border-radius:99px;background:var(--raised);border:1px solid var(--line);overflow:hidden}
+.cg .cgb i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),color-mix(in oklab,var(--accent) 55%,#f2a65a));transition:width .8s var(--ease)}
+.cg .cgs{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 12px;font-size:12.5px;color:var(--mute)}.cg .cgs b{color:var(--text)}
+.cg.hit .cgb i{animation:cghit 1.6s ease 2}@keyframes cghit{50%{filter:brightness(1.35) saturate(1.3)}}
+.cn{display:flex;align-items:center;gap:9px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line);font-size:13.5px;color:var(--mute)}
+.classnow .cg+.cn{margin-top:12px}.classnow h2+.cn{margin-top:0;padding-top:0;border-top:0}
+.cn .dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--line2)}
+.cn .dot.on{background:var(--good,#22a06b);box-shadow:0 0 0 3px color-mix(in oklab,var(--good,#22a06b) 25%,transparent);animation:cnp 2s ease-in-out infinite}@keyframes cnp{50%{opacity:.45}}
+.cn .ct{flex:1;min-width:0}.cn .ct b{color:var(--text)}
+.cn .btn{flex:none;padding:6px 11px;font-size:13px;gap:6px}.cn .btn.on{border-color:var(--accent-line);color:var(--accent);font-variant-numeric:tabular-nums}
+.cn .ok{flex:none;color:var(--good,#22a06b);font-weight:600}
+@media (prefers-reduced-motion:reduce){.cn .dot.on,.cg.hit .cgb i{animation:none}.cg .cgb i{transition:none}}
 /* iPhone Safari: back up your progress (one time) */
 .bkcard{display:flex;gap:14px;align-items:flex-start;margin:0 0 18px;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--accent-line)}
 .bkcard[hidden]{display:none}
@@ -309,6 +327,7 @@ html.introing body{overflow:hidden}
  <a class="btn prevq" id="prevq" hidden></a>
  <section class="tests" id="tests" hidden aria-label="Tests coming up"></section>
  <section class="today" id="today" hidden aria-label="Today"></section>
+ <section class="classnow" id="classnow" hidden aria-label="Class"></section>
  <nav class="tools" aria-label="Tools">
   <a class="tool" id="gdtool" href="discuss.html?c=general" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg></span><span><b>General discussion</b><span id="gdsub">Talk with the whole class</span></span></a>
   <a class="tool" id="qztool" href="quiz.html"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Live quiz</b><span>Quiz your study group, live: everyone joins on their phone with a code</span></span></a>
@@ -345,6 +364,7 @@ html.introing body{overflow:hidden}
 <script src="reminders-core.js"></script>
 <script src="push-client.js"></script>
 <script src="daily.js"></script>
+<script src="classnow.js"></script>
 <script src="move.js"></script>
 <script src="homeedit.js"></script>
 <script>
@@ -521,6 +541,43 @@ function shiftDay(d,n){const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDat
  window.testsOpen=o=>{box.classList.toggle('open',o);try{localStorage.setItem('reviewer_tests_open',o?'1':'0')}catch(e){}const b=box.querySelector('.tmore');if(b){const n=list.length-1;b.setAttribute('aria-expanded',o);b.firstChild.textContent=o?'Show less':'Show '+n+' more test'+(n>1?'s':'')}};
  const tick=()=>{const now=Date.now();let gone=false;box.querySelectorAll('[data-at]').forEach(b=>{const ms=+b.dataset.at-now;if(ms<=0)gone=true;b.textContent=left(ms);b.closest('.trow').classList.toggle('soon',ms<864e5)});if(gone)draw()};
  draw();setInterval(tick,1000)}catch(err){}})();
+// Class card (Oct 31, classnow.js): answers the class sent before the next test (toward the next milestone), how many are
+// studying right now, and a 25-minute focus timer. Counts only, never names.
+(async function(){const box=document.getElementById('classnow');if(!box||!window.ClassNow)return;
+ let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){return}
+ const cloud=(list.find(c=>c.cloud&&c.cloud.url)||{}).cloud;if(!cloud)return;
+ ClassNow.init(cloud,'');try{await Sched.load()}catch(e){}
+ const short=id=>{const c=list.find(x=>x.id===id);return c?c.title.replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,''):''};
+ const fmt=n=>Number(n).toLocaleString('en-US'),SEEN='reviewer_class_seen';let doneAt=0;
+ const studyLine=s=>{if(!s)return 'Studying now shows when you’re online.';
+  if(s.total<1)return 'Nobody is studying right now. Start a focus and be the first.';
+  const parts=Object.entries(s.by).filter(([c])=>c&&short(c)).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([c,n])=>esc(short(c))+' '+n);
+  return '<b>'+s.total+'</b> studying now'+(s.me?' (with you)':'')+(parts.length?' · '+parts.join(' · '):'')};
+ async function draw(){
+  const now=new Date(),t=(window.Remind?Remind.list(3,now):[]).find(a=>a.from-now<14*864e5&&a.subj&&list.some(c=>c.id===a.subj.course&&c.storageKey));
+  const [g,s]=await Promise.all([t?ClassNow.goal(list,t):null,ClassNow.now()]),fl=ClassNow.left();
+  if(!g&&!s&&!fl&&!doneAt){box.hidden=true;return}
+  let h='<h2>'+ic('users')+' Class</h2>';
+  if(g){const k=t.subj.course+'@'+(+t.from),pct=Math.max(2,Math.round(100*(g.n-g.prev)/Math.max(1,g.next-g.prev)));let seen={};try{seen=JSON.parse(localStorage.getItem(SEEN))||{}}catch(e){}
+   const hit=g.prev>0&&seen.k===k&&g.prev>(seen.m||0);            // first look since the class passed a milestone
+   try{localStorage.setItem(SEEN,JSON.stringify({k,m:g.prev}))}catch(e){}
+   const since=new Date(g.since+'T00:00:00+08:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+   h+='<div class="cg'+(hit?' hit':'')+'"><div class="cgt"><span><b class="num">'+fmt(g.n)+'</b> answers from the class</span><span class="s">'+esc(short(t.subj.course)||t.subj.name)+' · '+esc(t.label)+' · '+esc(Sched.when(t.date))+'</span></div>'+
+    '<div class="cgb" role="progressbar" aria-label="Class answers toward '+fmt(g.next)+'" aria-valuemin="'+g.prev+'" aria-valuemax="'+g.next+'" aria-valuenow="'+g.n+'"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="cgs">'+(hit?'<b>The class just passed '+fmt(g.prev)+'! 🎉</b>':'<span>Counting since '+esc(since)+'</span>')+'<span>Next stop <b>'+fmt(g.next)+'</b> · '+fmt(g.next-g.n)+' to go</span></div></div>'}
+  const done=doneAt&&Date.now()-doneAt<8000;
+  h+='<div class="cn"><span class="dot'+(s&&s.total?' on':'')+'" aria-hidden="true"></span><span class="ct">'+studyLine(s)+'</span>'+
+   (fl?'<button class="btn on" data-cn="stop" aria-label="Focus timer running. Stop it">'+ic('timer')+'<span id="cnleft">'+ClassNow.mmss(fl)+'</span></button>'
+    :done?'<span class="ok">25 minutes done!</span>':'<button class="btn" data-cn="go">'+ic('timer')+'Focus 25 min</button>')+'</div>';
+  box.innerHTML=h;box.hidden=false}
+ box.addEventListener('click',e=>{const b=e.target.closest('[data-cn]');if(!b)return;
+  if(b.dataset.cn==='go'){ClassNow.focus(25);draw()}
+  else (window.ask?ask('You’ll stop counting as studying now.',{title:'Stop the focus timer?',ok:'Stop',no:'Keep going'}):Promise.resolve(true)).then(y=>{if(y){ClassNow.focus(0);draw()}})});
+ ClassNow.onFocus(fin=>{if(fin){doneAt=Date.now();setTimeout(draw,8100)}draw()});
+ setInterval(()=>{const e=$('cnleft'),l=ClassNow.left();if(e&&l)e.textContent=ClassNow.mmss(l)},1000);
+ setInterval(()=>{if(!document.hidden&&!(window.HomeEdit&&HomeEdit.isOn()))draw()},60e3);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)draw()});
+ draw()})();
 // Install: Android/desktop Chrome offer a prompt; iPhone needs Share → Add to Home Screen.
 // The browser only offers the prompt while the app isn't installed, so after an uninstall the link comes back by itself.
 // Anything but a normal browser tab (standalone, minimal-ui, window controls overlay) is the installed app.
