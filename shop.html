@@ -211,6 +211,27 @@ body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px)
 .paybox b{font:600 16px Fredoka,var(--sans);color:var(--ink2)}.paybox span{font-size:14px;white-space:pre-line}.paybox .ok{color:var(--good);font-weight:600}
 .refrow{display:flex;gap:8px;width:100%}.refrow input{flex:1;min-width:0;padding:8px 12px;border-radius:99px;border:1px solid var(--line2);background:var(--bg);font-size:15px}
 .paybox .msg{margin:0}
+
+/* ---- v4: tidy cart (grouped, one thing per row), checkout is its own step ---- */
+#cart{max-width:720px;margin-left:auto;margin-right:auto}
+.cpanel{padding:16px}
+.cgroup{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:14px 0 8px;padding:10px 14px;border-radius:12px;background:color-mix(in srgb,var(--sky) 45%,var(--surface));color:var(--ink2);font:600 15px Fredoka,var(--sans)}
+.cgroup:first-child{margin-top:0}.cgroup small{font:500 12.5px var(--sans);color:var(--mute)}
+.citem{display:flex;gap:14px;align-items:center;padding:10px 2px}
+.cimg{flex:none;width:84px;height:84px;border:1px solid var(--line);border-radius:14px;background:var(--surface);display:grid;place-items:center;overflow:hidden}
+.cimg img{width:100%;height:100%;object-fit:contain;padding:6px}
+.cinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cinfo b{font:600 16px/1.25 Fredoka,var(--sans);color:var(--ink2)}
+.cp{font-size:14px;color:var(--mute)}
+.cact{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+.cact .qty{margin:0;min-width:116px}
+.trash{flex:none;width:38px;height:38px;border-radius:50%;border:0;background:color-mix(in srgb,var(--sky) 55%,var(--surface));color:var(--ink2);display:grid;place-items:center;padding:0}
+.trash:hover{background:color-mix(in srgb,var(--bad) 18%,var(--surface));color:var(--bad)}
+.cfoot{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.btn.big{width:100%;padding:14px 16px;font:600 18px Fredoka,var(--sans);margin-top:6px}
+.cmore{display:flex;justify-content:space-between;margin-top:8px}
+.linkbtn{border:0;background:none;color:var(--accent);font:600 14px var(--sans);padding:8px 4px}
+#cart .btn.primary{background:var(--pink);border-color:var(--pink);color:#2b1220}
 </style></head><body>
 <main>
  <a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a>
@@ -250,6 +271,9 @@ try{const v=localStorage.getItem('reviewer_shop_view');if(v==='list'||v==='grid'
 function setView(v){VIEW=v;try{localStorage.setItem('reviewer_shop_view',v)}catch(e){}applyView()}
 function applyView(){const s=$('shop');s.classList.remove('v-list','v-grid','v-small');s.classList.add('v-'+VIEW);for(const k of ['list','grid','small'])$('v-'+k).setAttribute('aria-pressed',VIEW===k)}
 function setCV(v){CV=v;drawReview()}
+let CS='manage';
+function setCS(v){CS=v;drawReview();const r=$('cart').getBoundingClientRect();if(r.top<0)$('cart').scrollIntoView({block:'start'})}
+function clearCart(){if(!confirm('Remove everything from your cart?'))return;CART={};saveCart();drawShop();drawBar();drawReview()}
 try{const f=JSON.parse(localStorage.getItem(CF));if(Array.isArray(f))FAV=f.filter(x=>Number.isInteger(x))}catch(e){}
 function saveFav(){try{localStorage.setItem(CF,JSON.stringify(FAV))}catch(e){}}
 const HEART='<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.6 3.6 4.5 6.8 4.5c2 0 3.4 1.1 5.2 3 1.8-1.9 3.2-3 5.2-3 3.2 0 5.2 3.1 4 6.6-1.700 4.8-9.200 9.400-9.200 9.400z"/></svg>';
@@ -259,7 +283,7 @@ const img=p=>p?Auth.base()+'/storage/v1/object/public/shop/'+p.split('/').map(en
 const item=id=>D.items.find(i=>i.id===+id);
 function tab(t){for(const k of ['shop','cart','orders']){$('t-'+k).setAttribute('aria-pressed',t===k);$(k).hidden=t!==k}
  if(D&&!(D.soon&&!D.manager))$('tools').hidden=t!=='shop';
- history.replaceState(null,'',t==='shop'?'#':'#'+t);drawBar();if(t==='orders')return loadOrders();if(t==='cart')drawReview()}
+ history.replaceState(null,'',t==='shop'?'#':'#'+t);drawBar();if(t==='orders')return loadOrders();if(t==='cart'){CS='manage';drawReview()}}
 function cartLines(){return Object.entries(CART).map(([id,q])=>({it:item(id),q})).filter(x=>x.it&&x.q>0)}
 function drawBar(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0);
  $('bar').hidden=!n||$('shop').hidden;$('tot').innerHTML=n+' sticker'+(n===1?'':'s')+'<b>'+peso(t)+'</b>';
@@ -310,24 +334,38 @@ function favPanel(){const open=D.settings.open,L=FAV.map(item).filter(Boolean);
  return '<h3>♥ Your favorites</h3><div class="favlist">'+L.map(it=>{const q=CART[it.id]||0,out=it.left===0;return '<div class="line">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'<div class="n">'+esc(it.name)+'<small>'+peso(it.price)+(out?' · sold out':'')+'</small></div>'+
   (!open||out?'':q?'<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>':'<button class="btn mini" onclick="setQty('+it.id+',1)">+ Add</button>')+
   '<button class="fav sm" aria-pressed="true" onclick="toggleFav('+it.id+')" aria-label="Remove from favorites">'+HEART+'</button></div>'}).join('')+'</div>'}
-function drawReview(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0),s=D.settings,PL=s.places||[],signed=!!Auth.ses(),favN=FAV.filter(id=>item(id)).length;let ct='',nmv={};try{ct=localStorage.getItem(CT)||'';nmv=JSON.parse(localStorage.getItem(CN)||'{}')||{}}catch(e){}
- const keep=$('ccontact')?{c:$('ccontact').value,n:$('cnote').value,r:$('cref')?$('cref').value:'',f:$('cfirst').value,l:$('clast').value,s:$('cschool').value}:null;
- let h='<h2 class="ctitle">Your Cart</h2><span class="seg wide" role="group" aria-label="Cart sections"><button aria-pressed="'+(CV==='sum')+'" onclick="setCV(\'sum\')">Order Summary'+(n?' ('+n+')':'')+'</button><button aria-pressed="'+(CV==='fav')+'" onclick="setCV(\'fav\')">Favorites'+(favN?' ('+favN+')':'')+'</button></span>';
- if(CV==='fav')h+='<div class="cpanel">'+favPanel()+'</div>';
- else if(!L.length)h+='<div class="cpanel cempty"><div class="bask"><i>0</i>'+BASKET+'</div><p>Your cart is empty</p><button class="btn primary" onclick="tab(\'shop\')">Start Shopping</button></div>';
- else h+='<div class="cpanel cgrid"><div class="cl"><h3>Your stickers</h3><div id="rlines">'+L.map(({it,q})=>'<div class="line">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'<div class="n">'+esc(it.name)+'<small>'+peso(it.price)+' each</small></div>'+
-   '<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div></div>').join('')+'</div>'+
-   '<div class="sum"><span>Total</span><span>'+peso(t)+'</span></div>'+
-   (s.pay_note?'<div class="note"><b>How to pay</b>'+esc(s.pay_note)+'</div>':'')+(s.pickup_note?'<div class="note"><b>Pickup</b>'+esc(s.pickup_note)+'</div>':'')+'</div>'+
-   '<div class="cr"><h3>Checkout</h3>'+(!signed?'<p class="msg">Sign in with Google to order, so the seller knows who it\'s from.</p><a class="btn primary" style="width:100%;margin-top:10px" href="./?signin=1">Sign in with Google</a>':
-   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f" style="margin-top:0">First name<input id="cfirst" maxlength="40" autocomplete="given-name" value="'+esc(keep?keep.f:(nmv.f||''))+'"></label>'+
-   '<label class="f" style="margin-top:0">Last name<input id="clast" maxlength="40" autocomplete="family-name" value="'+esc(keep?keep.l:(nmv.l||''))+'"></label></div>'+
+const TRASH='<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zM6 9h12l-1 11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 9zm4 2v8h2v-8h-2zm4 0v8h2v-8h-2z"/></svg>';
+/* step 1: manage the cart (grouped by catalog, quantity, remove); step 2: checkout after Continue */
+function manageView(L,t,n){
+ const groups=D.catalogs.map(c=>({c,rows:L.filter(x=>x.it.catalog===c.id)})).filter(g=>g.rows.length);
+ return '<div class="cpanel" id="rlines">'+groups.map(g=>'<div class="cgroup">'+esc(g.c.name)+(g.c.to_fund?'<small>♡ proceeds go to the class fund</small>':'')+'</div>'+
+  g.rows.map(({it,q})=>'<div class="citem"><div class="cimg">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'</div><div class="cinfo"><b>'+esc(it.name)+'</b><span class="cp">'+peso(it.price)+(q>1?' × '+q+' = '+peso(it.price*q):'')+'</span>'+
+   '<div class="cact"><div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>'+
+   '<button class="trash" onclick="setQty('+it.id+',0)" aria-label="Remove '+esc(it.name)+' from the cart">'+TRASH+'</button></div></div></div>').join('')).join('')+
+  '<div class="cfoot"><div class="sum"><span>'+n+' sticker'+(n===1?'':'s')+'</span><span>'+peso(t)+'</span></div>'+
+  '<button class="btn primary big" id="cont" onclick="setCS(\'checkout\')">Continue '+peso(t)+'</button>'+
+  '<div class="cmore"><button class="linkbtn" onclick="tab(\'shop\')">+ Add more stickers</button><button class="linkbtn" onclick="clearCart()">Clear cart</button></div></div></div>'}
+function checkoutView(L,t,n,keep,nmv,ct){
+ const s=D.settings,PL=s.places||[],signed=!!Auth.ses();
+ return '<div class="cpanel"><button class="linkbtn" onclick="setCS(\'manage\')">← Back to cart</button>'+
+  '<div class="sum" style="padding:8px 0 0"><span>'+n+' sticker'+(n===1?'':'s')+'</span><span>'+peso(t)+'</span></div>'+
+  (s.pay_note?'<div class="note"><b>How to pay</b>'+esc(s.pay_note)+'</div>':'')+(s.pickup_note?'<div class="note"><b>Pickup</b>'+esc(s.pickup_note)+'</div>':'')+
+  (!signed?'<p class="msg">Sign in with Google to order, so the seller knows who it\'s from.</p><a class="btn primary" style="width:100%;margin-top:10px" href="./?signin=1">Sign in with Google</a>':
+   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f">First name<input id="cfirst" maxlength="40" autocomplete="given-name" value="'+esc(keep?keep.f:(nmv.f||''))+'"></label>'+
+   '<label class="f">Last name<input id="clast" maxlength="40" autocomplete="family-name" value="'+esc(keep?keep.l:(nmv.l||''))+'"></label></div>'+
    '<label class="f">School (where you\'ll pick up)'+(PL.length?'<select id="cschool"><option value="">Choose your school…</option>'+PL.map(x=>'<option'+(x===(keep?keep.s:(nmv.s||''))?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select>':'<input id="cschool" maxlength="80" autocomplete="organization" placeholder="Your school" value="'+esc(keep?keep.s:(nmv.s||''))+'">')+'</label>'+
    '<label class="f">Messenger or Instagram <span class="opt">(optional)</span><input id="ccontact" maxlength="200" placeholder="@username or your profile link" oninput="contactCheck()" value="'+esc(keep?keep.c:ct)+'"></label><p class="conf" id="cconf"></p>'+
    '<div class="f" style="margin-top:10px;font-size:13px;font-weight:600;color:var(--mute)">How will you pay?<div><span class="seg" role="group" aria-label="Payment method" style="margin-top:4px"><button type="button" aria-pressed="'+(PM==='gcash')+'" onclick="setPM(\'gcash\')">GCash</button><button type="button" aria-pressed="'+(PM==='cash')+'" onclick="setPM(\'cash\')">Cash</button></span></div></div>'+
    (PM==='gcash'?'<label class="f">GCash reference number (if you already paid)<input id="cref" maxlength="30" inputmode="numeric" value="'+esc(keep?keep.r:'')+'"></label>':'<p class="msg" style="margin-top:8px">Pay the seller '+peso(t)+' in cash when you pick up your stickers.</p>')+
    '<label class="f">Note for the seller (optional)<textarea id="cnote" maxlength="500">'+esc(keep?keep.n:'')+'</textarea></label>'+
-   '<p class="msg" id="omsg"></p><button class="btn primary" id="place" style="width:100%;margin-top:12px" onclick="place()">Place order · '+peso(t)+'</button>')+'</div></div>';
+   '<p class="msg" id="omsg"></p><button class="btn primary big" id="place" style="margin-top:12px" onclick="place()">Place order · '+peso(t)+'</button>')+'</div>'}
+function drawReview(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0),favN=FAV.filter(id=>item(id)).length;let ct='',nmv={};try{ct=localStorage.getItem(CT)||'';nmv=JSON.parse(localStorage.getItem(CN)||'{}')||{}}catch(e){}
+ const keep=$('ccontact')?{c:$('ccontact').value,n:$('cnote').value,r:$('cref')?$('cref').value:'',f:$('cfirst').value,l:$('clast').value,s:$('cschool').value}:null;
+ if(!L.length)CS='manage';
+ let h='<h2 class="ctitle">Your Cart</h2><span class="seg wide" role="group" aria-label="Cart sections"><button aria-pressed="'+(CV==='sum')+'" onclick="setCV(\'sum\')">Order Summary'+(n?' ('+n+')':'')+'</button><button aria-pressed="'+(CV==='fav')+'" onclick="setCV(\'fav\')">Favorites'+(favN?' ('+favN+')':'')+'</button></span>';
+ if(CV==='fav')h+='<div class="cpanel">'+favPanel()+'</div>';
+ else if(!L.length)h+='<div class="cpanel cempty"><div class="bask"><i>0</i>'+BASKET+'</div><p>Your cart is empty</p><button class="btn primary" onclick="tab(\'shop\')">Start Shopping</button></div>';
+ else h+=CS==='checkout'?checkoutView(L,t,n,keep,nmv,ct):manageView(L,t,n);
  $('cart').innerHTML=h;contactCheck()}
 async function place(){const b=$('place'),m=$('omsg'),contact=$('ccontact').value.trim(),fn=$('cfirst').value.trim(),ln=$('clast').value.trim(),school=$('cschool').value.trim(),ref=$('cref')?$('cref').value.replace(/\s/g,''):'';
  if(!fn||!ln||BADNAME.test(fn+ln)){m.className='msg bad';m.textContent='Add your first and last name (letters only).';return}
@@ -338,7 +376,7 @@ async function place(){const b=$('place'),m=$('omsg'),contact=$('ccontact').valu
  if(ref&&!/^[0-9]+$/.test(ref)){m.className='msg bad';m.textContent='The GCash reference number should be digits only.';return}
  b.disabled=true;m.className='msg';m.textContent='Placing your order…';
  try{const id=await Auth.rpc('shop_order',{p_items:cartLines().map(x=>({id:x.it.id,qty:x.q})),p_contact:ck.url||contact,p_note:$('cnote').value.trim(),p_pay_ref:ref,p_first:fn,p_last:ln,p_method:PM,p_school:school},true);
-  try{localStorage.setItem(CT,contact);localStorage.setItem(CN,JSON.stringify({f:fn,l:ln,s:school}))}catch(e){}CART={};saveCart();await load();ORDERS=null;await tab('orders');
+  try{localStorage.setItem(CT,contact);localStorage.setItem(CN,JSON.stringify({f:fn,l:ln,s:school}))}catch(e){}CART={};saveCart();CS='manage';await load();ORDERS=null;await tab('orders');
   const f=$('orders').querySelector('.ord');if(f)f.insertAdjacentHTML('beforebegin','<p class="msg ok">Order #'+id+' placed! The seller will message you. You\'ll see updates here.</p>')}
  catch(e){b.disabled=false;m.className='msg bad';m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t place the order. Check your connection.';load().then(()=>{drawShop();drawBar()})}}
 async function loadOrders(){const el=$('orders');
