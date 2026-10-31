@@ -101,7 +101,7 @@ function drawOrders(){const live=A.orders.filter(o=>o.status!=='cancelled'),paid
   (list.length?list.map(o=>'<div class="card ord"><div class="h"><b>#'+o.id+' '+esc(o.buyer)+'</b><span class="st '+esc(o.status)+'">'+esc(LBL[o.status])+'</span><span class="mute">'+new Date(o.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span></div>'+
    '<div class="mute">'+contact(o.contact)+(o.email?' · '+esc(o.email):'')+'</div>'+
    '<ul>'+(o.items||[]).map(x=>'<li>'+x.qty+' × '+esc(x.name)+' <span class="mute">('+esc(x.catalog)+')</span></li>').join('')+'</ul>'+
-   '<div class="h"><b>'+peso(o.total_cents)+'</b>'+(o.fund_cents?'<span class="mute">'+peso(o.fund_cents)+' to the class fund</span>':'')+(o.pay_ref?'<span class="mute">GCash ref: '+esc(o.pay_ref)+'</span>':'')+'</div>'+
+   '<div class="h"><b>'+peso(o.total_cents)+'</b>'+(o.fund_cents?'<span class="mute">'+peso(o.fund_cents)+' to the class fund</span>':'')+'<span class="mute"><b>'+(o.pay_method==='cash'?'Cash':'GCash')+'</b></span>'+(o.pay_ref?'<span class="mute">GCash ref: '+esc(o.pay_ref)+'</span>':'')+'</div>'+
    (o.note?'<p class="mute" style="margin:6px 0 0">Note: '+esc(o.note)+'</p>':'')+
    '<div class="row" style="margin-top:10px"><input class="inp" style="flex:1;min-width:160px" id="n'+o.id+'" maxlength="300" placeholder="Note to the buyer (optional)" value="'+esc(o.seller_note)+'">'+
    ({placed:[['paid','Mark paid'],['cancelled','Cancel']],paid:[['ready','Ready for pickup']],ready:[['done','Picked up']],done:[],cancelled:[['placed','Reopen']]}[o.status]||[]).map(([s,l])=>'<button class="btn'+(s==='cancelled'?' bad':s==='placed'?'':' primary')+'" onclick="setStatus('+o.id+',\''+s+'\')">'+l+'</button>').join('')+'</div></div>').join('')
@@ -109,8 +109,8 @@ function drawOrders(){const live=A.orders.filter(o=>o.status!=='cancelled'),paid
   '<h2>Print list (orders not cancelled)</h2><div class="card">'+(Object.keys(print).length?'<table class="prt"><tr><th>Sticker</th><th class="n">How many</th></tr>'+Object.entries(print).sort().map(([k,n])=>'<tr><td>'+esc(k)+'</td><td class="n">'+n+'</td></tr>').join('')+'</table>':'<p class="mute" style="margin:0">Nothing ordered yet.</p>')+'</div>'}
 function contact(c){c=String(c||'');if(/^https?:\/\//i.test(c))return '<a href="'+esc(c)+'" target="_blank" rel="noopener">'+esc(c.replace(/^https?:\/\/(www\.)?/,''))+'</a>';return esc(c)}
 async function setStatus(id,s){try{await Auth.rpc('shop_admin_status',{p_id:id,p_status:s,p_note:$('n'+id).value.trim()},true);toast(s==='paid'?'Marked paid. The buyer gets a notification.':s==='ready'?'Marked ready. The buyer gets a notification.':'Saved.');await reload()}catch(e){toast('Couldn\'t save: '+e.message)}}
-function csv(){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',rows=[['order','date','buyer','email','contact','status','catalog','sticker','qty','price','line total','class fund','gcash ref','note']];
- A.orders.forEach(o=>(o.items||[]).forEach(x=>rows.push([o.id,o.created_at.slice(0,16).replace('T',' '),o.buyer,o.email,o.contact,o.status,x.catalog,x.name,x.qty,x.price/100,x.qty*x.price/100,x.fund?'yes':'',o.pay_ref,o.note])));
+function csv(){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',rows=[['order','date','buyer','email','contact','status','pay method','catalog','sticker','qty','price','line total','class fund','gcash ref','note']];
+ A.orders.forEach(o=>(o.items||[]).forEach(x=>rows.push([o.id,o.created_at.slice(0,16).replace('T',' '),o.buyer,o.email,o.contact,o.status,o.pay_method,x.catalog,x.name,x.qty,x.price/100,x.qty*x.price/100,x.fund?'yes':'',o.pay_ref,o.note])));
  const b=new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='sticker-orders.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000)}
 
 /* ---------- Stickers ---------- */
