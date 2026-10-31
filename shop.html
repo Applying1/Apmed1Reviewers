@@ -72,7 +72,7 @@ h1{font:600 clamp(26px,3.4vw,32px)/1.15 var(--serif);letter-spacing:-.3px;margin
 .line .qty{margin:0;padding:2px}.line .qty button{width:30px;height:28px;font-size:16px}
 .sum{display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding:12px 0}
 label.f{display:block;margin-top:10px;font-size:13px;font-weight:600;color:var(--mute)}
-label.f input,label.f textarea{display:block;width:100%;margin-top:4px;padding:10px 12px;border-radius:11px;border:1px solid var(--line2);background:var(--bg);font-size:15px}
+label.f input,label.f textarea,label.f select{display:block;width:100%;margin-top:4px;padding:10px 12px;border-radius:11px;border:1px solid var(--line2);background:var(--bg);font-size:15px}
 label.f textarea{resize:vertical;min-height:60px}
 .note{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--raised);font-size:13.5px;white-space:pre-line}
 .note b{display:block;margin-bottom:2px}
@@ -206,6 +206,11 @@ body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px)
 .bask{position:relative;width:104px;height:104px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:color-mix(in srgb,var(--sky) 55%,var(--surface));color:var(--mute)}
 .bask i{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font:600 20px Fredoka,var(--sans);font-style:normal;background:#3d9be0;color:#fff;border-radius:8px;min-width:34px;padding:2px 8px;text-align:center}
 .cempty .btn{min-width:240px}
+
+.paybox{margin-top:10px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--pink) 10%,var(--surface));border:1px dashed color-mix(in srgb,var(--pink) 55%,transparent);display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.paybox b{font:600 16px Fredoka,var(--sans);color:var(--ink2)}.paybox span{font-size:14px;white-space:pre-line}.paybox .ok{color:var(--good);font-weight:600}
+.refrow{display:flex;gap:8px;width:100%}.refrow input{flex:1;min-width:0;padding:8px 12px;border-radius:99px;border:1px solid var(--line2);background:var(--bg);font-size:15px}
+.paybox .msg{margin:0}
 </style></head><body>
 <main>
  <a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a>
@@ -254,7 +259,7 @@ const img=p=>p?Auth.base()+'/storage/v1/object/public/shop/'+p.split('/').map(en
 const item=id=>D.items.find(i=>i.id===+id);
 function tab(t){for(const k of ['shop','cart','orders']){$('t-'+k).setAttribute('aria-pressed',t===k);$(k).hidden=t!==k}
  if(D&&!(D.soon&&!D.manager))$('tools').hidden=t!=='shop';
- history.replaceState(null,'',t==='shop'?'#':'#'+t);drawBar();if(t==='orders')return loadOrders();if(t==='cart'){drawReview();window.scrollTo(0,0)}}
+ history.replaceState(null,'',t==='shop'?'#':'#'+t);drawBar();if(t==='orders')return loadOrders();if(t==='cart')drawReview()}
 function cartLines(){return Object.entries(CART).map(([id,q])=>({it:item(id),q})).filter(x=>x.it&&x.q>0)}
 function drawBar(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0);
  $('bar').hidden=!n||$('shop').hidden;$('tot').innerHTML=n+' sticker'+(n===1?'':'s')+'<b>'+peso(t)+'</b>';
@@ -305,7 +310,7 @@ function favPanel(){const open=D.settings.open,L=FAV.map(item).filter(Boolean);
  return '<h3>♥ Your favorites</h3><div class="favlist">'+L.map(it=>{const q=CART[it.id]||0,out=it.left===0;return '<div class="line">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'<div class="n">'+esc(it.name)+'<small>'+peso(it.price)+(out?' · sold out':'')+'</small></div>'+
   (!open||out?'':q?'<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>':'<button class="btn mini" onclick="setQty('+it.id+',1)">+ Add</button>')+
   '<button class="fav sm" aria-pressed="true" onclick="toggleFav('+it.id+')" aria-label="Remove from favorites">'+HEART+'</button></div>'}).join('')+'</div>'}
-function drawReview(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0),s=D.settings,signed=!!Auth.ses(),favN=FAV.filter(id=>item(id)).length;let ct='',nmv={};try{ct=localStorage.getItem(CT)||'';nmv=JSON.parse(localStorage.getItem(CN)||'{}')||{}}catch(e){}
+function drawReview(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0),s=D.settings,PL=s.places||[],signed=!!Auth.ses(),favN=FAV.filter(id=>item(id)).length;let ct='',nmv={};try{ct=localStorage.getItem(CT)||'';nmv=JSON.parse(localStorage.getItem(CN)||'{}')||{}}catch(e){}
  const keep=$('ccontact')?{c:$('ccontact').value,n:$('cnote').value,r:$('cref')?$('cref').value:'',f:$('cfirst').value,l:$('clast').value,s:$('cschool').value}:null;
  let h='<h2 class="ctitle">Your Cart</h2><span class="seg wide" role="group" aria-label="Cart sections"><button aria-pressed="'+(CV==='sum')+'" onclick="setCV(\'sum\')">Order Summary'+(n?' ('+n+')':'')+'</button><button aria-pressed="'+(CV==='fav')+'" onclick="setCV(\'fav\')">Favorites'+(favN?' ('+favN+')':'')+'</button></span>';
  if(CV==='fav')h+='<div class="cpanel">'+favPanel()+'</div>';
@@ -317,17 +322,19 @@ function drawReview(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce(
    '<div class="cr"><h3>Checkout</h3>'+(!signed?'<p class="msg">Sign in with Google to order, so the seller knows who it\'s from.</p><a class="btn primary" style="width:100%;margin-top:10px" href="./?signin=1">Sign in with Google</a>':
    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f" style="margin-top:0">First name<input id="cfirst" maxlength="40" autocomplete="given-name" value="'+esc(keep?keep.f:(nmv.f||''))+'"></label>'+
    '<label class="f" style="margin-top:0">Last name<input id="clast" maxlength="40" autocomplete="family-name" value="'+esc(keep?keep.l:(nmv.l||''))+'"></label></div>'+
-   '<label class="f">School <span class="opt">(optional)</span><input id="cschool" maxlength="80" autocomplete="organization" placeholder="Where do you study?" value="'+esc(keep?keep.s:(nmv.s||''))+'"></label>'+
-   '<label class="f">Messenger or Instagram (so the seller can reach you)<input id="ccontact" maxlength="200" placeholder="@username or paste your profile link" oninput="contactCheck()" value="'+esc(keep?keep.c:ct)+'"></label><p class="conf" id="cconf"></p>'+
+   '<label class="f">School (where you\'ll pick up)'+(PL.length?'<select id="cschool"><option value="">Choose your school…</option>'+PL.map(x=>'<option'+(x===(keep?keep.s:(nmv.s||''))?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select>':'<input id="cschool" maxlength="80" autocomplete="organization" placeholder="Your school" value="'+esc(keep?keep.s:(nmv.s||''))+'">')+'</label>'+
+   '<label class="f">Messenger or Instagram <span class="opt">(optional)</span><input id="ccontact" maxlength="200" placeholder="@username or your profile link" oninput="contactCheck()" value="'+esc(keep?keep.c:ct)+'"></label><p class="conf" id="cconf"></p>'+
    '<div class="f" style="margin-top:10px;font-size:13px;font-weight:600;color:var(--mute)">How will you pay?<div><span class="seg" role="group" aria-label="Payment method" style="margin-top:4px"><button type="button" aria-pressed="'+(PM==='gcash')+'" onclick="setPM(\'gcash\')">GCash</button><button type="button" aria-pressed="'+(PM==='cash')+'" onclick="setPM(\'cash\')">Cash</button></span></div></div>'+
-   (PM==='gcash'?'<label class="f">GCash reference number (if you already paid)<input id="cref" maxlength="30" inputmode="numeric" value="'+esc(keep?keep.r:'')+'"></label>':'<p class="msg" style="margin-top:8px">Pay the seller in cash when you pick up your stickers.</p>')+
+   (PM==='gcash'?'<label class="f">GCash reference number (if you already paid)<input id="cref" maxlength="30" inputmode="numeric" value="'+esc(keep?keep.r:'')+'"></label>':'<p class="msg" style="margin-top:8px">Pay the seller '+peso(t)+' in cash when you pick up your stickers.</p>')+
    '<label class="f">Note for the seller (optional)<textarea id="cnote" maxlength="500">'+esc(keep?keep.n:'')+'</textarea></label>'+
    '<p class="msg" id="omsg"></p><button class="btn primary" id="place" style="width:100%;margin-top:12px" onclick="place()">Place order · '+peso(t)+'</button>')+'</div></div>';
  $('cart').innerHTML=h;contactCheck()}
 async function place(){const b=$('place'),m=$('omsg'),contact=$('ccontact').value.trim(),fn=$('cfirst').value.trim(),ln=$('clast').value.trim(),school=$('cschool').value.trim(),ref=$('cref')?$('cref').value.replace(/\s/g,''):'';
  if(!fn||!ln||BADNAME.test(fn+ln)){m.className='msg bad';m.textContent='Add your first and last name (letters only).';return}
- const ck=contactKind(contact);if(!ck){m.className='msg bad';m.textContent='Type your Messenger or Instagram name or @username, or paste your profile link (facebook.com, m.me or instagram.com).';return}
- if(/[<>]|https?:|www\./i.test(school)){m.className='msg bad';m.textContent='Type your school name, not a link.';return}
+ const ck=contact?contactKind(contact):{kind:'none'};if(!ck){m.className='msg bad';m.textContent='Type your Messenger or Instagram name or @username, or paste your profile link (facebook.com, m.me or instagram.com). You can also leave it empty.';return}
+ const PL=D.settings.places||[];if(!school){m.className='msg bad';m.textContent=PL.length?'Choose your school from the list.':'Add your school.';return}
+ if(PL.length&&!PL.includes(school)){m.className='msg bad';m.textContent='Choose your school from the list. The seller only does pickup at those places.';return}
+ if(!PL.length&&/[<>]|https?:|www\./i.test(school)){m.className='msg bad';m.textContent='Type your school name, not a link.';return}
  if(ref&&!/^[0-9]+$/.test(ref)){m.className='msg bad';m.textContent='The GCash reference number should be digits only.';return}
  b.disabled=true;m.className='msg';m.textContent='Placing your order…';
  try{const id=await Auth.rpc('shop_order',{p_items:cartLines().map(x=>({id:x.it.id,qty:x.q})),p_contact:ck.url||contact,p_note:$('cnote').value.trim(),p_pay_ref:ref,p_first:fn,p_last:ln,p_method:PM,p_school:school},true);
@@ -339,8 +346,23 @@ async function loadOrders(){const el=$('orders');
  if(!ORDERS){el.innerHTML='<p class="empty">Loading…</p>';try{ORDERS=await Auth.rpc('shop_my_orders',{},true)||[]}catch(e){el.innerHTML='<p class="empty">Couldn\'t load your orders. Check your connection.</p>';return}}
  const LBL={placed:'Waiting for the seller',paid:'Paid',ready:'Ready for pickup',done:'Picked up',cancelled:'Cancelled'};
  el.innerHTML=ORDERS.length?ORDERS.map(o=>'<div class="ord"><div class="h"><b>Order #'+o.id+'</b><span class="st '+esc(o.status)+'">'+esc(LBL[o.status]||o.status)+'</span><span>'+(o.method==='cash'?'Cash':'GCash')+' · '+new Date(o.at).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span></div>'+
-  '<ul>'+(o.items||[]).map(x=>'<li>'+x.qty+' × '+esc(x.name)+'</li>').join('')+'</ul><div class="h"><b>'+peso(o.total)+'</b>'+(o.seller_note?'<span>Seller: '+esc(o.seller_note)+'</span>':'')+'</div>'+
+  '<ul>'+(o.items||[]).map(x=>'<li>'+x.qty+' × '+esc(x.name)+'</li>').join('')+'</ul><div class="h"><b>'+peso(o.total)+'</b>'+(o.seller_note?'<span>Seller: '+esc(o.seller_note)+'</span>':'')+'</div>'+payBox(o)+
   (o.status==='placed'?'<button class="btn" style="margin-top:10px;padding:7px 12px;font-size:13.5px" onclick="cancelOrder('+o.id+')">Cancel this order</button>':'')+'</div>').join(''):'<p class="empty">No orders yet.</p>'}
+/* what the buyer still has to do: the amount and the seller's GCash details, and a place to type the reference number after paying */
+const PHONE=/(?:\+?63|0)\s?9\d{2}[\s-]?\d{3}[\s-]?\d{4}/;
+function payBox(o){if(o.status!=='placed')return '';const s=D.settings,amt=peso(o.total);
+ if(o.method==='cash')return '<div class="paybox"><b>Pay '+amt+' in cash when you pick up.</b>'+(s.pickup_note?'<span>'+esc(s.pickup_note)+'</span>':'')+'</div>';
+ const num=(PHONE.exec(s.pay_note||'')||[''])[0].replace(/[\s-]/g,'');
+ return '<div class="paybox"><b>Pay '+amt+' by GCash</b>'+(s.pay_note?'<span>'+esc(s.pay_note)+'</span>':'<span>The seller will message you her GCash details.</span>')+
+  (num?'<button class="btn mini" onclick="copyNum(this,\''+num+'\')">Copy number</button>':'')+
+  (o.pay_ref?'<span class="ok">✓ Reference sent: '+esc(o.pay_ref)+'. The seller will mark it paid.</span>'
+   :'<div class="refrow"><input id="ref'+o.id+'" inputmode="numeric" maxlength="30" placeholder="GCash reference number" aria-label="GCash reference number"><button class="btn mini" onclick="sendRef('+o.id+')">Send reference</button></div><p class="msg" id="rm'+o.id+'"></p>')+'</div>'}
+function copyNum(b,n){const done=()=>{b.textContent='Copied!';setTimeout(()=>b.textContent='Copy number',1800)};
+ try{navigator.clipboard.writeText(n).then(done,()=>{b.textContent=n})}catch(e){b.textContent=n}}
+async function sendRef(id){const i=$('ref'+id),m=$('rm'+id),v=i.value.replace(/\s/g,'');
+ if(!/^[0-9]{6,20}$/.test(v)){m.className='msg bad';m.textContent='The reference number is digits only (6 to 20 numbers).';return}
+ m.className='msg';m.textContent='Sending…';
+ try{await Auth.rpc('shop_order_ref',{p_id:id,p_ref:v},true);ORDERS=null;await loadOrders()}catch(e){m.className='msg bad';m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t send it. Check your connection.'}}
 async function cancelOrder(id){if(!confirm('Cancel order #'+id+'?'))return;try{await Auth.rpc('shop_cancel',{p_id:id},true)}catch(e){alert(e.message)}ORDERS=null;await load();drawChips();drawShop();loadOrders()}
 async function load(){D=await Auth.rpc('shop_catalog',{},!!Auth.ses());
  for(const id of Object.keys(CART)){const it=item(id);if(!it||it.left===0)delete CART[id];else if(CART[id]>maxFor(it))CART[id]=maxFor(it)}saveCart()}
