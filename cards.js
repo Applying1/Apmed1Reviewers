@@ -219,7 +219,7 @@ function grade(g){if(!CUR||!CUR.flip)return;const c=CUR.c;
  UNDO={id:c.i,old,day:FC.day.slice(),h:FC.h?JSON.stringify(FC.h):null,c};
  FC.c[c.i]=pack(review(k,g,now(),opts(true)));if(!old)FC.day[1]++;
  else if(k.st===2){FC.day[2]++;const td=dayNum(now()),H=FC.h||(FC.h={}),x=H[td]||(H[td]=[0,0]);x[0]++;if(g===1)x[1]++;for(const d in H)if(+d<td-60)delete H[d]}
- fcSave();if(!old||k.st===2)dailyAdd(1);LAST=c.i;CUR=null;draw()}
+ fcSave();if(!old||k.st===2)dailyAdd(1);if(typeof badgeAdd==='function')badgeAdd('cards',1);LAST=c.i;CUR=null;draw()}
 function undo(){if(!UNDO)return;const u=UNDO;UNDO=null;if(u.old)FC.c[u.id]=u.old;else delete FC.c[u.id];FC.day=u.day;if(u.h)FC.h=JSON.parse(u.h);else delete FC.h;fcSave();CUR={c:u.c,flip:true};LAST='';draw()}
 function more(){dayRoll();FC.day[3]+=10;fcSave();CUR=null;draw()}
 // Phones: drag the flipped card left for Again, right for Good.

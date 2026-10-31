@@ -112,6 +112,8 @@ h1 em{font-style:normal;color:var(--accent)}
 <script src="schedule-core.js"></script>
 <script src="reminders-core.js"></script>
 <script src="auth.js"></script>
+<script src="daily.js"></script>
+<script src="badges.js"></script>
 <script>
 // Sort It: one sorting set a day for the class. Sets: sortit/days.json (built by tools/make_sortit.py from sortit_src/).
 // Progress: localStorage 'reviewer_sortit' = {v:1, how, g:{<date>:{p:{item:group placed}, ok:[locked items], c checks, m mistakes,
@@ -211,6 +213,7 @@ function done(){return Object.keys(S.g).filter(d=>S.g[d].d===1).sort()}
 function streak(){const w=new Set(done());let d=w.has(TODAY)?TODAY:shift(TODAY,-1),n=0;while(w.has(d)){n++;d=shift(d,-1)}return n}
 function best(){let b=0,run=0,prev='';for(const d of done()){run=prev&&shift(prev,1)===d?run+1:1;b=Math.max(b,run);prev=d}return b}
 function drawEnd(){
+ if(window.Badges)Badges.check();
  const n=streak(),b=$('end');
  b.innerHTML='<h2>'+(G.c===1?'Perfect: sorted in one check':'Sorted in '+G.c+' checks · '+G.m+' mistake'+(G.m===1?'':'s'))+'</h2>'+
   (n?'<div class="streak">'+ic('flame')+n+'-day streak</div>':'')+

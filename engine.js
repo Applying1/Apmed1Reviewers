@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='103',APP_DATE='Oct 31, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='104',APP_DATE='Oct 31, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -897,6 +897,11 @@ function drawLastLook(){const el=$('lastlook');if(!el)return;const {src,list}=ll
 addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('llopen'))closeLastLook()});
 /* ---------- v71: daily goal and streak, across every course on this device (site/daily.js) ---------- */
 function dailyAdd(n){if(n&&window.ClassNow&&CONFIG.home&&state.prefs.crowd)ClassNow.ping(courseId());if(!n||!window.Daily||!CONFIG.home)return;try{const g=Daily.add(n);if(g&&!(Daily.hidden&&Daily.hidden()))setTimeout(()=>{toast('Daily goal reached: '+g.goal+' questions'+(g.streak>1?' · '+g.streak+'-day streak':''));celebrate('section')},650)}catch(e){}}
+// v104: badges (site/badges.js) count study habits across courses: events here, levels for answers, sections and lessons
+function badgeAdd(c,n){if(window.Badges&&CONFIG.home)try{Badges.add(c,n)}catch(e){}}
+let badgeT=0;function badgeLevels(now){if(!window.Badges||!CONFIG.home)return;clearTimeout(badgeT);badgeT=setTimeout(()=>{try{const id=courseId();
+ Badges.level('answers',id,(state.correct||0)+(state.wrong||0));Badges.level('sections',id,sectionKeys.filter(completed).length);
+ Badges.level('lessons',id,chapters.filter(ch=>{const p=chProgress(ch);return p.total&&p.done===p.total}).length)}catch(e){}},now?0:1500)}
 // v103: how many classmates answered in this course in the last 3 minutes (only with class stats on; you are not counted)
 function cnNow(){if(!window.ClassNow||!CONFIG.home||!state.prefs.crowd)return;ClassNow.now().then(s=>{const h=$('hero');if(!s||!h)return;const id=courseId(),n=(s.by[id]||0)-(s.me&&s.here===id?1:0);let e=$('cnnow');
  if(n<1){if(e)e.remove();return}if(!e){e=document.createElement('p');e.id='cnnow';e.className='cnnow';h.firstElementChild.appendChild(e)}
@@ -942,7 +947,7 @@ function drawDash(){
   (pageOn('notes')?'<button class="shuffle-link" onclick="openNotes(\'all\')">'+NOTE_SM+'Read the high-yield notes</button>':'')+
   (state.prefs.stars&&nStar?'<button class="shuffle-link" onclick="selectSection(\'STAR\')">'+STAR_SM+'Review starred ('+nStar+')</button>':'')+(classOn()?'<button class="shuffle-link" onclick="selectSection(\'CLASS\')">'+CLASS_SM+'Class\'s most missed ('+classList().length+')</button>':'')+'</div>';
 
- cnNow();
+ cnNow();badgeLevels(true);
  const tile=(ic,k,v,d)=>'<div class="kpi"><div class="k">'+ic+k+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div></div>';
  $('kpis').innerHTML=
   tile(ICON.target,'Accuracy',Math.round(100*state.correct/Math.max(1,att))+'<small>%</small>',state.correct+' right · '+state.wrong+' wrong')+
@@ -1352,7 +1357,7 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
   if(a==null||a===''||q.mt||q.self)return;   // written answers count when marked (exMark); skipped (matching items are not bank questions): no effect on mastery, Missed or class stats
   k.seen++;if(ok){state.correct++;masteryUp(k);delete k.back}else{k.wrong++;state.wrong++;masteryDown(k);relearn(k)}
   crowdAdd(q.cid,!ok,!ok&&!q.ident?(q.choices.find(x=>x.letter===a)||{}).label:'');state.history.push({cid:q.cid,correct:ok,lookup:false,mode:'EXAM'})});
- dailyAdd(ex.qs.filter((q,j)=>{const a=ex.ans[j];return !(a==null||a===''||q.mt)}).length);
+ dailyAdd(ex.qs.filter((q,j)=>{const a=ex.ans[j];return !(a==null||a===''||q.mt)}).length);badgeAdd('exams',1);
  ex.right=right;ex.byCh=byCh;if(100*right/n>=(Object.assign({pass:60},CONFIG.grading||{})).pass)setTimeout(()=>celebrate('exam'),380);
  state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0,easy:ex.easy?1:0}).slice(-20);
  // A challenge keeps your first score; later tries are shared as retakes.
@@ -2293,7 +2298,7 @@ function overrideTyped(){const fb=state.feedback;if(view!=null||!fb||fb.correct|
  const last=state.log[state.log.length-1];if(last)last.fb=fb;save();draw()}
 
 function record(correct,lookup,conf){
- const q=state.active,k=state.concepts[q.cid],choice=q.choices.find(x=>x.letter===state.selected),target=q.choices.find(x=>x.correct);
+ const q=state.active,k=state.concepts[q.cid],lastTry=k&&k.history&&k.history[k.history.length-1],choice=q.choices.find(x=>x.letter===state.selected),target=q.choices.find(x=>x.correct);
  k.seen++;crowdAdd(q.cid,!correct,!correct&&!lookup&&choice&&!q.typed?choice.label:'');if(state.section==='CLASS'){state.classDone=state.classDone||[];if(!state.classDone.includes(q.cid))state.classDone.push(q.cid)}
  if(state.section==='CRAM'){state.cramDone=state.cramDone||[];if(!state.cramDone.includes(q.cid))state.cramDone.push(q.cid)}
  if(onPass(state.section)){const P=state.pass;if(!P.done.includes(q.cid))P.done.push(q.cid);if(!correct&&!P.miss.includes(q.cid))P.miss.push(q.cid)}
@@ -2313,6 +2318,7 @@ function record(correct,lookup,conf){
  if(lookup)state.selected=null;
  if(!free){k.history.push({correct,lookup,kind:q.kind});if(k.history.length>5)k.history.splice(0,k.history.length-5)}
  state.history.push({cid:q.cid,correct,lookup,mode:state.section});dailyAdd(1);
+ if(correct&&!lookup&&!free&&lastTry&&!lastTry.correct&&!lastTry.lookup)badgeAdd('fixes',1);badgeLevels();
  if(state.history.length>600)state.history=state.history.slice(-600);
  state.log.push({sec:state.section,sel:state.selected,fb:state.feedback,q:{cid:q.cid,kind:q.kind,stem:q.stem,why:q.why===((byId[q.cid]||{}).why||'')?undefined:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))}});
  if(state.log.length>150)state.log=state.log.slice(-150);

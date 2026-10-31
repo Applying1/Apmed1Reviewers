@@ -1,0 +1,89 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Site stats · APMed '33</title>
+<meta name="description" content="How many classmates use the site: devices, accounts, answers and who is studying now.">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:720px;margin:0 auto;padding:14px 16px calc(28px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:8px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+h1{font:600 28px/1.2 var(--serif);margin:12px 0 4px}
+.sub{margin:0 0 18px;color:var(--mute);font-size:14px}
+.card{margin:0 0 14px;padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.card h2{margin:0 0 12px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi{padding:12px 14px;border-radius:13px;background:var(--raised);border:1px solid var(--line)}
+.kpi b{display:block;font:800 26px/1.1 var(--sans);font-variant-numeric:tabular-nums}
+.kpi span{display:block;margin-top:3px;font-size:12.5px;color:var(--mute)}
+.chart{display:grid;grid-template-columns:repeat(14,1fr);gap:5px;align-items:end;height:150px;margin-top:6px}
+.chart .c{display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;height:100%;gap:2px}
+.chart .c i{display:block;border-radius:5px 5px 2px 2px;background:var(--accent);min-height:2px}
+.chart .c i.a{background:color-mix(in oklab,var(--accent) 35%,var(--raised))}
+.days{display:grid;grid-template-columns:repeat(14,1fr);gap:5px;margin-top:5px;font-size:10.5px;color:var(--faint);text-align:center}
+.legend{display:flex;gap:14px;margin-top:10px;font-size:12.5px;color:var(--mute)}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--accent)}.legend i.a{background:color-mix(in oklab,var(--accent) 35%,var(--raised))}
+.row{display:flex;align-items:center;gap:14px}
+.row .t{flex:1;min-width:0}.row b{display:block;font-size:15px}.row .t span{display:block;font-size:13px;color:var(--mute)}
+.sw{flex:none;position:relative;width:46px;height:28px;border-radius:99px;border:0;background:var(--line2);transition:background .15s;padding:0}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .15s}
+.sw[aria-checked="true"]{background:var(--accent)}.sw[aria-checked="true"]::after{transform:translateX(18px)}
+.note{margin:10px 0 0;font-size:12.5px;color:var(--faint)}
+.empty{color:var(--mute);font-size:14px}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none}
+</style></head><body>
+<main>
+ <div class="top"><a class="back" href="settings.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>Settings</a></div>
+ <h1>Site stats</h1>
+ <p class="sub" id="sub">How many classmates use the site. Numbers only, never names.</p>
+ <div id="view"><p class="empty">Loading…</p></div>
+</main>
+<script src="auth.js"></script>
+<script src="dialog.js"></script>
+<script>
+// Site stats (Oct 31): site_stats() from supabase_site_stats.sql. The owner always sees it and can let everyone see it
+// (site_stats_public); others see it only while it is public. Devices are counted once a day (classnow.js, site_visit).
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>Number(n||0).toLocaleString('en-US');
+let S=null;
+async function boot(){
+ try{const cl=(await (await fetch('courses.json')).json()).find(c=>c.cloud&&c.cloud.url);if(cl)Auth.cloud=cl.cloud}catch(e){}
+ if(!Auth.cloud){$('view').innerHTML='<p class="empty">The class cloud isn\'t set up here.</p>';return}
+ load()}
+async function load(){
+ try{S=await Auth.rpc('site_stats',{},!!Auth.ses());draw()}
+ catch(e){$('view').innerHTML='<div class="card"><p class="empty">'+esc(e.message)+(Auth.ses()?'':' If you are the site owner, sign in first.')+'</p></div>'}}
+function draw(){
+ const s=S,ser=s.series||[],mx=Math.max(1,...ser.map(x=>x.devices)),ma=Math.max(1,...ser.map(x=>x.answers));
+ const since=s.since?new Date(s.since+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+ const k=(v,t)=>'<div class="kpi"><b>'+fmt(v)+'</b><span>'+t+'</span></div>';
+ $('view').innerHTML=
+  (s.owner?'<div class="card"><div class="row"><div class="t"><b>Let everyone see these numbers</b><span>'+(s.public?'Everyone can open this page from Settings.':'Only you can see this page now.')+'</span></div>'+
+   '<button class="sw" role="switch" aria-checked="'+!!s.public+'" aria-label="Let everyone see these numbers" onclick="flip()"></button></div></div>':'')+
+  '<div class="card"><h2>People</h2><div class="kpis">'+k(s.today,'devices today')+k(s.week,'devices this week')+k(s.month,'devices in 30 days')+k(s.studying,'studying right now')+'</div>'+
+  '<p class="note">A device counts once a day when it opens the home page or a course'+(since?' (counting since '+esc(since)+')':'')+'. One person with a phone and a laptop counts twice.</p></div>'+
+  '<div class="card"><h2>Accounts and activity</h2><div class="kpis">'+k(s.accounts,'Google accounts')+k(s.synced_week,'synced progress this week')+k(s.answers_today,'answers today')+k(s.answers_week,'answers this week')+k(s.duels,'duels played')+k(s.push,'devices with notifications')+'</div></div>'+
+  '<div class="card"><h2>Last 14 days</h2><div class="chart" aria-hidden="true">'+ser.map(x=>'<div class="c" title="'+esc(x.day)+': '+x.devices+' devices, '+x.answers+' answers"><i style="height:'+(100*x.devices/mx*.62)+'%"></i><i class="a" style="height:'+(100*x.answers/ma*.36)+'%"></i></div>').join('')+'</div>'+
+  '<div class="days" aria-hidden="true">'+ser.map(x=>'<span>'+new Date(x.day+'T12:00:00').getDate()+'</span>').join('')+'</div>'+
+  '<div class="legend"><span><i></i>devices</span><span><i class="a"></i>answers</span></div>'+
+  '<table hidden>'+ser.map(x=>'<tr><td>'+esc(x.day)+'</td><td>'+x.devices+' devices</td><td>'+x.answers+' answers</td></tr>').join('')+'</table></div>';
+}
+async function flip(){const on=!S.public;
+ if(on&&window.ask&&!(await ask('Everyone who opens Settings will see a Site stats button and these numbers (no names).',{title:'Show the site stats to everyone?',ok:'Show to everyone'})))return;
+ try{S=await Auth.rpc('site_stats_public',{p_on:on},true);draw()}catch(e){window.ask?ask(e.message,{alert:true,title:'Couldn\'t change it'}):0}}
+boot();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+<script src="update.js" defer></script>
+</body></html>

@@ -98,6 +98,8 @@ label.f select{display:block;width:100%;margin-top:5px;padding:9px 10px;border-r
 </main>
 <div class="toast" id="toast" role="status"></div>
 <script src="auth.js"></script>
+<script src="daily.js"></script>
+<script src="badges.js"></script>
 <script src="profile.js"></script>
 <script src="schedule-core.js"></script>
 <script src="reminders-core.js"></script>
@@ -273,7 +275,7 @@ function answer(k){const q=P.qs[P.i],ok=P.ch[k]===q.a,btns=[...document.querySel
 async function finish(){
  const res=P.qs.map((_,i)=>P.res[i]||'x').join(''),secs=Math.max(1,Math.min(7200,P.spent||1));
  $('view').innerHTML='<p class="empty">Saving your score…</p>';
- try{DUEL=await rpc('duel_submit',{p_code:P.code,p_res:res,p_secs:secs});setLocal(P.code,{done:1});showDuel();if(DUEL.open&&DUEL.me==='a')toast('Done! Now send the link to a classmate.',3000)}
+ try{DUEL=await rpc('duel_submit',{p_code:P.code,p_res:res,p_secs:secs});setLocal(P.code,{done:1});if(window.Badges)Badges.check();showDuel();if(DUEL.open&&DUEL.me==='a')toast('Done! Now send the link to a classmate.',3000)}
  catch(e){if(/already played/i.test(e.message)){openDuel(P.code);return}
   $('view').innerHTML='<div class="card"><p>Your score couldn\'t be saved: '+esc(e.message)+'</p><button class="btn primary" onclick="finish()">Try again</button></div>'}
 }

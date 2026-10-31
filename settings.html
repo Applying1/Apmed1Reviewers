@@ -57,6 +57,7 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
   <div class="row"><div class="t"><b>What you hear about</b><span>Announcements, new courses and content, timetable changes, exam reminders, replies and push notifications on this device.</span></div><a class="btn" href="notifications.html#settings">Open</a></div>
  </section>
  <section class="sec" id="mod" hidden></section>
+ <section class="sec" id="stats" hidden></section>
  <section class="sec" id="snd"></section>
  <section class="sec" id="store"></section>
  <p class="note">Each course's study settings (recall goal, flashcards, question order and more) are in that course's <b>Personalize</b> page. <a href="privacy.html">Privacy &amp; terms</a></p>
@@ -130,7 +131,12 @@ async function drawMod(){let m=null,pass=false;try{pass=!!localStorage.getItem('
  const p=m?[[m.links,'link request'],[m.questions,'question'],[m.reports,'report'],[m.cards,'flashcard']].filter(x=>x[0]).map(x=>x[0]+' '+x[1]+(x[0]>1?'s':'')):[];
  $('mod').innerHTML='<h2>Moderator</h2><div class="row"><div class="t"><b>Moderator page'+(n?' <span class="cnt">'+n+'</span>':'')+'</b><span>'+(m?(n?esc(p.join(' · '))+' waiting.':'Nothing waiting.')+' Update attendance, approve link requests, review questions and reports.':'Review the questions and reports classmates send.')+'</span></div><a class="btn'+(n?' primary':'')+'" href="moderate.html">Open</a></div>'+
   (m?'<div class="row"><div class="t"><b>Attendance</b><span>Read the tracker sheet now, or set up the one-tap update.</span></div><a class="btn" href="moderate.html#sync">Update settings</a></div>':'');$('mod').hidden=false}
-drawAcc();drawLook();drawHome();drawGoal();drawSnd();drawStore();drawMod();
+// site stats (site_stats, stats.html): the owner always; everyone else only while the owner lets everyone see them
+async function drawStats(){const b=$('stats');try{const cl=(await (await fetch('courses.json')).json()).find(c=>c.cloud&&c.cloud.url);if(!cl)return;Auth.cloud=Auth.cloud||cl.cloud;
+ const s=await Auth.rpc('site_stats',{},!!Auth.ses());
+ b.innerHTML='<h2>Site stats</h2><p class="d">'+(s.owner?(s.public?'Everyone can see these numbers.':'Only you can see these numbers.')+' Change it on the stats page.':'How many classmates use the site.')+'</p>'+
+  '<div class="row"><div class="t"><b>'+s.today+' devices today · '+s.week+' this week</b><span>'+s.studying+' studying now · '+s.accounts+' accounts</span></div><a class="btn" href="stats.html">Open</a></div>';b.hidden=false}catch(e){b.hidden=true}}
+drawAcc();drawLook();drawHome();drawGoal();drawSnd();drawStore();drawMod();drawStats();
 if(location.hash==='#home')setTimeout(()=>$('home').scrollIntoView({block:'start'}),50);
 addEventListener('storage',()=>{drawAcc();drawLook();drawHome();drawGoal();drawSnd()});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');

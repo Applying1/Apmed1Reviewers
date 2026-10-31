@@ -68,7 +68,7 @@ window.ClassNow = (function () {
     clearTimeout(timer); if (focusEnd()) timer = setTimeout(tick, 1000);
   }
   let doneUntil = 0;
-  function done() { doneUntil = Date.now() + 8000; setTimeout(drawChip, 8100) }
+  function done() { doneUntil = Date.now() + 8000; setTimeout(drawChip, 8100); if (window.Badges) Badges.add('focus', 1) }
   // the chip on course pages (the home page shows the timer in its Class card)
   function drawChip() {
     if (!here) return;
@@ -92,9 +92,11 @@ window.ClassNow = (function () {
     if (chip.innerHTML !== html) chip.innerHTML = html;
     chip.setAttribute('aria-label', ms > 0 ? 'Focus timer, ' + Math.ceil(ms / 60e3) + ' minutes left. Tap twice to stop.' : 'Focus done');
   }
+  // the site's device count (site_visit): once a day per device, a random code only
+  function visit() { const day = ymd(new Date()); if (!cloud || ls.get('reviewer_visit') === day) return; rpc('site_visit', { p_dev: dev() }).then(() => ls.set('reviewer_visit', day)).catch(() => { }) }
   function init(c, course) {
     cloud = c && c.url ? c : null; here = course || '';
-    tick();
+    tick(); visit();
     addEventListener('storage', e => { if (e.key === FK) { tick(); listeners.forEach(f => { try { f() } catch (x) { } }) } });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) tick() });
   }

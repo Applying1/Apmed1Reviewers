@@ -1217,6 +1217,7 @@ c. Euphrates</pre>
  const nc=document.createElement('script');nc.src='notify-core.js';nc.async=false;document.body.appendChild(nc);
  const pc=document.createElement('script');pc.src='push-client.js';pc.async=false;pc.onload=()=>{if(d.config.cloud&&window.Push){Push.init(d.config.cloud);setTimeout(()=>Push.heal(),3000)}};document.body.appendChild(pc);
  const dy=document.createElement('script');dy.src='daily.js';dy.async=false;document.body.appendChild(dy);
+ const bg=document.createElement('script');bg.src='badges.js';bg.async=false;document.body.appendChild(bg);
  const cn=document.createElement('script');cn.src='classnow.js';cn.async=false;cn.onload=()=>{if(d.config.cloud&&window.ClassNow)ClassNow.init(d.config.cloud,id.toLowerCase())};document.body.appendChild(cn);
  const au=document.createElement('script');au.src='auth.js';au.async=false;document.body.appendChild(au);
  const up=document.createElement('script');up.src='update.js';document.body.appendChild(up);
