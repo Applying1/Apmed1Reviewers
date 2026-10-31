@@ -374,15 +374,15 @@ let D=null,CART={},FILTER='all',ORDERS=null,FAV=[],VIEW='grid',CV='sum',WAIT=[];
    the dearest stickers that fit; repeat until no deal saves anything. */
 function dealsFor(L){const B=(D&&D.bundles)||[],u=[],got={};let disc=0;
  L.forEach(x=>{for(let k=0;k<x.q;k++)u.push({i:x.it.id,c:x.it.catalog,p:x.it.price})});
- u.sort((a,b)=>b.p-a.p||a.i-b.i);const used=u.map(()=>false);
+ u.sort((a,b)=>b.p-a.p||a.i-b.i);const used=u.map(()=>false),paid=u.map(x=>x.p);
  for(let g=0;g<u.length;g++){let best=null,bs=0,bb=null;
   for(const b of B){const pick=[];
    if(b.kind==='any'){for(let k=0;k<u.length&&pick.length<b.qty;k++)if(!used[k]&&(b.catalog==null||u[k].c===b.catalog))pick.push(k);if(pick.length<b.qty)continue}
    else{const req=D.items.filter(i=>i.catalog===b.catalog).map(i=>i.id).sort((a,c)=>a-c);if(req.length<2)continue;
     for(const r of req){const k=u.findIndex((x,j)=>!used[j]&&x.i===r);if(k<0)break;pick.push(k)}if(pick.length<req.length)continue}
    const s=pick.reduce((a,k)=>a+u[k].p,0)-b.price;if(s>bs){bs=s;best=pick;bb=b}}
-  if(!best)break;best.forEach(k=>used[k]=true);disc+=bs;const d=got[bb.id]||(got[bb.id]={id:bb.id,name:bb.name,n:0,save:0});d.n++;d.save+=bs}
- return {disc,deals:Object.values(got).sort((a,b)=>a.id-b.id)}}
+  if(!best)break;best.forEach(k=>used[k]=true);disc+=bs;{const tot=best.reduce((a,k)=>a+u[k].p,0);let rest=bb.price;best.forEach((k,ix)=>{if(ix===best.length-1)paid[k]=rest;else{const a=Math.floor(bb.price*u[k].p/tot);paid[k]=a;rest-=a}})}const d=got[bb.id]||(got[bb.id]={id:bb.id,name:bb.name,n:0,save:0});d.n++;d.save+=bs}
+ return {disc,paid,deals:Object.values(got).sort((a,b)=>a.id-b.id)}}
 const catOf=id=>(D.catalogs.find(c=>c.id===id)||{}).name||'';
 /* a nudge toward the nearest deal: "Add 2 more ... to get Any 5 for ₱20" */
 function dealHint(L){for(const b of (D.bundles||[])){
@@ -391,12 +391,14 @@ function dealHint(L){for(const b of (D.bundles||[])){
   else{const its=D.items.filter(i=>i.catalog===b.catalog),miss=its.filter(i=>!CART[i.id]);
    if(its.length>=2&&miss.length&&miss.length<its.length&&miss.length<=2&&miss.every(i=>i.left!==0))return 'Add '+miss.map(i=>i.name).join(' and ')+' to complete “'+b.name+'”.'}}
  return ''}
-/* Study coupons (Nov 1, supabase_shop_coupons.sql): 2 coupons = one bundle free, 1 golden coupon = every bundle free.
+/* Study coupons (Nov 1, supabase_shop_coupons.sql + coupons2.sql): a sticker coupon = the 2 dearest stickers free (after deals),
+   2 special coupons = one bundle free, 1 golden coupon = every bundle free.
    The server checks everything again (shop_order p_coupon); this only shows the choice and the total. */
 let COUP=null,CPN='';
 async function loadCoup(){if(!Auth.ses()){COUP=null;return}try{COUP=await Auth.rpc('shop_coupons_me',{},true)}catch(e){COUP=null}}
-function cpOpts(L){if(!COUP||!COUP.on)return [];const ids=dealsFor(L).deals.map(d=>d.id),B=D.bundles||[],o=[];
- if(COUP.basic>=2)B.filter(b=>ids.includes(b.id)).forEach(b=>o.push({k:'b'+b.id,save:b.price,label:'2 coupons: '+b.name+' free'}));
+function cpOpts(L){if(!COUP||!COUP.on)return [];const dl=dealsFor(L),ids=dl.deals.map(d=>d.id),B=D.bundles||[],o=[];
+ if(COUP.starter>=1&&dl.paid.length>=2){const p=dl.paid.slice().sort((a,b)=>b-a);o.push({k:'starter',save:p[0]+p[1],label:'Sticker coupon: 2 stickers free'})}
+ if(COUP.basic>=1)B.filter(b=>ids.includes(b.id)).forEach(b=>o.push({k:'b'+b.id,save:b.price,label:'Special coupon: '+b.name+' free'}));
  if(COUP.golden>=1&&B.length&&B.every(b=>ids.includes(b.id)))o.push({k:'golden',save:B.reduce((a,b)=>a+b.price,0),label:'Golden coupon: '+B.map(b=>b.name).join(' + ')+' free'});
  return o}
 function cpSave(L,t){const o=cpOpts(L).find(x=>x.k===CPN);if(!o){CPN='';return 0}return Math.min(o.save,t)}
@@ -410,24 +412,25 @@ function dealsStrip(){const B=D.bundles||[];if(!B.length)return '';
   return '<div class="dcard"><div class="dt"><b>'+esc(b.name)+'</b><span class="mute">'+(b.kind==='set'?'all '+its.length+' from '+esc(catOf(b.catalog)):'any '+b.qty+' stickers'+(b.catalog==null?'':' from '+esc(catOf(b.catalog))))+'</span></div>'+
    (its.length?'<div class="dthumbs">'+its.slice(0,8).map(i=>i.image?'<img src="'+esc(img(i.image))+'" alt="'+esc(i.name)+'" loading="lazy">':'').join('')+'</div>':'')+
    '<div class="pr">'+(full>b.price?'<s>'+peso(full)+'</s>':'')+'<b>'+peso(b.price)+'</b>'+(full>b.price?'<span class="save">Save '+peso(full-b.price)+'</span>':'')+'</div>'+bundleBtn(b)+'</div>'}).join('')+'</div></section>'}
-/* coupon card: the starter offer with the buyer's progress and a Claim button, or the coupons they have */
-function couponCard(){const B=D.bundles||[];if(!B.length)return '';const c=COUP,gold='<p class="gold">🌟 Golden coupons: every Sunday, classmates who studied 4 or more days that week can win one (it makes every bundle free).</p>';
- if(!Auth.ses())return '<div class="cpcard"><b class="t">🎟 Free bundle for the first 25</b><p>Answer 50 questions with 5 right in a row, then claim 2 coupons here (2 coupons = a bundle of your choice, free).</p><button class="btn mini" onclick="goSignIn(\'shop.html\')">Sign in to claim</button>'+gold+'</div>';
+/* coupon card: what the buyer holds, the sticker-coupon offer with their progress and a Claim button, and the weekly draw */
+function drawWhen(c){const d=c&&c.next_draw?new Date(c.next_draw):null;return d?d.toLocaleString('en-US',{weekday:'long',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Thursday, Nov 5, 8:00 PM'}
+function couponCard(){const c=COUP,draw=(!c||c.next_draw!==null)?'<p class="gold">🌟 <b>Study draw: '+drawWhen(c)+'.</b> 1 golden coupon (both bundles free) and 2 special coupons (each makes one bundle free) go to classmates who study at least 2 days before then (20+ answers a day). More answers = better odds.</p>':'';
+ if(!Auth.ses())return '<div class="cpcard"><b class="t">🎟 2 free stickers for the first 25</b><p>From now on, answer 50 questions with 5 right in a row, then claim a sticker coupon here (1 coupon = 2 stickers free).</p><button class="btn mini" onclick="goSignIn(\'shop.html\')">Sign in to claim</button>'+draw+'</div>';
  if(!c||!c.on)return '';
- if(c.basic>0||c.golden>0)return '<div class="cpcard"><b class="t">🎟 You have '+[c.golden?c.golden+' golden coupon'+(c.golden>1?'s':''):'',c.basic?c.basic+' coupon'+(c.basic>1?'s':''):''].filter(Boolean).join(' and ')+'</b><p>'+
-  (c.golden?'A golden coupon makes every bundle free. ':'')+(c.basic>=2?'2 coupons make one bundle of your choice free. ':c.basic?'You need 2 coupons for a free bundle. ':'')+'Add the bundle to your cart and choose the coupon in the cart.</p>'+gold+'</div>';
- if(c.claimed)return '<div class="cpcard"><b class="t">🎟 Coupons used</b><p>Thanks for studying! Keep going: golden coupons are drawn every Sunday.</p>'+gold+'</div>';
- const left=Math.max(0,c.cap-c.taken);if(!left)return '<div class="cpcard"><b class="t">🎟 All '+c.cap+' starter coupons are taken</b>'+gold+'</div>';
- const ok=c.answered>=c.need&&c.run>=c.run_need,bar=(v,n)=>'<i><em style="width:'+Math.min(100,Math.round(v*100/n))+'%"></em></i>';
- return '<div class="cpcard"><b class="t">🎟 Free bundle for the first '+c.cap+' · '+left+' left</b><p>Answer '+c.need+' questions and get '+c.run_need+' right in a row to claim 2 coupons (2 coupons = a bundle of your choice, free).</p>'+
-  '<div class="meter"><span>Answered '+Math.min(c.answered,c.need)+' of '+c.need+bar(c.answered,c.need)+'</span><span>Best run '+Math.min(c.run,c.run_need)+' of '+c.run_need+' in a row'+bar(c.run,c.run_need)+'</span></div>'+
-  (!c.linked?'<p>First link your account to the class: home page → <b>My attendance</b>.</p>':ok?'<button class="btn primary" id="cpclaim" onclick="claimCp()">Claim my 2 coupons</button>':'<p class="mute">Study in any course on this site (signed in). Your numbers update when your progress syncs.</p>')+'<p class="msg bad" id="cpmsg"></p>'+gold+'</div>'}
+ const has=[c.golden?c.golden+' golden coupon'+(c.golden>1?'s':'')+' (every bundle free)':'',c.basic?c.basic+' special coupon'+(c.basic>1?'s':'')+' (each = a free bundle)':'',c.starter?'1 sticker coupon (2 stickers free)':''].filter(Boolean);
+ let h=has.length?'<b class="t">🎟 You have '+has.join(', ')+'</b><p>Choose it in the cart when you check out.</p>':'';
+ if(!c.claimed){const left=Math.max(0,c.cap-c.taken),ok=c.answered>=c.need&&c.run>=c.run_need,bar=(v,n)=>'<i><em style="width:'+Math.min(100,Math.round(v*100/n))+'%"></em></i>';
+  h+=!left?'<b class="t">🎟 All '+c.cap+' sticker coupons are taken</b>':'<b class="t">🎟 2 free stickers for the first '+c.cap+' · '+left+' left</b><p>Answer '+c.need+' questions and get '+c.run_need+' right in a row to claim a sticker coupon (1 coupon = 2 stickers free). Only answers since the shop opened count.</p>'+
+   '<div class="meter"><span>Answered '+Math.min(c.answered,c.need)+' of '+c.need+bar(c.answered,c.need)+'</span><span>Best run '+Math.min(c.run,c.run_need)+' of '+c.run_need+' in a row'+bar(c.run,c.run_need)+'</span></div>'+
+   (!c.linked?'<p>First link your account to the class: home page → <b>My attendance</b>.</p>':ok?'<button class="btn primary" id="cpclaim" onclick="claimCp()">Claim my sticker coupon</button>':'<p class="mute">Study in any course on this site (signed in). Your numbers update when your progress syncs.</p>')+'<p class="msg bad" id="cpmsg"></p>'}
+ else if(!has.length)h='<b class="t">🎟 Thanks for studying!</b><p>Your sticker coupon is used. Keep going for the study draw.</p>';
+ return '<div class="cpcard">'+h+draw+'</div>'}
 async function claimCp(){const b=$('cpclaim');if(b)b.disabled=true;
- try{COUP=await Auth.rpc('shop_coupon_claim',{},true);drawShop();await ask('You got 2 coupons! 🎟','Add a bundle to your cart, then choose “2 coupons” in the cart. That bundle is free.',{ok:'Nice!',cancel:null,danger:false})}
+ try{COUP=await Auth.rpc('shop_coupon_claim',{},true);drawShop();await ask('You got a sticker coupon! 🎟','Add stickers to your cart, then choose “Sticker coupon” in the cart. 2 of them are free.',{ok:'Nice!',cancel:null,danger:false})}
  catch(e){if(b)b.disabled=false;const m=$('cpmsg');if(m)m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t claim. Check your connection.'}}
 /* coupon choice in the cart */
-function couponBox(L){if(!COUP||!COUP.on||!(COUP.basic>=2||COUP.golden>=1))return '';const o=cpOpts(L),t0=L.reduce((a,x)=>a+x.q*x.it.price,0)-dealsFor(L).disc;
- if(!o.length){const B=(D.bundles||[]).filter(b=>!inCart(b)&&bundleItems(b).length);return '<div class="cpbox"><b>🎟 You have coupons</b><span>Add a whole bundle to use them:</span>'+B.map(b=>'<div>'+esc(b.name)+' '+bundleBtn(b)+'</div>').join('')+'</div>'}
+function couponBox(L){if(!COUP||!COUP.on||!(COUP.starter>=1||COUP.basic>=1||COUP.golden>=1))return '';const o=cpOpts(L),t0=L.reduce((a,x)=>a+x.q*x.it.price,0)-dealsFor(L).disc;
+ if(!o.length){const B=(D.bundles||[]).filter(b=>!inCart(b)&&bundleItems(b).length);return '<div class="cpbox"><b>🎟 You have coupons</b><span>'+(COUP.starter?'Add at least 2 stickers to use your sticker coupon. ':'')+(COUP.basic||COUP.golden?'Add a whole bundle to use your special or golden coupon:':'')+'</span>'+B.map(b=>'<div>'+esc(b.name)+' '+bundleBtn(b)+'</div>').join('')+'</div>'}
  return '<div class="cpbox" role="radiogroup" aria-label="Use a coupon"><b>🎟 Use a coupon?</b>'+[{k:'',label:'Not this time',save:0}].concat(o).map(x=>'<label class="cpopt"><input type="radio" name="cpn"'+(CPN===x.k?' checked':'')+' onchange="CPN=\''+x.k+'\';drawReview();drawBar()"> '+esc(x.label)+(x.save?' <b>−'+peso(Math.min(x.save,t0))+'</b>':'')+'</label>').join('')+'</div>'}
 function addSet(cat){D.items.filter(i=>i.catalog===cat&&i.left!==0&&!CART[i.id]).forEach(i=>CART[i.id]=1);saveCart();drawShop();drawBar();if(!$('cart').hidden)drawReview()}
 /* "Tell me when it's back" on a sold-out sticker (shop_wait): the seller restocking it sends one push to this account's
