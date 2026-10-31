@@ -98,19 +98,43 @@
     if (typeof document === 'undefined' || !document.body) return;
     queue.push(b); if (!showing) next();
   }
+  // a soft chime made with Web Audio (no files); follows the Sounds switch in Settings (reviewer_quiz_mute) and stays quiet if the browser blocks audio
+  let actx = null;
+  function chime() {
+    try {
+      if (ls.get('reviewer_quiz_mute') === '1') return;
+      const AC = g.AudioContext || g.webkitAudioContext; if (!AC) return;
+      actx = actx || new AC(); if (actx.state === 'suspended') actx.resume().catch(() => { });
+      const t0 = actx.currentTime + 0.02, out = actx.createGain(); out.gain.value = 0.16; out.connect(actx.destination);
+      // a quick rising sparkle: E6 G6 C7, then a tiny high twinkle
+      [[1318.5, 0, 0.42], [1568, 0.09, 0.42], [2093, 0.18, 0.7], [3136, 0.34, 0.5]].forEach(([f, at, len], i) => {
+        const o = actx.createOscillator(), e = actx.createGain(); o.type = i === 3 ? 'triangle' : 'sine'; o.frequency.value = f;
+        e.gain.setValueAtTime(0.0001, t0 + at); e.gain.exponentialRampToValueAtTime(i === 3 ? 0.35 : 1, t0 + at + 0.015); e.gain.exponentialRampToValueAtTime(0.0001, t0 + at + len);
+        o.connect(e); e.connect(out); o.start(t0 + at); o.stop(t0 + at + len + 0.05);
+      });
+    } catch (e) { }
+  }
   function next() {
     const b = queue.shift(); if (!b) { showing = false; return }
     showing = true;
     if (!document.getElementById('bdpopcss')) {
       const st = document.createElement('style'); st.id = 'bdpopcss';
-      st.textContent = '.bdpop{position:fixed;left:50%;bottom:calc(var(--tbh,0px) + 16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:95;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 12px;border-radius:16px;background:var(--surface,#fff);color:var(--text,#222);border:1px solid var(--accent-line,#c7c3f3);box-shadow:0 10px 30px #0004;font:600 14px/1.3 system-ui,sans-serif;max-width:calc(100vw - 32px);animation:bdin .3s ease}'
-        + '.bdpop .e{font-size:30px;line-height:1}.bdpop small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--accent,#4f46e5)}.bdpop a{display:block;margin-top:2px;font-size:12.5px;font-weight:600;color:var(--accent,#4f46e5)}'
-        + '@keyframes bdin{from{opacity:0;transform:translate(-50%,12px)}}@media (prefers-reduced-motion:reduce){.bdpop{animation:none}}';
+      st.textContent = '.bdpop{position:fixed;left:50%;bottom:calc(var(--tbh,0px) + 16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:95;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 12px;border-radius:16px;background:var(--surface,#fff);color:var(--text,#222);border:1px solid var(--accent-line,#c7c3f3);box-shadow:0 10px 30px #0004;font:600 14px/1.3 system-ui,sans-serif;max-width:calc(100vw - 32px);overflow:hidden;animation:bdin .45s cubic-bezier(.2,1.3,.4,1)}'
+        + '.bdpop .e{position:relative;font-size:30px;line-height:1;display:inline-block;animation:bdshake .7s .25s ease-in-out}.bdpop small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--accent,#4f46e5)}.bdpop a{display:block;margin-top:2px;font-size:12.5px;font-weight:600;color:var(--accent,#4f46e5)}'
+        + '.bdpop::after{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.6),transparent);transform:translateX(-130%) skewX(-18deg);animation:bdshine .9s .35s ease-out forwards;pointer-events:none}'
+        + '.bdpop .sp{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:1px;background:var(--accent,#4f46e5);opacity:0;transform:rotate(45deg);animation:bdsp .8s .3s ease-out forwards}'
+        + '.bdpop .sp:nth-child(odd){background:#f5b82e}'
+        + '@keyframes bdin{from{opacity:0;transform:translate(-50%,24px) scale(.85)}}'
+        + '@keyframes bdshake{0%,100%{transform:rotate(0) scale(1)}15%{transform:rotate(-16deg) scale(1.25)}35%{transform:rotate(13deg) scale(1.2)}55%{transform:rotate(-8deg) scale(1.1)}75%{transform:rotate(4deg) scale(1.05)}}'
+        + '@keyframes bdshine{to{transform:translateX(340%) skewX(-18deg)}}'
+        + '@keyframes bdsp{0%{opacity:0;transform:translate(0,0) rotate(45deg) scale(.4)}25%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(225deg) scale(1.1)}}'
+        + '@media (prefers-reduced-motion:reduce){.bdpop,.bdpop .e,.bdpop::after,.bdpop .sp{animation:none!important}.bdpop::after,.bdpop .sp{display:none}}';
       document.head.appendChild(st);
     }
     const t = document.createElement('div'); t.className = 'bdpop'; t.setAttribute('role', 'status');
-    t.innerHTML = '<span class="e" aria-hidden="true">' + b.icon + '</span><span><small>New badge</small>' + esc(b.name) + '<a href="badges.html">See your badges</a></span>';
-    document.body.appendChild(t);
+    const sp = [[-20, -20], [24, -22], [-13, 22], [30, 12], [2, -26], [-22, 6]].map(([x, y]) => '<i class="sp" style="--dx:' + x + 'px;--dy:' + y + 'px;left:27px"></i>').join('');
+    t.innerHTML = '<span class="e" aria-hidden="true">' + b.icon + '</span><span><small>New badge</small>' + esc(b.name) + '<a href="badges.html">See your badges</a></span>' + sp;
+    document.body.appendChild(t); chime();
     setTimeout(() => { t.remove(); next() }, 3500);
   }
   function add(c, n) {
