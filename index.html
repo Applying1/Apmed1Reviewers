@@ -844,7 +844,7 @@ window.shopPoster=function(d){
   const o=document.createElement('div');o.className='jorts';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','The class sticker shop is open');
   o.innerHTML='<div class="jbox"><img src="img/shop-poster.webp" alt="Poster: Diary ng Stickerholic, stickers for 5 pesos, pre-order only" width="800" height="1000">'+
    '<h2>The sticker shop is open! <span class="jw">✨</span></h2><p><b>₱5 stickers</b>, and the Chiikawa and Med bundles help the class fund.</p>'+
-   '<p style="margin-top:6px">🎟 The first 25 who answer 50 questions with 5 right in a row get a <b>free bundle</b>.</p>'+
+   '<p style="margin-top:6px">🎟 The first 25 who answer 50 questions with 5 right in a row get <b>2 free stickers</b>.</p>'+
    '<div class="jrow"><button type="button" class="yes">Open the shop</button><button type="button" class="no">Later</button></div></div>';
   const close=()=>{o.classList.remove('on');setTimeout(()=>{o.remove();removeEventListener('keydown',k)},260)};
   const k=e=>{if(e.key==='Escape')close()};
