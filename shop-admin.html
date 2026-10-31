@@ -99,7 +99,7 @@ function drawOrders(){const live=A.orders.filter(o=>o.status!=='cancelled'),paid
   '<div class="row" style="margin-top:16px"><span class="seg" role="group" aria-label="Status">'+[['placed','Waiting'],['paid','Paid'],['ready','Ready'],['done','Picked up'],['cancelled','Cancelled'],['all','All']].map(([k,l])=>'<button aria-pressed="'+(OF===k)+'" onclick="OF=\''+k+'\';drawOrders()">'+l+(k!=='all'&&cnt(k)?' ('+cnt(k)+')':'')+'</button>').join('')+'</span>'+
   '<span class="sp"></span><button class="btn" onclick="reload()">Refresh</button><button class="btn" onclick="csv()">Download CSV</button></div>'+
   (list.length?list.map(o=>'<div class="card ord"><div class="h"><b>#'+o.id+' '+esc(o.buyer)+'</b><span class="st '+esc(o.status)+'">'+esc(LBL[o.status])+'</span><span class="mute">'+new Date(o.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span></div>'+
-   '<div class="mute">'+contact(o.contact)+(o.email?' · '+esc(o.email):'')+'</div>'+
+   '<div class="mute">'+contact(o.contact)+(o.email?' · '+esc(o.email):'')+(o.school?' · '+esc(o.school):'')+'</div>'+
    '<ul>'+(o.items||[]).map(x=>'<li>'+x.qty+' × '+esc(x.name)+' <span class="mute">('+esc(x.catalog)+')</span></li>').join('')+'</ul>'+
    '<div class="h"><b>'+peso(o.total_cents)+'</b>'+(o.fund_cents?'<span class="mute">'+peso(o.fund_cents)+' to the class fund</span>':'')+'<span class="mute"><b>'+(o.pay_method==='cash'?'Cash':'GCash')+'</b></span>'+(o.pay_ref?'<span class="mute">GCash ref: '+esc(o.pay_ref)+'</span>':'')+'</div>'+
    (o.note?'<p class="mute" style="margin:6px 0 0">Note: '+esc(o.note)+'</p>':'')+
@@ -109,8 +109,8 @@ function drawOrders(){const live=A.orders.filter(o=>o.status!=='cancelled'),paid
   '<h2>Print list (orders not cancelled)</h2><div class="card">'+(Object.keys(print).length?'<table class="prt"><tr><th>Sticker</th><th class="n">How many</th></tr>'+Object.entries(print).sort().map(([k,n])=>'<tr><td>'+esc(k)+'</td><td class="n">'+n+'</td></tr>').join('')+'</table>':'<p class="mute" style="margin:0">Nothing ordered yet.</p>')+'</div>'}
 function contact(c){c=String(c||'');if(/^https?:\/\//i.test(c))return '<a href="'+esc(c)+'" target="_blank" rel="noopener">'+esc(c.replace(/^https?:\/\/(www\.)?/,''))+'</a>';return esc(c)}
 async function setStatus(id,s){try{await Auth.rpc('shop_admin_status',{p_id:id,p_status:s,p_note:$('n'+id).value.trim()},true);toast(s==='paid'?'Marked paid. The buyer gets a notification.':s==='ready'?'Marked ready. The buyer gets a notification.':'Saved.');await reload()}catch(e){toast('Couldn\'t save: '+e.message)}}
-function csv(){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',rows=[['order','date','buyer','email','contact','status','pay method','catalog','sticker','qty','price','line total','class fund','gcash ref','note']];
- A.orders.forEach(o=>(o.items||[]).forEach(x=>rows.push([o.id,o.created_at.slice(0,16).replace('T',' '),o.buyer,o.email,o.contact,o.status,o.pay_method,x.catalog,x.name,x.qty,x.price/100,x.qty*x.price/100,x.fund?'yes':'',o.pay_ref,o.note])));
+function csv(){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',rows=[['order','date','buyer','email','contact','school','status','pay method','catalog','sticker','qty','price','line total','class fund','gcash ref','note']];
+ A.orders.forEach(o=>(o.items||[]).forEach(x=>rows.push([o.id,o.created_at.slice(0,16).replace('T',' '),o.buyer,o.email,o.contact,o.school,o.status,o.pay_method,x.catalog,x.name,x.qty,x.price/100,x.qty*x.price/100,x.fund?'yes':'',o.pay_ref,o.note])));
  const b=new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='sticker-orders.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000)}
 
 /* ---------- Stickers ---------- */
@@ -138,6 +138,7 @@ function editItem(id,cat){const i=A.items.find(x=>x.id===id)||{name:'',price_cen
   '<label class="f">Name<input class="inp" id="in" maxlength="80" value="'+esc(i.name)+'"></label>'+
   '<div class="row"><label class="f" style="flex:1">Price (₱)<input class="inp" id="ip" inputmode="decimal" value="'+(i.price_cents/100)+'"></label><label class="f" style="flex:1">Stock (empty = no limit)<input class="inp" id="is" inputmode="numeric" value="'+(i.stock==null?'':i.stock)+'"></label></div>'+
   '<label class="f">Catalog<select class="inp" id="ic">'+A.catalogs.map(c=>'<option value="'+c.id+'"'+(c.id===i.catalog_id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></label>'+
+  '<label class="f">Search tags (hidden; buyers find the sticker by these words)<input class="inp" id="it" maxlength="300" placeholder="e.g. bunny rabbit doctor stethoscope" value="'+esc(i.tags||'')+'"></label>'+
   '<label class="chk"><input type="checkbox" id="ia"'+(i.active?' checked':'')+'> Show in the shop</label><p class="msg bad" id="em"></p>'+
   '<div class="row" style="margin-top:14px">'+(id?'<button class="btn bad" onclick="saveItem('+id+',true)">Delete</button>':'')+'<span class="sp"></span><button class="btn" onclick="$(\'modal\').hidden=true">Cancel</button><button class="btn primary" id="isave" onclick="saveItem('+(id||'null')+')">Save</button></div>')}
 // resize to at most 800 px and encode as WebP (JPEG where WebP isn't supported), then upload to the "shop" bucket
@@ -150,7 +151,7 @@ async function pickPhoto(inp){const f=inp.files[0];if(!f)return;$('pv').textCont
  try{PIC=await upload(f);$('pv').innerHTML='<img src="'+esc(img(PIC))+'" alt="">'}catch(e){$('pv').textContent='Failed';$('em').textContent=e.message}$('isave').disabled=false}
 async function saveItem(id,del){if(del&&!confirm('Delete this sticker? If someone already ordered it, it\'s hidden instead.'))return;
  const price=Math.round(parseFloat($('ip')?$('ip').value:'0')*100);
- try{await Auth.rpc('shop_admin_item',{p:del?{id,delete:true}:{id,catalog:+$('ic').value,name:$('in').value,price:isNaN(price)?500:price,stock:$('is').value.trim(),image:PIC||'',active:$('ia').checked}},true);$('modal').hidden=true;await reload()}catch(e){$('em').textContent=e.message}}
+ try{await Auth.rpc('shop_admin_item',{p:del?{id,delete:true}:{id,catalog:+$('ic').value,name:$('in').value,price:isNaN(price)?500:price,stock:$('is').value.trim(),image:PIC||'',active:$('ia').checked,tags:$('it').value}},true);$('modal').hidden=true;await reload()}catch(e){$('em').textContent=e.message}}
 async function bulk(cat,inp){const files=[...inp.files];if(!files.length)return;let n=0;
  for(const f of files){toast('Uploading '+(++n)+' of '+files.length+'…');try{const path=await upload(f),name=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim().slice(0,80)||'Sticker';
   await Auth.rpc('shop_admin_item',{p:{catalog:cat,name,price:500,image:path}},true)}catch(e){toast('Couldn\'t add '+f.name+': '+e.message);await new Promise(r=>setTimeout(r,1500))}}
