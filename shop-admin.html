@@ -93,34 +93,35 @@ function ask(title,msg,o){o=o||{};return new Promise(res=>{
  m.onclick=e=>{if(e.target===m)done(false);const b=e.target.closest('button[data-v]');if(b)done(b.dataset.v==='1')};
  document.addEventListener('keydown',key);document.body.appendChild(m);(m.querySelector('[data-v="0"]')||m.querySelector('[data-v="1"]')).focus()})}
 const img=p=>p?Auth.base()+'/storage/v1/object/public/shop/'+p.split('/').map(encodeURIComponent).join('/'):'';
-const LBL={placed:'Waiting',paid:'Paid',ready:'Ready',done:'Picked up',cancelled:'Cancelled'};
+const LBL={held:'Guest: check',placed:'Waiting',paid:'Paid',ready:'Ready',done:'Picked up',cancelled:'Cancelled'};
 let A=null,TAB=location.hash.slice(1)||'orders',OF='placed';
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
 async function reload(){A=await Auth.rpc('shop_admin_get',{},true);draw()}
 function go(t){TAB=t;history.replaceState(null,'','#'+t);draw()}
-function draw(){const w=A.orders.filter(o=>o.status==='placed').length,t=$('tabs');t.hidden=false;
+function draw(){const w=A.orders.filter(o=>o.status==='placed'||o.status==='held').length,t=$('tabs');t.hidden=false;
  t.innerHTML=[['orders','Orders'],['stickers','Stickers'],['settings','Settings']].concat(A.owner?[['managers','Managers']]:[]).map(([k,l])=>'<button aria-pressed="'+(TAB===k)+'" onclick="go(\''+k+'\')">'+l+(k==='orders'&&w?'<b>'+w+'</b>':'')+'</button>').join('');
  ({orders:drawOrders,stickers:drawStickers,settings:drawSettings,managers:drawManagers}[TAB]||drawOrders)()}
 
 /* ---------- Orders ---------- */
-function drawOrders(){const live=A.orders.filter(o=>o.status!=='cancelled'),paid=live.filter(o=>o.status!=='placed'),sum=(l,k)=>l.reduce((a,o)=>a+o[k],0);
+function drawOrders(){const live=A.orders.filter(o=>o.status!=='cancelled'&&o.status!=='held'),paid=live.filter(o=>o.status!=='placed'),sum=(l,k)=>l.reduce((a,o)=>a+o[k],0);
  const list=A.orders.filter(o=>OF==='all'||o.status===OF),cnt=s=>A.orders.filter(o=>o.status===s).length;
  const print={};live.forEach(o=>(o.items||[]).forEach(x=>{const k=x.catalog+' · '+x.name;print[k]=(print[k]||0)+x.qty}));
  $('body').innerHTML='<div class="kpis"><div class="kpi"><div class="k">Orders</div><div class="v">'+live.length+'</div></div><div class="kpi"><div class="k">Waiting for payment</div><div class="v">'+peso(sum(live.filter(o=>o.status==='placed'),'total_cents'))+'</div></div>'+
   '<div class="kpi"><div class="k">Paid</div><div class="v">'+peso(sum(paid,'total_cents'))+'</div></div><div class="kpi fund"><div class="k">Class fund (paid)</div><div class="v">'+peso(sum(paid,'fund_cents'))+'</div></div></div>'+
-  '<div class="row" style="margin-top:16px"><span class="seg" role="group" aria-label="Status">'+[['placed','Waiting'],['paid','Paid'],['ready','Ready'],['done','Picked up'],['cancelled','Cancelled'],['all','All']].map(([k,l])=>'<button aria-pressed="'+(OF===k)+'" onclick="OF=\''+k+'\';drawOrders()">'+l+(k!=='all'&&cnt(k)?' ('+cnt(k)+')':'')+'</button>').join('')+'</span>'+
+  '<div class="row" style="margin-top:16px"><span class="seg" role="group" aria-label="Status">'+(cnt('held')?[['held','Guests to check']]:[]).concat([['placed','Waiting'],['paid','Paid'],['ready','Ready'],['done','Picked up'],['cancelled','Cancelled'],['all','All']]).map(([k,l])=>'<button aria-pressed="'+(OF===k)+'" onclick="OF=\''+k+'\';drawOrders()">'+l+(k!=='all'&&cnt(k)?' ('+cnt(k)+')':'')+'</button>').join('')+'</span>'+
   '<span class="sp"></span><button class="btn" onclick="reload()">Refresh</button><button class="btn" onclick="csv()">Download CSV</button></div>'+
-  (list.length?list.map(o=>'<div class="card ord"><div class="h"><b>#'+o.id+' '+esc(o.buyer)+'</b><span class="st '+esc(o.status)+'">'+esc(LBL[o.status])+'</span><span class="mute">'+new Date(o.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span></div>'+
+  (list.length?list.map(o=>'<div class="card ord"><div class="h"><b>#'+o.id+' '+esc(o.buyer)+'</b><span class="st '+esc(o.status)+'">'+esc(LBL[o.status])+'</span>'+(o.guest?'<span class="st">No sign-in</span>':'')+'<span class="mute">'+new Date(o.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span></div>'+
    '<div class="mute">'+contact(o.contact)+(o.email?' · '+esc(o.email):'')+(o.school?' · '+esc(o.school):'')+'</div>'+
    '<ul>'+(o.items||[]).map(x=>'<li>'+x.qty+' × '+esc(x.name)+' <span class="mute">('+esc(x.catalog)+')</span></li>').join('')+'</ul>'+
    '<div class="h"><b>'+peso(o.total_cents)+'</b>'+(o.discount_cents?'<span class="mute">after '+esc((o.deals||[]).map(d=>d.name+(d.n>1?' ×'+d.n:'')).join(', ')||'a deal')+' (−'+peso(o.discount_cents)+')</span>':'')+(o.fund_cents?'<span class="mute">'+peso(o.fund_cents)+' to the class fund</span>':'')+'<span class="mute"><b>'+(o.pay_method==='cash'?'Cash':'GCash')+'</b></span>'+(o.pay_ref?'<span class="mute">GCash ref: '+esc(o.pay_ref)+'</span>':'')+'</div>'+
    (o.note?'<p class="mute" style="margin:6px 0 0">Note: '+esc(o.note)+'</p>':'')+
    '<div class="row" style="margin-top:10px"><input class="inp" style="flex:1;min-width:160px" id="n'+o.id+'" maxlength="300" placeholder="Note to the buyer (optional)" value="'+esc(o.seller_note)+'">'+
-   ({placed:[['paid','Mark paid'],['cancelled','Cancel']],paid:[['ready','Ready for pickup']],ready:[['done','Picked up']],done:[],cancelled:[['placed','Reopen']]}[o.status]||[]).map(([s,l])=>'<button class="btn'+(s==='cancelled'?' bad':s==='placed'?'':' primary')+'" onclick="setStatus('+o.id+',\''+s+'\')">'+l+'</button>').join('')+'</div></div>').join('')
+   (o.status==='held'?'<p class="mute" style="margin:6px 0 0;flex-basis:100%">Ordered without signing in. Open their profile link above to check who it is, then Accept (it then holds the stickers) or Cancel.</p>':'')+({held:[['accept','Accept'],['cancelled','Cancel']],placed:[['paid','Mark paid'],['cancelled','Cancel']],paid:[['ready','Ready for pickup']],ready:[['done','Picked up']],done:[],cancelled:[['placed','Reopen']]}[o.status]||[]).map(([s,l])=>'<button class="btn'+(s==='cancelled'?' bad':s==='placed'?'':' primary')+'" onclick="setStatus('+o.id+',\''+s+'\')">'+l+'</button>').join('')+'</div></div>').join('')
    :'<p class="empty">No orders here.</p>')+
   '<h2>Print list (orders not cancelled)</h2><div class="card">'+(Object.keys(print).length?'<table class="prt"><tr><th>Sticker</th><th class="n">How many</th></tr>'+Object.entries(print).sort().map(([k,n])=>'<tr><td>'+esc(k)+'</td><td class="n">'+n+'</td></tr>').join('')+'</table>':'<p class="mute" style="margin:0">Nothing ordered yet.</p>')+'</div>'}
 function contact(c){c=String(c||'');if(/^https?:\/\//i.test(c))return '<a href="'+esc(c)+'" target="_blank" rel="noopener">'+esc(c.replace(/^https?:\/\/(www\.)?/,''))+'</a>';return esc(c)}
-async function setStatus(id,s){try{await Auth.rpc('shop_admin_status',{p_id:id,p_status:s,p_note:$('n'+id).value.trim()},true);toast(s==='paid'?'Marked paid. The buyer gets a notification.':s==='ready'?'Marked ready. The buyer gets a notification.':'Saved.');await reload()}catch(e){toast('Couldn\'t save: '+e.message)}}
+async function setStatus(id,s){if(s==='accept'){try{await Auth.rpc('shop_admin_accept',{p_id:id},true);toast('Accepted. It now holds the stickers.');await reload()}catch(e){toast('Couldn\'t accept: '+e.message)}return}
+ try{await Auth.rpc('shop_admin_status',{p_id:id,p_status:s,p_note:$('n'+id).value.trim()},true);toast(s==='paid'?'Marked paid. The buyer gets a notification.':s==='ready'?'Marked ready. The buyer gets a notification.':'Saved.');await reload()}catch(e){toast('Couldn\'t save: '+e.message)}}
 function csv(){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',rows=[['order','date','buyer','email','contact','school','status','pay method','catalog','sticker','qty','price','line total','class fund','gcash ref','note','order total','order deal discount']];
  A.orders.forEach(o=>(o.items||[]).forEach(x=>rows.push([o.id,o.created_at.slice(0,16).replace('T',' '),o.buyer,o.email,o.contact,o.school,o.status,o.pay_method,x.catalog,x.name,x.qty,x.price/100,x.qty*x.price/100,x.fund?'yes':'',o.pay_ref,o.note,o.total_cents/100,(o.discount_cents||0)/100])));
  const b=new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='sticker-orders.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000)}
@@ -196,6 +197,8 @@ function drawSettings(){const s=A.settings,dl=s.deadline?new Date(s.deadline):nu
  $('body').innerHTML='<div class="card"><label class="chk" style="margin-top:0;font-weight:600"><input type="checkbox" id="so"'+(s.open?' checked':'')+'> The shop is open for orders</label>'+
   '<label class="chk" style="font-weight:600"><input type="checkbox" id="sl"'+(s.launched?' checked':'')+'> Launched: everyone can see the shop</label>'+
   '<p class="mute" style="margin:2px 0 0 26px">Until then, only managers can see it; classmates see a locked "Coming soon" tile.</p>'+
+  '<label class="chk" style="font-weight:600"><input type="checkbox" id="sgu"'+(s.guest_ok!==false?' checked':'')+'> Allow orders without Google sign-in</label>'+
+  '<p class="mute" style="margin:2px 0 0 26px">They need a Messenger/Instagram profile link and wait for you to accept them (Orders → Guests to check). The shop asks everyone to sign in first.</p>'+
   '<label class="f">Orders close at (optional)<input class="inp" type="datetime-local" id="sd" value="'+(dl?loc(dl):'')+'"></label>'+
   '<label class="f">Title<input class="inp" id="st" maxlength="80" value="'+esc(s.title)+'"></label>'+
   '<label class="f">Intro (shown at the top)<textarea class="inp" id="si" rows="4" maxlength="2000" placeholder="For example: A small sticker launch to share my art :3 Each sticker is ₱5.">'+esc(s.intro)+'</textarea></label>'+
@@ -206,7 +209,7 @@ function drawSettings(){const s=A.settings,dl=s.deadline?new Date(s.deadline):nu
   '<p class="msg" id="sm2"></p><div class="row" style="margin-top:12px"><span class="sp"></span><a class="btn" href="shop.html" target="_blank">See the shop</a><button class="btn primary" onclick="saveSettings()">Save</button></div></div>'+
   (Push.supported()?'<div class="card row"><div style="flex:1"><b>Order alerts on this device</b><p class="mute" style="margin:2px 0 0">A notification for each new order.</p></div><button class="btn" id="alb" onclick="alerts()">'+(Push.attOn()?'On':'Turn on')+'</button></div>':'')}
 async function saveSettings(){const d=$('sd').value;
- try{await Auth.rpc('shop_admin_settings',{p:{open:$('so').checked,launched:$('sl').checked,deadline:d?new Date(d).toISOString():'',title:$('st').value,intro:$('si').value,pay_note:$('sp').value,pickup_note:$('sk').value,pickup_places:$('spl').value,max_qty:+$('sm').value||50}},true);
+ try{await Auth.rpc('shop_admin_settings',{p:{open:$('so').checked,launched:$('sl').checked,guest_ok:$('sgu').checked,deadline:d?new Date(d).toISOString():'',title:$('st').value,intro:$('si').value,pay_note:$('sp').value,pickup_note:$('sk').value,pickup_places:$('spl').value,max_qty:+$('sm').value||50}},true);
   await reload();$('sm2').className='msg ok';$('sm2').textContent='Saved.'}catch(e){$('sm2').className='msg bad';$('sm2').textContent=e.message}}
 async function alerts(){const b=$('alb');b.disabled=true;try{await Push.attSet(!Push.attOn());toast(Push.attOn()?'Order alerts are on for this device.':'Order alerts are off.')}catch(e){toast(e.message==='blocked'?'Notifications are blocked for this site in your browser settings.':'Couldn\'t change it.')}b.disabled=false;b.textContent=Push.attOn()?'On':'Turn on'}
 

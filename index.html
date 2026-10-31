@@ -534,8 +534,13 @@ async function finishSignIn(){const h=new URLSearchParams(location.hash.slice(1)
   try{localStorage.setItem(ACC_KEY,JSON.stringify({name:m.full_name||m.name||'',email:u.email||m.email||'',avatar:m.avatar_url||m.picture||'',at:Date.now()}))}catch(e){}
   await Profile.refresh();
   drawSyncBtn();drawSync(was&&was!==code?'Signed in. Open your courses and your progress here is combined with your account.':'Signed in. Your progress now follows you on every device where you sign in.',true)
+  afterSignIn()
  }catch(e){drawSync('Could not finish signing in. Check your connection and try again.')}
  return true}
+// A page that sent the person here to sign in (the sticker shop) asked to be reopened afterwards: only our own pages, only
+// within 15 minutes ('reviewer_after_signin' = {to, at}).
+function afterSignIn(){try{const n=JSON.parse(localStorage.getItem('reviewer_after_signin')||'null');localStorage.removeItem('reviewer_after_signin');
+ if(n&&Date.now()-n.at<9e5&&/^[a-z0-9-]+\.html(#[a-z]+)?$/.test(n.to||''))location.replace(n.to)}catch(e){}}
 function signOut(sure){if(sure!==true){ask('Your progress stays here, but it stops syncing until you sign in again.',{title:'Sign out on this device?',ok:'Sign out',danger:1}).then(y=>{if(y)signOut(true)});return}
  try{localStorage.removeItem(ACC_KEY);localStorage.removeItem('reviewer_session')}catch(e){}setCode('');drawSyncBtn();drawSync('Signed out.',true)}
 function drawSync(msg,ok){const c=getCode(),a=getAcc(),b=$('syncbody');$('synch').textContent=a&&c?'Your account':'Sign in to sync';const note='<p class="msg'+(ok?' ok':'')+'" id="syncmsg">'+(msg||'')+'</p>';
