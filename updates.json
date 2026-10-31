@@ -807,5 +807,13 @@
   "title": "Botany and NSTP moved next week",
   "text": "Botany class and Evals: Friday, Nov 6 at 10:00 AM. NSTP (temporary): Thursday, Nov 5, 4:00-7:00 PM.",
   "link": "schedule.html"
+ },
+ {
+  "id": 98,
+  "date": "2026-11-01",
+  "type": "content",
+  "title": "Chem: aldehydes, ketones and carboxylic acids updated from the lectures",
+  "text": "Topics 14 and 15 now follow the video lectures: her naming drills, boiling points, oxidation tests, hemiacetals, esters, amides and polymers, plus written-quiz practice (true or false, name, draw and predict, answer briefly). Slides she did not teach are optional.",
+  "link": "reviewer.html?course=chem"
  }
 ]
