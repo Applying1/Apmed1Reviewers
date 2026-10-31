@@ -149,6 +149,7 @@ body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px)
 @media (max-width:420px){.cartbtn span{display:none}}
 #chips .chips{padding:8px 2px 4px}
 .chip.favchip{--c:#ffb3c9}
+.ib .pr .loves{font:600 12.5px Fredoka,var(--sans);color:#d64a7c}
 .rescount{margin:16px 2px 12px;font:500 15px Fredoka,var(--sans);color:var(--ink2)}
 .it{position:relative}
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px}.top b{min-width:0;overflow-wrap:anywhere}
@@ -412,6 +413,7 @@ function maxFor(it){const m=D.settings.max_qty||50;return it.left==null?m:Math.m
 function setQty(id,q){const it=item(id);if(!it)return;q=Math.max(0,Math.min(maxFor(it),q));if(q)CART[id]=q;else delete CART[id];saveCart();
  const c=document.querySelector('[data-id="'+id+'"]');if(c)c.outerHTML=card(it);drawBar();if(!$('cart').hidden)drawReview()}
 function toggleFav(id){id=+id;const i=FAV.indexOf(id);if(i<0)FAV.push(id);else FAV.splice(i,1);saveFav();
+ {const l=item(id);if(l&&l.loves!=null)l.loves=Math.max(0,l.loves+(i<0?1:-1))}
  if(FILTER==='fav'&&i>=0)FILTER='all';
  const it=item(id),c=document.querySelector('.it[data-id="'+id+'"]');if(c&&it&&FILTER!=='fav')c.outerHTML=card(it);else drawShop();
  drawChips();if(!$('cart').hidden)drawReview()}
@@ -419,7 +421,7 @@ const HUES=['#ff9ab5','#86dbb8','#a3b0ff','#ffd27a','#cba6ff','#ffb08a','#8fd3f0
 const hue=c=>HUES[Math.max(0,D.catalogs.findIndex(x=>x.id===c))%HUES.length],tilt=id=>(((id*37)%7)-3)*1.1;
 function card(it){const q=CART[it.id]||0,open=D.settings.open,out=it.left===0,fav=FAV.includes(it.id);
  return '<div class="it'+(q?' inc':'')+'" data-id="'+it.id+'" style="--r:'+tilt(it.id)+'deg;--c:'+hue(it.catalog)+'"><button class="pic" onclick="zoom('+it.id+')" aria-label="See '+esc(it.name)+' bigger">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="" loading="lazy">':'<span class="none">No photo</span>')+(out?'<span class="sold">Sold out</span>':'')+'</button>'+
-  '<div class="ib"><div class="top"><b>'+esc(it.name)+'</b>'+'<button class="fav" aria-pressed="'+fav+'" onclick="toggleFav('+it.id+')" aria-label="'+(fav?'Remove '+esc(it.name)+' from favorites':'Add '+esc(it.name)+' to favorites')+'">'+HEART+'</button>'+'</div><div class="pr"><span>'+peso(it.price)+'</span><span>'+(it.left==null?'':out?'':it.left+' left')+'</span></div>'+
+  '<div class="ib"><div class="top"><b>'+esc(it.name)+'</b>'+'<button class="fav" aria-pressed="'+fav+'" onclick="toggleFav('+it.id+')" aria-label="'+(fav?'Remove '+esc(it.name)+' from favorites':'Add '+esc(it.name)+' to favorites')+'">'+HEART+'</button>'+'</div><div class="pr"><span>'+peso(it.price)+'</span>'+(it.loves>=3?'<span class="loves">♥ '+it.loves+'</span>':'')+'<span>'+(it.left==null?'':out?'':it.left+' left')+'</span></div>'+
   (out?'<button class="bell" aria-pressed="'+WAIT.includes(it.id)+'" onclick="toggleWait('+it.id+')">'+(WAIT.includes(it.id)?'✓ We\'ll tell you':'🔔 Tell me when it\'s back')+'</button>':!open?'':q?'<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>'
    :'<button class="add" onclick="setQty('+it.id+',1)">+ Add</button>')+'</div></div>'}
 /* search: names, catalog names and the seller's hidden tags; forgives plurals and a typo or two */
@@ -434,15 +436,16 @@ function searchItems(list,q){const ts=norm(q).split(' ').filter(Boolean);if(!ts.
  const hit=list.filter(it=>{const ws=words(it);return ts.every(t=>tokHit(t,ws))});
  return hit.sort((a,b)=>ts.every(t=>b._n.includes(t))-ts.every(t=>a._n.includes(t)))}
 let QT=0;function onSearch(){clearTimeout(QT);QT=setTimeout(drawShop,120)}
-function drawChips(){const cats=D.catalogs.filter(c=>D.items.some(i=>i.catalog===c.id)),favs=FAV.filter(id=>item(id)).length;
- $('chips').innerHTML=cats.length>1||favs?'<div class="chips" role="group" aria-label="Catalogs"><button class="chip" aria-pressed="'+(FILTER==='all')+'" onclick="FILTER=\'all\';drawChips();drawShop()">All</button>'+
+function drawChips(){const cats=D.catalogs.filter(c=>D.items.some(i=>i.catalog===c.id)),favs=FAV.filter(id=>item(id)).length,loved=D.items.some(i=>i.loves>=3);
+ $('chips').innerHTML=cats.length>1||favs||loved?'<div class="chips" role="group" aria-label="Catalogs"><button class="chip" aria-pressed="'+(FILTER==='all')+'" onclick="FILTER=\'all\';drawChips();drawShop()">All</button>'+
+  (loved?'<button class="chip favchip" aria-pressed="'+(FILTER==='loved')+'" onclick="FILTER=\'loved\';drawChips();drawShop()">♥ Most loved</button>':'')+
   (favs?'<button class="chip favchip" aria-pressed="'+(FILTER==='fav')+'" onclick="FILTER=\'fav\';drawChips();drawShop()">♥ Favorites ('+favs+')</button>':'')+
   cats.map(c=>'<button class="chip" style="--c:'+hue(c.id)+'" aria-pressed="'+(FILTER===c.id)+'" onclick="FILTER='+c.id+';drawChips();drawShop()">'+esc(c.name)+'</button>').join('')+'</div>':''}
 function drawShop(){const s=D.settings,cats=D.catalogs.filter(c=>D.items.some(i=>i.catalog===c.id));
  if(!cats.length){$('tools').hidden=true;$('shop').innerHTML='<p class="empty">'+(s.opened?'Stickers are coming soon.':'The shop isn\'t open yet. Check back soon!')+'</p>';return}
  const q=$('q').value.trim();
- if(q||FILTER==='fav'){let list=D.items.filter(i=>FILTER==='all'||(FILTER==='fav'?FAV.includes(i.id):i.catalog===FILTER));list=searchItems(list,q);
-  $('shop').innerHTML=list.length?'<p class="rescount">'+list.length+' sticker'+(list.length===1?'':'s')+(q?' for “'+esc(q)+'”':' you hearted')+'</p><div class="grid">'+list.map(card).join('')+'</div>'
+ if(q||FILTER==='fav'||FILTER==='loved'){let list=D.items.filter(i=>FILTER==='all'||(FILTER==='fav'?FAV.includes(i.id):FILTER==='loved'?i.loves>=3:i.catalog===FILTER));list=searchItems(list,q);if(FILTER==='loved')list=list.slice().sort((a,b)=>(b.loves||0)-(a.loves||0)||a.name.localeCompare(b.name));
+  $('shop').innerHTML=list.length?'<p class="rescount">'+list.length+' sticker'+(list.length===1?'':'s')+(q?' for “'+esc(q)+'”':FILTER==='loved'?' · Most loved stickers':' you hearted')+'</p><div class="grid">'+list.map(card).join('')+'</div>'
    :'<p class="empty">'+(q?'No stickers match “'+esc(q)+'”. Try a character, a song or what it looks like.':'Tap the heart on a sticker to save it here.')+'</p>';return}
  $('shop').innerHTML=cats.filter(c=>FILTER==='all'||FILTER===c.id).map(c=>{const its=D.items.filter(i=>i.catalog===c.id);return '<section class="cat" style="--c:'+hue(c.id)+'"><div class="ch"><h2>'+esc(c.name)+'</h2>'+(c.to_fund?'<span class="fund">♡ class fund</span>':'')+'<span class="n">'+its.length+' sticker'+(its.length===1?'':'s')+'</span>'+
    (D.bundles||[]).filter(b=>b.catalog===c.id).map(b=>'<span class="dealchip">🏷 '+esc(b.name)+'</span>'+(b.kind==='set'&&s.open&&its.some(i=>i.left!==0&&!CART[i.id])?'<button class="setbtn" onclick="addSet('+c.id+')">+ Add the whole set</button>':'')).join('')+(c.blurb?'<p>'+esc(c.blurb)+'</p>':'')+'</div>'+
