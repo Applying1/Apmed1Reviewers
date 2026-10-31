@@ -63,6 +63,7 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
  <p class="note">Each course's study settings (recall goal, flashcards, question order and more) are in that course's <b>Personalize</b> page. <a href="privacy.html">Privacy &amp; terms</a></p>
 </main>
 <script src="daily.js"></script>
+<script src="badges.js"></script>
 <script src="auth.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -85,7 +86,7 @@ function drawLook(){$('theme').innerHTML=seg('theme',[['auto','Device'],['light'
 // Saved as 'reviewer_home' = {layout: auto|compact|full, first, hide: [element ids], order: [tool ids], top: [card ids], courses: [course ids], hideC: [course ids]};
 // the home page reads it in its <head> (HomeLayout) and its Customize mode (homeedit.js) edits the same object.
 const SECTIONS=[['upnext','Next class','The class coming up, with a warm-up quiz before it'],['tests','Tests coming up','Countdowns to exams, evals and quizzes'],['today','Today','Your daily goal, streak and reviews due'],['classnow','Class','The class goal before the next test, who is studying now, a focus timer']];
-const TOOLS=[['gdtool','General discussion'],['qztool','Live quiz'],['cwtool','Daily crossword'],['wdtool','APMed’le'],['sttool','Sort It'],['dutool','Duels'],['atttool','My attendance'],['shoptool','Class shop'],['cdtool','Class day','Only the class secretary sees it'],['modtool','Moderator','Only the site owner sees it']];
+const TOOLS=[['gdtool','General discussion'],['qztool','Live quiz'],['cwtool','Daily crossword'],['wdtool','APMed’le'],['sttool','Sort It'],['dutool','Duels'],['bdtool','Badges'],['atttool','My attendance'],['shoptool','Class shop'],['cdtool','Class day','Only the class secretary sees it'],['modtool','Moderator','Only the site owner sees it']];
 let CRS=null;fetch('courses.json').then(r=>r.json()).then(l=>{CRS=l.map(c=>[c.id,c.title,c.soon?'Not available yet':''])}).catch(()=>{}).then(()=>{if(CRS)drawHome()});
 const HLISTS={order:()=>TOOLS,top:()=>SECTIONS,courses:()=>CRS};
 function homeGet(){let h={};try{h=JSON.parse(get('reviewer_home'))||{}}catch(e){}if(typeof h!=='object'||Array.isArray(h))h={};
@@ -112,7 +113,8 @@ function drawHome(){const h=homeGet(),up='<svg class="i" width="14" height="14" 
 function drawGoal(){if(!window.Daily){$('goal').hidden=true;return}const o=Daily.data(),hid=Daily.hidden();
  $('goal').innerHTML='<h2>Daily goal</h2><p class="d">Answers and cards from every course count. Synced with your account.</p>'+
   '<div class="row"><div class="t"><b>Questions a day</b><span>Meet it every day to build your streak.</span></div><span class="seg" role="radiogroup" aria-label="Daily goal">'+seg('goal',[10,20,30,50,100].map(n=>[n,String(n)]),o.goal,'setGoal')+'</span></div>'+
-  '<div class="row"><div class="t"><b>Show the streak and goal</b><span>On the home page, in courses and as a pop-up when you reach it.</span></div>'+sw(!hid,'Daily.setHidden('+!hid+');drawGoal()','Show the streak and goal')+'</div>'}
+  '<div class="row"><div class="t"><b>Show the streak and goal</b><span>On the home page, in courses and as a pop-up when you reach it.</span></div>'+sw(!hid,'Daily.setHidden('+!hid+');drawGoal()','Show the streak and goal')+'</div>'+
+  (window.Badges?'<div class="row"><div class="t"><b>Badges</b><span>Show badges and pop-ups when you earn one. They still count while off.</span></div>'+sw(!Badges.isOff(),'Badges.setOff('+!Badges.isOff()+');drawGoal()','Show badges')+'</div>':'')}
 function setGoal(n){Daily.setGoal(n);drawGoal()}
 // sounds: the live quiz's music and effects (same switch as in the quiz)
 function drawSnd(){const on=get('reviewer_quiz_mute')!=='1';

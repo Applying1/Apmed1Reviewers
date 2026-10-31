@@ -765,7 +765,7 @@
   "date": "2026-10-31",
   "type": "feature",
   "title": "Arrange your home page",
-  "text": "Tap Customize home under the tiles, then drag the cards, tiles and courses into any order (on a phone: hold, then drag). Tap \u00d7 to hide one; hidden ones wait at the bottom, ready to come back.",
+  "text": "Tap Customize home under the tiles, then drag the cards, tiles and courses into any order (on a phone: hold, then drag). Tap × to hide one; hidden ones wait at the bottom, ready to come back.",
   "link": "index.html"
  },
  {
@@ -791,5 +791,13 @@
   "title": "Duels: challenge a classmate",
   "text": "Pick a course, answer 7 questions, then send the link. Your classmate plays the same questions and you both see who won, question by question. Tap Duels on the home page (sign in first).",
   "link": "duel.html"
+ },
+ {
+  "id": 96,
+  "date": "2026-10-31",
+  "type": "feature",
+  "title": "Badges for good study habits",
+  "text": "Earn badges for practicing, fixing mistakes, streaks and the daily games. Your earlier progress counts too. Tap Badges on the home page.",
+  "link": "badges.html"
  }
 ]

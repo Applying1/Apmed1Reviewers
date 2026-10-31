@@ -20,7 +20,7 @@
         Badges.setOff(bool), Badges.isOff(), Badges.SHOW */
 (function (g) {
   const KEY = 'reviewer_badges', DK = 'reviewer_dev', mem = {};
-  const SHOW = false;   // Sonnet: set true when the badge screen ships (see PLAN.md)
+  const SHOW = true;   // the badge screen (badges.html) shipped Oct 31
   // [id, group, icon (emoji), name, what it takes, counter, need]
   const DEFS = [
     ['first10', 'Practice', '🌱', 'First steps', 'Answer 10 questions', 'answers', 10],
@@ -91,14 +91,27 @@
     if (SHOW && !S.off) fresh.forEach(id => { const b = list().find(x => x.id === id); listeners.forEach(f => { try { f(b) } catch (e) { } }); if (!listeners.length) pop(b) });
     return true;
   }
-  // a plain pop-up until the badge screen brings its own (Badges.onEarn)
+  // the earned-badge card: one at a time (queued), 3.5 s, above the phone tab bar on course pages
+  const queue = []; let showing = false;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   function pop(b) {
     if (typeof document === 'undefined' || !document.body) return;
-    const t = document.createElement('div');
-    t.setAttribute('role', 'status');
-    t.style.cssText = 'position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:95;padding:10px 16px;border-radius:14px;background:var(--text,#222);color:var(--bg,#fff);font:600 14px/1.3 system-ui,sans-serif;box-shadow:0 10px 30px #0004;max-width:calc(100vw - 32px);text-align:center';
-    t.textContent = b.icon + ' New badge: ' + b.name;
-    document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+    queue.push(b); if (!showing) next();
+  }
+  function next() {
+    const b = queue.shift(); if (!b) { showing = false; return }
+    showing = true;
+    if (!document.getElementById('bdpopcss')) {
+      const st = document.createElement('style'); st.id = 'bdpopcss';
+      st.textContent = '.bdpop{position:fixed;left:50%;bottom:calc(var(--tbh,0px) + 16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:95;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 12px;border-radius:16px;background:var(--surface,#fff);color:var(--text,#222);border:1px solid var(--accent-line,#c7c3f3);box-shadow:0 10px 30px #0004;font:600 14px/1.3 system-ui,sans-serif;max-width:calc(100vw - 32px);animation:bdin .3s ease}'
+        + '.bdpop .e{font-size:30px;line-height:1}.bdpop small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--accent,#4f46e5)}.bdpop a{display:block;margin-top:2px;font-size:12.5px;font-weight:600;color:var(--accent,#4f46e5)}'
+        + '@keyframes bdin{from{opacity:0;transform:translate(-50%,12px)}}@media (prefers-reduced-motion:reduce){.bdpop{animation:none}}';
+      document.head.appendChild(st);
+    }
+    const t = document.createElement('div'); t.className = 'bdpop'; t.setAttribute('role', 'status');
+    t.innerHTML = '<span class="e" aria-hidden="true">' + b.icon + '</span><span><small>New badge</small>' + esc(b.name) + '<a href="badges.html">See your badges</a></span>';
+    document.body.appendChild(t);
+    setTimeout(() => { t.remove(); next() }, 3500);
   }
   function add(c, n) {
     if (!EVENTS.includes(c) || !(n > 0)) return;

@@ -335,6 +335,7 @@ html.introing body{overflow:hidden}
  <a class="tool" id="wdtool" href="apmeddle.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-letters"/></svg></span><span><b>APMed'le</b><span id="wdsub">Guess the term of the day</span></span></a>
  <a class="tool" id="sttool" href="sortit.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-list"/></svg></span><span><b>Sort It</b><span id="stsub">Put today's terms in their groups</span></span></a>
  <a class="tool" id="dutool" href="duel.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-trophy"/></svg></span><span><b>Duels</b><span id="dusub">Challenge a classmate to 7 questions</span></span></a>
+ <a class="tool" id="bdtool" href="badges.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crown"/></svg></span><span><b>Badges</b><span id="bdsub">Earn badges for good study habits</span></span></a>
  <a class="tool" id="atttool" href="attendance.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span><span><b>My attendance</b><span id="attsub">From the class tracker</span></span></a>
  <a class="tool locked" id="shoptool" aria-disabled="true" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b id="shopname">Coming soon</b><span id="shopsub">Stay tuned</span></span></a>
  <a class="tool" id="cdtool" href="classday.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span><span><b>Class day</b><span>Post today's summary, answer questions (only you see this)</span></span></a>
@@ -528,6 +529,15 @@ function shiftDay(d,n){const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDat
  const turn=list.filter(d=>d.me&&!d[d.me].done).length,done=list.filter(d=>d.me&&d.a.res!=null&&d.b&&d.b.res!=null&&d.a.done&&d.b.done).length;
  if(turn){sub.textContent=turn+(turn>1?' duels are':' duel is')+' waiting for you';t.classList.add('due')}
  else if(list.length)sub.textContent=done+' finished · start a new one';
+}catch(e){}})();
+// Badges tile (badges.html): "7 of 26 badges" + new ones; hidden when badges are off in Settings
+(function(){try{
+ if(!window.Badges||Badges.isOff())return;
+ const t=document.getElementById('bdtool'),sub=document.getElementById('bdsub');
+ const draw=()=>{if(Badges.isOff()){t.hidden=true;return}
+  const l=Badges.list(),n=l.filter(b=>b.got).length,u=Badges.unseen();
+  sub.textContent=n+' of '+l.length+' badges'+(u?' · '+u+' new':'');t.classList.toggle('due',!!u);t.hidden=false};
+ draw();Badges.check().then(draw).catch(()=>{});Badges.onEarn(()=>setTimeout(draw,50));
 }catch(e){}})();
 // Sort It tile: only on days with a set; "Sorted ✓" once done, "New" until the page is opened once
 (async function(){try{
