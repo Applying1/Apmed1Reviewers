@@ -253,6 +253,16 @@ body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px)
 .intro mark.pesos{background:color-mix(in srgb,var(--pink) 22%,transparent);color:inherit;font-weight:700;border-radius:8px;padding:0 6px}
 .hero .row2{margin-top:16px}
 .count{font:700 13px/1.6 var(--sans);padding:4px 11px;border-radius:99px;background:color-mix(in srgb,var(--sky) 55%,var(--surface));color:var(--ink2)}
+/* ---- v6 (Oct 31): deals and "tell me when it's back" ---- */
+.dealchip{display:inline-flex;align-items:center;gap:6px;font:600 13px/1.6 var(--sans);padding:4px 11px;border-radius:99px;background:color-mix(in srgb,#ffd27a 40%,var(--surface));color:var(--ink2)}
+.cat .ch .dealchip{font-size:12.5px;padding:2px 10px}
+.setbtn{border:0;background:none;color:var(--accent);font:600 13.5px var(--sans);padding:2px 4px}
+.bell{margin-top:auto;border:2px dashed color-mix(in srgb,var(--c,var(--sky)) 70%,transparent);background:none;color:var(--ink2);border-radius:99px;padding:6px 8px;font:500 14px Fredoka,var(--sans)}
+.bell[aria-pressed="true"]{border-style:solid;background:color-mix(in srgb,var(--c,var(--sky)) 25%,var(--surface))}
+#shop.v-list .bell{grid-area:a;margin:0;min-width:128px}#shop.v-small .bell{font-size:12px;padding:4px}
+.dline{display:flex;justify-content:space-between;font-size:14px;color:var(--good);font-weight:600;padding:2px 0}
+.dline.sub{color:var(--mute);font-weight:500}
+.dhint{margin:8px 0 0;padding:8px 12px;border-radius:12px;background:color-mix(in srgb,#ffd27a 30%,var(--surface));font-size:13.5px;color:var(--ink2)}
 .testtag{margin:0 0 12px;display:inline-block;padding:5px 12px;border-radius:99px;background:color-mix(in srgb,var(--pink) 14%,var(--surface));font-size:12.5px;color:var(--mute)}.testtag b{color:var(--ink2);margin-right:4px}
 </style></head><body>
 <main>
@@ -268,6 +278,8 @@ body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px)
 </main>
 <div class="bar" id="bar" hidden><div class="in"><div class="tot" id="tot"></div><button class="btn primary" onclick="review()">Review order</button></div></div>
 <script src="auth.js"></script>
+<script src="notify-core.js"></script>
+<script src="push-client.js"></script>
 <script>
 /* The class sticker shop (supabase_shop.sql). Anyone can browse; ordering needs Google sign-in. Prices, stock and the
    class-fund share are checked by the server; the cart stays on this device (localStorage 'reviewer_shop_cart').
@@ -296,7 +308,41 @@ function renderIntro(txt){const lines=String(txt||'').replace(/\r/g,'').split('\
  const flush=()=>{if(para.length)out+='<p>'+para.map(hi).join('<br>')+'</p>';para=[]};
  for(let i=first+1;i<lines.length;i++){if(lines[i])para.push(lines[i]);else flush()}flush();
  return out+(sig?'<p class="sig">— '+esc(sig)+'</p>':'')}
-let D=null,CART={},FILTER='all',ORDERS=null,FAV=[],VIEW='grid',CV='sum';
+let D=null,CART={},FILTER='all',ORDERS=null,FAV=[],VIEW='grid',CV='sum',WAIT=[];
+/* Deals: the same rule as shop_deals() in supabase_shop_deals.sql, so the cart shows what the server will charge (the
+   server's total is the one that counts). Apply the deal that saves the most (ties: the seller's order), each time using
+   the dearest stickers that fit; repeat until no deal saves anything. */
+function dealsFor(L){const B=(D&&D.bundles)||[],u=[],got={};let disc=0;
+ L.forEach(x=>{for(let k=0;k<x.q;k++)u.push({i:x.it.id,c:x.it.catalog,p:x.it.price})});
+ u.sort((a,b)=>b.p-a.p||a.i-b.i);const used=u.map(()=>false);
+ for(let g=0;g<u.length;g++){let best=null,bs=0,bb=null;
+  for(const b of B){const pick=[];
+   if(b.kind==='any'){for(let k=0;k<u.length&&pick.length<b.qty;k++)if(!used[k]&&(b.catalog==null||u[k].c===b.catalog))pick.push(k);if(pick.length<b.qty)continue}
+   else{const req=D.items.filter(i=>i.catalog===b.catalog).map(i=>i.id).sort((a,c)=>a-c);if(req.length<2)continue;
+    for(const r of req){const k=u.findIndex((x,j)=>!used[j]&&x.i===r);if(k<0)break;pick.push(k)}if(pick.length<req.length)continue}
+   const s=pick.reduce((a,k)=>a+u[k].p,0)-b.price;if(s>bs){bs=s;best=pick;bb=b}}
+  if(!best)break;best.forEach(k=>used[k]=true);disc+=bs;const d=got[bb.id]||(got[bb.id]={id:bb.id,name:bb.name,n:0,save:0});d.n++;d.save+=bs}
+ return {disc,deals:Object.values(got).sort((a,b)=>a.id-b.id)}}
+const catOf=id=>(D.catalogs.find(c=>c.id===id)||{}).name||'';
+/* a nudge toward the nearest deal: "Add 2 more ... to get Any 5 for ₱20" */
+function dealHint(L){for(const b of (D.bundles||[])){
+  if(b.kind==='any'){const n=L.filter(x=>b.catalog==null||x.it.catalog===b.catalog).reduce((a,x)=>a+x.q,0),need=b.qty-n%b.qty;
+   if(n&&need<b.qty&&need<=3)return 'Add '+need+' more'+(b.catalog==null?'':' from '+catOf(b.catalog))+' to get “'+b.name+'”.'}
+  else{const its=D.items.filter(i=>i.catalog===b.catalog),miss=its.filter(i=>!CART[i.id]);
+   if(its.length>=2&&miss.length&&miss.length<its.length&&miss.length<=2&&miss.every(i=>i.left!==0))return 'Add '+miss.map(i=>i.name).join(' and ')+' to complete “'+b.name+'”.'}}
+ return ''}
+function addSet(cat){D.items.filter(i=>i.catalog===cat&&i.left!==0&&!CART[i.id]).forEach(i=>CART[i.id]=1);saveCart();drawShop();drawBar()}
+/* "Tell me when it's back" on a sold-out sticker (shop_wait): the seller restocking it sends one push to this account's
+   devices that have alerts on; the wait is then forgotten. */
+async function toggleWait(id){
+ if(!Auth.ses()){if(await ask('Sign in for the alert','Sign in with Google, then tap the bell again. We\'ll send you a notification when this sticker is back.',{ok:'Sign in',cancel:'Not now',danger:false}))location.href='./?signin=1';return}
+ const on=!WAIT.includes(id);
+ try{await Auth.rpc('shop_wait',{p_item:id,p_on:on},true)}
+ catch(e){await ask("Couldn't save it",/slow/.test(e.message)?'Too many taps. Wait a minute.':e.message||'Check your connection and try again.',{ok:'OK',cancel:null,danger:false});
+  if(/in stock|no longer/.test(e.message||''))try{await load();drawShop();drawBar()}catch(x){}return}
+ WAIT=on?WAIT.concat(id):WAIT.filter(x=>x!==id);const it=item(id),c=document.querySelector('.it[data-id="'+id+'"]');if(c&&it)c.outerHTML=card(it);
+ if(on&&window.Push&&Push.supported()&&!Push.attOn()&&await ask('Get it on this device?','Allow notifications so the alert reaches this phone or computer. You\'ll also get updates on your orders.',{ok:'Allow alerts',cancel:'Not now',danger:false}))
+  try{await Push.attSet(true)}catch(e){await ask('Notifications are off',e.message==='blocked'?'Notifications are blocked for this site in your browser settings.':'Couldn\'t turn them on here. Your order updates still show on My orders.',{ok:'OK',cancel:null,danger:false})}}
 try{const v=localStorage.getItem('reviewer_shop_view');if(v==='list'||v==='grid'||v==='small')VIEW=v}catch(e){}
 function setView(v){VIEW=v;try{localStorage.setItem('reviewer_shop_view',v)}catch(e){}applyView()}
 function applyView(){const s=$('shop');s.classList.remove('v-list','v-grid','v-small');s.classList.add('v-'+VIEW);for(const k of ['list','grid','small'])$('v-'+k).setAttribute('aria-pressed',VIEW===k)}
@@ -346,8 +392,8 @@ function tab(t){for(const k of ['shop','cart','orders']){$('t-'+k).setAttribute(
  if(D&&!(D.soon&&!D.manager))$('tools').hidden=t!=='shop';
  history.replaceState(null,'',t==='shop'?'#':'#'+t);drawBar();if(t==='orders')return loadOrders();if(t==='cart'){CS='manage';drawReview()}}
 function cartLines(){return Object.entries(CART).map(([id,q])=>({it:item(id),q})).filter(x=>x.it&&x.q>0)}
-function drawBar(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0);
- $('bar').hidden=!n||$('shop').hidden;$('tot').innerHTML=n+' sticker'+(n===1?'':'s')+'<b>'+peso(t)+'</b>';
+function drawBar(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),dl=dealsFor(L),t=L.reduce((a,x)=>a+x.q*x.it.price,0)-dl.disc;
+ $('bar').hidden=!n||$('shop').hidden;$('tot').innerHTML=n+' sticker'+(n===1?'':'s')+(dl.disc?' · deal −'+peso(dl.disc):'')+'<b>'+peso(t)+'</b>';
  $('cartn').textContent=n;$('cartbtn').classList.toggle('has',n>0);$('t-cart').textContent='Cart'+(n?' ('+n+')':'')}
 function maxFor(it){const m=D.settings.max_qty||50;return it.left==null?m:Math.min(m,it.left)}
 function setQty(id,q){const it=item(id);if(!it)return;q=Math.max(0,Math.min(maxFor(it),q));if(q)CART[id]=q;else delete CART[id];saveCart();
@@ -361,7 +407,7 @@ const hue=c=>HUES[Math.max(0,D.catalogs.findIndex(x=>x.id===c))%HUES.length],til
 function card(it){const q=CART[it.id]||0,open=D.settings.open,out=it.left===0,fav=FAV.includes(it.id);
  return '<div class="it'+(q?' inc':'')+'" data-id="'+it.id+'" style="--r:'+tilt(it.id)+'deg;--c:'+hue(it.catalog)+'"><button class="pic" onclick="zoom('+it.id+')" aria-label="See '+esc(it.name)+' bigger">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="" loading="lazy">':'<span class="none">No photo</span>')+(out?'<span class="sold">Sold out</span>':'')+'</button>'+
   '<div class="ib"><div class="top"><b>'+esc(it.name)+'</b>'+'<button class="fav" aria-pressed="'+fav+'" onclick="toggleFav('+it.id+')" aria-label="'+(fav?'Remove '+esc(it.name)+' from favorites':'Add '+esc(it.name)+' to favorites')+'">'+HEART+'</button>'+'</div><div class="pr"><span>'+peso(it.price)+'</span><span>'+(it.left==null?'':out?'':it.left+' left')+'</span></div>'+
-  (!open||out?'':q?'<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>'
+  (out?'<button class="bell" aria-pressed="'+WAIT.includes(it.id)+'" onclick="toggleWait('+it.id+')">'+(WAIT.includes(it.id)?'✓ We\'ll tell you':'🔔 Tell me when it\'s back')+'</button>':!open?'':q?'<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>'
    :'<button class="add" onclick="setQty('+it.id+',1)">+ Add</button>')+'</div></div>'}
 /* search: names, catalog names and the seller's hidden tags; forgives plurals and a typo or two */
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
@@ -385,7 +431,8 @@ function drawShop(){const s=D.settings,cats=D.catalogs.filter(c=>D.items.some(i=
  if(q||FILTER==='fav'){let list=D.items.filter(i=>FILTER==='all'||(FILTER==='fav'?FAV.includes(i.id):i.catalog===FILTER));list=searchItems(list,q);
   $('shop').innerHTML=list.length?'<p class="rescount">'+list.length+' sticker'+(list.length===1?'':'s')+(q?' for “'+esc(q)+'”':' you hearted')+'</p><div class="grid">'+list.map(card).join('')+'</div>'
    :'<p class="empty">'+(q?'No stickers match “'+esc(q)+'”. Try a character, a song or what it looks like.':'Tap the heart on a sticker to save it here.')+'</p>';return}
- $('shop').innerHTML=cats.filter(c=>FILTER==='all'||FILTER===c.id).map(c=>{const its=D.items.filter(i=>i.catalog===c.id);return '<section class="cat" style="--c:'+hue(c.id)+'"><div class="ch"><h2>'+esc(c.name)+'</h2>'+(c.to_fund?'<span class="fund">♡ class fund</span>':'')+'<span class="n">'+its.length+' sticker'+(its.length===1?'':'s')+'</span>'+(c.blurb?'<p>'+esc(c.blurb)+'</p>':'')+'</div>'+
+ $('shop').innerHTML=cats.filter(c=>FILTER==='all'||FILTER===c.id).map(c=>{const its=D.items.filter(i=>i.catalog===c.id);return '<section class="cat" style="--c:'+hue(c.id)+'"><div class="ch"><h2>'+esc(c.name)+'</h2>'+(c.to_fund?'<span class="fund">♡ class fund</span>':'')+'<span class="n">'+its.length+' sticker'+(its.length===1?'':'s')+'</span>'+
+   (D.bundles||[]).filter(b=>b.catalog===c.id).map(b=>'<span class="dealchip">🏷 '+esc(b.name)+'</span>'+(b.kind==='set'&&s.open&&its.some(i=>i.left!==0&&!CART[i.id])?'<button class="setbtn" onclick="addSet('+c.id+')">+ Add the whole set</button>':'')).join('')+(c.blurb?'<p>'+esc(c.blurb)+'</p>':'')+'</div>'+
    '<div class="grid">'+its.map(card).join('')+'</div></section>'}).join('')}
 function zoom(id){const it=item(id);if(!it||!it.image)return;const z=document.createElement('div');z.className='zoom';z.innerHTML='<img src="'+esc(img(it.image))+'" alt=""><b>'+esc(it.name)+' · '+peso(it.price)+'</b>';z.onclick=()=>z.remove();document.body.appendChild(z)}
 function review(){tab('cart')}
@@ -398,6 +445,10 @@ function favPanel(){const open=D.settings.open,L=FAV.map(item).filter(Boolean);
   (!open||out?'':q?'<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>':'<button class="btn mini" onclick="setQty('+it.id+',1)">+ Add</button>')+
   '<button class="fav sm" aria-pressed="true" onclick="toggleFav('+it.id+')" aria-label="Remove from favorites">'+HEART+'</button></div>'}).join('')+'</div>'}
 const TRASH='<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zM6 9h12l-1 11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 9zm4 2v8h2v-8h-2zm4 0v8h2v-8h-2z"/></svg>';
+/* the subtotal and each deal used, above the total (nothing when no deal applies) */
+function dealLines(L){const dl=dealsFor(L);if(!dl.disc)return '';
+ return '<div class="dline sub"><span>Stickers</span><span>'+peso(L.reduce((a,x)=>a+x.q*x.it.price,0))+'</span></div>'+
+  dl.deals.map(d=>'<div class="dline"><span>🏷 '+esc(d.name)+(d.n>1?' ×'+d.n:'')+'</span><span>−'+peso(d.save)+'</span></div>').join('')}
 /* step 1: manage the cart (grouped by catalog, quantity, remove); step 2: checkout after Continue */
 function manageView(L,t,n){
  const groups=D.catalogs.map(c=>({c,rows:L.filter(x=>x.it.catalog===c.id)})).filter(g=>g.rows.length);
@@ -405,13 +456,14 @@ function manageView(L,t,n){
   g.rows.map(({it,q})=>'<div class="citem"><div class="cimg">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'</div><div class="cinfo"><b>'+esc(it.name)+'</b><span class="cp">'+peso(it.price)+(q>1?' × '+q+' = '+peso(it.price*q):'')+'</span>'+
    '<div class="cact"><div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>'+
    '<button class="trash" onclick="setQty('+it.id+',0)" aria-label="Remove '+esc(it.name)+' from the cart">'+TRASH+'</button></div></div></div>').join('')).join('')+
-  '<div class="cfoot"><div class="sum"><span>'+n+' sticker'+(n===1?'':'s')+'</span><span>'+peso(t)+'</span></div>'+
+  '<div class="cfoot">'+dealLines(L)+'<div class="sum"><span>'+n+' sticker'+(n===1?'':'s')+'</span><span>'+peso(t)+'</span></div>'+
+  (dealHint(L)?'<p class="dhint">🏷 '+esc(dealHint(L))+'</p>':'')+
   '<button class="btn primary big" id="cont" onclick="setCS(\'checkout\')">Continue '+peso(t)+'</button>'+
   '<div class="cmore"><button class="linkbtn" onclick="tab(\'shop\')">+ Add more stickers</button><button class="linkbtn" onclick="clearCart()">Clear cart</button></div></div></div>'}
 function checkoutView(L,t,n,keep,nmv,ct){
  const s=D.settings,PL=s.places||[],signed=!!Auth.ses();
  return '<div class="cpanel"><button class="linkbtn" onclick="setCS(\'manage\')">← Back to cart</button>'+
-  '<div class="sum" style="padding:8px 0 0"><span>'+n+' sticker'+(n===1?'':'s')+'</span><span>'+peso(t)+'</span></div>'+
+  '<div style="padding-top:8px">'+dealLines(L)+'</div><div class="sum" style="padding:4px 0 0"><span>'+n+' sticker'+(n===1?'':'s')+'</span><span>'+peso(t)+'</span></div>'+
   (s.pay_note?'<div class="note"><b>How to pay</b>'+esc(s.pay_note)+'</div>':'')+(s.pickup_note?'<div class="note"><b>Pickup</b>'+esc(s.pickup_note)+'</div>':'')+
   (!signed?'<p class="msg">Sign in with Google to order, so the seller knows who it\'s from.</p><a class="btn primary" style="width:100%;margin-top:10px" href="./?signin=1">Sign in with Google</a>':
    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f">First name<input id="cfirst" maxlength="40" autocomplete="given-name" value="'+esc(keep?keep.f:(nmv.f||''))+'"></label>'+
@@ -422,7 +474,7 @@ function checkoutView(L,t,n,keep,nmv,ct){
    (PM==='gcash'?'<label class="f">GCash reference number (if you already paid)<input id="cref" maxlength="30" inputmode="numeric" value="'+esc(keep?keep.r:'')+'"></label>':'<p class="msg" style="margin-top:8px">Pay the seller '+peso(t)+' in cash when you pick up your stickers.</p>')+
    '<label class="f">Note for the seller (optional)<textarea id="cnote" maxlength="500">'+esc(keep?keep.n:'')+'</textarea></label>'+
    '<p class="msg" id="omsg"></p><button class="btn primary big" id="place" style="margin-top:12px" onclick="place()">Place order · '+peso(t)+'</button>')+'</div>'}
-function drawReview(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0),favN=FAV.filter(id=>item(id)).length;let ct='',nmv={};try{ct=localStorage.getItem(CT)||'';nmv=JSON.parse(localStorage.getItem(CN)||'{}')||{}}catch(e){}
+function drawReview(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0)-dealsFor(L).disc,favN=FAV.filter(id=>item(id)).length;let ct='',nmv={};try{ct=localStorage.getItem(CT)||'';nmv=JSON.parse(localStorage.getItem(CN)||'{}')||{}}catch(e){}
  const keep=$('ccontact')?{c:$('ccontact').value,n:$('cnote').value,r:$('cref')?$('cref').value:'',f:$('cfirst').value,l:$('clast').value,s:$('cschool').value}:null;
  if(!L.length)CS='manage';
  let h='<h2 class="ctitle">Your Cart</h2><span class="seg wide" role="group" aria-label="Cart sections"><button aria-pressed="'+(CV==='sum')+'" onclick="setCV(\'sum\')">Order Summary'+(n?' ('+n+')':'')+'</button><button aria-pressed="'+(CV==='fav')+'" onclick="setCV(\'fav\')">Favorites'+(favN?' ('+favN+')':'')+'</button></span>';
@@ -447,7 +499,7 @@ async function loadOrders(){const el=$('orders');
  if(!ORDERS){el.innerHTML='<p class="empty">Loading…</p>';try{ORDERS=await Auth.rpc('shop_my_orders',{},true)||[]}catch(e){el.innerHTML='<p class="empty">Couldn\'t load your orders. Check your connection.</p>';return}}
  const LBL={placed:'Waiting for the seller',paid:'Paid',ready:'Ready for pickup',done:'Picked up',cancelled:'Cancelled'};
  el.innerHTML=ORDERS.length?ORDERS.map(o=>'<div class="ord"><div class="h"><b>Order #'+o.id+'</b><span class="st '+esc(o.status)+'">'+esc(LBL[o.status]||o.status)+'</span><span>'+(o.method==='cash'?'Cash':'GCash')+' · '+new Date(o.at).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span></div>'+
-  '<ul>'+(o.items||[]).map(x=>'<li>'+x.qty+' × '+esc(x.name)+'</li>').join('')+'</ul><div class="h"><b>'+peso(o.total)+'</b>'+(o.seller_note?'<span>Seller: '+esc(o.seller_note)+'</span>':'')+'</div>'+payBox(o)+
+  '<ul>'+(o.items||[]).map(x=>'<li>'+x.qty+' × '+esc(x.name)+'</li>').join('')+'</ul><div class="h"><b>'+peso(o.total)+'</b>'+(o.discount?'<span>🏷 '+esc((o.deals||[]).map(d=>d.name+(d.n>1?' ×'+d.n:'')).join(', ')||'Deal')+' −'+peso(o.discount)+'</span>':'')+(o.seller_note?'<span>Seller: '+esc(o.seller_note)+'</span>':'')+'</div>'+payBox(o)+
   (o.status==='placed'?'<button class="btn" style="margin-top:10px;padding:7px 12px;font-size:13.5px" onclick="cancelOrder('+o.id+')">Cancel this order</button>':'')+'</div>').join(''):'<p class="empty">No orders yet.</p>'}
 /* what the buyer still has to do: the amount and the seller's GCash details, and a place to type the reference number after paying */
 const PHONE=/(?:\+?63|0)\s?9\d{2}[\s-]?\d{3}[\s-]?\d{4}/;
@@ -465,12 +517,13 @@ async function sendRef(id){const i=$('ref'+id),m=$('rm'+id),v=i.value.replace(/\
  m.className='msg';m.textContent='Sending…';
  try{await Auth.rpc('shop_order_ref',{p_id:id,p_ref:v},true);ORDERS=null;await loadOrders()}catch(e){m.className='msg bad';m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t send it. Check your connection.'}}
 async function cancelOrder(id){if(!await ask('Cancel order #'+id+'?','The seller will see it as cancelled. You can place a new order anytime.',{ok:'Yes, cancel it'}))return;try{await Auth.rpc('shop_cancel',{p_id:id},true)}catch(e){await ask("Couldn't cancel",e.message||'Check your connection and try again.',{ok:'OK',cancel:null,danger:false})}ORDERS=null;await load();drawChips();drawShop();loadOrders()}
-async function load(){D=await Auth.rpc('shop_catalog',{},!!Auth.ses());
+async function load(){D=await Auth.rpc('shop_catalog',{},!!Auth.ses());WAIT=Array.isArray(D.waits)?D.waits:[];
  for(const id of Object.keys(CART)){const it=item(id);if(!it||it.left===0)delete CART[id];else if(CART[id]>maxFor(it))CART[id]=maxFor(it)}saveCart()}
 (async function(){
  try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
  if(!Auth.cloud){$('shop').innerHTML='<p class="empty">The shop needs the online features, which aren\'t set up here.</p>';return}
  if(Auth.ses())await Auth.token();
+ try{Push.init(Auth.cloud)}catch(e){}
  try{await load()}catch(e){$('shop').innerHTML='<p class="empty">Couldn\'t load the shop. Check your connection and try again.</p>';return}
  if(D.soon&&!D.manager){$('state').hidden=false;$('state').textContent='Coming soon';document.querySelector('.tabs').hidden=true;
   $('shop').innerHTML='<p class="empty">Something new is coming soon. Stay tuned!</p>';return}
@@ -480,6 +533,7 @@ async function load(){D=await Auth.rpc('shop_catalog',{},!!Auth.ses());
  $('state').textContent=s.open?(dl?'Open · orders close '+dl.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Open for orders'):(s.opened?'Orders closed':'Not open yet');
  {const nc=D.catalogs.filter(c=>D.items.some(i=>i.catalog===c.id)).length;if(D.items.length){$('countnote').hidden=false;$('countnote').textContent=D.items.length+' sticker'+(D.items.length===1?'':'s')+(nc>1?' · '+nc+' catalogs':'')}}
  const fc=D.catalogs.filter(c=>c.to_fund&&D.items.some(i=>i.catalog===c.id));if(fc.length){$('fundnote').hidden=false;$('fundnote').textContent='♡ '+fc.map(c=>c.name).join(' & ')+' help the APMed \'33 class fund'}
+ (D.bundles||[]).filter(b=>b.catalog==null).forEach(b=>$('fundnote').insertAdjacentHTML('afterend','<span class="dealchip">🏷 '+esc(b.name)+'</span>'));
  $('mgr').hidden=!D.manager;$('tools').hidden=false;applyView();drawChips();drawShop();drawBar();if(location.hash==='#orders')tab('orders');else if(location.hash==='#cart')tab('cart');
  pullFavs().then(ch=>{if(ch){drawChips();drawShop();if(!$('cart').hidden)drawReview()}});   /* hearts from your other devices */
 })();
