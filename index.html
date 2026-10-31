@@ -7,7 +7,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
 <script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script><script>(function(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const f=()=>{if(document.body)m.content=getComputedStyle(document.body).backgroundColor},g=()=>{f();setTimeout(f,350)};addEventListener('DOMContentLoaded',f);new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',g)})()</script>
 <link rel="stylesheet" href="ui.css">
-<script>/* home layout (Settings → Home page, this device): hidden tiles, tile order, compact tiles, courses first */try{const h=JSON.parse(localStorage.getItem('reviewer_home'))||{},ok=x=>/^[a-z]+$/.test(x);let c='';(h.hide||[]).filter(ok).forEach(id=>{c+='#'+id+'{display:none!important}'});(h.order||[]).filter(ok).forEach((id,i)=>{c+='#'+id+'{order:'+i+'}'});if(c){const s=document.createElement('style');s.textContent=c;document.head.appendChild(s)}document.documentElement.dataset.home=['compact','full'].includes(h.layout)?h.layout:'auto';if(h.first)document.documentElement.dataset.first='1'}catch(e){}</script>
+<script>/* home layout (this device): hidden cards, tiles and courses, their order, compact tiles, courses first.
+ Edited in Settings → Home page and by Customize on this page (homeedit.js). Works without storage (kept in memory). */
+window.HomeLayout=(function(){const K='reviewer_home',TOP=['upnext','tests','today'],ok=x=>/^[a-z]+$/.test(x),okc=x=>/^[a-z0-9_-]+$/.test(x);let mem=null;
+ const norm=h=>{if(!h||typeof h!=='object'||Array.isArray(h))h={};['hide','order','top','courses','hideC'].forEach(k=>{h[k]=Array.isArray(h[k])?h[k].filter(x=>typeof x==='string'):[]});return h};
+ function get(){if(mem)return norm(JSON.parse(JSON.stringify(mem)));let h=null;try{h=JSON.parse(localStorage.getItem(K))}catch(e){}return norm(h)}
+ function css(h){let c='';h.hide.filter(ok).forEach(id=>{c+='#'+id+'{display:none!important}'});if(h.hide.includes('upnext'))c+='#prevq{display:none!important}';
+  h.order.filter(ok).forEach((id,i)=>{c+='#'+id+'{order:'+i+'}'});h.hideC.filter(okc).forEach(id=>{c+='#list>[data-c="'+id+'"]{display:none!important}'});return c}
+ function apply(h){h=h||get();let s=document.getElementById('homecss');if(!s){s=document.createElement('style');s.id='homecss';document.head.appendChild(s)}s.textContent=css(h);
+  const d=document.documentElement;d.dataset.home=['compact','full'].includes(h.layout)?h.layout:'auto';if(h.first)d.dataset.first='1';else delete d.dataset.first}
+ function put(h){const o={};for(const k in h)if(h[k]!=null&&!(Array.isArray(h[k])&&!h[k].length))o[k]=h[k];
+  try{if(Object.keys(o).length)localStorage.setItem(K,JSON.stringify(o));else localStorage.removeItem(K);mem=null}catch(e){mem=o}apply(norm(o))}
+ const topOrder=h=>{const t=h.top.filter((x,i,a)=>TOP.includes(x)&&a.indexOf(x)===i);return t.concat(TOP.filter(x=>!t.includes(x)))};
+ // put the top cards, the tiles and the course list in the saved order (the tiles' CSS order says the same, so nothing jumps)
+ function place(h){h=h||get();const n=document.querySelector('nav.tools'),l=document.getElementById('list');if(!n||!l)return;const p=n.parentNode,mv=document.getElementById('move'),pq=document.getElementById('prevq');
+  if(h.first)p.insertBefore(l,n);else if(mv)mv.after(l);
+  const a=h.first?l:n;topOrder(h).forEach(id=>{const e=document.getElementById(id);if(e)p.insertBefore(e,a);if(id==='upnext'&&pq)p.insertBefore(pq,a)});
+  const cu=n.querySelector('.cust');h.order.forEach(id=>{const e=document.getElementById(id);if(e&&e.parentNode===n)n.insertBefore(e,cu)})}
+ function sortCourses(list){const o=get().courses,rk=c=>{const i=o.indexOf(c.id);return i<0?1e3+list.indexOf(c):i};return list.slice().sort((a,b)=>rk(a)-rk(b))}
+ try{apply()}catch(e){}return {TOP,get,put,apply,place,sortCourses}})();</script>
 <style>
 /* APMed '33 palette (chosen in a course's Personalize → Appearance) */
 *{box-sizing:border-box}
@@ -175,6 +193,34 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 :root[data-home="compact"] .tool .new{display:none}
 @media (max-width:640px){:root[data-home="auto"] .tools{grid-template-columns:1fr 1fr;gap:8px}:root[data-home="auto"] .tool{padding:9px 10px;gap:9px;border-radius:12px}:root[data-home="auto"] .tool .tic{width:30px;height:30px;border-radius:9px}:root[data-home="auto"] .tool .tic .i{width:15px;height:15px}:root[data-home="auto"] .tool b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root[data-home="auto"] .tool span span,:root[data-home="auto"] #gdsub{display:block!important;white-space:nowrap!important;font-size:12px}:root[data-home="auto"] .tool .new{display:none}}
 .tools .cust{grid-column:1/-1;order:99;justify-self:end;font-size:12.5px;font-weight:600;color:var(--mute);text-decoration:none;padding:2px 4px}.tools .cust:hover{color:var(--accent)}
+/* Customize home (homeedit.js): dashed items, a grip on top, × to hide, the bar at the bottom of the screen */
+.hediting .hed{position:relative;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;outline:2px dashed var(--accent-line);outline-offset:3px}
+.hediting .hed:focus-visible{outline:2px solid var(--accent)}.hediting .hed *{-webkit-user-drag:none}
+.hediting nav.tools>.tool{order:0!important}.tool.hed>span+span:not(.hg){min-width:0}.hediting nav.tools>.cust{display:none}
+.hediting .tool.hed:hover,.hediting .course.hed:hover{transform:none}
+.hed .hx{position:absolute;top:-11px;right:-11px;z-index:3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--line2);background:var(--surface);color:var(--text);box-shadow:var(--shadow);cursor:pointer}
+.hed .hx:hover{color:var(--bad,#c0392b);border-color:currentColor}
+.hed .hg{position:absolute;top:-10px;left:50%;z-index:3;transform:translateX(-50%);display:grid;place-items:center;width:38px;height:20px;border-radius:99px;border:1px solid var(--line2);background:var(--surface);color:var(--mute);box-shadow:var(--shadow);touch-action:none;cursor:grab}
+.hed .hg svg{transform:rotate(90deg)}
+.course.hed .hx{top:7px;right:7px}.course.hed .hg{top:7px}
+.hed.hph{opacity:.3}.hed.hhold{transform:scale(.97);transition:transform .25s}
+.hghost{position:fixed!important;left:0!important;top:0!important;margin:0!important;z-index:60;pointer-events:none;outline:0!important;scale:1.03;rotate:1deg;box-shadow:0 16px 36px #0000003a!important;opacity:.97}
+.hdragging,.hdragging *{cursor:grabbing!important}
+.hed.hnew{animation:hnew .9s ease}@keyframes hnew{0%{box-shadow:0 0 0 6px var(--accent-line)}100%{box-shadow:0 0 0 0 transparent}}
+.hbar{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:50;width:min(640px,calc(100% - 24px));box-sizing:border-box;display:flex;flex-direction:column;gap:10px;padding:12px 14px max(12px,env(safe-area-inset-bottom));border-radius:18px;background:var(--surface);border:1px solid var(--line2);box-shadow:0 12px 36px #00000038}
+.hb1{display:flex;align-items:center;gap:12px}.hb1 .ht{flex:1;min-width:0}.hb1 b{display:block;font-size:15px}.hb1 .ht span{display:block;font-size:12.5px;color:var(--mute)}.hb1 .btn{flex:none}
+.hb2{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.hseg{display:inline-flex;padding:2px;border-radius:10px;background:var(--raised);border:1px solid var(--line)}
+.hseg button{font:600 12.5px/1 var(--sans);padding:7px 10px;border:0;border-radius:8px;background:none;color:var(--mute);cursor:pointer}
+.hseg button[aria-checked="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.hck{display:inline-flex;align-items:center;gap:7px;font:600 12.5px/1 var(--sans);padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--text);cursor:pointer}
+.hck i{position:relative;width:26px;height:15px;border-radius:99px;background:var(--line2);transition:background .15s}.hck i::after{content:"";position:absolute;left:2px;top:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:transform .15s}
+.hck[aria-checked="true"] i{background:var(--accent)}.hck[aria-checked="true"] i::after{transform:translateX(11px)}
+.hrs{margin-left:auto;font:600 12.5px/1 var(--sans);padding:7px 6px;border:0;background:none;color:var(--mute);cursor:pointer}.hrs:hover{color:var(--bad,#c0392b)}
+.htray{display:flex;gap:6px;align-items:center;overflow-x:auto;padding-top:10px;border-top:1px solid var(--line);scrollbar-width:none}.htray::-webkit-scrollbar{display:none}
+.htray>span{flex:none;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--faint)}
+.htray button{flex:none;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:99px;border:1px dashed var(--accent-line);background:var(--accent-soft);color:var(--text);font:600 12.5px/1 var(--sans);cursor:pointer;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.hed.hhold,.hed.hnew{transition:none;animation:none}}
 /* iPhone Safari: back up your progress (one time) */
 .bkcard{display:flex;gap:14px;align-items:flex-start;margin:0 0 18px;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--accent-line)}
 .bkcard[hidden]{display:none}
@@ -272,11 +318,12 @@ html.introing body{overflow:hidden}
  <a class="tool locked" id="shoptool" aria-disabled="true" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b id="shopname">Coming soon</b><span id="shopsub">Stay tuned</span></span></a>
  <a class="tool" id="cdtool" href="classday.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span><span><b>Class day</b><span>Post today's summary, answer questions (only you see this)</span></span></a>
  <a class="tool" id="modtool" href="moderate.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-shield-check"/></svg></span><span><b>Moderator</b><span id="modsub">Link requests, questions, reports, attendance update</span></span></a>
-  <a class="cust" href="settings.html#home">Customize home</a>
+  <a class="cust" href="settings.html#home" role="button">Customize home</a>
  </nav>
  <div class="try" id="try" hidden></div>
  <div class="try" id="move" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
+ <script>try{HomeLayout.place()}catch(e){}</script>
  <p class="note inst" id="install" hidden>Use this like an app, even offline. <button class="linkbtn" id="installbtn">Install app</button></p>
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
  <p class="note setl"><a href="settings.html">Settings</a>: colors, daily goal, notifications, sounds and storage.</p>
@@ -299,6 +346,7 @@ html.introing body{overflow:hidden}
 <script src="push-client.js"></script>
 <script src="daily.js"></script>
 <script src="move.js"></script>
+<script src="homeedit.js"></script>
 <script>
 // Progress from the old address: one tap opens a page there that sends it back here (move.js).
 (function(){const b=document.getElementById('move'),show=h=>{b.innerHTML=h;b.hidden=false};
@@ -350,16 +398,16 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
  const inlineIcons=()=>document.querySelectorAll('.ic[data-src]').forEach(el=>{const u=el.dataset.src;loadIcon(u).then(t=>{if(t&&el.isConnected){el.innerHTML=t;el.removeAttribute('data-src')}else if(!t){el.innerHTML='<img src="'+u+'" alt="" height="140" width="160">'}})});
  const artHTML=c=>!c.image?'<b>'+esc(c.title.charAt(0))+'</b>':/\.svg$/.test(c.image)?'<span class="ic" data-src="'+esc(c.image)+'" role="img" aria-hidden="true"></span>':'<img src="'+esc(c.thumb||c.image)+'" alt="" loading="lazy" decoding="async" width="160" height="140">';
  const art=c=>'<span class="art">'+artHTML(c)+'</span>';
- window.drawCourses=()=>{document.getElementById('list').innerHTML=list.map(c=>{
-  if(c.soon)return '<div class="course soon" aria-disabled="true">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag soon">Not available yet</span></span></span></div>';
-  if(c.notesOnly)return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag exam">Notes &amp; transes</span><span class="tag soon">Questions coming soon</span></span></span></a>';
+ window.drawCourses=()=>{document.getElementById('list').innerHTML=HomeLayout.sortCourses(list).map(c=>{
+  if(c.soon)return '<div class="course soon" data-c="'+esc(c.id)+'" aria-disabled="true">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag soon">Not available yet</span></span></span></div>';
+  if(c.notesOnly)return '<a class="course" data-c="'+esc(c.id)+'" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+art(c)+'<span class="body"><span class="t">'+esc(c.title)+'</span><span class="tags"><span class="tag exam">Notes &amp; transes</span><span class="tag soon">Questions coming soon</span></span></span></a>';
   const s=summary(c.storageKey),pr=progressOf(c,s),pct=pr.pct;
-  return '<a class="course" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+
+  return '<a class="course" data-c="'+esc(c.id)+'" href="reviewer.html?course='+encodeURIComponent(c.id)+'">'+
    '<span class="art">'+artHTML(c)+'</span>'+
    '<span class="body"><span class="t">'+esc(c.title)+'</span>'+
    (c.exam?'<span class="tags">'+examTag(c.exam)+'</span>':'')+
    '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?(pr.scope&&!(c.exam&&c.exam.name===pr.scope)?esc(pr.scope)+': ':'')+pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('')};
- {const _dc=window.drawCourses;window.drawCourses=()=>{_dc();inlineIcons()}}
+ {const _dc=window.drawCourses;window.drawCourses=()=>{const E=window.HomeEdit;if(E&&E.busy())return E.later();_dc();inlineIcons();if(E&&E.isOn())E.redecorate()}}
  drawCourses();
  window.COURSE_LIST=list;if(window.afterCourses)afterCourses(list);
  if(CLOUD&&getCode()){pullSummaries(list);if(window.Daily&&Daily.sync)Daily.sync(rpc,getCode()).then(c=>{if(c&&window.drawToday)drawToday()})}
@@ -409,7 +457,6 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  b.innerHTML='<span class="tic"><svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-megaphone"/></svg></span><div class="ab"><div class="ak">Announcement <span>· '+esc(a.author||'')+' · '+new Date(a.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'})+'</span></div><p>'+esc(a.body)+'</p><a href="discuss.html?c=general#p'+a.id+'">Open in General discussion →</a></div>'+
   '<button class="mx" onclick="annClose('+a.id+')" aria-label="Close the announcement" title="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>';
  b.hidden=false}catch(err){}})();
-if(document.documentElement.dataset.first){const n=document.querySelector('nav.tools'),l=document.getElementById('list');if(n&&l)n.parentNode.insertBefore(l,n)}
 function annClose(id){if(window.Notify)Notify.annDone(id);$('annc').hidden=true}
 // My attendance tile: for signed-in students (att_mine); not linked yet = a link to send a request. A missed day with
 // its chat still open comes first; the owner (class secretary) also gets the Class day tile.

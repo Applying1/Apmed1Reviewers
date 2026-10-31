@@ -80,24 +80,32 @@ const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMe
 function setPal(p){const d=document.documentElement;if(p==='classic'){delete d.dataset.palette;set('reviewer_palette',null)}else{d.dataset.palette=p;set('reviewer_palette',p)}drawLook()}
 function drawLook(){$('theme').innerHTML=seg('theme',[['auto','Device'],['light','Light'],['dark','Dark']],curTheme(),'setTheme');const cur=get('reviewer_palette')||'classic';
  $('pals').innerHTML=PALS.map(([v,t,c])=>'<button role="radio" aria-checked="'+(v===cur)+'" class="'+(v===cur?'on':'')+'" onclick="setPal(\''+v+'\')"><i style="background:linear-gradient(135deg,'+c[0]+' 0 50%,'+c[1]+' 50% 75%,'+c[2]+' 75%)"></i>'+esc(t)+'</button>').join('')}
-// Home page (this device, like the colors): which tiles show, in what order, compact tiles, courses first.
-// Saved as 'reviewer_home' = {layout: auto|compact|full, first, hide: [element ids], order: [tool ids]}; the home page reads it in its <head>.
+// Home page (this device, like the colors): which cards, tiles and courses show, in what order, compact tiles, courses first.
+// Saved as 'reviewer_home' = {layout: auto|compact|full, first, hide: [element ids], order: [tool ids], top: [card ids], courses: [course ids], hideC: [course ids]};
+// the home page reads it in its <head> (HomeLayout) and its Customize mode (homeedit.js) edits the same object.
 const SECTIONS=[['upnext','Next class','The class coming up, with a warm-up quiz before it'],['tests','Tests coming up','Countdowns to exams, evals and quizzes'],['today','Today','Your daily goal, streak and reviews due']];
-const TOOLS=[['gdtool','General discussion'],['qztool','Live quiz'],['cwtool','Daily crossword'],['wdtool','APMed\u2019le'],['atttool','My attendance'],['shoptool','Class shop'],['cdtool','Class day','Only the class secretary sees it'],['modtool','Moderator','Only the site owner sees it']];
-function homeGet(){let h={};try{h=JSON.parse(get('reviewer_home'))||{}}catch(e){}h.hide=Array.isArray(h.hide)?h.hide:[];const ids=TOOLS.map(t=>t[0]);h.order=(Array.isArray(h.order)?h.order:[]).filter(x=>ids.includes(x));ids.forEach(x=>{if(!h.order.includes(x))h.order.push(x)});return h}
+const TOOLS=[['gdtool','General discussion'],['qztool','Live quiz'],['cwtool','Daily crossword'],['wdtool','APMed’le'],['atttool','My attendance'],['shoptool','Class shop'],['cdtool','Class day','Only the class secretary sees it'],['modtool','Moderator','Only the site owner sees it']];
+let CRS=null;fetch('courses.json').then(r=>r.json()).then(l=>{CRS=l.map(c=>[c.id,c.title,c.soon?'Not available yet':''])}).catch(()=>{}).then(()=>{if(CRS)drawHome()});
+const HLISTS={order:()=>TOOLS,top:()=>SECTIONS,courses:()=>CRS};
+function homeGet(){let h={};try{h=JSON.parse(get('reviewer_home'))||{}}catch(e){}if(typeof h!=='object'||Array.isArray(h))h={};
+ ['hide','hideC'].forEach(k=>{h[k]=Array.isArray(h[k])?h[k]:[]});
+ for(const k in HLISTS){const l=HLISTS[k]();if(!l)continue;const ids=l.map(t=>t[0]);h[k]=(Array.isArray(h[k])?h[k]:[]).filter((x,i,a)=>ids.includes(x)&&a.indexOf(x)===i);ids.forEach(x=>{if(!h[k].includes(x))h[k].push(x)})}
+ return h}
 function homePut(h){set('reviewer_home',JSON.stringify(h));drawHome()}
 function homeSet(k,v){const h=homeGet();h[k]=v;homePut(h)}
-function homeToggle(id){const h=homeGet();h.hide=h.hide.includes(id)?h.hide.filter(x=>x!==id):h.hide.concat(id);homePut(h)}
-function homeMove(id,d){const h=homeGet(),i=h.order.indexOf(id),j=i+d;if(i<0||j<0||j>=h.order.length)return;h.order.splice(i,1);h.order.splice(j,0,id);homePut(h)}
+function homeToggle(id,k){k=k||'hide';const h=homeGet();h[k]=h[k].includes(id)?h[k].filter(x=>x!==id):h[k].concat(id);homePut(h)}
+function homeMove(k,id,d){const h=homeGet(),o=h[k];if(!Array.isArray(o))return;const i=o.indexOf(id),j=i+d;if(i<0||j<0||j>=o.length)return;o.splice(i,1);o.splice(j,0,id);homePut(h)}
 function drawHome(){const h=homeGet(),up='<svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>',dn='<svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
- const row=(id,name,note,move,i)=>{const on=!h.hide.includes(id);return '<li class="'+(on?'':'off')+'"><span class="nm">'+esc(name)+(note?'<small>'+esc(note)+'</small>':'')+'</span>'+
-  (move?'<button class="mv" onclick="homeMove(\''+id+'\',-1)" aria-label="Move '+esc(name)+' up"'+(i===0?' disabled':'')+'>'+up+'</button><button class="mv" onclick="homeMove(\''+id+'\',1)" aria-label="Move '+esc(name)+' down"'+(i===TOOLS.length-1?' disabled':'')+'>'+dn+'</button>':'')+
-  sw(on,"homeToggle('"+id+"')",'Show '+name)+'</li>'};
- $('home').innerHTML='<h2>Home page</h2><p class="d">Choose what the home page shows on this device. Hidden tiles are still there in Settings, ready to turn back on.</p>'+
+ const list=(k,hk)=>{const all=HLISTS[k]();return '<ul class="tiles">'+h[k].map((id,i)=>{const t=all.find(x=>x[0]===id),name=t[1],note=t[2],on=!h[hk].includes(id),q="'"+k+"','"+id+"'";
+  return '<li class="'+(on?'':'off')+'"><span class="nm">'+esc(name)+(note?'<small>'+esc(note)+'</small>':'')+'</span>'+
+   '<button class="mv" onclick="homeMove('+q+',-1)" aria-label="Move '+esc(name)+' up"'+(i===0?' disabled':'')+'>'+up+'</button><button class="mv" onclick="homeMove('+q+',1)" aria-label="Move '+esc(name)+' down"'+(i===h[k].length-1?' disabled':'')+'>'+dn+'</button>'+
+   sw(on,"homeToggle('"+id+"','"+hk+"')",'Show '+name)+'</li>'}).join('')+'</ul>'};
+ $('home').innerHTML='<h2>Home page</h2><p class="d">Choose what the home page shows on this device. Hidden ones are still here, ready to turn back on. You can also tap <b>Customize home</b> on the home page and drag things around.</p>'+
   '<div class="row"><div class="t"><b>Tile size</b><span>Compact: two small tiles a row, one line each. Auto is compact on phones.</span></div><span class="seg" role="radiogroup" aria-label="Tile size">'+seg('layout',[['auto','Auto'],['compact','Compact'],['full','Full']],h.layout||'auto',"homeSet.bind(null,'layout')")+'</span></div>'+
   '<div class="row"><div class="t"><b>Courses first</b><span>Put your courses above the tiles, so lessons are one tap away.</span></div>'+sw(!!h.first,"homeSet('first',"+!h.first+")",'Courses first')+'</div>'+
-  '<p class="sub">Cards at the top</p><ul class="tiles">'+SECTIONS.map(([id,n,d])=>row(id,n,d,false)).join('')+'</ul>'+
-  '<p class="sub">Tiles</p><ul class="tiles">'+h.order.map((id,i)=>{const t=TOOLS.find(x=>x[0]===id);return row(id,t[1],t[2],true,i)}).join('')+'</ul>'+
+  '<p class="sub">Cards at the top</p>'+list('top','hide')+
+  '<p class="sub">Tiles</p>'+list('order','hide')+
+  (CRS?'<p class="sub">Courses</p>'+list('courses','hideC'):'')+
   '<p class="note">Tiles only show when they have something for you (for example My attendance once your account is linked).</p>'}
 // daily goal + streak (site-wide, synced with the account)
 function drawGoal(){if(!window.Daily){$('goal').hidden=true;return}const o=Daily.data(),hid=Daily.hidden();
