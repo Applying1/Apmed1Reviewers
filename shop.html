@@ -151,29 +151,74 @@ body{background:var(--paper) radial-gradient(var(--dot) 1.3px,transparent 1.5px)
 .chip.favchip{--c:#ffb3c9}
 .rescount{margin:16px 2px 12px;font:500 15px Fredoka,var(--sans);color:var(--ink2)}
 .it{position:relative}
-.fav{position:absolute;top:15px;right:15px;z-index:2;width:34px;height:34px;border-radius:50%;border:0;background:#ffffffd9;color:#d64a7c;display:grid;place-items:center;box-shadow:0 2px 6px #0002;padding:0}
-.fav svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round;transition:transform .2s cubic-bezier(.3,1.8,.5,1)}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px}.top b{min-width:0;overflow-wrap:anywhere}
+.fav{position:static;flex:none;width:28px;height:28px;margin:-3px -5px 0 0;border-radius:50%;border:0;background:none;color:color-mix(in srgb,var(--mute) 70%,transparent);display:grid;place-items:center;padding:0}
+.fav:hover{color:#d64a7c;background:color-mix(in srgb,var(--pink) 14%,transparent)}
+.fav[aria-pressed="true"]{color:#d64a7c}
+.fav svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round;transition:transform .2s cubic-bezier(.3,1.8,.5,1)}
 .fav[aria-pressed="true"] svg{fill:currentColor;transform:scale(1.12)}
-.fav.sm{position:static;width:30px;height:30px;box-shadow:none;background:var(--raised);flex:none}
+.fav.sm{width:30px;height:30px;margin:0;background:var(--raised);color:#d64a7c}
 .favsec{margin-top:14px;padding:12px 14px 4px;border-radius:18px;background:color-mix(in srgb,var(--pink) 10%,var(--surface));border:1px dashed color-mix(in srgb,var(--pink) 55%,transparent)}
 .favsec h4{margin:0 0 4px;font:600 16px Fredoka,var(--sans);color:var(--ink2)}
 .favsec .line:last-child{border-bottom:0}
 .btn.mini{padding:5px 12px;font:600 14px Fredoka,var(--sans);border-radius:99px;background:var(--pink);border-color:var(--pink);color:#2b1220}
 .conf{margin:6px 2px 0;font-size:13px;line-height:1.35}.conf:empty{display:none}.conf.ok{color:var(--good)}.conf.bad{color:var(--bad)}.conf a{font-weight:600}
 .opt{font-weight:500;color:var(--faint)}
+
+/* ---- v3: layout toggle (list / grid / small) and the Cart page ---- */
+.crow{display:flex;align-items:center;gap:8px}
+#chips{flex:1;min-width:0}
+.views{display:inline-flex;gap:2px;flex:none;background:var(--surface);border:2px solid var(--sky);border-radius:99px;padding:2px}
+.views button{border:0;background:none;color:var(--mute);width:34px;height:30px;border-radius:99px;display:grid;place-items:center;padding:0}
+.views button[aria-pressed="true"]{background:var(--sky);color:var(--ink2)}
+#shop.v-list .grid{grid-template-columns:1fr;gap:12px}
+#shop.v-list .it{flex-direction:row;align-items:stretch}
+#shop.v-list .pic{width:150px;flex:none;aspect-ratio:1;margin:8px}
+#shop.v-list .ib{display:grid;grid-template-columns:1fr auto;grid-template-areas:"n a" "p a";align-items:center;column-gap:14px;row-gap:2px;padding:10px 12px 10px 6px;flex:1;min-width:0}
+#shop.v-list .top{grid-area:n;align-self:end}#shop.v-list .ib b{font-size:17px}
+#shop.v-list .ib .pr{grid-area:p;justify-content:flex-start;gap:10px;align-self:start}
+#shop.v-list .add,#shop.v-list .qty{grid-area:a;margin:0;min-width:128px}
+@media (max-width:520px){#shop.v-list .pic{width:104px}#shop.v-list .ib{padding-right:8px;grid-template-columns:1fr;grid-template-areas:"n" "p" "a";row-gap:6px}#shop.v-list .add,#shop.v-list .qty{min-width:0}}
+#shop.v-small .grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+@media (max-width:520px){#shop.v-small .grid{grid-template-columns:repeat(3,1fr);gap:8px}}
+#shop.v-small .it{border-radius:16px}
+#shop.v-small .pic{margin:5px 5px 0;border-radius:12px}
+#shop.v-small .ib{padding:6px 8px 8px;gap:5px}
+#shop.v-small .ib b{font-size:12.5px}
+#shop.v-small .ib .pr span:last-child{display:none}
+#shop.v-small .ib .pr span:first-child{font-size:12px;padding:0 8px}
+#shop.v-small .add{font-size:13px;padding:5px}
+#shop.v-small .qty button{width:26px;height:26px;font-size:15px}
+#shop.v-small .qty output{font-size:14px}
+#shop.v-small .fav{width:22px;height:22px;margin:-2px -4px 0 0}#shop.v-small .fav svg{width:14px;height:14px}
+#cart{margin-top:16px}
+.ctitle{font:600 28px/1.1 Fredoka,var(--sans);color:var(--ink2);margin:4px 2px 12px}
+.seg.wide{display:flex;width:100%}.seg.wide button{flex:1;padding:10px 12px;font-size:16px}
+.cpanel{margin-top:14px;background:var(--surface);border-radius:24px;padding:20px;box-shadow:0 8px 24px #0000000f}
+.cgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:start}
+@media (max-width:760px){.cgrid{grid-template-columns:1fr;gap:6px}.cpanel{padding:14px}}
+.cpanel h3{font:600 19px Fredoka,var(--sans);color:var(--ink2);margin:0 0 8px}
+.cpanel .line img{width:64px;height:64px;border-radius:12px}
+.cpanel .line .n{font-weight:600;font-size:15px}
+.cpanel .line:last-of-type{border-bottom:0}
+.cempty{text-align:center;padding:34px 10px 28px}
+.cempty p{margin:14px 0 18px;color:var(--mute);font-size:16px}
+.bask{position:relative;width:104px;height:104px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:color-mix(in srgb,var(--sky) 55%,var(--surface));color:var(--mute)}
+.bask i{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font:600 20px Fredoka,var(--sans);font-style:normal;background:#3d9be0;color:#fff;border-radius:8px;min-width:34px;padding:2px 8px;text-align:center}
+.cempty .btn{min-width:240px}
 </style></head><body>
 <main>
  <a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a>
  <header class="hero"><picture><source media="(max-width:640px)" srcset="img/shop-banner-sm.webp"><img class="banner" src="img/shop-banner.webp" alt="Welcome" width="2000" height="623" fetchpriority="high"></picture><div class="hbody"><h1 id="ttl">Coming soon</h1>
  <p class="intro" id="intro"></p>
  <div class="row2"><span class="state off" id="state" hidden></span><span class="heart" id="fundnote" hidden></span></div></div></header>
- <div class="tabs"><span class="seg" role="group" aria-label="Show"><button id="t-shop" aria-pressed="true" onclick="tab('shop')">Stickers</button><button id="t-orders" aria-pressed="false" onclick="tab('orders')">My orders</button></span><a class="mgr" id="mgr" href="shop-admin.html" hidden>Manage the shop</a></div>
- <div class="tools" id="tools" hidden><div class="trow"><label class="find"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search stickers" aria-label="Search stickers" oninput="onSearch()" autocomplete="off" enterkeyhint="search"></label><button class="cartbtn" id="cartbtn" onclick="review()" aria-label="Open your cart"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2.5l2.3 11h9.9l2-8H7"/><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg><span>Cart</span><i id="cartn">0</i></button></div><div id="chips"></div></div>
+ <div class="tabs"><span class="seg" role="group" aria-label="Show"><button id="t-shop" aria-pressed="true" onclick="tab('shop')">Stickers</button><button id="t-cart" aria-pressed="false" onclick="tab('cart')">Cart</button><button id="t-orders" aria-pressed="false" onclick="tab('orders')">My orders</button></span><a class="mgr" id="mgr" href="shop-admin.html" hidden>Manage the shop</a></div>
+ <div class="tools" id="tools" hidden><div class="trow"><label class="find"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search stickers" aria-label="Search stickers" oninput="onSearch()" autocomplete="off" enterkeyhint="search"></label><button class="cartbtn" id="cartbtn" onclick="review()" aria-label="Open your cart"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2.5l2.3 11h9.9l2-8H7"/><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg><span>Cart</span><i id="cartn">0</i></button></div><div class="crow"><div id="chips"></div><span class="views" role="group" aria-label="Layout"><button id="v-list" onclick="setView('list')" aria-label="List view"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="5" width="18" height="3" rx="1.5"/><rect x="3" y="10.5" width="18" height="3" rx="1.5"/><rect x="3" y="16" width="18" height="3" rx="1.5"/></svg></button><button id="v-grid" onclick="setView('grid')" aria-label="Medium grid"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></button><button id="v-small" onclick="setView('small')" aria-label="Small grid"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3.5" y="3.5" width="4.4" height="4.4" rx="1.2"/><rect x="9.8" y="3.5" width="4.4" height="4.4" rx="1.2"/><rect x="16.1" y="3.5" width="4.4" height="4.4" rx="1.2"/><rect x="3.5" y="9.8" width="4.4" height="4.4" rx="1.2"/><rect x="9.8" y="9.8" width="4.4" height="4.4" rx="1.2"/><rect x="16.1" y="9.8" width="4.4" height="4.4" rx="1.2"/><rect x="3.5" y="16.1" width="4.4" height="4.4" rx="1.2"/><rect x="9.8" y="16.1" width="4.4" height="4.4" rx="1.2"/><rect x="16.1" y="16.1" width="4.4" height="4.4" rx="1.2"/></svg></button></span></div></div>
  <div id="shop"><p class="empty">Loading…</p></div>
  <div id="orders" hidden></div>
+ <div id="cart" hidden></div>
 </main>
 <div class="bar" id="bar" hidden><div class="in"><div class="tot" id="tot"></div><button class="btn primary" onclick="review()">Review order</button></div></div>
-<div class="modal" id="modal" hidden onclick="if(event.target===this)closeModal()"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 <script src="auth.js"></script>
 <script>
 /* The class sticker shop (supabase_shop.sql). Anyone can browse; ordering needs Google sign-in. Prices, stock and the
@@ -195,7 +240,11 @@ function contactCheck(){const el=$('cconf'),i=$('ccontact');if(!el||!i)return;co
  if(k.kind==='name'){el.className='conf ok';el.textContent='✓ The seller will look you up as “'+v+'”.';return}
  el.className='conf ok';el.innerHTML='✓ '+(k.ig?'Instagram':'Messenger')+' profile link: <a href="'+esc(k.url)+'" target="_blank" rel="noopener noreferrer">'+esc(k.shown)+'</a> (tap to check it\'s you)'}
 function setPM(v){PM=v;drawReview()}
-let D=null,CART={},FILTER='all',ORDERS=null,FAV=[];
+let D=null,CART={},FILTER='all',ORDERS=null,FAV=[],VIEW='grid',CV='sum';
+try{const v=localStorage.getItem('reviewer_shop_view');if(v==='list'||v==='grid'||v==='small')VIEW=v}catch(e){}
+function setView(v){VIEW=v;try{localStorage.setItem('reviewer_shop_view',v)}catch(e){}applyView()}
+function applyView(){const s=$('shop');s.classList.remove('v-list','v-grid','v-small');s.classList.add('v-'+VIEW);for(const k of ['list','grid','small'])$('v-'+k).setAttribute('aria-pressed',VIEW===k)}
+function setCV(v){CV=v;drawReview()}
 try{const f=JSON.parse(localStorage.getItem(CF));if(Array.isArray(f))FAV=f.filter(x=>Number.isInteger(x))}catch(e){}
 function saveFav(){try{localStorage.setItem(CF,JSON.stringify(FAV))}catch(e){}}
 const HEART='<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.6 3.6 4.5 6.8 4.5c2 0 3.4 1.1 5.2 3 1.8-1.9 3.2-3 5.2-3 3.2 0 5.2 3.1 4 6.6-1.700 4.8-9.200 9.400-9.200 9.400z"/></svg>';
@@ -203,26 +252,25 @@ try{CART=JSON.parse(localStorage.getItem(CK))||{}}catch(e){CART={}}
 function saveCart(){try{localStorage.setItem(CK,JSON.stringify(CART))}catch(e){}}
 const img=p=>p?Auth.base()+'/storage/v1/object/public/shop/'+p.split('/').map(encodeURIComponent).join('/'):'';
 const item=id=>D.items.find(i=>i.id===+id);
-function tab(t){$('t-shop').setAttribute('aria-pressed',t==='shop');$('t-orders').setAttribute('aria-pressed',t==='orders');$('shop').hidden=t!=='shop';$('orders').hidden=t!=='orders';
+function tab(t){for(const k of ['shop','cart','orders']){$('t-'+k).setAttribute('aria-pressed',t===k);$(k).hidden=t!==k}
  if(D&&!(D.soon&&!D.manager))$('tools').hidden=t!=='shop';
- history.replaceState(null,'',t==='orders'?'#orders':'#');drawBar();if(t==='orders')return loadOrders()}
+ history.replaceState(null,'',t==='shop'?'#':'#'+t);drawBar();if(t==='orders')return loadOrders();if(t==='cart'){drawReview();window.scrollTo(0,0)}}
 function cartLines(){return Object.entries(CART).map(([id,q])=>({it:item(id),q})).filter(x=>x.it&&x.q>0)}
 function drawBar(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0);
  $('bar').hidden=!n||$('shop').hidden;$('tot').innerHTML=n+' sticker'+(n===1?'':'s')+'<b>'+peso(t)+'</b>';
- $('cartn').textContent=n;$('cartbtn').classList.toggle('has',n>0)}
+ $('cartn').textContent=n;$('cartbtn').classList.toggle('has',n>0);$('t-cart').textContent='Cart'+(n?' ('+n+')':'')}
 function maxFor(it){const m=D.settings.max_qty||50;return it.left==null?m:Math.min(m,it.left)}
 function setQty(id,q){const it=item(id);if(!it)return;q=Math.max(0,Math.min(maxFor(it),q));if(q)CART[id]=q;else delete CART[id];saveCart();
- const c=document.querySelector('[data-id="'+id+'"]');if(c)c.outerHTML=card(it);drawBar();if(!$('modal').hidden)drawReview()}
+ const c=document.querySelector('[data-id="'+id+'"]');if(c)c.outerHTML=card(it);drawBar();if(!$('cart').hidden)drawReview()}
 function toggleFav(id){id=+id;const i=FAV.indexOf(id);if(i<0)FAV.push(id);else FAV.splice(i,1);saveFav();
  if(FILTER==='fav'&&i>=0)FILTER='all';
  const it=item(id),c=document.querySelector('.it[data-id="'+id+'"]');if(c&&it&&FILTER!=='fav')c.outerHTML=card(it);else drawShop();
- drawChips();if(!$('modal').hidden)drawReview()}
+ drawChips();if(!$('cart').hidden)drawReview()}
 const HUES=['#ff9ab5','#86dbb8','#a3b0ff','#ffd27a','#cba6ff','#ffb08a','#8fd3f0'];
 const hue=c=>HUES[Math.max(0,D.catalogs.findIndex(x=>x.id===c))%HUES.length],tilt=id=>(((id*37)%7)-3)*1.1;
 function card(it){const q=CART[it.id]||0,open=D.settings.open,out=it.left===0,fav=FAV.includes(it.id);
  return '<div class="it'+(q?' inc':'')+'" data-id="'+it.id+'" style="--r:'+tilt(it.id)+'deg;--c:'+hue(it.catalog)+'"><button class="pic" onclick="zoom('+it.id+')" aria-label="See '+esc(it.name)+' bigger">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="" loading="lazy">':'<span class="none">No photo</span>')+(out?'<span class="sold">Sold out</span>':'')+'</button>'+
-  '<button class="fav" aria-pressed="'+fav+'" onclick="toggleFav('+it.id+')" aria-label="'+(fav?'Remove '+esc(it.name)+' from favorites':'Add '+esc(it.name)+' to favorites')+'">'+HEART+'</button>'+
-  '<div class="ib"><b>'+esc(it.name)+'</b><div class="pr"><span>'+peso(it.price)+'</span><span>'+(it.left==null?'':out?'':it.left+' left')+'</span></div>'+
+  '<div class="ib"><div class="top"><b>'+esc(it.name)+'</b>'+'<button class="fav" aria-pressed="'+fav+'" onclick="toggleFav('+it.id+')" aria-label="'+(fav?'Remove '+esc(it.name)+' from favorites':'Add '+esc(it.name)+' to favorites')+'">'+HEART+'</button>'+'</div><div class="pr"><span>'+peso(it.price)+'</span><span>'+(it.left==null?'':out?'':it.left+' left')+'</span></div>'+
   (!open||out?'':q?'<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>'
    :'<button class="add" onclick="setQty('+it.id+',1)">+ Add</button>')+'</div></div>'}
 /* search: names, catalog names and the seller's hidden tags; forgives plurals and a typo or two */
@@ -250,28 +298,32 @@ function drawShop(){const s=D.settings,cats=D.catalogs.filter(c=>D.items.some(i=
  $('shop').innerHTML=cats.filter(c=>FILTER==='all'||FILTER===c.id).map(c=>{const its=D.items.filter(i=>i.catalog===c.id);return '<section class="cat" style="--c:'+hue(c.id)+'"><div class="ch"><h2>'+esc(c.name)+'</h2>'+(c.to_fund?'<span class="fund">♡ class fund</span>':'')+'<span class="n">'+its.length+' sticker'+(its.length===1?'':'s')+'</span>'+(c.blurb?'<p>'+esc(c.blurb)+'</p>':'')+'</div>'+
    '<div class="grid">'+its.map(card).join('')+'</div></section>'}).join('')}
 function zoom(id){const it=item(id);if(!it||!it.image)return;const z=document.createElement('div');z.className='zoom';z.innerHTML='<img src="'+esc(img(it.image))+'" alt=""><b>'+esc(it.name)+' · '+peso(it.price)+'</b>';z.onclick=()=>z.remove();document.body.appendChild(z)}
-function closeModal(){$('modal').hidden=true}
-function review(){$('modal').hidden=false;drawReview()}
-function favRows(){const open=D.settings.open,L=FAV.map(item).filter(x=>x&&x.left!==0&&!(CART[x.id]>0));if(!L.length)return '';
- return '<div id="favsec" class="favsec"><h4>♥ Your favorites</h4>'+L.map(it=>'<div class="line">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'<div class="n">'+esc(it.name)+'<small>'+peso(it.price)+'</small></div>'+
-  (open?'<button class="btn mini" onclick="setQty('+it.id+',1)">+ Add</button>':'')+'<button class="fav sm" aria-pressed="true" onclick="toggleFav('+it.id+')" aria-label="Remove from favorites">'+HEART+'</button></div>').join('')+'</div>'}
-function drawReview(){const L=cartLines(),t=L.reduce((a,x)=>a+x.q*x.it.price,0),s=D.settings,signed=!!Auth.ses();let ct='',nmv={};try{ct=localStorage.getItem(CT)||'';nmv=JSON.parse(localStorage.getItem(CN)||'{}')||{}}catch(e){}
+function review(){tab('cart')}
+const BASKET='<svg width="46" height="46" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 10h14l-1.6 8.2a2 2 0 0 1-2 1.6H8.6a2 2 0 0 1-2-1.6L5 10z"/><path d="M8.5 10 12 4l3.500 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="14.500" r="1" fill="#fff"/><circle cx="14" cy="14.500" r="1" fill="#fff"/></svg>';
+function favPanel(){const open=D.settings.open,L=FAV.map(item).filter(Boolean);
+ if(!L.length)return '<div class="cempty"><p>No favorites yet. Tap the heart on a sticker to save it here.</p><button class="btn primary" onclick="tab(\'shop\')">Start Shopping</button></div>';
+ return '<h3>♥ Your favorites</h3><div class="favlist">'+L.map(it=>{const q=CART[it.id]||0,out=it.left===0;return '<div class="line">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'<div class="n">'+esc(it.name)+'<small>'+peso(it.price)+(out?' · sold out':'')+'</small></div>'+
+  (!open||out?'':q?'<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>':'<button class="btn mini" onclick="setQty('+it.id+',1)">+ Add</button>')+
+  '<button class="fav sm" aria-pressed="true" onclick="toggleFav('+it.id+')" aria-label="Remove from favorites">'+HEART+'</button></div>'}).join('')+'</div>'}
+function drawReview(){const L=cartLines(),n=L.reduce((a,x)=>a+x.q,0),t=L.reduce((a,x)=>a+x.q*x.it.price,0),s=D.settings,signed=!!Auth.ses(),favN=FAV.filter(id=>item(id)).length;let ct='',nmv={};try{ct=localStorage.getItem(CT)||'';nmv=JSON.parse(localStorage.getItem(CN)||'{}')||{}}catch(e){}
  const keep=$('ccontact')?{c:$('ccontact').value,n:$('cnote').value,r:$('cref')?$('cref').value:'',f:$('cfirst').value,l:$('clast').value,s:$('cschool').value}:null;
- $('sheet').innerHTML='<h3>Your cart<button class="x" onclick="closeModal()" aria-label="Close">×</button></h3>'+
-  (L.length?'<div id="rlines">'+L.map(({it,q})=>'<div class="line">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'<div class="n">'+esc(it.name)+'<small>'+peso(it.price)+' each</small></div>'+
+ let h='<h2 class="ctitle">Your Cart</h2><span class="seg wide" role="group" aria-label="Cart sections"><button aria-pressed="'+(CV==='sum')+'" onclick="setCV(\'sum\')">Order Summary'+(n?' ('+n+')':'')+'</button><button aria-pressed="'+(CV==='fav')+'" onclick="setCV(\'fav\')">Favorites'+(favN?' ('+favN+')':'')+'</button></span>';
+ if(CV==='fav')h+='<div class="cpanel">'+favPanel()+'</div>';
+ else if(!L.length)h+='<div class="cpanel cempty"><div class="bask"><i>0</i>'+BASKET+'</div><p>Your cart is empty</p><button class="btn primary" onclick="tab(\'shop\')">Start Shopping</button></div>';
+ else h+='<div class="cpanel cgrid"><div class="cl"><h3>Your stickers</h3><div id="rlines">'+L.map(({it,q})=>'<div class="line">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'<div class="n">'+esc(it.name)+'<small>'+peso(it.price)+' each</small></div>'+
    '<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div></div>').join('')+'</div>'+
-   '<div class="sum"><span>Total</span><span>'+peso(t)+'</span></div>'
-   :'<p class="empty" style="padding:18px 6px">Your cart is empty.</p>')+favRows()+
-  (L.length&&s.pay_note?'<div class="note"><b>How to pay</b>'+esc(s.pay_note)+'</div>':'')+(L.length&&s.pickup_note?'<div class="note"><b>Pickup</b>'+esc(s.pickup_note)+'</div>':'')+
-  (!L.length?'':!signed?'<p class="msg">Sign in with Google to order, so the seller knows who it\'s from.</p><a class="btn primary" style="width:100%;margin-top:10px" href="./?signin=1">Sign in with Google</a>':
-   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f">First name<input id="cfirst" maxlength="40" autocomplete="given-name" value="'+esc(keep?keep.f:(nmv.f||''))+'"></label>'+
-   '<label class="f">Last name<input id="clast" maxlength="40" autocomplete="family-name" value="'+esc(keep?keep.l:(nmv.l||''))+'"></label></div>'+
+   '<div class="sum"><span>Total</span><span>'+peso(t)+'</span></div>'+
+   (s.pay_note?'<div class="note"><b>How to pay</b>'+esc(s.pay_note)+'</div>':'')+(s.pickup_note?'<div class="note"><b>Pickup</b>'+esc(s.pickup_note)+'</div>':'')+'</div>'+
+   '<div class="cr"><h3>Checkout</h3>'+(!signed?'<p class="msg">Sign in with Google to order, so the seller knows who it\'s from.</p><a class="btn primary" style="width:100%;margin-top:10px" href="./?signin=1">Sign in with Google</a>':
+   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f" style="margin-top:0">First name<input id="cfirst" maxlength="40" autocomplete="given-name" value="'+esc(keep?keep.f:(nmv.f||''))+'"></label>'+
+   '<label class="f" style="margin-top:0">Last name<input id="clast" maxlength="40" autocomplete="family-name" value="'+esc(keep?keep.l:(nmv.l||''))+'"></label></div>'+
    '<label class="f">School <span class="opt">(optional)</span><input id="cschool" maxlength="80" autocomplete="organization" placeholder="Where do you study?" value="'+esc(keep?keep.s:(nmv.s||''))+'"></label>'+
    '<label class="f">Messenger or Instagram (so the seller can reach you)<input id="ccontact" maxlength="200" placeholder="@username or paste your profile link" oninput="contactCheck()" value="'+esc(keep?keep.c:ct)+'"></label><p class="conf" id="cconf"></p>'+
    '<div class="f" style="margin-top:10px;font-size:13px;font-weight:600;color:var(--mute)">How will you pay?<div><span class="seg" role="group" aria-label="Payment method" style="margin-top:4px"><button type="button" aria-pressed="'+(PM==='gcash')+'" onclick="setPM(\'gcash\')">GCash</button><button type="button" aria-pressed="'+(PM==='cash')+'" onclick="setPM(\'cash\')">Cash</button></span></div></div>'+
    (PM==='gcash'?'<label class="f">GCash reference number (if you already paid)<input id="cref" maxlength="30" inputmode="numeric" value="'+esc(keep?keep.r:'')+'"></label>':'<p class="msg" style="margin-top:8px">Pay the seller in cash when you pick up your stickers.</p>')+
    '<label class="f">Note for the seller (optional)<textarea id="cnote" maxlength="500">'+esc(keep?keep.n:'')+'</textarea></label>'+
-   '<p class="msg" id="omsg"></p><button class="btn primary" id="place" style="width:100%;margin-top:12px" onclick="place()">Place order · '+peso(t)+'</button>');contactCheck()}
+   '<p class="msg" id="omsg"></p><button class="btn primary" id="place" style="width:100%;margin-top:12px" onclick="place()">Place order · '+peso(t)+'</button>')+'</div></div>';
+ $('cart').innerHTML=h;contactCheck()}
 async function place(){const b=$('place'),m=$('omsg'),contact=$('ccontact').value.trim(),fn=$('cfirst').value.trim(),ln=$('clast').value.trim(),school=$('cschool').value.trim(),ref=$('cref')?$('cref').value.replace(/\s/g,''):'';
  if(!fn||!ln||BADNAME.test(fn+ln)){m.className='msg bad';m.textContent='Add your first and last name (letters only).';return}
  const ck=contactKind(contact);if(!ck){m.className='msg bad';m.textContent='Type your Messenger or Instagram name or @username, or paste your profile link (facebook.com, m.me or instagram.com).';return}
@@ -279,7 +331,7 @@ async function place(){const b=$('place'),m=$('omsg'),contact=$('ccontact').valu
  if(ref&&!/^[0-9]+$/.test(ref)){m.className='msg bad';m.textContent='The GCash reference number should be digits only.';return}
  b.disabled=true;m.className='msg';m.textContent='Placing your order…';
  try{const id=await Auth.rpc('shop_order',{p_items:cartLines().map(x=>({id:x.it.id,qty:x.q})),p_contact:ck.url||contact,p_note:$('cnote').value.trim(),p_pay_ref:ref,p_first:fn,p_last:ln,p_method:PM,p_school:school},true);
-  try{localStorage.setItem(CT,contact);localStorage.setItem(CN,JSON.stringify({f:fn,l:ln,s:school}))}catch(e){}CART={};saveCart();closeModal();await load();ORDERS=null;await tab('orders');
+  try{localStorage.setItem(CT,contact);localStorage.setItem(CN,JSON.stringify({f:fn,l:ln,s:school}))}catch(e){}CART={};saveCart();await load();ORDERS=null;await tab('orders');
   const f=$('orders').querySelector('.ord');if(f)f.insertAdjacentHTML('beforebegin','<p class="msg ok">Order #'+id+' placed! The seller will message you. You\'ll see updates here.</p>')}
  catch(e){b.disabled=false;m.className='msg bad';m.textContent=/slow/.test(e.message)?'Too many tries. Wait a minute.':e.message||'Couldn\'t place the order. Check your connection.';load().then(()=>{drawShop();drawBar()})}}
 async function loadOrders(){const el=$('orders');
@@ -304,7 +356,7 @@ async function load(){D=await Auth.rpc('shop_catalog',{},!!Auth.ses());
  const dl=s.deadline?new Date(s.deadline):null;$('state').hidden=false;$('state').className='state'+(s.open?'':' off');
  $('state').textContent=s.open?(dl?'Open · orders close '+dl.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Open for orders'):(s.opened?'Orders closed':'Not open yet');
  const fc=D.catalogs.filter(c=>c.to_fund&&D.items.some(i=>i.catalog===c.id));if(fc.length){$('fundnote').hidden=false;$('fundnote').textContent='♡ '+fc.map(c=>c.name).join(' & ')+' help the APMed \'33 class fund'}
- $('mgr').hidden=!D.manager;$('tools').hidden=false;drawChips();drawShop();drawBar();if(location.hash==='#orders')tab('orders');
+ $('mgr').hidden=!D.manager;$('tools').hidden=false;applyView();drawChips();drawShop();drawBar();if(location.hash==='#orders')tab('orders');else if(location.hash==='#cart')tab('cart');
 })();
 </script>
 <script src="update.js" defer></script>
