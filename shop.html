@@ -312,7 +312,31 @@ function ask(title,msg,o){o=o||{};return new Promise(res=>{
  document.addEventListener('keydown',key);document.body.appendChild(m);(m.querySelector('[data-v="0"]')||m.querySelector('[data-v="1"]')).focus()})}
 async function clearCart(){if(!await ask('Clear your cart?','Every sticker in your cart will be removed.',{ok:'Yes, clear it'}))return;CART={};saveCart();drawShop();drawBar();drawReview()}
 try{const f=JSON.parse(localStorage.getItem(CF));if(Array.isArray(f))FAV=f.filter(x=>Number.isInteger(x))}catch(e){}
-function saveFav(){try{localStorage.setItem(CF,JSON.stringify(FAV))}catch(e){}}
+/* Hearts follow you to every device while you're signed in (shop_favs_get / shop_favs_set in supabase_shop.sql).
+   This device always keeps its own copy, so hearts still work signed out or offline. The first sync on a device, and
+   any sync after a save that never reached the cloud, keeps both lists; after that the cloud is the truth, so taking
+   a heart off on the phone also takes it off on the laptop. */
+const FS='reviewer_shop_favs_sync',FD='reviewer_shop_favs_dirty';let FT=null;
+function flag(k,on){try{on?localStorage.setItem(k,'1'):localStorage.removeItem(k)}catch(e){}}
+function saveFav(){try{localStorage.setItem(CF,JSON.stringify(FAV))}catch(e){}pushFavs()}
+function pushFavs(){if(!Auth.ses())return;flag(FD,1);clearTimeout(FT);FT=setTimeout(sendFavs,600)}
+async function sendFavs(){clearTimeout(FT);FT=null;
+ if(!Auth.ses()||!localStorage.getItem(FD))return;
+ const sent=FAV.slice();
+ try{await Auth.rpc('shop_favs_set',{p_ids:sent},true)}catch(e){return}   /* offline: the dirty flag sends it next time */
+ flag(FS,1);if(sent.join()===FAV.join())flag(FD,0)}
+async function pullFavs(){if(!Auth.ses())return false;
+ let cloud;try{cloud=await Auth.rpc('shop_favs_get',{},true)}catch(e){return false}
+ if(!Array.isArray(cloud))return false;
+ cloud=cloud.filter(x=>Number.isInteger(x));
+ const both=!localStorage.getItem(FS)||!!localStorage.getItem(FD);
+ const next=both?cloud.concat(FAV.filter(id=>!cloud.includes(id))):cloud;
+ const changed=next.join()!==FAV.join();
+ FAV=next;if(changed)try{localStorage.setItem(CF,JSON.stringify(FAV))}catch(e){}
+ flag(FS,1);
+ if(next.join()!==cloud.join()){flag(FD,1);await sendFavs()}else flag(FD,0);
+ return changed}
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&FT)sendFavs()});
 const HEART='<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.6 3.6 4.5 6.8 4.5c2 0 3.4 1.1 5.2 3 1.8-1.9 3.2-3 5.2-3 3.2 0 5.2 3.1 4 6.6-1.700 4.8-9.200 9.400-9.200 9.400z"/></svg>';
 try{CART=JSON.parse(localStorage.getItem(CK))||{}}catch(e){CART={}}
 function saveCart(){try{localStorage.setItem(CK,JSON.stringify(CART))}catch(e){}}
@@ -366,9 +390,11 @@ function drawShop(){const s=D.settings,cats=D.catalogs.filter(c=>D.items.some(i=
 function zoom(id){const it=item(id);if(!it||!it.image)return;const z=document.createElement('div');z.className='zoom';z.innerHTML='<img src="'+esc(img(it.image))+'" alt=""><b>'+esc(it.name)+' · '+peso(it.price)+'</b>';z.onclick=()=>z.remove();document.body.appendChild(z)}
 function review(){tab('cart')}
 const BASKET='<svg width="46" height="46" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 10h14l-1.6 8.2a2 2 0 0 1-2 1.6H8.6a2 2 0 0 1-2-1.6L5 10z"/><path d="M8.5 10 12 4l3.500 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="14.500" r="1" fill="#fff"/><circle cx="14" cy="14.500" r="1" fill="#fff"/></svg>';
+const FAVNOTE=()=>Auth.ses()?'<p class="msg">Your hearts follow you on every device you sign in on.</p>'
+ :'<p class="msg">Hearts are kept on this device. <a href="./?signin=1">Sign in</a> to keep them on your phone and laptop.</p>';
 function favPanel(){const open=D.settings.open,L=FAV.map(item).filter(Boolean);
- if(!L.length)return '<div class="cempty"><p>No favorites yet. Tap the heart on a sticker to save it here.</p><button class="btn primary" onclick="tab(\'shop\')">Start Shopping</button></div>';
- return '<h3>♥ Your favorites</h3><div class="favlist">'+L.map(it=>{const q=CART[it.id]||0,out=it.left===0;return '<div class="line">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'<div class="n">'+esc(it.name)+'<small>'+peso(it.price)+(out?' · sold out':'')+'</small></div>'+
+ if(!L.length)return '<div class="cempty"><p>No favorites yet. Tap the heart on a sticker to save it here.</p><button class="btn primary" onclick="tab(\'shop\')">Start Shopping</button>'+FAVNOTE()+'</div>';
+ return '<h3>♥ Your favorites</h3>'+FAVNOTE()+'<div class="favlist">'+L.map(it=>{const q=CART[it.id]||0,out=it.left===0;return '<div class="line">'+(it.image?'<img src="'+esc(img(it.image))+'" alt="">':'')+'<div class="n">'+esc(it.name)+'<small>'+peso(it.price)+(out?' · sold out':'')+'</small></div>'+
   (!open||out?'':q?'<div class="qty"><button onclick="setQty('+it.id+','+(q-1)+')" aria-label="One less">−</button><output>'+q+'</output><button onclick="setQty('+it.id+','+(q+1)+')"'+(q>=maxFor(it)?' disabled':'')+' aria-label="One more">+</button></div>':'<button class="btn mini" onclick="setQty('+it.id+',1)">+ Add</button>')+
   '<button class="fav sm" aria-pressed="true" onclick="toggleFav('+it.id+')" aria-label="Remove from favorites">'+HEART+'</button></div>'}).join('')+'</div>'}
 const TRASH='<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zM6 9h12l-1 11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 9zm4 2v8h2v-8h-2zm4 0v8h2v-8h-2z"/></svg>';
@@ -455,6 +481,7 @@ async function load(){D=await Auth.rpc('shop_catalog',{},!!Auth.ses());
  {const nc=D.catalogs.filter(c=>D.items.some(i=>i.catalog===c.id)).length;if(D.items.length){$('countnote').hidden=false;$('countnote').textContent=D.items.length+' sticker'+(D.items.length===1?'':'s')+(nc>1?' · '+nc+' catalogs':'')}}
  const fc=D.catalogs.filter(c=>c.to_fund&&D.items.some(i=>i.catalog===c.id));if(fc.length){$('fundnote').hidden=false;$('fundnote').textContent='♡ '+fc.map(c=>c.name).join(' & ')+' help the APMed \'33 class fund'}
  $('mgr').hidden=!D.manager;$('tools').hidden=false;applyView();drawChips();drawShop();drawBar();if(location.hash==='#orders')tab('orders');else if(location.hash==='#cart')tab('cart');
+ pullFavs().then(ch=>{if(ch){drawChips();drawShop();if(!$('cart').hidden)drawReview()}});   /* hearts from your other devices */
 })();
 </script>
 <script src="update.js" defer></script>

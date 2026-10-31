@@ -56,6 +56,11 @@ label.f{display:block;margin-top:10px;font-size:13px;font-weight:600;color:var(-
 .modal{position:fixed;inset:0;z-index:40;background:#0008;display:flex;align-items:flex-end;justify-content:center}@media (min-width:640px){.modal{align-items:center}}
 .sheet{background:var(--surface);width:100%;max-width:480px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px}@media (min-width:640px){.sheet{border-radius:20px}}
 .sheet h3{font:600 20px/1.2 var(--serif);margin:0 0 6px}
+.modal.dlgwrap{align-items:center;padding:20px;z-index:60}
+.sheet.dlg{max-width:380px;border-radius:20px;text-align:center;padding:22px 20px 18px;box-shadow:0 20px 50px #0004}
+.sheet.dlg p{margin:0 0 18px;color:var(--mute);font-size:14.5px}
+.dbtns{display:flex;gap:10px}.dbtns .btn{flex:1;padding:11px 10px;font-size:15px;border-radius:99px}
+.dbtns .btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
 .prev{width:120px;height:120px;border-radius:12px;background:var(--raised);display:grid;place-items:center;overflow:hidden;color:var(--faint);font-size:12px;margin-top:8px}.prev img{width:100%;height:100%;object-fit:contain}
 .empty{color:var(--mute);text-align:center;padding:30px 0}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
@@ -80,6 +85,13 @@ label.f{display:block;margin-top:10px;font-size:13px;font-weight:600;color:var(-
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const peso=c=>'₱'+(c/100).toLocaleString('en-US',{minimumFractionDigits:c%100?2:0,maximumFractionDigits:2});
+/* our own confirm popup (the same one shop.html uses, instead of the browser's confirm box) */
+function ask(title,msg,o){o=o||{};return new Promise(res=>{
+ const m=document.createElement('div');m.className='modal dlgwrap';
+ m.innerHTML='<div class="sheet dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgt"><h3 id="dlgt">'+esc(title)+'</h3><p>'+esc(msg||'')+'</p><div class="dbtns">'+(o.cancel===null?'':'<button class="btn" data-v="0">'+esc(o.cancel||'Keep it')+'</button>')+'<button class="btn primary'+(o.danger===false?'':' danger')+'" data-v="1">'+esc(o.ok||'OK')+'</button></div></div>';
+ const done=v=>{document.removeEventListener('keydown',key);m.remove();res(v)},key=e=>{if(e.key==='Escape')done(false)};
+ m.onclick=e=>{if(e.target===m)done(false);const b=e.target.closest('button[data-v]');if(b)done(b.dataset.v==='1')};
+ document.addEventListener('keydown',key);document.body.appendChild(m);(m.querySelector('[data-v="0"]')||m.querySelector('[data-v="1"]')).focus()})}
 const img=p=>p?Auth.base()+'/storage/v1/object/public/shop/'+p.split('/').map(encodeURIComponent).join('/'):'';
 const LBL={placed:'Waiting',paid:'Paid',ready:'Ready',done:'Picked up',cancelled:'Cancelled'};
 let A=null,TAB=location.hash.slice(1)||'orders',OF='placed';
@@ -129,7 +141,7 @@ function editCat(id){const c=A.catalogs.find(x=>x.id===id)||{name:'',blurb:'',to
   '<label class="chk"><input type="checkbox" id="cf"'+(c.to_fund?' checked':'')+'> Proceeds go to the class fund</label><label class="chk"><input type="checkbox" id="cv"'+(c.visible?' checked':'')+'> Show in the shop</label>'+
   '<label class="f">Order (1 = first)<input class="inp" id="cs" inputmode="numeric" value="'+esc(c.sort)+'"></label><p class="msg bad" id="em"></p>'+
   '<div class="row" style="margin-top:14px">'+(id?'<button class="btn bad" onclick="saveCat('+id+',true)">Delete</button>':'')+'<span class="sp"></span><button class="btn" onclick="$(\'modal\').hidden=true">Cancel</button><button class="btn primary" onclick="saveCat('+(id||'null')+')">Save</button></div>')}
-async function saveCat(id,del){if(del&&!confirm('Delete this catalog and its stickers? Past orders keep their lines.'))return;
+async function saveCat(id,del){if(del&&!await ask('Delete this catalog?','Its stickers go with it. Past orders keep their lines.',{ok:'Yes, delete it'}))return;
  try{await Auth.rpc('shop_admin_catalog',{p:del?{id,delete:true}:{id,name:$('cn').value,blurb:$('cb').value,to_fund:$('cf').checked,visible:$('cv').checked,sort:$('cs').value?+$('cs').value:null}},true);$('modal').hidden=true;await reload()}catch(e){$('em').textContent=e.message}}
 let PIC=null;
 function editItem(id,cat){const i=A.items.find(x=>x.id===id)||{name:'',price_cents:500,stock:null,active:true,image:null,catalog_id:cat,sort:''};PIC=i.image;
@@ -149,7 +161,7 @@ async function upload(file){const b=await shrink(file),ext=b.type==='image/webp'
  if(!r.ok){let m='';try{m=(await r.json()).message}catch(e){}throw new Error('upload failed'+(m?': '+m:''))}return path}
 async function pickPhoto(inp){const f=inp.files[0];if(!f)return;$('pv').textContent='Uploading…';$('isave').disabled=true;
  try{PIC=await upload(f);$('pv').innerHTML='<img src="'+esc(img(PIC))+'" alt="">'}catch(e){$('pv').textContent='Failed';$('em').textContent=e.message}$('isave').disabled=false}
-async function saveItem(id,del){if(del&&!confirm('Delete this sticker? If someone already ordered it, it\'s hidden instead.'))return;
+async function saveItem(id,del){if(del&&!await ask('Delete this sticker?','If someone already ordered it, it is hidden instead of deleted.',{ok:'Yes, delete it'}))return;
  const price=Math.round(parseFloat($('ip')?$('ip').value:'0')*100);
  try{await Auth.rpc('shop_admin_item',{p:del?{id,delete:true}:{id,catalog:+$('ic').value,name:$('in').value,price:isNaN(price)?500:price,stock:$('is').value.trim(),image:PIC||'',active:$('ia').checked,tags:$('it').value}},true);$('modal').hidden=true;await reload()}catch(e){$('em').textContent=e.message}}
 async function bulk(cat,inp){const files=[...inp.files];if(!files.length)return;let n=0;
@@ -180,7 +192,7 @@ async function alerts(){const b=$('alb');b.disabled=true;try{await Push.attSet(!
 function drawManagers(){$('body').innerHTML='<div class="card"><p class="mute" style="margin:0 0 10px">Managers can add stickers, change settings and handle orders. You (the site owner) always can.</p>'+
   (A.managers.length?A.managers.map(m=>'<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span style="flex:1">'+esc(m.name||'(no name)')+' <span class="mute">'+esc(m.email)+'</span></span><button class="btn bad" onclick="mgr(\''+esc(m.email)+'\',false)">Remove</button></div>').join(''):'<p class="mute">No other managers.</p>')+
   '<div class="row" style="margin-top:12px"><input class="inp" style="flex:1;min-width:200px" id="me" type="email" placeholder="Their Google email (they must have signed in once)"><button class="btn primary" onclick="mgr($(\'me\').value,true)">Add</button></div><p class="msg bad" id="mm"></p></div>'}
-async function mgr(email,add){if(!add&&!confirm('Remove '+email+' as a manager?'))return;try{await Auth.rpc('shop_admin_manager',{p_email:email,p_add:add},true);await reload()}catch(e){$('mm').textContent=e.message}}
+async function mgr(email,add){if(!add&&!await ask('Remove this manager?',email+' will no longer see Manage the shop.',{ok:'Yes, remove'}))return;try{await Auth.rpc('shop_admin_manager',{p_email:email,p_add:add},true);await reload()}catch(e){$('mm').textContent=e.message}}
 
 (async function(){
  try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
