@@ -37,11 +37,13 @@ window.ClassNow = (function () {
   }
   // milestones the class climbs toward before a test
   const STEPS = [100, 250, 500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000, 50000, 75000, 100000];
+  const FIRST = '2026-10-31';
   const ymd = d => { const p = new Date(d.getTime() + 8 * 36e5); return p.toISOString().slice(0, 10) };     // Manila date
   function goal(list, test) {
     const c = (list || []).find(x => x.id === test.subj.course); if (!c || !c.storageKey) return Promise.resolve(null);
     if (!goalP || Date.now() - goalAt > 60e3) { goalAt = Date.now(); goalP = rpc('class_counts', { p_days: 14 }).catch(() => null) }
-    const since = ymd(new Date(test.from.getTime() - 7 * 864e5));
+    const since = [ymd(new Date(test.from.getTime() - 7 * 864e5)), FIRST].sort()[1];     // counting began Oct 31, 2026
+
     return goalP.then(rows => {
       if (!rows) return null;
       const n = rows.filter(r => r.course === c.storageKey && r.day >= since).reduce((a, r) => a + r.n, 0);
