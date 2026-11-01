@@ -848,5 +848,13 @@
   "title": "Class list: see who's studying or on the site",
   "text": "A new Class list tile shows linked classmates and whether they are studying a course, on the site right now, or offline. Active is the default, and you can switch to Invisible anytime without changing the anonymous Studying now count.",
   "link": "classlist.html"
+ },
+ {
+  "id": 103,
+  "date": "2026-11-01",
+  "type": "feature",
+  "title": "Pick a classmate in Duels + duel notifications",
+  "text": "You can now pick a classmate directly when starting a duel (or tap Duel next to their name on the Class list) — it appears straight in their Duels list and sends them a push notification when you finish, plus a result alert when the second player finishes.",
+  "link": "duel.html"
  }
 ]

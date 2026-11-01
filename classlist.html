@@ -63,6 +63,8 @@ h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 4px;text-al
 .row.studying .st{color:var(--good,#22a06b);font-weight:600}
 .row.here .st{color:var(--accent);font-weight:600}
 .row.offline{opacity:.78}
+.duel{flex:none;display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:9px;border:1px solid var(--line2);background:var(--raised);font-size:12.5px;font-weight:600;color:var(--text);text-decoration:none;transition:background .15s,border-color .15s}
+.duel:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 @media (max-width:480px){
@@ -150,7 +152,7 @@ function draw(){
  groups.forEach(([key,title,list])=>{
   if(!list.length)return;
   html+='<h2 class="sec"><i class="dot '+key+'" aria-hidden="true"></i>'+esc(title)+' ('+list.length+')</h2><div class="list" data-group="'+key+'">'+
-   list.map(r=>'<div class="row '+esc(r.state)+'">'+avHtml(r,36)+'<div class="w"><b>'+esc(r.name)+'</b></div><span class="st"><i class="dot '+esc(r.state)+'" aria-hidden="true"></i>'+esc(stateLabel(r))+'</span></div>').join('')+
+   list.map(r=>'<div class="row '+esc(r.state)+'">'+avHtml(r,36)+'<div class="w"><b>'+esc(r.name)+'</b><span class="st"><i class="dot '+esc(r.state)+'" aria-hidden="true"></i>'+esc(stateLabel(r))+'</span></div><a class="duel" href="duel.html?to='+encodeURIComponent(r.name)+'" title="Challenge '+esc(r.name)+' to a duel">'+ic('zap')+'Duel</a></div>').join('')+
   '</div>';
  });
  if(!rows.length)html='<p class="empty">No linked classmates found.</p>';

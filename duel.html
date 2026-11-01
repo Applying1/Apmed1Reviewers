@@ -104,10 +104,10 @@ label.f select{display:block;width:100%;margin-top:5px;padding:9px 10px;border-r
 <script src="schedule-core.js"></script>
 <script src="reminders-core.js"></script>
 <script>
-// Duels (Oct 31): a classmate challenges another to the same 7 questions from a course; both play when they like.
-// Cloud: supabase_duels.sql (duel_create / duel_get / duel_join / duel_submit / duel_mine; signed-in only). The page picks
-// the questions (from courses/<id>.json, same rules as the mock exam: no typed, picture or true/false items, no hidden
-// sections) and reports each answer right or wrong. Your picks are kept on this device ('reviewer_duels') for the review.
+// Duels (Oct 31 + Nov 1): a classmate challenges another to the same 7 questions from a course; both play when they like.
+// Cloud: supabase_duels.sql + supabase_duels2.sql (duel_classmates / duel_create / duel_get / duel_join / duel_submit /
+// duel_mine; signed-in only). Pick a classmate from the class list to put the challenge straight in their duels list and
+// send them a push alert, or leave it open for anyone with the link. Your picks stay on this device ('reviewer_duels').
 const N=7,LOCAL='reviewer_duels';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -145,9 +145,9 @@ async function boot(){
  try{COURSES=(await (await fetch('courses.json')).json()).filter(c=>!c.soon&&!c.notesOnly);const cl=COURSES.find(c=>c.cloud&&c.cloud.url);if(cl)Auth.cloud=cl.cloud}catch(e){}
  if(!Auth.cloud){$('view').innerHTML='<div class="card"><p>Duels need the class cloud, which isn\'t set up here.</p></div>';return}
  let msg='';try{await Auth.finish()}catch(e){msg=e.message}
- const code=new URLSearchParams(location.search).get('d');
+ const params=new URLSearchParams(location.search),code=params.get('d'),to=params.get('to');
  if(!Auth.ses()){signedOut(code,msg);return}
- if(code)openDuel(code);else home();
+ if(code)openDuel(code);else home(to);
 }
 function signedOut(code,msg){
  $('view').innerHTML='<div class="card"><h2>'+ic('users')+' Sign in to duel</h2><p>'+(code?'A classmate challenged you! Sign in with Google to accept. Your name and picture show to the other player.':'Duels use your Google sign-in, so your classmate knows who challenged them.')+'</p>'+
@@ -155,16 +155,25 @@ function signedOut(code,msg){
 }
 
 // ---------- the list + new duel ----------
-async function home(){
+let CLASSMATES=[];
+async function home(to){
  history.replaceState(null,'','duel.html');$('sub').textContent='Challenge a classmate to the same '+N+' questions.';
- $('view').innerHTML='<div class="card" id="new"><h2>'+ic('zap')+' New duel</h2><p>You play first, then send the link to a classmate (or the group chat). The first to open it plays the same questions.</p>'+
+ $('view').innerHTML='<div class="card" id="new"><h2>'+ic('zap')+' New duel</h2><p>Pick a classmate to notify them right away, or send the link in the group chat. You play first; they play the same questions when they like.</p>'+
   '<label class="f">Course<select id="nc">'+COURSES.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.title)+'</option>').join('')+'</select></label>'+
   '<label class="f">Questions from<select id="ns"><option>Loading…</option></select></label>'+
+  '<label class="f">Opponent<select id="no"><option value="">Anyone with the link</option></select></label>'+
   '<button class="btn primary wide" id="go" disabled onclick="create()">'+ic('zap')+'Start a duel</button><p class="err" id="nerr" hidden></p></div>'+
   '<div class="card"><h2>'+ic('trophy')+' Your duels</h2><div class="list" id="mine"><p class="empty">Loading…</p></div></div>';
  // default: the course with the nearest test
  try{await Sched.load();const t=Remind.list(3).find(a=>a.subj&&COURSES.some(c=>c.id===a.subj.course));if(t)$('nc').value=t.subj.course}catch(e){}
  $('nc').onchange=scopes;scopes();
+ rpc('duel_classmates').catch(()=>rpc('discussion_people').catch(()=>[])).then(list=>{
+  const sel=$('no');if(!sel)return;
+  CLASSMATES=Array.isArray(list)?list:[];
+  const stateTxt=p=>p.state==='studying'?' · Studying '+(p.course?short(course(p.course).title):'Focus timer'):p.state==='here'?' · On the site':'';
+  sel.innerHTML='<option value="">Anyone with the link</option>'+CLASSMATES.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+esc(stateTxt(p))+'</option>').join('');
+  if(to){const m=CLASSMATES.find(p=>p.id===to||p.name===to||String(p.name||'').toLowerCase()===String(to).toLowerCase());if(m)sel.value=m.id}
+ });
  rpc('duel_mine').then(list=>{const box=$('mine');if(!box)return;list=list||[];
   box.innerHTML=list.length?list.map(d=>{const me=d.me,o=d[me==='a'?'b':'a'],[st,cls]=status(d);
    return '<button class="row" onclick="openDuel(\''+d.code+'\')">'+who(o)+'<span class="w"><b>'+(o?esc(o.name):'Open challenge')+'</b><span>'+esc(short(course(d.course).title))+(d.scope?' · '+esc(d.scope):'')+'</span></span><span class="pill '+cls+'">'+esc(st)+'</span></button>'}).join('')
@@ -182,12 +191,12 @@ async function scopes(){
  catch(e){sel.innerHTML='<option value="">'+esc(e.message)+'</option>'}
 }
 async function create(){
- const id=$('nc').value,sc=$('ns').value,err=$('nerr');err.hidden=true;$('go').disabled=true;
+ const id=$('nc').value,sc=$('ns').value,opp=($('no')&&$('no').value)||null,err=$('nerr');err.hidden=true;$('go').disabled=true;
  try{const c=await bank(id),cfg=c.config,el=eligible(c,cfg),ex=(cfg.exams||[]).find(e=>e.id===cfg.activeExam);let pool=el,label='Whole course';
   if(sc==='ex'&&ex){pool=el.filter(x=>(ex.sections||[]).includes(x.section)||(ex.chapters||[]).includes(String(x.section).split('-')[0]));label=ex.name}
   else if(sc.startsWith('ch:')){const ch=sc.slice(3);pool=el.filter(x=>String(x.section).split('-')[0]===ch);label=(cfg.unit||'Chapter')+' '+ch}
   const pick=pool.slice();for(let i=pick.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pick[i],pick[j]]=[pick[j],pick[i]]}
-  const d=await rpc('duel_create',{p_course:id,p_scope:label,p_qids:pick.slice(0,N).map(x=>x.id)});
+  const d=await rpc('duel_create',Object.assign({p_course:id,p_scope:label,p_qids:pick.slice(0,N).map(x=>x.id)},opp?{p_opponent:opp}:{}));
   play(d)}
  catch(e){err.textContent=e.message;err.hidden=false;$('go').disabled=false}
 }
@@ -212,9 +221,10 @@ function showDuel(){
   h+=gridHTML(d)}
  else if(!me){h+=d.open?'<p class="what"><b>'+esc(d.a.name)+'</b> challenges you to '+d.qids.length+' questions. You\'ll see their score after you play.</p><div class="acts"><button class="btn primary" onclick="accept()">'+ic('zap')+'Accept and play</button></div>'
    :'<p class="what">This duel already has two players.</p><div class="acts"><button class="btn primary" onclick="home()">Start your own duel</button></div>'}
- else if(!d[me].done){h+='<div class="acts"><button class="btn primary" onclick="play(DUEL)">'+ic('play')+(local(d.code).p?'Keep playing':'Play now')+'</button></div>'}
- else{h+='<p class="what">'+(d.b?'Waiting for <b>'+esc(d[me==='a'?'b':'a'].name)+'</b> to play. You\'ll both see the result here.':'Now send the link to a classmate. The first to open it plays the same questions.')+'</p>'+
-   (d.open?'<div class="acts"><button class="btn primary" onclick="shareLink()">'+ic('share')+'Send the link</button><button class="btn" onclick="copyLink()">'+ic('copy')+'Copy link</button></div>':'')}
+ else if(!d[me].done){h+=(me==='b'?'<p class="what"><b>'+esc(d.a.name)+'</b> challenged you to '+d.qids.length+' questions. You\'ll see their score after you play.</p>':'')+
+   '<div class="acts"><button class="btn primary" onclick="play(DUEL)">'+ic('play')+(local(d.code).p?'Keep playing':'Play now')+'</button></div>'}
+ else{h+='<p class="what">'+(d.b?'Waiting for <b>'+esc(d[me==='a'?'b':'a'].name)+'</b> to play. They\'ve been notified and it\'s in their duels list — or send them the link below.':'Now send the link to a classmate. The first to open it plays the same questions.')+'</p>'+
+   (d.open||(me==='a'&&d.b&&!d.b.done)?'<div class="acts"><button class="btn primary" onclick="shareLink()">'+ic('share')+'Send the link</button><button class="btn" onclick="copyLink()">'+ic('copy')+'Copy link</button></div>':'')}
  h+='</div>';
  if(me&&d[me].done)h+='<div class="card"><h2>'+ic('check')+' Your answers</h2><div class="rev" id="rev"><p class="empty">Loading…</p></div></div>';
  h+='<div class="acts"><button class="btn" onclick="home()">'+ic('list')+'Your duels</button>'+(r&&me?'<button class="btn" onclick="rematch()">'+ic('rotate-cw')+'Rematch</button>':'')+'</div>';
@@ -241,7 +251,8 @@ function copyLink(){const u=link(DUEL.code);(navigator.clipboard&&window.isSecur
 async function rematch(){const d=DUEL;try{const c=await bank(d.course),el=eligible(c,c.config),prev=new Set(d.qids);let pool=el.filter(x=>!prev.has(x.id));
   const sec=new Set(d.qids.map(id=>(c.bank.find(x=>x.id===id)||{}).section));const same=pool.filter(x=>sec.has(x.section));if(same.length>=N)pool=same;
   for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
-  play(await rpc('duel_create',{p_course:d.course,p_scope:d.scope,p_qids:pool.slice(0,N).map(x=>x.id)}))}catch(e){toast(e.message)}}
+  const other=d.me==='a'?d.b:d.a,opp=other&&CLASSMATES.find(p=>p.name===other.name);
+  play(await rpc('duel_create',Object.assign({p_course:d.course,p_scope:d.scope,p_qids:pool.slice(0,N).map(x=>x.id)},opp?{p_opponent:opp.id}:{})))}catch(e){toast(e.message)}}
 
 // ---------- playing: one question at a time, choices reshuffled, the answer and why right after ----------
 let P=null;
@@ -272,10 +283,15 @@ function answer(k){const q=P.qs[P.i],ok=P.ch[k]===q.a,btns=[...document.querySel
   '<button class="btn primary wide next" id="nx">'+(last?'See the result':'Next question')+'</button>';
  $('nx').onclick=()=>{P.i++;while(P.i<P.qs.length&&!P.qs[P.i]){P.res[P.i]='x';P.i++}if(P.i>=P.qs.length)finish();else ask1()};$('nx').focus({preventScroll:true});
 }
+function nudgePush(){try{if(Auth.cloud&&Auth.cloud.url)fetch(Auth.cloud.url.replace(/\/+$/,'')+'/functions/v1/push',{method:'POST',headers:Auth.headers(),body:JSON.stringify({personal:true})}).catch(()=>{})}catch(e){}}
 async function finish(){
  const res=P.qs.map((_,i)=>P.res[i]||'x').join(''),secs=Math.max(1,Math.min(7200,P.spent||1));
  $('view').innerHTML='<p class="empty">Saving your score…</p>';
- try{DUEL=await rpc('duel_submit',{p_code:P.code,p_res:res,p_secs:secs});setLocal(P.code,{done:1});if(window.Badges)Badges.check();showDuel();if(DUEL.open&&DUEL.me==='a')toast('Done! Now send the link to a classmate.',3000)}
+ try{DUEL=await rpc('duel_submit',{p_code:P.code,p_res:res,p_secs:secs});setLocal(P.code,{done:1});
+  if((DUEL.me==='a'&&DUEL.b&&!DUEL.b.done)||(DUEL.a&&DUEL.b&&DUEL.a.done&&DUEL.b.done))nudgePush();
+  if(window.Badges)Badges.check();showDuel();
+  if(DUEL.open&&DUEL.me==='a')toast('Done! Now send the link to a classmate.',3000);
+  else if(DUEL.me==='a'&&DUEL.b&&!DUEL.b.done)toast('Done! '+DUEL.b.name+' was notified.',3000)}
  catch(e){if(/already played/i.test(e.message)){openDuel(P.code);return}
   $('view').innerHTML='<div class="card"><p>Your score couldn\'t be saved: '+esc(e.message)+'</p><button class="btn primary" onclick="finish()">Try again</button></div>'}
 }

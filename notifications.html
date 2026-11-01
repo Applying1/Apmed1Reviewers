@@ -94,11 +94,11 @@ function drawSettings(){const p=Notify.prefs();
   row('Unread dots','Red dots for replies to you, @mentions, moderator posts and new updates; a small gray dot for other new comments.',sw(p.ddot!==false,"flip('ddot')",'Unread dots'))+'</div>'+
   '<div class="sec" id="pushsec"><h2>On this device</h2><p class="d">Push notifications reach you even when the site is closed.</p><div id="pushbody"><p class="pstat">Checking…</p></div><div id="persbody"></div></div>';
  drawDaily();drawRem();Push.draw($('pushbody'));drawPersonal()}
-// Personal alerts (supabase_attendance2.sql + supabase_discussion_replies.sql): this device gets pushes meant for your account only:
-// replies and @mentions in the discussion, and attendance (the summary of a day you missed, replies from the class secretary).
+// Personal alerts (supabase_attendance2.sql + supabase_discussion_replies.sql + supabase_duels2.sql): this device gets pushes meant for your account only:
+// replies and @mentions in the discussion, duel challenges and results, and attendance (the summary of a day you missed, replies from the class secretary).
 async function drawPersonal(){const el=$('persbody');if(!el)return;if(!Push.supported())return el.innerHTML='';
- if(!Auth.cloud||!Auth.ses()){el.innerHTML=row('Personal alerts','Replies and @mentions in the discussion, and attendance alerts. Sign in on the home page to turn these on.','');return}
- el.innerHTML=row('Personal alerts','Replies to you and @mentions in the discussion, and attendance alerts (a summary of a day you missed, replies from the class secretary). Only for your account.',sw(Push.attOn(),'personal(this)','Personal alerts'))+'<p class="pstat" style="color:var(--bad)" id="perr"></p>'}
+ if(!Auth.cloud||!Auth.ses()){el.innerHTML=row('Personal alerts','Replies and @mentions in the discussion, duel challenges and results, and attendance alerts. Sign in on the home page to turn these on.','');return}
+ el.innerHTML=row('Personal alerts','Replies to you and @mentions in the discussion, duel challenges and results, and attendance alerts (a summary of a day you missed, replies from the class secretary). Only for your account.',sw(Push.attOn(),'personal(this)','Personal alerts'))+'<p class="pstat" style="color:var(--bad)" id="perr"></p>'}
 async function personal(b){const on=b.getAttribute('aria-checked')!=='true';b.disabled=true;$('perr').textContent='';
  try{await Push.attSet(on)}catch(e){$('perr').textContent=e.message==='blocked'?'Notifications are blocked for this site. Allow them in your browser\'s site settings first.':e.message==='dismissed'?'':'Couldn\'t change it. Try again in a moment.'}
  Push.draw($('pushbody'));drawPersonal()}
