@@ -831,5 +831,14 @@
   "title": "New topic icons in every course",
   "text": "The topic cards inside each course now use soft 3D icons with no background box, so they match your theme in light and dark mode (including the newer topics).",
   "link": "index.html"
+ },
+ {
+  "id": 101,
+  "date": "2026-11-01",
+  "type": "course",
+  "course": "purcom",
+  "title": "40 new situational & theoretical questions for PurCom",
+  "text": "Added 40 new situational case questions and theoretical items to Topic 4: Nature of Research (now 108 questions total), covering Dr. Arcena's lecture scenarios, Calmorin traits, and proposal rules.",
+  "link": "reviewer.html?course=purcom"
  }
 ]
