@@ -1055,6 +1055,206 @@
    transform: scale(0.96);
   }
 
+
+  /* Floating DJ Equalizer */
+  .jdj-equalizer {
+   display: flex;
+   align-items: flex-end;
+   gap: 2.5px;
+   height: 16px;
+   padding: 0 4px;
+   flex-shrink: 0;
+  }
+  .jbar {
+   width: 3px;
+   background: var(--gold, #fbbf24);
+   border-radius: 999px;
+   height: 4px;
+   transition: height 0.15s ease;
+  }
+  .jdj-dock.playing .jbar {
+   animation: eqBounce 0.8s ease-in-out infinite alternate;
+  }
+  .jdj-dock.playing .bar-1 { animation-delay: 0.1s; animation-duration: 0.6s; }
+  .jdj-dock.playing .bar-2 { animation-delay: 0.3s; animation-duration: 0.75s; }
+  .jdj-dock.playing .bar-3 { animation-delay: 0.0s; animation-duration: 0.5s; }
+  .jdj-dock.playing .bar-4 { animation-delay: 0.25s; animation-duration: 0.65s; }
+  @keyframes eqBounce {
+   0% { height: 3px; }
+   100% { height: 16px; }
+  }
+
+  /* Range Slider */
+  .jrange {
+   -webkit-appearance: none;
+   appearance: none;
+   width: 100%;
+   height: 6px;
+   border-radius: 999px;
+   background: rgba(255, 255, 255, 0.14);
+   outline: none;
+  }
+  .jrange::-webkit-slider-thumb {
+   -webkit-appearance: none;
+   appearance: none;
+   width: 18px;
+   height: 18px;
+   border-radius: 50%;
+   background: var(--gold, #fbbf24);
+   cursor: pointer;
+   box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+   border: 2px solid #0f1d36;
+   transition: transform 0.15s ease;
+  }
+  .jrange::-webkit-slider-thumb:hover {
+   transform: scale(1.15);
+  }
+
+  /* Custom Fashion Dropdown */
+  .jcustom-select {
+   position: relative;
+   width: 100%;
+   user-select: none;
+  }
+  .jcustom-select-trigger {
+   width: 100%;
+   background: rgba(13, 22, 41, 0.75);
+   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.14));
+   color: #f8fafc;
+   padding: 11px 14px;
+   border-radius: 12px;
+   font-family: inherit;
+   font-size: 13.5px;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 10px;
+   cursor: pointer;
+   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+   text-align: left;
+  }
+  .jcustom-select-trigger:hover,
+  .jcustom-select.open .jcustom-select-trigger {
+   border-color: var(--gold, #fbbf24);
+   background: rgba(26, 41, 74, 0.9);
+   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18), 0 4px 14px rgba(0, 0, 0, 0.35);
+  }
+  .jcustom-select-label {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   min-width: 0;
+   flex: 1;
+  }
+  .jcustom-select-label b {
+   font-weight: 600;
+   color: #fff;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
+  }
+  .jchevron {
+   flex: none;
+   color: var(--gold, #fbbf24);
+   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .jcustom-select.open .jchevron {
+   transform: rotate(180deg);
+  }
+  .jcustom-select-menu {
+   position: absolute;
+   top: calc(100% + 6px);
+   left: 0;
+   right: 0;
+   z-index: 1200;
+   background: rgba(11, 20, 38, 0.98);
+   backdrop-filter: blur(20px);
+   border: 1px solid rgba(245, 158, 11, 0.35);
+   border-radius: 14px;
+   padding: 6px;
+   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85), 0 0 20px rgba(245, 158, 11, 0.12);
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+   opacity: 0;
+   pointer-events: none;
+   transform: translateY(-8px) scale(0.98);
+   transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+   max-height: 290px;
+   overflow-y: auto;
+  }
+  .jcustom-select.open .jcustom-select-menu {
+   opacity: 1;
+   pointer-events: auto;
+   transform: translateY(0) scale(1);
+  }
+  .jcustom-select-option {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+   padding: 10px 12px;
+   border-radius: 10px;
+   cursor: pointer;
+   transition: all 0.15s ease;
+   color: #cbd5e1;
+   border: 1px solid transparent;
+  }
+  .jcustom-select-option:hover {
+   background: rgba(245, 158, 11, 0.12);
+   border-color: rgba(245, 158, 11, 0.25);
+   color: #fff;
+   transform: translateX(2px);
+  }
+  .jcustom-select-option.selected {
+   background: rgba(245, 158, 11, 0.2);
+   border-color: rgba(245, 158, 11, 0.45);
+   color: #fef08a;
+   font-weight: 600;
+  }
+  .jcustom-select-option .jopt-icon {
+   flex: none;
+   width: 28px;
+   height: 28px;
+   border-radius: 8px;
+   background: rgba(255, 255, 255, 0.06);
+   display: grid;
+   place-items: center;
+   color: #94a3b8;
+  }
+  .jcustom-select-option.selected .jopt-icon {
+   background: rgba(245, 158, 11, 0.25);
+   color: var(--gold, #fbbf24);
+  }
+  .jcustom-select-option .jopt-content {
+   flex: 1;
+   min-width: 0;
+   display: flex;
+   flex-direction: column;
+   gap: 2px;
+  }
+  .jcustom-select-option .jopt-title {
+   font-size: 13.5px;
+   font-weight: 600;
+   color: inherit;
+  }
+  .jcustom-select-option .jopt-sub {
+   font-size: 11.5px;
+   color: #94a3b8;
+  }
+  .jcustom-select-option .jopt-check {
+   flex: none;
+   opacity: 0;
+   color: var(--gold, #fbbf24);
+   transform: scale(0.7);
+   transition: all 0.15s ease;
+  }
+  .jcustom-select-option.selected .jopt-check {
+   opacity: 1;
+   transform: scale(1);
+  }
+
   /* Form Inputs */
   .jform-group {
    margin-bottom: 16px;
@@ -1288,15 +1488,24 @@
 
 <!-- Floating Runway DJ Player Dock -->
 <div class="jdj-dock" id="djDock">
- <div class="jvinyl" id="djDisc">
+ <div class="jvinyl" id="djDisc" title="Vinyl DJ Turntable">
   <svg class="v-icon" width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
  </div>
+ <div class="jdj-equalizer" id="djEqualizer">
+  <span class="jbar bar-1"></span>
+  <span class="jbar bar-2"></span>
+  <span class="jbar bar-3"></span>
+  <span class="jbar bar-4"></span>
+ </div>
  <div class="jdj-dock-info">
-  <b id="djTrackName">The Catwalk Strut</b>
-  <span id="djTrackStatus">124 BPM House Beat</span>
+  <b id="djTrackName">Official Runway Anthem</b>
+  <span id="djTrackStatus">BEST FASHION SHOW MUSIC · Ready</span>
  </div>
  <button class="jdj-dock-btn" id="djPlayBtn" onclick="toggleDjPlay()" title="Play / Pause Runway Beat">
   <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+ </button>
+ <button class="jdj-dock-btn" onclick="nextDjTrack()" title="Next Runway Track">
+  <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
  </button>
  <button class="jdj-dock-btn" onclick="openDjModal()" title="Soundboard & DJ Controls">
   <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1305,44 +1514,119 @@
 
 <!-- Modal: DJ Booth & Soundboard -->
 <div class="jmodal" id="djModal" hidden onclick="if(event.target===this)closeDjModal()">
- <div class="jbox" style="max-width:440px;">
+ <div class="jbox" style="max-width:480px;">
   <div class="jmhead">
-   <h2>Runway DJ & Soundboard</h2>
+   <div style="display:flex;align-items:center;gap:10px;">
+    <div class="jvinyl" style="width:28px;height:28px;">
+     <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+    <h2>Runway DJ & Soundboard</h2>
+   </div>
    <button class="jmx" onclick="closeDjModal()">
     <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
    </button>
   </div>
 
-  <div style="margin-bottom:20px;">
-   <label style="display:block;font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:8px;">Live Catwalk Soundboard</label>
+  <!-- Music Track Swapping (Custom Luxury Dropdown) -->
+  <div class="jform-group">
+   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+    <label style="margin:0;font-size:13px;font-weight:700;color:#cbd5e1;">Runway Music Track</label>
+    <span id="currentBpmBadge" style="font-size:11px;color:#f59e0b;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">Official Audio</span>
+   </div>
+   <div class="jcustom-select" id="trackDropdown" data-value="anthem">
+    <button type="button" class="jcustom-select-trigger" onclick="toggleCustomDropdown('trackDropdown')">
+     <span class="jcustom-select-label">
+      <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+      <b id="trackDropdownSelectedText">Official Runway Anthem (BEST FASHION SHOW MUSIC)</b>
+     </span>
+     <svg class="v-icon jchevron" width="16" height="16" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="jcustom-select-menu">
+     <div class="jcustom-select-option selected" data-val="anthem" onclick="selectTrackOption('anthem')">
+      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <div class="jopt-content">
+       <span class="jopt-title">Official Runway Anthem</span>
+       <span class="jopt-sub">BEST FASHION SHOW MUSIC · High-Energy Continuous Mix</span>
+      </div>
+      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+     </div>
+     <div class="jcustom-select-option" data-val="euro_synth" onclick="selectTrackOption('euro_synth')">
+      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="jopt-content">
+       <span class="jopt-title">Euro-Runway Model Strut</span>
+       <span class="jopt-sub">124 BPM Catwalk Deep House · Live Web Audio Synth</span>
+      </div>
+      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+     </div>
+     <div class="jcustom-select-option" data-val="vogue_synth" onclick="selectTrackOption('vogue_synth')">
+      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+      <div class="jopt-content">
+       <span class="jopt-title">Vogue Club Minimal</span>
+       <span class="jopt-sub">128 BPM Tech-House Groove · Live Web Audio Synth</span>
+      </div>
+      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+     </div>
+     <div class="jcustom-select-option" data-val="custom" onclick="selectTrackOption('custom')">
+      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+      <div class="jopt-content">
+       <span class="jopt-title">Load Custom Local MP3...</span>
+       <span class="jopt-sub">Select any audio file stored on your phone or computer</span>
+      </div>
+      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+     </div>
+    </div>
+    <input type="hidden" id="djTrackSelect" value="anthem">
+   </div>
+  </div>
+
+  <!-- Master Volume Control -->
+  <div class="jform-group" style="margin-top:14px;background:rgba(0,0,0,0.22);padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
+   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <label style="margin:0;display:flex;align-items:center;gap:7px;font-size:12.5px;color:#cbd5e1;">
+     <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+     <span>Master Runway Volume</span>
+    </label>
+    <span id="volLabel" style="font-size:12px;color:#f59e0b;font-weight:700;">80%</span>
+   </div>
+   <input type="range" min="0" max="100" value="80" class="jrange" id="djVolSlider" oninput="setDjVolume(this.value)">
+  </div>
+
+  <!-- Quick Play/Pause inside modal -->
+  <div style="margin-bottom:18px;">
+   <button type="button" class="jbtn-submit" id="modalPlayBtn" style="width:100%;justify-content:center;gap:10px;" onclick="toggleDjPlay()">
+    <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span id="modalPlayLabel">Play Runway Track</span>
+   </button>
+  </div>
+
+  <!-- Distinct SFX Soundboard -->
+  <div style="margin-bottom:8px;">
+   <label style="display:block;font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:8px;">Live Stage Soundboard (Distinct Effects)</label>
    <div class="jsound-grid">
-    <button class="jpad-btn" onclick="playSfx('camera')">
+    <button class="jpad-btn" onclick="playSfx('camera')" title="Mechanical DSLR Shutter Burst + Flash">
      <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
      Camera Flash
     </button>
-    <button class="jpad-btn" onclick="playSfx('airhorn')">
+    <button class="jpad-btn" onclick="playSfx('airhorn')" title="Triple Stadium DJ Airhorn Blasts">
      <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-     Airhorn
+     Stadium Airhorn
     </button>
-    <button class="jpad-btn" onclick="playSfx('cheer')">
+    <button class="jpad-btn" onclick="playSfx('cheer')" title="Real Rushing Stadium Cheer & Applause">
      <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
      Crowd Cheer
     </button>
-    <button class="jpad-btn" onclick="playSfx('drumroll')">
+    <button class="jpad-btn" onclick="playSfx('drumroll')" title="Snare Roll Crescendo + Rimshot Crash">
      <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><ellipse cx="12" cy="8" rx="9" ry="3"/><path d="M3 8v8c0 1.66 4 3 9 3s9-1.34 9-3V8"/></svg>
-     Drumroll
+     Snare Drumroll
     </button>
-    <button class="jpad-btn" onclick="playSfx('fanfare')">
+    <button class="jpad-btn" onclick="playSfx('fanfare')" title="Triumphant Brass Trumpet March Melody">
      <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
      Victory Fanfare
     </button>
    </div>
   </div>
 
-  <div class="jform-group">
-   <label>Custom Runway Track (Local MP3)</label>
-   <input type="file" id="customAudioFile" accept="audio/*" class="jinput" onchange="loadCustomTrack(event)">
-  </div>
+  <input type="file" id="customAudioFile" accept="audio/*" style="display:none;" onchange="loadCustomTrack(event)">
  </div>
 </div>
 
@@ -1368,11 +1652,35 @@
   </div>
 
   <div class="jform-group">
-   <label>Competition Phase</label>
-   <select class="jselect" id="phaseSelect" onchange="setCompetitionPhase(this.value)">
-    <option value="prelim">Auditions & Preliminaries (Top 5 Advance)</option>
-    <option value="final">Final Runway (Top 5 Q&A · JORTS GOD/GODDESS)</option>
-   </select>
+   <label style="font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:8px;display:block;">Competition Phase</label>
+   <div class="jcustom-select" id="phaseDropdown" data-value="prelim">
+    <button type="button" class="jcustom-select-trigger" onclick="toggleCustomDropdown('phaseDropdown')" aria-haspopup="listbox">
+     <span class="jcustom-select-label">
+      <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <b id="phaseDropdownSelectedText">Auditions &amp; Preliminaries (Top 5 Advance)</b>
+     </span>
+     <svg class="v-icon jchevron" width="16" height="16" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="jcustom-select-menu" role="listbox">
+     <div class="jcustom-select-option selected" data-val="prelim" onclick="selectDropdownOption('phaseDropdown', 'prelim', 'Auditions &amp; Preliminaries (Top 5 Advance)', setCompetitionPhase)">
+      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+      <div class="jopt-content">
+       <span class="jopt-title">Auditions &amp; Preliminaries</span>
+       <span class="jopt-sub">Audience gets 3 votes for Top 5 overall + category picks</span>
+      </div>
+      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+     </div>
+     <div class="jcustom-select-option" data-val="final" onclick="selectDropdownOption('phaseDropdown', 'final', 'Final Runway (Top 5 Q&amp;A · JORTS GOD/GODDESS)', setCompetitionPhase)">
+      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+      <div class="jopt-content">
+       <span class="jopt-title">Final Runway Championship</span>
+       <span class="jopt-sub">Top 5 finalists walk with harder Q&amp;A to crown JORTS GOD</span>
+      </div>
+      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+     </div>
+    </div>
+    <input type="hidden" id="phaseSelect" value="prelim">
+   </div>
   </div>
 
   <div class="jform-group">
@@ -1451,19 +1759,55 @@
     <textarea class="jtextarea" id="awDesc" placeholder="e.g. Pick the fit with the most creative frayed fringes."></textarea>
    </div>
    <div class="jform-group">
-    <label>Votes Allowed Per Voter</label>
-    <select class="jselect" id="awVotes">
-     <option value="1">1 vote per person (Standard Special Award)</option>
-     <option value="3">3 votes per person (Top 5 Audition Style)</option>
-     <option value="2">2 votes per person</option>
-    </select>
+    <label style="font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:6px;display:block;">Votes Allowed Per Voter</label>
+    <div class="jcustom-select" id="awVotesDropdown" data-value="1">
+     <button type="button" class="jcustom-select-trigger" onclick="toggleCustomDropdown('awVotesDropdown')">
+      <span class="jcustom-select-label">
+       <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+       <b id="awVotesDropdownSelectedText">1 vote per student (Standard Award)</b>
+      </span>
+      <svg class="v-icon jchevron" width="16" height="16" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+     </button>
+     <div class="jcustom-select-menu">
+      <div class="jcustom-select-option selected" data-val="1" onclick="selectDropdownOption('awVotesDropdown', '1', '1 vote per student (Standard Award)')">
+       <div class="jopt-content"><span class="jopt-title">1 Vote per Student</span><span class="jopt-sub">Standard single-winner special award</span></div>
+       <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="jcustom-select-option" data-val="3" onclick="selectDropdownOption('awVotesDropdown', '3', '3 votes per student (Top 5 Selection)')">
+       <div class="jopt-content"><span class="jopt-title">3 Votes per Student</span><span class="jopt-sub">Allows selecting multiple contestants (Top 5 audition style)</span></div>
+       <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="jcustom-select-option" data-val="2" onclick="selectDropdownOption('awVotesDropdown', '2', '2 votes per student (Duo selection)')">
+       <div class="jopt-content"><span class="jopt-title">2 Votes per Student</span><span class="jopt-sub">Pair or duo voting</span></div>
+       <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+     </div>
+     <input type="hidden" id="awVotes" value="1">
+    </div>
    </div>
+
    <div class="jform-group">
-    <label>Phase</label>
-    <select class="jselect" id="awPhase">
-     <option value="prelim">Preliminary Phase</option>
-     <option value="final">Final Runway Phase</option>
-    </select>
+    <label style="font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:6px;display:block;">Award Phase</label>
+    <div class="jcustom-select" id="awPhaseDropdown" data-value="prelim">
+     <button type="button" class="jcustom-select-trigger" onclick="toggleCustomDropdown('awPhaseDropdown')">
+      <span class="jcustom-select-label">
+       <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+       <b id="awPhaseDropdownSelectedText">Preliminary Phase</b>
+      </span>
+      <svg class="v-icon jchevron" width="16" height="16" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+     </button>
+     <div class="jcustom-select-menu">
+      <div class="jcustom-select-option selected" data-val="prelim" onclick="selectDropdownOption('awPhaseDropdown', 'prelim', 'Preliminary Phase')">
+       <div class="jopt-content"><span class="jopt-title">Preliminary Phase</span><span class="jopt-sub">Voted during open runway walk</span></div>
+       <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="jcustom-select-option" data-val="final" onclick="selectDropdownOption('awPhaseDropdown', 'final', 'Final Championship Phase')">
+       <div class="jopt-content"><span class="jopt-title">Final Championship Phase</span><span class="jopt-sub">Voted during final Top 5 round</span></div>
+       <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+     </div>
+     <input type="hidden" id="awPhase" value="prelim">
+    </div>
    </div>
    <button type="submit" class="jbtn-submit" style="width:100%;justify-content:center;">Save Category</button>
   </form>
@@ -1525,6 +1869,14 @@ function loadLocalState() {
  try {
   const v = localStorage.getItem('jorts_my_votes');
   if (v) STATE.my_votes = JSON.parse(v);
+ } catch(e){}
+ try {
+  const p = localStorage.getItem('jorts_phase');
+  if (p) {
+   STATE.settings.phase = p;
+   const label = p === 'final' ? 'Final Runway (Top 5 Q&A · JORTS GOD/GODDESS)' : 'Auditions & Preliminaries (Top 5 Advance)';
+   selectDropdownOption('phaseDropdown', p, label);
+  }
  } catch(e){}
 }
 
@@ -1751,53 +2103,220 @@ function closeLightbox() {
  document.getElementById('lightboxModal').hidden = true;
 }
 
-/* DJ BOOTH & AUDIO ENGINE */
+/* RUNWAY DJ & AUDIO SYSTEM */
 let audioCtx = null;
-let isPlaying = false;
 let discoTimer = null;
+let isPlaying = false;
+let djVolumeVal = 0.8;
+let currentTrackId = 'anthem';
+let customAudioEl = null;
 
 function toggleDjModal() {
  const m = document.getElementById('djModal');
- m.hidden = !m.hidden;
+ if (m) m.hidden = !m.hidden;
 }
-function openDjModal() { document.getElementById('djModal').hidden = false; }
-function closeDjModal() { document.getElementById('djModal').hidden = true; }
+function openDjModal() {
+ const m = document.getElementById('djModal');
+ if (m) m.hidden = false;
+}
+function closeDjModal() {
+ const m = document.getElementById('djModal');
+ if (m) m.hidden = true;
+}
+
+const DJ_TRACKS = [
+ {
+  id: 'anthem',
+  name: 'Official Runway Anthem',
+  sub: 'BEST FASHION SHOW MUSIC · High-Energy Continuous Mix',
+  badge: 'Official Audio',
+  type: 'audio'
+ },
+ {
+  id: 'euro_synth',
+  name: 'Euro-Runway Model Strut',
+  sub: '124 BPM Catwalk Deep House · Live Web Audio Synth',
+  badge: '124 BPM Synth',
+  type: 'synth',
+  tempo: 124
+ },
+ {
+  id: 'vogue_synth',
+  name: 'Vogue Club Minimal',
+  sub: '128 BPM Tech-House Groove · Live Web Audio Synth',
+  badge: '128 BPM Synth',
+  type: 'synth',
+  tempo: 128
+ },
+ {
+  id: 'custom',
+  name: 'Custom Local MP3',
+  sub: 'Loaded from your device',
+  badge: 'Local MP3',
+  type: 'custom'
+ }
+];
+
+function toggleCustomDropdown(dropdownId) {
+ const dd = document.getElementById(dropdownId);
+ if (!dd) return;
+ const isOpen = dd.classList.contains('open');
+ document.querySelectorAll('.jcustom-select.open').forEach(el => {
+  if (el !== dd) el.classList.remove('open');
+ });
+ dd.classList.toggle('open', !isOpen);
+}
+
+function selectDropdownOption(dropdownId, val, labelText, onchangeFn) {
+ const dd = document.getElementById(dropdownId);
+ if (!dd) return;
+ dd.querySelectorAll('.jcustom-select-option').forEach(opt => {
+  opt.classList.toggle('selected', opt.dataset.val === String(val));
+ });
+ const b = dd.querySelector('.jcustom-select-label b');
+ if (b) b.textContent = labelText;
+ const hiddenInput = dd.querySelector('input[type="hidden"]');
+ if (hiddenInput) hiddenInput.value = val;
+ dd.classList.remove('open');
+ if (typeof onchangeFn === 'function') onchangeFn(val);
+}
+
+document.addEventListener('click', (e) => {
+ if (!e.target.closest('.jcustom-select')) {
+  document.querySelectorAll('.jcustom-select.open').forEach(el => el.classList.remove('open'));
+ }
+});
+
+function selectTrackOption(trackId) {
+ if (trackId === 'custom' && !customAudioEl) {
+  document.getElementById('customAudioFile').click();
+  return;
+ }
+ const wasPlaying = isPlaying;
+ stopCurrentTrack();
+ currentTrackId = trackId;
+ updateTrackUi();
+ if (wasPlaying) {
+  startCurrentTrack();
+ }
+ const dd = document.getElementById('trackDropdown');
+ if (dd) dd.classList.remove('open');
+}
+
+function updateTrackUi() {
+ const track = DJ_TRACKS.find(t => t.id === currentTrackId) || DJ_TRACKS[0];
+ const trackText = document.getElementById('trackDropdownSelectedText');
+ if (trackText) trackText.textContent = track.name + ' (' + track.badge + ')';
+ 
+ const dd = document.getElementById('trackDropdown');
+ if (dd) {
+  dd.querySelectorAll('.jcustom-select-option').forEach(opt => {
+   opt.classList.toggle('selected', opt.dataset.val === currentTrackId);
+  });
+ }
+ const badge = document.getElementById('currentBpmBadge');
+ if (badge) badge.textContent = track.badge;
+ const dockName = document.getElementById('djTrackName');
+ if (dockName) dockName.textContent = track.name;
+ const dockStatus = document.getElementById('djTrackStatus');
+ if (dockStatus) dockStatus.textContent = track.sub;
+}
+
+function nextDjTrack() {
+ const order = ['anthem', 'euro_synth', 'vogue_synth'];
+ const idx = order.indexOf(currentTrackId);
+ const nextId = order[(idx + 1) % order.length];
+ selectTrackOption(nextId);
+}
+
+function setDjVolume(val) {
+ djVolumeVal = parseInt(val) / 100;
+ document.getElementById('volLabel').textContent = val + '%';
+ const anthem = document.getElementById('anthemAudio');
+ if (anthem) anthem.volume = djVolumeVal;
+ if (customAudioEl) customAudioEl.volume = djVolumeVal;
+}
 
 function toggleDjPlay() {
- if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
- if (audioCtx.state === 'suspended') audioCtx.resume();
-
+ initAudioContext();
  isPlaying = !isPlaying;
- const disc = document.getElementById('djDisc');
- const btn = document.getElementById('djPlayBtn');
- const status = document.getElementById('djTrackStatus');
-
+ updatePlaybackUi();
  if (isPlaying) {
-  disc.classList.add('playing');
-  btn.innerHTML = '<svg class="v-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
-  status.textContent = '124 BPM Catwalk House · Playing';
-  startCatwalkLoop();
+  startCurrentTrack();
  } else {
-  disc.classList.remove('playing');
-  btn.innerHTML = '<svg class="v-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-  status.textContent = '124 BPM House Beat · Paused';
-  stopCatwalkLoop();
+  stopCurrentTrack();
  }
 }
 
-function startCatwalkLoop() {
+function initAudioContext() {
+ if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+ if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function updatePlaybackUi() {
+ const disc = document.getElementById('djDisc');
+ const dock = document.getElementById('djDock');
+ const btn = document.getElementById('djPlayBtn');
+ const modalBtn = document.getElementById('modalPlayBtn');
+ const modalLabel = document.getElementById('modalPlayLabel');
+
+ if (isPlaying) {
+  if (disc) disc.classList.add('playing');
+  if (dock) dock.classList.add('playing');
+  if (btn) btn.innerHTML = '<svg class="v-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+  if (modalBtn) modalBtn.classList.add('highlight');
+  if (modalLabel) modalLabel.textContent = 'Pause Runway Track';
+ } else {
+  if (disc) disc.classList.remove('playing');
+  if (dock) dock.classList.remove('playing');
+  if (btn) btn.innerHTML = '<svg class="v-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+  if (modalBtn) modalBtn.classList.remove('highlight');
+  if (modalLabel) modalLabel.textContent = 'Play Runway Track';
+ }
+}
+
+function startCurrentTrack() {
+ if (currentTrackId === 'anthem') {
+  const anthem = document.getElementById('anthemAudio');
+  if (anthem) {
+   anthem.volume = djVolumeVal;
+   anthem.play().catch(e => console.log('Autoplay restriction:', e));
+  }
+ } else if (currentTrackId === 'euro_synth') {
+  startCatwalkLoop(124);
+ } else if (currentTrackId === 'vogue_synth') {
+  startCatwalkLoop(128);
+ } else if (currentTrackId === 'custom') {
+  if (customAudioEl) {
+   customAudioEl.volume = djVolumeVal;
+   customAudioEl.play().catch(e => console.log('Custom play error:', e));
+  } else {
+   document.getElementById('customAudioFile').click();
+  }
+ }
+}
+
+function stopCurrentTrack() {
+ const anthem = document.getElementById('anthemAudio');
+ if (anthem) anthem.pause();
+ if (customAudioEl) customAudioEl.pause();
+ stopCatwalkLoop();
+}
+
+function startCatwalkLoop(bpm) {
+ bpm = bpm || 124;
  if (discoTimer) clearInterval(discoTimer);
  let step = 0;
- const interval = (60 / 124 / 4) * 1000;
+ const interval = (60 / bpm / 4) * 1000;
  discoTimer = setInterval(() => {
   if (!isPlaying) return;
-  // 4-on-the-floor kick
+  // 4-on-the-floor kick drum
   if (step % 4 === 0) playKick();
-  // Offbeat hi-hat
+  // Crisp offbeat hi-hat
   if (step % 4 === 2) playHiHat();
-  // Bassline
+  // Deep syncopated bassline
   if (step % 2 === 0) {
-   const bassFreqs = [110, 110, 130.8, 146.8];
+   const bassFreqs = bpm === 128 ? [116.5, 116.5, 138.6, 155.6] : [110, 110, 130.8, 146.8];
    playBass(bassFreqs[(step / 2) % bassFreqs.length]);
   }
   step = (step + 1) % 16;
@@ -1812,9 +2331,9 @@ function playKick() {
  if (!audioCtx) return;
  const osc = audioCtx.createOscillator();
  const gain = audioCtx.createGain();
- osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+ osc.frequency.setValueAtTime(145, audioCtx.currentTime);
  osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
- gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+ gain.gain.setValueAtTime(djVolumeVal * 0.75, audioCtx.currentTime);
  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
  osc.connect(gain);
  gain.connect(audioCtx.destination);
@@ -1834,7 +2353,7 @@ function playHiHat() {
  filter.type = 'highpass';
  filter.frequency.value = 7500;
  const gain = audioCtx.createGain();
- gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+ gain.gain.setValueAtTime(djVolumeVal * 0.22, audioCtx.currentTime);
  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
  noise.connect(filter);
  filter.connect(gain);
@@ -1848,7 +2367,7 @@ function playBass(freq) {
  const gain = audioCtx.createGain();
  osc.type = 'sawtooth';
  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
- gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+ gain.gain.setValueAtTime(djVolumeVal * 0.26, audioCtx.currentTime);
  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
  osc.connect(gain);
  gain.connect(audioCtx.destination);
@@ -1856,45 +2375,189 @@ function playBass(freq) {
  osc.stop(audioCtx.currentTime + 0.2);
 }
 
+/* REVAMPED DISTINCT SOUNDBOARD SFX */
 function playSfx(type) {
- if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
- if (audioCtx.state === 'suspended') audioCtx.resume();
+ initAudioContext();
+ const t0 = audioCtx.currentTime;
 
  if (type === 'camera') {
-  // Shutter click
-  playHiHat();
-  setTimeout(playHiHat, 90);
- } else if (type === 'airhorn') {
+  // Mechanical DSLR Shutter Burst (3 fast mirror clicks) + flash charge whine
+  [0, 0.13, 0.30].forEach((st) => {
+   const t = t0 + st;
+   const bSize = Math.floor(audioCtx.sampleRate * 0.035);
+   const buf = audioCtx.createBuffer(1, bSize, audioCtx.sampleRate);
+   const d = buf.getChannelData(0);
+   for (let i = 0; i < bSize; i++) d[i] = Math.random() * 2 - 1;
+   const src = audioCtx.createBufferSource();
+   src.buffer = buf;
+   const filter = audioCtx.createBiquadFilter();
+   filter.type = 'bandpass';
+   filter.frequency.value = 4500;
+   const g = audioCtx.createGain();
+   g.gain.setValueAtTime(0.65, t);
+   g.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+   src.connect(filter);
+   filter.connect(g);
+   g.connect(audioCtx.destination);
+   src.start(t);
+   src.stop(t + 0.035);
+  });
+  // Strobe capacitor charging high whine
   const osc = audioCtx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(2400, t0 + 0.35);
+  osc.frequency.exponentialRampToValueAtTime(8500, t0 + 0.75);
   const gain = audioCtx.createGain();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-  gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+  gain.gain.setValueAtTime(0.08, t0 + 0.35);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.75);
   osc.connect(gain);
   gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.5);
- } else if (type === 'cheer' || type === 'fanfare') {
-  const notes = [523.25, 659.25, 783.99, 1046.50];
-  notes.forEach((n, i) => {
-   setTimeout(() => {
+  osc.start(t0 + 0.35);
+  osc.stop(t0 + 0.75);
+
+ } else if (type === 'airhorn') {
+  // Triple Reggae/Stadium Airhorn Stutter Blast
+  const bursts = [
+   { start: 0, dur: 0.12 },
+   { start: 0.16, dur: 0.12 },
+   { start: 0.32, dur: 0.48 }
+  ];
+  bursts.forEach(b => {
+   const t = t0 + b.start;
+   [587.33, 739.99, 880.00].forEach((freq) => {
     const osc = audioCtx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, t);
     const gain = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(n, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    gain.gain.setValueAtTime(0.24, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + b.dur);
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.4);
-   }, i * 90);
+    osc.start(t);
+    osc.stop(t + b.dur);
+   });
   });
- } else if (type === 'drumroll') {
-  for (let i = 0; i < 14; i++) {
-   setTimeout(() => playKick(), i * 45);
+
+ } else if (type === 'cheer') {
+  // Real Rushing Stadium Crowd Applause & Roar (Poisson clapping bursts + crowd filter)
+  const dur = 2.5;
+  const bSize = Math.floor(audioCtx.sampleRate * dur);
+  const buffer = audioCtx.createBuffer(1, bSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bSize; i++) {
+   data[i] = (Math.random() * 2 - 1) * 0.35;
   }
+  const numClaps = Math.floor(dur * 90);
+  for (let c = 0; c < numClaps; c++) {
+   const clapPos = Math.floor(Math.random() * bSize);
+   for (let k = 0; k < 60 && clapPos + k < bSize; k++) {
+    data[clapPos + k] += (Math.random() * 2 - 1) * 0.9 * Math.exp(-k / 12);
+   }
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(1150, t0);
+  filter.Q.setValueAtTime(1.3, t0);
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.01, t0);
+  gain.gain.linearRampToValueAtTime(0.75, t0 + 0.25);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  noise.start(t0);
+  noise.stop(t0 + dur);
+
+ } else if (type === 'drumroll') {
+  // Snare Drumroll Crescendo + Crash Cymbal at end
+  const count = 28;
+  for (let i = 0; i < count; i++) {
+   const t = t0 + (i * 0.045) * Math.pow(0.98, i);
+   const vol = 0.08 + (i / count) * 0.55;
+   const osc = audioCtx.createOscillator();
+   osc.type = 'triangle';
+   osc.frequency.setValueAtTime(190, t);
+   osc.frequency.exponentialRampToValueAtTime(60, t + 0.04);
+   const g = audioCtx.createGain();
+   g.gain.setValueAtTime(vol * 0.65, t);
+   g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+   osc.connect(g);
+   g.connect(audioCtx.destination);
+   osc.start(t);
+   osc.stop(t + 0.04);
+  }
+  // Crash Cymbal
+  const tCrash = t0 + 1.15;
+  const cSize = Math.floor(audioCtx.sampleRate * 0.9);
+  const cBuf = audioCtx.createBuffer(1, cSize, audioCtx.sampleRate);
+  const cd = cBuf.getChannelData(0);
+  for (let i = 0; i < cSize; i++) cd[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.28));
+  const crashSrc = audioCtx.createBufferSource();
+  crashSrc.buffer = cBuf;
+  const crashF = audioCtx.createBiquadFilter();
+  crashF.type = 'highpass';
+  crashF.frequency.value = 4000;
+  const crashG = audioCtx.createGain();
+  crashG.gain.setValueAtTime(0.55, tCrash);
+  crashG.gain.exponentialRampToValueAtTime(0.001, tCrash + 0.9);
+  crashSrc.connect(crashF);
+  crashF.connect(crashG);
+  crashG.connect(audioCtx.destination);
+  crashSrc.start(tCrash);
+  crashSrc.stop(tCrash + 0.9);
+
+ } else if (type === 'fanfare') {
+  // Triumphant Brass Trumpet March Melody: G4 -> C5 -> E5 -> G5 -> C6 with harmony chords!
+  const sequence = [
+   { f: 392.00, start: 0,    dur: 0.13 },
+   { f: 523.25, start: 0.13, dur: 0.13 },
+   { f: 659.25, start: 0.26, dur: 0.13 },
+   { f: 783.99, start: 0.39, dur: 0.22 },
+   { f: 1046.50, start: 0.61, dur: 0.95 }
+  ];
+  sequence.forEach(note => {
+   const t = t0 + note.start;
+   [-3, 3].forEach(detune => {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(note.f, t);
+    osc.detune.setValueAtTime(detune, t);
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(note.f * 3.5, t);
+    filter.Q.setValueAtTime(3.0, t);
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.linearRampToValueAtTime(0.28, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + note.dur);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + note.dur);
+   });
+  });
+  // Grand final harmony chord (E5 and G5 underneath C6)
+  [659.25, 783.99].forEach(f => {
+   const t = t0 + 0.61;
+   const osc = audioCtx.createOscillator();
+   osc.type = 'sawtooth';
+   osc.frequency.setValueAtTime(f, t);
+   const filter = audioCtx.createBiquadFilter();
+   filter.type = 'lowpass';
+   filter.frequency.setValueAtTime(f * 2.8, t);
+   const gain = audioCtx.createGain();
+   gain.gain.setValueAtTime(0.001, t);
+   gain.gain.linearRampToValueAtTime(0.18, t + 0.02);
+   gain.gain.exponentialRampToValueAtTime(0.001, t + 0.95);
+   osc.connect(filter);
+   filter.connect(gain);
+   gain.connect(audioCtx.destination);
+   osc.start(t);
+   osc.stop(t + 0.95);
+  });
  }
 }
 
@@ -1902,11 +2565,23 @@ function loadCustomTrack(e) {
  const file = e.target.files[0];
  if (!file) return;
  const url = URL.createObjectURL(file);
- const audio = new Audio(url);
- audio.play();
- document.getElementById('djTrackName').textContent = file.name.replace(/\.[^/.]+$/, "");
- document.getElementById('djTrackStatus').textContent = "Custom DJ Track · Playing";
- document.getElementById('djDisc').classList.add('playing');
+ if (!customAudioEl) {
+  customAudioEl = new Audio();
+  customAudioEl.loop = true;
+ }
+ customAudioEl.src = url;
+ stopCurrentTrack();
+ currentTrackId = 'custom';
+ const name = file.name.replace(/\.[^/.]+$/, "");
+ const customObj = DJ_TRACKS.find(t => t.id === 'custom');
+ if (customObj) {
+  customObj.name = name;
+  customObj.sub = 'Custom MP3 File (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)';
+ }
+ updateTrackUi();
+ if (isPlaying) {
+  startCurrentTrack();
+ }
  closeDjModal();
 }
 
@@ -1969,8 +2644,8 @@ function openAddAwardModal() {
  document.getElementById('awId').value = "";
  document.getElementById('awTitle').value = "";
  document.getElementById('awDesc').value = "";
- document.getElementById('awVotes').value = "1";
- document.getElementById('awPhase').value = "prelim";
+ selectDropdownOption('awVotesDropdown', '1', '1 vote per student (Standard Award)');
+ selectDropdownOption('awPhaseDropdown', 'prelim', 'Preliminary Phase');
  document.getElementById('awardModal').hidden = false;
 }
 function closeAwardModal() { document.getElementById('awardModal').hidden = true; }
@@ -1989,6 +2664,7 @@ function saveAward() {
 
 function setCompetitionPhase(phase) {
  STATE.settings.phase = phase;
+ try { localStorage.setItem('jorts_phase', phase); } catch(e){}
  alert(`Competition phase switched to: ${phase === 'final' ? 'Final Runway (Top 5)' : 'Auditions & Preliminaries'}`);
  renderBallot();
  renderLeaderboard();
@@ -2020,10 +2696,12 @@ function submitVotes() {
 document.addEventListener('DOMContentLoaded', () => {
  initVoterId();
  loadLocalState();
+ updateTrackUi();
  renderLookbookGallery();
  renderBallot();
  renderLeaderboard();
 });
 </script>
+<audio id="anthemAudio" preload="auto" loop src="audio/runway-anthem.mp3"></audio>
 </body>
 </html>
