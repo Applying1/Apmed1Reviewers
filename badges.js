@@ -27,26 +27,26 @@
     ['ans500', 'Practice', '📚', 'Steady learner', 'Answer 500 questions', 'answers', 500],
     ['ans2000', 'Practice', '🧠', 'Question machine', 'Answer 2,000 questions', 'answers', 2000],
     ['ans5000', 'Practice', '🏔️', 'Summit', 'Answer 5,000 questions', 'answers', 5000],
-    ['fix10', 'Mistakes', '🔁', 'Comeback', 'Get 10 missed questions right later', 'fixes', 10],
+    ['fix10', 'Mistakes', '🩹', 'Comeback', 'Get 10 missed questions right later', 'fixes', 10],
     ['fix100', 'Mistakes', '💪', 'Comeback kid', 'Get 100 missed questions right later', 'fixes', 100],
-    ['fix500', 'Mistakes', '🦾', 'Unbreakable', 'Get 500 missed questions right later', 'fixes', 500],
-    ['sec1', 'Mastery', '✅', 'Section cleared', 'Master every question in a section', 'sections', 1],
-    ['sec10', 'Mastery', '🧩', 'Ten sections', 'Master 10 sections', 'sections', 10],
+    ['fix500', 'Mistakes', '💎', 'Unbreakable', 'Get 500 missed questions right later', 'fixes', 500],
+    ['sec1', 'Mastery', '🌟', 'Section cleared', 'Master every question in a section', 'sections', 1],
+    ['sec10', 'Mastery', '🗝️', 'Ten sections', 'Master 10 sections', 'sections', 10],
     ['les1', 'Mastery', '🎓', 'Lesson master', 'Master a whole lesson or chapter', 'lessons', 1],
     ['les5', 'Mastery', '🏅', 'Five lessons', 'Master 5 lessons or chapters', 'lessons', 5],
-    ['exam1', 'Mastery', '📝', 'Dress rehearsal', 'Finish a mock exam', 'exams', 1],
-    ['exam10', 'Mastery', '🗂️', 'Exam-ready', 'Finish 10 mock exams', 'exams', 10],
+    ['exam1', 'Mastery', '📋', 'Dress rehearsal', 'Finish a mock exam', 'exams', 1],
+    ['exam10', 'Mastery', '🩺', 'Exam-ready', 'Finish 10 mock exams', 'exams', 10],
     ['streak3', 'Habits', '🔥', 'Warming up', 'Meet your daily goal 3 days in a row', 'streak', 3],
-    ['streak7', 'Habits', '📅', 'One full week', 'Meet your daily goal 7 days in a row', 'streak', 7],
-    ['streak30', 'Habits', '🌟', 'Habit formed', 'Meet your daily goal 30 days in a row', 'streak', 30],
-    ['cards100', 'Habits', '🃏', 'Card shark', 'Review 100 flashcards', 'cards', 100],
-    ['cards1000', 'Habits', '🎴', 'Spaced out', 'Review 1,000 flashcards', 'cards', 1000],
-    ['focus1', 'Habits', '⏱️', 'In the zone', 'Finish a 25-minute focus', 'focus', 1],
+    ['streak7', 'Habits', '⚡', 'One full week', 'Meet your daily goal 7 days in a row', 'streak', 7],
+    ['streak30', 'Habits', '👑', 'Habit formed', 'Meet your daily goal 30 days in a row', 'streak', 30],
+    ['cards100', 'Habits', '🗂️', 'Card shark', 'Review 100 flashcards', 'cards', 100],
+    ['cards1000', 'Habits', '🚀', 'Spaced out', 'Review 1,000 flashcards', 'cards', 1000],
+    ['focus1', 'Habits', '⏳', 'In the zone', 'Finish a 25-minute focus', 'focus', 1],
     ['focus10', 'Habits', '🧘', 'Deep worker', 'Finish 10 focus sessions', 'focus', 10],
-    ['word5', 'Games', '🔤', 'Wordsmith', "Solve APMed'le 5 times", 'words', 5],
-    ['sort5', 'Games', '🗃️', 'Sorted', 'Finish Sort It 5 times', 'sorts', 5],
+    ['word5', 'Games', '📖', 'Wordsmith', "Solve APMed'le 5 times", 'words', 5],
+    ['sort5', 'Games', '🧪', 'Sorted', 'Finish Sort It 5 times', 'sorts', 5],
     ['perfect3', 'Games', '🎯', 'Perfect sort', 'Get 3 perfect Sort It days', 'perfect', 3],
-    ['cw5', 'Games', '✏️', 'Puzzler', 'Solve 5 daily crosswords', 'crosswords', 5],
+    ['cw5', 'Games', '🧩', 'Puzzler', 'Solve 5 daily crosswords', 'crosswords', 5],
     ['duel1', 'Games', '⚔️', 'En garde', 'Finish a duel', 'duels', 1],
     ['duel10', 'Games', '🏆', 'Duelist', 'Finish 10 duels', 'duels', 10]];
   const EVENTS = ['fixes', 'exams', 'cards', 'focus'], LEVELS = ['answers', 'sections', 'lessons'];
@@ -120,7 +120,7 @@
     if (!document.getElementById('bdpopcss')) {
       const st = document.createElement('style'); st.id = 'bdpopcss';
       st.textContent = '.bdpop{position:fixed;left:50%;bottom:calc(var(--tbh,0px) + 16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:95;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 12px;border-radius:16px;background:var(--surface,#fff);color:var(--text,#222);border:1px solid var(--accent-line,#c7c3f3);box-shadow:0 10px 30px #0004;font:600 14px/1.3 system-ui,sans-serif;max-width:calc(100vw - 32px);overflow:hidden;animation:bdin .45s cubic-bezier(.2,1.3,.4,1)}'
-        + '.bdpop .e{position:relative;font-size:30px;line-height:1;display:inline-block;animation:bdshake .7s .25s ease-in-out}.bdpop small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--accent,#4f46e5)}.bdpop a{display:block;margin-top:2px;font-size:12.5px;font-weight:600;color:var(--accent,#4f46e5)}'
+        + '.bdpop .e{position:relative;width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 30%,var(--accent-soft,#eeeefd),var(--surface,#fff));border:1.5px solid var(--accent,#4f46e5);box-shadow:0 0 0 1px var(--accent-line,#c7c3f3);font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,sans-serif;font-variant-emoji:emoji;font-size:24px;line-height:1;flex:none;animation:bdshake .7s .25s ease-in-out}.bdpop small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--accent,#4f46e5)}.bdpop a{display:block;margin-top:2px;font-size:12.5px;font-weight:600;color:var(--accent,#4f46e5)}'
         + '.bdpop::after{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.6),transparent);transform:translateX(-130%) skewX(-18deg);animation:bdshine .9s .35s ease-out forwards;pointer-events:none}'
         + '.bdpop .sp{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:1px;background:var(--accent,#4f46e5);opacity:0;transform:rotate(45deg);animation:bdsp .8s .3s ease-out forwards}'
         + '.bdpop .sp:nth-child(odd){background:#f5b82e}'
