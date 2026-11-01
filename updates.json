@@ -865,5 +865,14 @@
   "title": "Psychology Evals moved to Nov 11",
   "text": "The Evals on Chapters 11 and 12 (Personality; Stress, Health & Coping) have been moved to Wednesday, November 11. Timetable, exam countdowns and reminders have been updated.",
   "link": "schedule.html"
+ },
+ {
+  "id": 105,
+  "date": "2026-11-01",
+  "type": "schedule",
+  "course": "chem",
+  "title": "General Chemistry: Lecture quiz this Saturday, Nov 7 at 8:00 AM",
+  "text": "The Chem Lecture quiz is scheduled for this Saturday, Nov 7 at 8:00 AM. Timetable and exam countdowns have been updated.",
+  "link": "schedule.html"
  }
 ]

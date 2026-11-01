@@ -244,13 +244,20 @@
     "mmw": "Graphical Method (Geometric Approach)",
     "nstp": "Ch. 9: Recreation, Physical Fitness & Wellness · Ch. 10: The Social Menace of Drug Addiction",
     "pe": "TABATA Workout 2",
-    "chem-lec-1": "Unit 17: Lipids",
+    "chem-lec-1": "Quiz: Chem Lecture · Unit 17: Lipids",
     "chem-lec-2": "Unit 18: Carbohydrates",
     "chem-lab": "Activity 11: Qualitative analysis of carbohydrates"
+   },
+   "times": {
+    "chem-lec-1": {
+     "start": "08:00",
+     "end": "10:30"
+    }
    },
    "notes": [
     "Holidays: All Saints' Day (Sun, Nov 1), All Souls' Day (Mon, Nov 2) and Institutional Family Day (Tue, Nov 3). No Pharmacology class on Tuesday.",
     "Botany (class and Evals) moves to Friday, Nov 6 at 10:00 AM. NSTP moves temporarily to Thursday, Nov 5, 4:00-7:00 PM. Psychology Evals (Ch. 11–12) moved to Wednesday, Nov 11.",
+    "Chem Lecture quiz on Saturday, Nov 7 at 8:00 AM.",
     "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
    ],
    "cancel": [
