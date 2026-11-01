@@ -20,10 +20,10 @@ window.HomeLayout=(function(){const K='reviewer_home',TOP=['upnext','tests','tod
   try{if(Object.keys(o).length)localStorage.setItem(K,JSON.stringify(o));else localStorage.removeItem(K);mem=null}catch(e){mem=o}apply(norm(o))}
  const topOrder=h=>{const t=h.top.filter((x,i,a)=>TOP.includes(x)&&a.indexOf(x)===i);return t.concat(TOP.filter(x=>!t.includes(x)))};
  // put the top cards, the tiles and the course list in the saved order (the tiles' CSS order says the same, so nothing jumps)
- function place(h){h=h||get();const n=document.querySelector('nav.tools'),l=document.getElementById('list');if(!n||!l)return;const p=n.parentNode,mv=document.getElementById('move'),pq=document.getElementById('prevq');
-  if(h.first)p.insertBefore(l,n);else if(mv)mv.after(l);
+ function place(h){h=h||get();const n=document.querySelector('nav.tools'),l=document.getElementById('list'),adm=document.getElementById('admintools');if(!n||!l)return;const p=n.parentNode,mv=document.getElementById('move'),pq=document.getElementById('prevq');
+  if(h.first)p.insertBefore(l,n);else if(mv)mv.after(l);if(adm&&!h.first)l.after(adm);
   const a=h.first?l:n;topOrder(h).forEach(id=>{const e=document.getElementById(id);if(e)p.insertBefore(e,a);if(id==='upnext'&&pq)p.insertBefore(pq,a)});
-  const cu=n.querySelector('.cust');h.order.forEach(id=>{const e=document.getElementById(id);if(e&&e.parentNode===n)n.insertBefore(e,cu)})}
+  const cu=n.querySelector('.cust');h.order.forEach(id=>{const e=document.getElementById(id);if(e&&(e.parentNode===n||e.parentNode===adm))n.insertBefore(e,cu)})}
  function sortCourses(list){const o=get().courses,rk=c=>{const i=o.indexOf(c.id);return i<0?1e3+list.indexOf(c):i};return list.slice().sort((a,b)=>rk(a)-rk(b))}
  try{apply()}catch(e){}return {TOP,get,put,apply,place,sortCourses}})();</script>
 <style>
@@ -102,6 +102,18 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .modal p.msg{color:var(--bad);margin-top:10px}
 .modal p.msg.ok{color:var(--good)}
 .modal p.msg:empty{display:none}
+.games-box{max-width:440px}
+.gsub{margin:0 0 14px;color:var(--mute);font-size:14px}
+.ghub{display:flex;flex-direction:column;gap:10px}
+.gitem{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line2);text-decoration:none;transition:background .15s,border-color .15s,transform .15s;color:inherit}
+.gitem:hover{background:var(--raised);border-color:var(--accent-line);transform:translateY(-1px)}
+.gtic{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-size:20px;flex:none}
+.gmain{flex:1;min-width:0}
+.gtop{display:flex;align-items:center;gap:7px}
+.gtop b{font:700 14.5px/1.2 var(--sans);color:var(--text)}
+.gitem p{margin:2px 0 0;font-size:12.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gitem p .done{color:var(--good,#1b7340);font-weight:600}
+.garrow{color:var(--mute);display:inline-flex;align-items:center;flex:none}
 /* One-time spotlight: features people miss */
 .spot{display:flex;gap:14px;padding:14px;margin-top:12px;border:1px solid var(--line2);border-radius:14px;background:var(--bg)}
 .spot .ic{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:var(--surface);border:1px solid var(--line)}
@@ -173,6 +185,8 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 @media (max-width:520px){.tdy{gap:12px 14px}.strk{flex-direction:column;align-items:flex-start;gap:6px;padding-right:14px}.strk b{font-size:22px}.strk .fl{width:38px;height:38px;font-size:19px}.gl .gt{flex-direction:column;gap:1px}.wk{max-width:none}.card .due .rm,.tdy .due .rm{margin-left:0}}
 /* Tools: live quiz and grade calculator */
 .tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:0 0 18px}
+.sec-tools{margin-top:20px}
+.sec-tools[hidden]{display:none!important}
 .tool{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow);min-width:0;transition:border-color .15s,transform .18s var(--ease)}
 .tool:hover{border-color:var(--accent-line);transform:translateY(-1px)}
 .tool[hidden]{display:none}
@@ -332,28 +346,79 @@ html.introing body{overflow:hidden}
  <nav class="tools" aria-label="Tools">
   <a class="tool" id="gdtool" href="discuss.html?c=general" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg></span><span><b>General discussion</b><span id="gdsub">Talk with the whole class</span></span></a>
   <a class="tool" id="qztool" href="quiz.html"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Live quiz</b><span>Quiz your study group, live: everyone joins on their phone with a code</span></span></a>
- <a class="tool" id="cwtool" href="crossword.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crossword"/></svg></span><span><b>Daily crossword</b><span id="cwsub">A short puzzle on your next eval</span></span></a>
- <a class="tool" id="wdtool" href="apmeddle.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-letters"/></svg></span><span><b>APMed'le</b><span id="wdsub">Guess the term of the day</span></span></a>
- <a class="tool" id="sttool" href="sortit.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-list"/></svg></span><span><b>Sort It</b><span id="stsub">Put today's terms in their groups</span></span></a>
- <a class="tool" id="dutool" href="duel.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-trophy"/></svg></span><span><b>Duels</b><span id="dusub">Challenge a classmate to 7 questions</span></span></a>
- <a class="tool" id="bdtool" href="badges.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crown"/></svg></span><span><b>Badges</b><span id="bdsub">Earn badges for good study habits</span></span></a>
- <a class="tool" id="cltool" href="classlist.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-users"/></svg></span><span><b>Class list</b><span id="clsub">See who is studying right now</span></span></a>
- <a class="tool" id="atttool" href="attendance.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span><span><b>My attendance</b><span id="attsub">From the class tracker</span></span></a>
- <a class="tool locked" id="shoptool" aria-disabled="true" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b id="shopname">Coming soon</b><span id="shopsub">Stay tuned</span></span></a>
- <a class="tool" id="cdtool" href="classday.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span><span><b>Class day</b><span>Post today's summary, answer questions (only you see this)</span></span></a>
- <a class="tool" id="modtool" href="moderate.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-shield-check"/></svg></span><span><b>Moderator</b><span id="modsub">Link requests, questions, reports, attendance update</span></span></a>
+  <a class="tool" id="gamestool" href="#games" onclick="event.preventDefault();openGames()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-gamepad"/></svg></span><span><b>Daily games</b><span id="gamessub">Crossword &middot; APMed&#39;le &middot; Sort It</span></span></a>
+  <a class="tool" id="dutool" href="duel.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-trophy"/></svg></span><span><b>Duels</b><span id="dusub">Challenge a classmate to 7 questions</span></span></a>
+  <a class="tool" id="bdtool" href="badges.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crown"/></svg></span><span><b>Badges</b><span id="bdsub">Earn badges for good study habits</span></span></a>
+  <a class="tool" id="classtool" href="#class" onclick="event.preventDefault();openClassModal()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-users"/></svg></span><span><b>Class &amp; attendance</b><span id="classsub">Class list &middot; My attendance</span></span></a>
+  <a class="tool locked" id="shoptool" aria-disabled="true" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b id="shopname">Coming soon</b><span id="shopsub">Stay tuned</span></span></a>
   <a class="cust" href="settings.html#home" role="button">Customize home</a>
  </nav>
  <div class="try" id="try" hidden></div>
  <div class="try" id="move" hidden></div>
  <div class="try" id="prnotice" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
+ <nav class="tools sec-tools" id="admintools" aria-label="Class management" hidden>
+  <a class="tool" id="cdtool" href="classday.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span><span><b>Class day</b><span>Post today's summary, answer questions (only you see this)</span></span></a>
+  <a class="tool" id="modtool" href="moderate.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-shield-check"/></svg></span><span><b>Moderator</b><span id="modsub">Link requests, questions, reports, attendance update</span></span></a>
+ </nav>
  <script>try{HomeLayout.place()}catch(e){}</script>
  <p class="note inst" id="install" hidden>Use this like an app, even offline. <button class="linkbtn" id="installbtn">Install app</button></p>
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
  <p class="note setl"><a href="settings.html">Settings</a>: colors, daily goal, notifications, sounds and storage.</p>
  <div class="class"><p class="legal"><a href="privacy.html">Privacy &amp; terms</a></p></div>
 </main>
+<div class="modal" id="gamesdlg" hidden onclick="if(event.target===this)closeGames()"><div class="box games-box" role="dialog" aria-modal="true" aria-labelledby="gamesh">
+ <div class="mhead"><h2 id="gamesh">Daily games</h2><button class="mx" onclick="closeGames()" aria-label="Close" title="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></div>
+ <p class="gsub">Three short daily games to test your recall and keep your mind sharp.</p>
+ <div class="ghub">
+  <a class="gitem" id="cwtool" href="crossword.html">
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-crossword"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>Daily crossword</b></div>
+    <p id="cwsub">A short puzzle on your next eval</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+  <a class="gitem" id="wdtool" href="apmeddle.html">
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-letters"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>APMed'le</b></div>
+    <p id="wdsub">Guess the term of the day</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+  <a class="gitem" id="sttool" href="sortit.html">
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-list"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>Sort It</b></div>
+    <p id="stsub">Put today's terms in their groups</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+ </div>
+</div></div>
+<div class="modal" id="classdlg" hidden onclick="if(event.target===this)closeClassModal()"><div class="box games-box" role="dialog" aria-modal="true" aria-labelledby="classh">
+ <div class="mhead"><h2 id="classh">Class &amp; attendance</h2><button class="mx" onclick="closeClassModal()" aria-label="Close" title="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></div>
+ <p class="gsub">See who is studying right now, send direct messages, and check your attendance record.</p>
+ <div class="ghub">
+  <a class="gitem" id="cltool" href="classlist.html">
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-users"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>Class list</b></div>
+    <p id="clsub">See who is studying right now</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+  <a class="gitem" id="atttool" href="attendance.html">
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>My attendance</b></div>
+    <p id="attsub">From the class tracker</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+ </div>
+</div></div>
 <div class="modal" id="sync" hidden onclick="if(event.target===this)closeSync()"><div class="box" role="dialog" aria-modal="true" aria-labelledby="synch">
  <div class="mhead"><h2 id="synch">Sync your progress</h2><button class="mx" onclick="closeSync()" aria-label="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></div>
  <div id="syncbody"></div>
@@ -488,14 +553,14 @@ function annClose(id){if(window.Notify)Notify.annDone(id);$('annc').hidden=true}
 // My attendance tile: for signed-in students (att_mine); not linked yet = a link to send a request. A missed day with
 // its chat still open comes first; the owner (class secretary) also gets the Class day tile.
 (async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c||!Auth.ses())return;Auth.cloud=c.cloud;
- const a=await Auth.rpc('att_mine',{},true);if(!a)return;if(a.owner)$('cdtool').hidden=false;if(a.owner)modTile();
+ const a=await Auth.rpc('att_mine',{},true);if(!a)return;if(a.owner){$('cdtool').hidden=false;if($('admintools'))$('admintools').hidden=false;modTile()};
  if(!a.linked){$('attsub').textContent=a.request&&a.request.status==='pending'?'Request waiting for the class secretary':'Link your account to see your attendance';$('atttool').hidden=false;return}
  const m=(a.missed||[]).find(x=>x.open),them=m&&(m.chat||[]).length&&m.chat[m.chat.length-1].o;
- $('attsub').textContent=m?(them?'New reply about '+m.label:'You missed '+m.label+(m.notes?': see the class summary':'')):(a.pct?a.pct+' · ':'')+(a.present??0)+' present · '+(a.absent??0)+' absent'+(a.excused?' · '+a.excused+' excused':'');$('atttool').hidden=false}catch(e){}})();
+ $('attsub').textContent=m?(them?'New reply about '+m.label:'You missed '+m.label+(m.notes?': see the class summary':'')):(a.pct?a.pct+' · ':'')+(a.present??0)+' present · '+(a.absent??0)+' absent'+(a.excused?' · '+a.excused+' excused':'');$('atttool').hidden=false;syncClassTile()}catch(e){}})();
 // Moderator tile (owner only): what is waiting on moderate.html (mod_counts, supabase_attsync.sql)
 async function modTile(){try{const m=await Auth.rpc('mod_counts',{},true),n=(m.links||0)+(m.questions||0)+(m.reports||0)+(m.cards||0);
  const p=[[m.links,'link request'],[m.questions,'question'],[m.reports,'report'],[m.cards,'flashcard']].filter(x=>x[0]).map(x=>x[0]+' '+x[1]+(x[0]>1?'s':''));
- $('modsub').textContent=n?p.join(' · ')+' waiting':'Nothing waiting · update attendance';$('modtool').classList.toggle('due',n>0);$('modtool').hidden=false}catch(e){}}
+ $('modsub').textContent=n?p.join(' · ')+' waiting':'Nothing waiting · update attendance';$('modtool').classList.toggle('due',n>0);$('modtool').hidden=false;if($('admintools'))$('admintools').hidden=false}catch(e){}}
 // Upcoming tile: until launch everyone sees only the icon and "Coming soon" (a surprise); its testers get the real tile
 (async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c)return;Auth.cloud=Auth.cloud||c.cloud;
  const d=await Auth.rpc('shop_catalog',{},!!Auth.ses()),t=$('shoptool');if(!d)return;
@@ -519,7 +584,7 @@ async function modTile(){try{const m=await Auth.rpc('mod_counts',{},true),n=(m.l
    sub.textContent='Today: '+today.filter(p=>!done(p)).map(nm).join(' and ')+when}
  }else{const left=all.filter(p=>!done(p));if(!left.length)return;sub.textContent='Catch up: '+nm(left[left.length-1])+' from '+(left[left.length-1].date===shiftDay(day,-1)?'yesterday':'this week')}
  if(!st.seen)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
- t.hidden=false;
+ t.hidden=false;syncGamesTile();
 }catch(e){}
 function shiftDay(d,n){const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)}})();
 // Duels tile (duel.html): shows when the class cloud is on; signed in, it counts the duels waiting for you
@@ -580,7 +645,8 @@ window.clTile=async function(){try{
  const hr=rows.filter(r=>r.state==='here'&&(r.me?!r.invisible:true)).length;
  const parts=[];if(st)parts.push(st+' studying');if(hr)parts.push(hr+' on the site');
  sub.textContent=(parts.length?parts.join(' · '):rows.length+' classmates · see who is online')+(me&&me.invisible?' · Invisible':'');
-}catch(e){if(/link your attendance/i.test(String(e&&e.message||''))){const s=document.getElementById('clsub');if(s)s.textContent='Link your attendance to see the class list'}}};
+ syncClassTile();
+}catch(e){if(/link your attendance/i.test(String(e&&e.message||''))){const s=document.getElementById('clsub');if(s)s.textContent='Link your attendance to see the class list'}}syncClassTile()};
 window.clTile();
 // Sort It tile: only on days with a set; "Sorted ✓" once done, "New" until the page is opened once
 (async function(){try{
@@ -591,7 +657,7 @@ window.clTile();
  if(g&&g.d)sub.innerHTML='<span class="done">'+(g.c===1?'Perfect today ✓':'Sorted today ✓')+'</span> · new set tomorrow';
  else sub.textContent=g&&g.c?'Keep going: '+g.ok.length+' of '+d.items.length+' sorted':d.title+' · '+d.items.length+' terms';
  if(!st.how)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
- t.hidden=false}catch(e){}})();
+ t.hidden=false;syncGamesTile()}catch(e){}})();
 // APMed'le tile: only on days with a word; "Solved ✓" / "Missed" once played, "New" until the page is opened once
 (async function(){try{
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -602,7 +668,7 @@ window.clTile();
  else if(g&&(g.r||[]).length>=6)sub.textContent='Missed today · new word tomorrow';
  else sub.textContent=g&&(g.r||[]).length?'Keep going: '+g.r.length+'/6 guesses used':'Spin for today’s subject · '+d.n+' letters';
  if(!st.how)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
- t.hidden=false}catch(e){}})();
+ t.hidden=false;syncGamesTile()}catch(e){}})();
 // Test countdown: the next exams, evals and quizzes on the timetable (next 14 days), ticking every second.
 (async function(){try{await Sched.load();const box=document.getElementById('tests');let list=[];
  const pick=()=>{const now=new Date();list=Remind.list(3,now).filter(a=>a.from-now<14*864e5).slice(0,4)};
@@ -684,7 +750,51 @@ function rpc(fn,body){const h={'Content-Type':'application/json',apikey:CLOUD.ke
  return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body)}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})}
 function openSync(){drawSync();$('sync').hidden=false}
 function closeSync(){$('sync').hidden=true}
-addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('sync').hidden)closeSync()});
+function openGames(){const d=$('gamesdlg');if(d)d.hidden=false;history.replaceState(null,'','#games')}
+function closeGames(){const d=$('gamesdlg');if(d)d.hidden=true;if(location.hash==='#games')history.replaceState(null,'',location.pathname+location.search)}
+function openClassModal(){const d=$('classdlg');if(d)d.hidden=false;history.replaceState(null,'','#class')}
+function closeClassModal(){const d=$('classdlg');if(d)d.hidden=true;if(location.hash==='#class')history.replaceState(null,'',location.pathname+location.search)}
+addEventListener('keydown',e=>{
+ if(e.key==='Escape'){
+  if($('sync')&&!$('sync').hidden)closeSync();
+  if($('gamesdlg')&&!$('gamesdlg').hidden)closeGames();
+  if($('classdlg')&&!$('classdlg').hidden)closeClassModal();
+ }
+});
+addEventListener('hashchange',()=>{
+ if(location.hash==='#games')openGames();
+ else if(location.hash==='#class')openClassModal();
+ else{
+  if($('gamesdlg')&&!$('gamesdlg').hidden)closeGames();
+  if($('classdlg')&&!$('classdlg').hidden)closeClassModal();
+ }
+});
+if(location.hash==='#games')setTimeout(openGames,60);
+if(location.hash==='#class')setTimeout(openClassModal,60);
+function syncGamesTile(){
+ const s=$('gamessub');if(!s)return;
+ const cwDone=$('cwsub')&&$('cwsub').querySelector('.done');
+ const wdDone=$('wdsub')&&$('wdsub').querySelector('.done');
+ const stDone=$('stsub')&&$('stsub').querySelector('.done');
+ const doneCount=(cwDone?1:0)+(wdDone?1:0)+(stDone?1:0);
+ if(doneCount===3){
+  s.innerHTML='<span class="done">All 3 solved today ✓</span> · Crossword · APMed\'le · Sort It';
+ }else if(doneCount>0){
+  s.textContent=doneCount+'/3 solved · Crossword · APMed\'le · Sort It';
+ }else{
+  s.textContent='Crossword · APMed\'le · Sort It';
+ }
+}
+function syncClassTile(){
+ const s=$('classsub');if(!s)return;
+ const cl=$('clsub')?$('clsub').textContent:'';
+ const m=cl.match(/(\d+\s+studying)/);
+ if(m){
+  s.textContent=m[1]+' · Class list · My attendance';
+ }else{
+  s.textContent='Class list · My attendance';
+ }
+}
 // ---- Sign in with Google (Supabase Auth). The account gets one sync code; signing in gives this device that code.
 const ACC_KEY='reviewer_account';
 function getAcc(){try{return JSON.parse(localStorage.getItem(ACC_KEY))||null}catch(e){return null}}

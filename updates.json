@@ -882,5 +882,13 @@
   "title": "Class list: Last online status + Direct Messages (DMs)",
   "text": "The Class list now shows when classmates were last online, plus a new DM feature to send private 1-on-1 messages, chat about questions or study topics, and receive instant push notifications when a classmate messages you.",
   "link": "classlist.html"
+ },
+ {
+  "id": 107,
+  "date": "2026-11-01",
+  "type": "feature",
+  "title": "Clean home layout: Consolidated Daily Games & Class Hub",
+  "text": "The home page is now cleaner and less crowded! Daily crossword, APMed'le, and Sort It are neatly consolidated into a single 'Daily games' hub tile with live completion status, while Class list and My attendance are unified into a 'Class & attendance' hub tile. Secretary and Moderator controls now sit below your courses by default.",
+  "link": "index.html"
  }
 ]

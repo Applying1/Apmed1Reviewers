@@ -5,7 +5,7 @@
 (function () {
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const NAMES = { upnext: 'Next class', tests: 'Tests coming up', today: 'Today', classnow: 'Class', gdtool: 'General discussion', qztool: 'Live quiz', cwtool: 'Daily crossword',
+  const NAMES = { upnext: 'Next class', tests: 'Tests coming up', today: 'Today', classnow: 'Class', gdtool: 'General discussion', qztool: 'Live quiz', gamestool: 'Daily games', classtool: 'Class & attendance', cwtool: 'Daily crossword',
     wdtool: 'APMed’le', sttool: 'Sort It', dutool: 'Duels', bdtool: 'Badges', cltool: 'Class list', atttool: 'My attendance', shoptool: 'Class shop', cdtool: 'Class day', modtool: 'Moderator' };
   const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const X = '<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-x"/></svg>';
