@@ -480,8 +480,8 @@
    font-size: 19px;
    font-weight: 800;
    color: #fff;
-   margin: 0 0 3px;
-   line-height: 1.2;
+   margin: 0 0 14px;
+   line-height: 1.25;
   }
   .jlook-fit-title {
    font-size: 13px;
@@ -883,28 +883,233 @@
    flex-shrink: 0;
   }
 
+
+  /* Prestigious Awards & Titles */
   .jaward-grid {
    display: grid;
-   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-   gap: 14px;
+   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+   gap: 16px;
   }
+  .jaward-hero-card {
+   grid-column: 1 / -1;
+   position: relative;
+   background: radial-gradient(ellipse at 85% 20%, rgba(245, 158, 11, 0.16) 0%, transparent 65%), linear-gradient(135deg, rgba(26, 42, 77, 0.9) 0%, rgba(13, 22, 41, 0.95) 100%);
+   border: 1.5px solid rgba(245, 158, 11, 0.45);
+   border-radius: 18px;
+   padding: 24px;
+   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), 0 0 24px rgba(245, 158, 11, 0.15);
+   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+   overflow: hidden;
+  }
+  .jaward-hero-card::before {
+   content: '';
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   height: 3px;
+   background: linear-gradient(90deg, #f59e0b, #fde047, #d97706);
+  }
+  .jaward-hero-card:hover {
+   transform: translateY(-2px);
+   border-color: rgba(245, 158, 11, 0.7);
+   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.5), 0 0 32px rgba(245, 158, 11, 0.25);
+  }
+
   .jaward-box {
-   background: rgba(255,255,255,0.03);
-   border: 1px solid var(--border-subtle);
+   position: relative;
+   background: linear-gradient(145deg, rgba(17, 28, 51, 0.7) 0%, rgba(10, 18, 34, 0.85) 100%);
+   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+   border-radius: 16px;
+   padding: 20px;
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  }
+  .jaward-box:hover {
+   transform: translateY(-3px);
+   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+   border-color: rgba(255, 255, 255, 0.22);
+  }
+  .jaward-box.silver {
+   border-color: rgba(203, 213, 225, 0.35);
+   background: radial-gradient(ellipse at 85% 15%, rgba(203, 213, 225, 0.1) 0%, transparent 60%), linear-gradient(145deg, rgba(20, 32, 56, 0.8) 0%, rgba(10, 18, 34, 0.9) 100%);
+  }
+  .jaward-box.silver:hover {
+   border-color: rgba(226, 232, 240, 0.6);
+   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(203, 213, 225, 0.15);
+  }
+  .jaward-box.bronze {
+   border-color: rgba(217, 119, 6, 0.35);
+   background: radial-gradient(ellipse at 85% 15%, rgba(217, 119, 6, 0.1) 0%, transparent 60%), linear-gradient(145deg, rgba(26, 29, 44, 0.8) 0%, rgba(12, 16, 28, 0.9) 100%);
+  }
+  .jaward-box.bronze:hover {
+   border-color: rgba(245, 158, 11, 0.6);
+   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(217, 119, 6, 0.15);
+  }
+  .jaward-box.blue {
+   border-color: rgba(56, 189, 248, 0.3);
+  }
+  .jaward-box.blue:hover {
+   border-color: rgba(56, 189, 248, 0.6);
+   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.15);
+  }
+  .jaward-box.purple {
+   border-color: rgba(192, 132, 252, 0.3);
+  }
+  .jaward-box.purple:hover {
+   border-color: rgba(192, 132, 252, 0.6);
+   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(192, 132, 252, 0.15);
+  }
+  .jaward-box.emerald {
+   border-color: rgba(52, 211, 153, 0.3);
+  }
+  .jaward-box.emerald:hover {
+   border-color: rgba(52, 211, 153, 0.6);
+   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(52, 211, 153, 0.15);
+  }
+
+  .jaward-top {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 10px;
+  }
+  .jaward-crest {
+   width: 40px;
+   height: 40px;
    border-radius: 12px;
-   padding: 16px;
+   display: grid;
+   place-items: center;
+   background: rgba(255, 255, 255, 0.06);
+   border: 1px solid rgba(255, 255, 255, 0.12);
+   color: #e2e8f0;
+   flex-shrink: 0;
   }
-  .jaward-box b {
-   display: block;
-   font-size: 15px;
+  .jaward-crest.gold {
+   background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.15));
+   border-color: rgba(245, 158, 11, 0.5);
+   color: #fde047;
+   box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+  }
+  .jaward-crest.silver {
+   background: linear-gradient(135deg, rgba(226, 232, 240, 0.2), rgba(148, 163, 184, 0.15));
+   border-color: rgba(203, 213, 225, 0.4);
+   color: #f8fafc;
+   box-shadow: 0 0 14px rgba(203, 213, 225, 0.2);
+  }
+  .jaward-crest.bronze {
+   background: linear-gradient(135deg, rgba(217, 119, 6, 0.25), rgba(180, 83, 9, 0.15));
+   border-color: rgba(217, 119, 6, 0.4);
+   color: #fbbf24;
+   box-shadow: 0 0 14px rgba(217, 119, 6, 0.2);
+  }
+  .jaward-crest.blue {
+   background: rgba(56, 189, 248, 0.12);
+   border-color: rgba(56, 189, 248, 0.35);
+   color: #38bdf8;
+  }
+  .jaward-crest.purple {
+   background: rgba(192, 132, 252, 0.12);
+   border-color: rgba(192, 132, 252, 0.35);
+   color: #c084fc;
+  }
+  .jaward-crest.emerald {
+   background: rgba(52, 211, 153, 0.12);
+   border-color: rgba(52, 211, 153, 0.35);
+   color: #34d399;
+  }
+
+  .jaward-badge {
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+   font-size: 11px;
+   font-weight: 800;
+   letter-spacing: 0.8px;
+   text-transform: uppercase;
+   padding: 3px 9px;
+   border-radius: 999px;
+   border: 1px solid currentColor;
+  }
+  .jaward-badge.supreme {
+   color: #fde047;
+   background: rgba(245, 158, 11, 0.18);
+   border-color: rgba(245, 158, 11, 0.5);
+  }
+  .jaward-badge.silver {
+   color: #e2e8f0;
+   background: rgba(203, 213, 225, 0.14);
+   border-color: rgba(203, 213, 225, 0.4);
+  }
+  .jaward-badge.bronze {
+   color: #f59e0b;
+   background: rgba(217, 119, 6, 0.14);
+   border-color: rgba(217, 119, 6, 0.4);
+  }
+  .jaward-badge.blue {
+   color: #38bdf8;
+   background: rgba(56, 189, 248, 0.12);
+   border-color: rgba(56, 189, 248, 0.35);
+  }
+  .jaward-badge.purple {
+   color: #c084fc;
+   background: rgba(192, 132, 252, 0.12);
+   border-color: rgba(192, 132, 252, 0.35);
+  }
+  .jaward-badge.emerald {
+   color: #34d399;
+   background: rgba(52, 211, 153, 0.12);
+   border-color: rgba(52, 211, 153, 0.35);
+  }
+
+  .jaward-title {
+   font-family: 'Cabinet Grotesk', system-ui, sans-serif;
+   font-size: 17px;
+   font-weight: 800;
    color: #fff;
-   margin-bottom: 4px;
+   margin: 0;
+   line-height: 1.25;
   }
-  .jaward-box span {
-   font-size: 12.5px;
-   color: var(--text-sub);
-   line-height: 1.4;
+  .jaward-hero-card .jaward-title {
+   font-size: 22px;
+   color: #fef08a;
+   letter-spacing: 0.3px;
   }
+  .jaward-desc {
+   font-size: 13px;
+   color: #94a3b8;
+   line-height: 1.5;
+   margin: 0;
+  }
+  .jaward-hero-card .jaward-desc {
+   font-size: 14px;
+   color: #cbd5e1;
+   max-width: 680px;
+  }
+  .jaward-meta {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
+   margin-top: 4px;
+  }
+  .jaward-chip {
+   font-size: 11.5px;
+   font-weight: 600;
+   color: #cbd5e1;
+   background: rgba(255, 255, 255, 0.05);
+   border: 1px solid rgba(255, 255, 255, 0.1);
+   padding: 3px 10px;
+   border-radius: 8px;
+  }
+  .jaward-chip.gold {
+   color: #fef08a;
+   background: rgba(245, 158, 11, 0.15);
+   border-color: rgba(245, 158, 11, 0.35);
+  }
+
 
   /* Floating DJ Player Dock */
   .jdj-dock {
@@ -1456,29 +1661,98 @@
     Titles & Official Awards
    </h3>
    <div class="jaward-grid">
-    <div class="jaward-box">
-     <b>Best in Jorts (JORTS GOD / GODDESS)</b>
-     <span>The supreme title awarded after the Top 5 Final Runway & Harder Q&A round.</span>
+    <!-- Grand Champion Award Hero -->
+    <div class="jaward-hero-card">
+     <div class="jaward-top">
+      <div class="jaward-crest gold">
+       <svg class="v-icon" width="22" height="22" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <span class="jaward-badge supreme">SUPREME GRAND TITLE</span>
+     </div>
+     <h4 class="jaward-title" style="margin-top:10px;">Best in Jorts (JORTS GOD / GODDESS)</h4>
+     <p class="jaward-desc">The supreme title of APMed '33. Crowned after the Top 5 Final Runway walk and harder Q&A questions, determined by overall style, catwalk confidence, and audience acclaim.</p>
+     <div class="jaward-meta">
+      <span class="jaward-chip gold">Final Runway Championship</span>
+      <span class="jaward-chip">Top 5 Finalists</span>
+      <span class="jaward-chip">Supreme Title</span>
+     </div>
     </div>
-    <div class="jaward-box">
-     <b>1st Runner Up (JORTS KING / QUEEN)</b>
-     <span>Silver distinction for exceptional runway performance and styling.</span>
+
+    <!-- 1st Runner Up -->
+    <div class="jaward-box silver">
+     <div class="jaward-top">
+      <div class="jaward-crest silver">
+       <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+      </div>
+      <span class="jaward-badge silver">SILVER DISTINCTION</span>
+     </div>
+     <h4 class="jaward-title">1st Runner Up (JORTS KING / QUEEN)</h4>
+     <p class="jaward-desc">Silver distinction honoring exceptional catwalk poise, styling execution, and stage charisma in the final round.</p>
+     <div class="jaward-meta">
+      <span class="jaward-chip">Final Runway</span>
+      <span class="jaward-chip">Silver Rank</span>
+     </div>
     </div>
-    <div class="jaward-box">
-     <b>2nd Runner Up (JORTS MASTER)</b>
-     <span>Bronze distinction for outstanding catwalk charisma.</span>
+
+    <!-- 2nd Runner Up -->
+    <div class="jaward-box bronze">
+     <div class="jaward-top">
+      <div class="jaward-crest bronze">
+       <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="12 7 13.5 10.5 17 11 14.5 13.5 15 17 12 15 9 17 9.5 13.5 7 11 10.5 10.5 12 7"/></svg>
+      </div>
+      <span class="jaward-badge bronze">BRONZE DISTINCTION</span>
+     </div>
+     <h4 class="jaward-title">2nd Runner Up (JORTS MASTER)</h4>
+     <p class="jaward-desc">Bronze distinction for outstanding catwalk presence, denim creativity, and top-tier runway confidence.</p>
+     <div class="jaward-meta">
+      <span class="jaward-chip">Final Runway</span>
+      <span class="jaward-chip">Bronze Rank</span>
+     </div>
     </div>
-    <div class="jaward-box">
-     <b>Best Runway Walk</b>
-     <span>Poise, stride, model turn, and catwalk presence.</span>
+
+    <!-- Special Award: Best Runway Walk -->
+    <div class="jaward-box blue">
+     <div class="jaward-top">
+      <div class="jaward-crest blue">
+       <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <span class="jaward-badge blue">STRIDE & PRESENCE</span>
+     </div>
+     <h4 class="jaward-title">Best Runway Walk</h4>
+     <p class="jaward-desc">Awarded to the model with the best strut, posture, rhythm, model turn, and unmistakable catwalk poise.</p>
+     <div class="jaward-meta">
+      <span class="jaward-chip">Audience Vote</span>
+     </div>
     </div>
-    <div class="jaward-box">
-     <b>Best in First Q&A</b>
-     <span>Quick wit, humor, and microphone composure.</span>
+
+    <!-- Special Award: Best in First Q&A -->
+    <div class="jaward-box purple">
+     <div class="jaward-top">
+      <div class="jaward-crest purple">
+       <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+      </div>
+      <span class="jaward-badge purple">WIT & CHARISMA</span>
+     </div>
+     <h4 class="jaward-title">Best in First Q&amp;A</h4>
+     <p class="jaward-desc">Quick wit, humor, audience connection, and microphone composure during the opening question round.</p>
+     <div class="jaward-meta">
+      <span class="jaward-chip">Audience Vote</span>
+     </div>
     </div>
-    <div class="jaward-box">
-     <b>Best Styled (Judges' Choice)</b>
-     <span>Cohesive styling, accessories, tailoring, and denim execution.</span>
+
+    <!-- Special Award: Best Styled -->
+    <div class="jaward-box emerald">
+     <div class="jaward-top">
+      <div class="jaward-crest emerald">
+       <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      </div>
+      <span class="jaward-badge emerald">JUDGES' CHOICE</span>
+     </div>
+     <h4 class="jaward-title">Best Styled (Judges' Choice)</h4>
+     <p class="jaward-desc">Curated directly by judges for superior denim execution, styling coordination, accessories, and cut aesthetics.</p>
+     <div class="jaward-meta">
+      <span class="jaward-chip">Executive Jury</span>
+     </div>
     </div>
    </div>
   </div>
@@ -1708,16 +1982,8 @@
     <input type="text" class="jinput" id="cName" placeholder="e.g. Gabriel Santos" required>
    </div>
    <div class="jform-group">
-    <label>Fit Nickname / Lookbook Title</label>
-    <input type="text" class="jinput" id="cTitle" placeholder="e.g. The Acid Wash Assassin">
-   </div>
-   <div class="jform-group">
     <label>Runway Number (#)</label>
     <input type="number" class="jinput" id="cNumber" value="1" min="1" max="99">
-   </div>
-   <div class="jform-group">
-    <label>Styling & Denim Cut Notes</label>
-    <textarea class="jtextarea" id="cBio" placeholder="Describe the wash, cut, distressing, footwear, and accessories..."></textarea>
    </div>
    <div class="jform-group">
     <label>Upload Lookbook Photo</label>
@@ -1841,11 +2107,11 @@ const STATE = {
   { id: 'styled', title: 'Best Styled', desc: 'Creative denim coordination, accessories, and cut execution.', votes_allowed: 1, phase: 'prelim' }
  ],
  contestants: [
-  { id: 1, name: "Gabriel Santos", title: "Acid Wash Assassin", number: 1, bio: "Raw-cut Bermuda jorts with double-belt styling, chunky retro sneakers, and headphone accessories.", photo_url: "img/jorts-battle.jpg", is_top5: true },
-  { id: 2, name: "Maria Rivera", title: "Denim Diva", number: 2, bio: "High-waisted distressed cutoffs with rhinestone pockets and an oversized blazer.", photo_url: "", is_top5: false },
-  { id: 3, name: "Kenji Tan", title: "The Cargo Cutoff", number: 3, bio: "Military cargo trousers converted to knee-length shorts with frayed tassels and boots.", photo_url: "", is_top5: false },
-  { id: 4, name: "Sophia Diaz", title: "Pleated Punk", number: 4, bio: "Upcycled pleated jeans turned high-couture pleated jorts with silver waist chains.", photo_url: "", is_top5: false },
-  { id: 5, name: "Lucas Chen", title: "Retro Relaxed", number: 5, bio: "90s baggy skater jorts paired with vintage tee, long socks, and classic canvas shoes.", photo_url: "", is_top5: false }
+  { id: 1, name: "Gabriel Santos", number: 1, photo_url: "img/jorts-battle.jpg", is_top5: true },
+  { id: 2, name: "Maria Rivera", number: 2, photo_url: "", is_top5: false },
+  { id: 3, name: "Kenji Tan", number: 3, photo_url: "", is_top5: false },
+  { id: 4, name: "Sophia Diaz", number: 4, photo_url: "", is_top5: false },
+  { id: 5, name: "Lucas Chen", number: 5, photo_url: "", is_top5: false }
  ],
  my_votes: {},
  scores: {},
@@ -1907,7 +2173,7 @@ function renderLookbookGallery() {
  grid.innerHTML = STATE.contestants.map(c => {
   const isVoted = isContestantSelected(STATE.current_award, c.id);
   const photoHtml = c.photo_url
-   ? `<img src="${c.photo_url}" class="jlook-img" alt="${esc(c.name)}" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} — ${esc(c.title)}')">`
+   ? `<img src="${c.photo_url}" class="jlook-img" alt="${esc(c.name)}" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} — Look #${c.number}')">`
    : `<div class="jlook-ph" onclick="openLightbox('img/jorts-battle.jpg', 'Fitting in Progress — ${esc(c.name)}')">
        <div class="jlook-ph-icon">
         <svg class="v-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -1923,7 +2189,7 @@ function renderLookbookGallery() {
      ${c.is_top5 ? '<span class="jlook-finalist"><svg class="v-icon" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Finalist</span>' : ''}
      ${photoHtml}
      ${c.photo_url ? `
-     <div class="jlook-zoom-overlay" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} — ${esc(c.title)}')">
+     <div class="jlook-zoom-overlay" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} — Look #${c.number}')">
       <span class="jzoom-pill">
        <svg class="v-icon" width="12" height="12" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
        View Full Look
@@ -1932,15 +2198,13 @@ function renderLookbookGallery() {
     </div>
     <div class="jlook-info">
      <h3 class="jlook-name">${esc(c.name)}</h3>
-     <div class="jlook-fit-title">${esc(c.title || 'Runway Model')}</div>
-     <p class="jlook-bio">${esc(c.bio || 'Representing APMed 33 with custom jorts.')}</p>
      <div class="jlook-foot">
       <button class="jbtn-look-vote ${isVoted ? 'selected' : ''}" onclick="toggleVote('${STATE.current_award}', ${c.id})">
        <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"/></svg>
        ${isVoted ? 'Selected for Ballot' : 'Vote for Look'}
       </button>
       ${c.photo_url ? `
-      <button class="jbtn-look-zoom" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} — ${esc(c.title)}')" title="Enlarge Lookbook Photo">
+      <button class="jbtn-look-zoom" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} — Look #${c.number}')" title="Enlarge Lookbook Photo">
        <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
       </button>` : ''}
      </div>
@@ -1988,7 +2252,7 @@ function renderBallot() {
     <img src="${thumb}" class="jballot-thumb" alt="${esc(c.name)}">
     <div class="jballot-meta">
      <div class="jballot-name">${esc(c.name)}</div>
-     <div class="jballot-fit">#${c.number} · ${esc(c.title || 'Look')}</div>
+     <div class="jballot-fit">Runway Look #${c.number}</div>
     </div>
     <div class="jballot-check">
      ${isSelected ? '<svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
@@ -2056,21 +2320,21 @@ function renderLeaderboard() {
    <div class="jrank-badge">II</div>
    <img src="${top3[1] ? top3[1].photo_url || 'icons/icon-192.png' : 'icons/icon-192.png'}" class="jpodium-thumb" alt="2nd">
    <div class="jpodium-name">${top3[1] ? esc(top3[1].name) : '—'}</div>
-   <div class="jpodium-fit">${top3[1] ? esc(top3[1].title) : ''}</div>
+   <div class="jpodium-fit">${top3[1] ? 'Look #' + top3[1].number : ''}</div>
    <div class="jpodium-votes">${top3[1] ? top3[1].votes + ' Votes' : ''}</div>
   </div>
   <div class="jpodium-col gold">
    <div class="jrank-badge">I</div>
    <img src="${top3[0] ? top3[0].photo_url || 'icons/icon-192.png' : 'icons/icon-192.png'}" class="jpodium-thumb" alt="1st">
    <div class="jpodium-name">${top3[0] ? esc(top3[0].name) : '—'}</div>
-   <div class="jpodium-fit">${top3[0] ? esc(top3[0].title) : ''}</div>
+   <div class="jpodium-fit">${top3[0] ? 'Look #' + top3[0].number : ''}</div>
    <div class="jpodium-votes">${top3[0] ? top3[0].votes + ' Votes' : ''}</div>
   </div>
   <div class="jpodium-col bronze">
    <div class="jrank-badge">III</div>
    <img src="${top3[2] ? top3[2].photo_url || 'icons/icon-192.png' : 'icons/icon-192.png'}" class="jpodium-thumb" alt="3rd">
    <div class="jpodium-name">${top3[2] ? esc(top3[2].name) : '—'}</div>
-   <div class="jpodium-fit">${top3[2] ? esc(top3[2].title) : ''}</div>
+   <div class="jpodium-fit">${top3[2] ? 'Look #' + top3[2].number : ''}</div>
    <div class="jpodium-votes">${top3[2] ? top3[2].votes + ' Votes' : ''}</div>
   </div>
  `;
@@ -2082,7 +2346,7 @@ function renderLeaderboard() {
    <div class="jtally-pos">#${i + 1}</div>
    <div class="jtally-info">
     <div style="display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;color:#fff;">
-     <span>${esc(c.name)} · <span style="color:var(--gold);font-weight:400;">${esc(c.title)}</span></span>
+     <span>${esc(c.name)} · <span style="color:var(--gold);font-weight:400;">Look #${c.number}</span></span>
      <span>${c.votes} votes</span>
     </div>
     <div class="jtally-bar">
@@ -2597,9 +2861,7 @@ function openAddContestantModal() {
  document.getElementById('contestantModalTitle').textContent = "Add Contestant";
  document.getElementById('cId').value = "";
  document.getElementById('cName').value = "";
- document.getElementById('cTitle').value = "";
  document.getElementById('cNumber').value = STATE.contestants.length + 1;
- document.getElementById('cBio').value = "";
  document.getElementById('cPhotoUrl').value = "";
  document.getElementById('cPhotoPreviewWrap').hidden = true;
  document.getElementById('cTop5').checked = false;
@@ -2610,17 +2872,15 @@ function closeContestantModal() { document.getElementById('contestantModal').hid
 function saveContestant() {
  const id = document.getElementById('cId').value ? parseInt(document.getElementById('cId').value) : Date.now();
  const name = document.getElementById('cName').value.trim();
- const title = document.getElementById('cTitle').value.trim();
- const number = parseInt(document.getElementById('cNumber').value) || 1;
- const bio = document.getElementById('cBio').value.trim();
+ const number = parseInt(document.getElementById('cNumber').value) || (STATE.contestants.length + 1);
  const photo_url = document.getElementById('cPhotoUrl').value.trim();
  const is_top5 = document.getElementById('cTop5').checked;
 
  const existingIdx = STATE.contestants.findIndex(c => c.id === id);
  if (existingIdx > -1) {
-  STATE.contestants[existingIdx] = { id, name, title, number, bio, photo_url, is_top5 };
+  STATE.contestants[existingIdx] = { id, name, number, photo_url, is_top5 };
  } else {
-  STATE.contestants.push({ id, name, title, number, bio, photo_url, is_top5 });
+  STATE.contestants.push({ id, name, number, photo_url, is_top5 });
  }
  closeContestantModal();
  renderLookbookGallery();
