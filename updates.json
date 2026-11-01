@@ -874,5 +874,13 @@
   "title": "General Chemistry: Lecture quiz this Saturday, Nov 7 at 8:00 AM",
   "text": "The Chem Lecture quiz is scheduled for this Saturday, Nov 7 at 8:00 AM. Timetable and exam countdowns have been updated.",
   "link": "schedule.html"
+ },
+ {
+  "id": 106,
+  "date": "2026-11-01",
+  "type": "feature",
+  "title": "Class list: Last online status + Direct Messages (DMs)",
+  "text": "The Class list now shows when classmates were last online, plus a new DM feature to send private 1-on-1 messages, chat about questions or study topics, and receive instant push notifications when a classmate messages you.",
+  "link": "classlist.html"
  }
 ]

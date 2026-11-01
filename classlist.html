@@ -63,7 +63,15 @@ h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 4px;text-al
 .row.studying .st{color:var(--good,#22a06b);font-weight:600}
 .row.here .st{color:var(--accent);font-weight:600}
 .row.offline{opacity:.78}
-.duel{flex:none;display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:9px;border:1px solid var(--line2);background:var(--raised);font-size:12.5px;font-weight:600;color:var(--text);text-decoration:none;transition:background .15s,border-color .15s}
+.duel{flex:none;display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:9px;border:1px solid var(--line2);background:var(--raised);font-size:12.5px;font-weight:600;color:var(--text);text-decoration:none;transition:background .15s,border-color .15s}
+.acts{flex:none;display:inline-flex;align-items:center;gap:6px}
+.act{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:9px;border:1px solid var(--line2);background:var(--raised);font-size:12.5px;font-weight:600;color:var(--text);text-decoration:none;transition:background .15s,border-color .15s,color .15s}
+.act:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.act.dm{background:var(--surface);border-color:var(--line2)}
+.act.dm:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.msgbtn{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:13px;font-weight:600;padding:5px 11px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--text);transition:background .15s}
+.msgbtn:hover{background:var(--raised)}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700}
 .duel:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -75,7 +83,7 @@ h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 4px;text-al
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
 <main>
- <div class="top"><a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a><span class="sp"></span></div>
+ <div class="top"><a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a><span class="sp"></span><a class="msgbtn" href="dm.html" id="msgbtn" title="Direct messages"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg><span>Messages</span><span id="unreadBadge" class="badge" hidden></span></a></div>
  <h1>Class list</h1>
  <p class="sub" id="sub">See who in the class is studying or on the site right now.</p>
  <div id="view"><p class="empty">Loading…</p></div>
@@ -93,10 +101,23 @@ function toast(t,ms){const e=$('toast');if(!e)return;e.textContent=t;e.classList
 
 let COURSES=[],ROWS=[],BUSY=false;
 const courseTitle=id=>{const c=COURSES.find(x=>x.id===id);return c?short(c.title):id};
+function timeAgo(t){
+ if(!t)return '';
+ const s=Math.max(0,Math.floor((Date.now()-new Date(t))/1000));
+ if(s<60)return 'just now';
+ if(s<3600)return Math.floor(s/60)+'m ago';
+ if(s<86400)return Math.floor(s/3600)+'h ago';
+ const d=new Date(t),now=new Date();
+ const isYesterday=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1).toDateString()===d.toDateString();
+ if(isYesterday)return 'yesterday';
+ const sameYear=now.getFullYear()===d.getFullYear();
+ return d.toLocaleDateString(undefined,sameYear?{month:'short',day:'numeric'}:{month:'short',day:'numeric',year:'numeric'});
+}
 function stateLabel(r){
  if(r.state==='studying')return r.course?'Studying '+courseTitle(r.course):'Studying · Focus timer';
  if(r.state==='here')return 'On the site';
- return 'Offline';
+ const ago=timeAgo(r.seen_at);
+ return ago?'Last online '+ago:'Offline';
 }
 function avHtml(r,sz){
  return window.Profile?Profile.html({av:r.av||'g',url:r.avatar||'',name:r.name||'Classmate'},sz||38):'';
@@ -152,7 +173,7 @@ function draw(){
  groups.forEach(([key,title,list])=>{
   if(!list.length)return;
   html+='<h2 class="sec"><i class="dot '+key+'" aria-hidden="true"></i>'+esc(title)+' ('+list.length+')</h2><div class="list" data-group="'+key+'">'+
-   list.map(r=>'<div class="row '+esc(r.state)+'">'+avHtml(r,36)+'<div class="w"><b>'+esc(r.name)+'</b><span class="st"><i class="dot '+esc(r.state)+'" aria-hidden="true"></i>'+esc(stateLabel(r))+'</span></div><a class="duel" href="duel.html?to='+encodeURIComponent(r.name)+'" title="Challenge '+esc(r.name)+' to a duel">'+ic('zap')+'Duel</a></div>').join('')+
+   list.map(r=>'<div class="row '+esc(r.state)+'">'+avHtml(r,36)+'<div class="w"><b>'+esc(r.name)+'</b><span class="st"><i class="dot '+esc(r.state)+'" aria-hidden="true"></i>'+esc(stateLabel(r))+'</span></div><div class="acts"><a class="act dm" href="dm.html?with='+encodeURIComponent(r.id||'')+'&to='+encodeURIComponent(r.name)+'" title="Message '+esc(r.name)+'">'+ic('message-circle')+'<span>DM</span></a><a class="act duel" href="duel.html?to='+encodeURIComponent(r.name)+'" title="Challenge '+esc(r.name)+' to a duel">'+ic('zap')+'<span>Duel</span></a></div></div>').join('')+
   '</div>';
  });
  if(!rows.length)html='<p class="empty">No linked classmates found.</p>';
@@ -186,13 +207,22 @@ async function load(quiet){
   ROWS=Array.isArray(rows)?rows:[];
   const me=ROWS.find(r=>r.me);
   if(me){try{localStorage.setItem('reviewer_presence_status',me.invisible?'invisible':'active')}catch(e){}}
-  draw();
+  draw();checkUnread();
  }catch(e){
   const m=String(e&&e.message||'');
   if(/link your attendance/i.test(m)){unlinked(m);return}
   if(!Auth.ses()){signedOut();return}
   if(!quiet)$('view').innerHTML='<div class="card"><p class="err">'+esc(m||'Could not load the class list.')+'</p><button class="btn" onclick="load()">Try again</button></div>';
  }
+}
+
+async function checkUnread(){
+ if(!Auth.ses())return;
+ try{
+  const n=await Auth.rpc('dm_unread_count',{},true);
+  const b=$('unreadBadge');
+  if(b){if(n&&n>0){b.textContent=n;b.hidden=false}else b.hidden=true}
+ }catch(e){}
 }
 
 async function boot(){
