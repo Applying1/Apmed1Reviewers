@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140">
+<defs>
+ <linearGradient id="gl" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gl0,#f5f3ff)"/>
+  <stop offset="1" stop-color="var(--ic-gl1,#c4b5fd)"/>
+ </linearGradient>
+ <linearGradient id="gm" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gm0,#c4b5fd)"/>
+  <stop offset="1" stop-color="var(--ic-gm1,#6366f1)"/>
+ </linearGradient>
+ <linearGradient id="gd" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gd0,#818cf8)"/>
+  <stop offset="1" stop-color="var(--ic-gd1,#3730a3)"/>
+ </linearGradient>
+ <linearGradient id="gx" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gx0,#4f46e5)"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)"/>
+ </linearGradient>
+ <radialGradient id="sh" cx="0.5" cy="0.5" r="0.5">
+  <stop offset="0" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".16"/>
+  <stop offset="0.65" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".05"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity="0"/>
+ </radialGradient>
+ <filter id="dp" x="-20%" y="-15%" width="140%" height="145%">
+  <feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#1e1b4b" flood-opacity=".18"/>
+ </filter>
+</defs>
+<ellipse cx="80" cy="120" rx="44" ry="10" fill="url(#sh)"/>
+<g filter="url(#dp)"><g transform="translate(11.2,13.0) scale(0.86)">
+<!-- Ascending stepping blocks -->
+ <rect x="34" y="84" width="24" height="22" rx="5" fill="url(#gl)"/>
+ <rect x="68" y="68" width="24" height="38" rx="5" fill="url(#gm)"/>
+ <rect x="102" y="48" width="24" height="58" rx="5" fill="url(#gd)"/>
+ <!-- Growing figures/crowns above each step -->
+ <circle cx="46" cy="70" r="7" fill="url(#gm)"/>
+ <circle cx="80" cy="52" r="9" fill="url(#gd)"/>
+ <circle cx="114" cy="28" r="12" fill="url(#gx)"/>
+ <circle cx="110" cy="24" r="3.5" fill="#fff" opacity=".55"/>
+</g></g>
+</svg>

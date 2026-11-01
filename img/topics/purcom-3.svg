@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140">
+<defs>
+ <linearGradient id="gl" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gl0,#f5f3ff)"/>
+  <stop offset="1" stop-color="var(--ic-gl1,#c4b5fd)"/>
+ </linearGradient>
+ <linearGradient id="gm" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gm0,#c4b5fd)"/>
+  <stop offset="1" stop-color="var(--ic-gm1,#6366f1)"/>
+ </linearGradient>
+ <linearGradient id="gd" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gd0,#818cf8)"/>
+  <stop offset="1" stop-color="var(--ic-gd1,#3730a3)"/>
+ </linearGradient>
+ <linearGradient id="gx" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gx0,#4f46e5)"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)"/>
+ </linearGradient>
+ <radialGradient id="sh" cx="0.5" cy="0.5" r="0.5">
+  <stop offset="0" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".16"/>
+  <stop offset="0.65" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".05"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity="0"/>
+ </radialGradient>
+ <filter id="dp" x="-20%" y="-15%" width="140%" height="145%">
+  <feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#1e1b4b" flood-opacity=".18"/>
+ </filter>
+</defs>
+<ellipse cx="80" cy="120" rx="44" ry="10" fill="url(#sh)"/>
+<g filter="url(#dp)"><g transform="translate(7.1,3.5) scale(0.91)">
+<!-- Microphone on left -->
+ <rect x="44" y="30" width="28" height="44" rx="14" fill="url(#gd)"/>
+ <ellipse cx="53" cy="42" rx="4" ry="8" fill="#fff" opacity=".45"/>
+ <path d="M36 54 V60 A22 22 0 0 0 80 60 V54" fill="none" stroke="url(#gx)" stroke-width="5" stroke-linecap="round"/>
+ <line x1="58" y1="82" x2="58" y2="102" stroke="url(#gx)" stroke-width="5" stroke-linecap="round"/>
+ <rect x="44" y="100" width="28" height="6" rx="3" fill="url(#gx)"/>
+ <!-- Sound wave bars on right -->
+ <rect x="92" y="52" width="7" height="28" rx="3.5" fill="url(#gm)"/>
+ <rect x="106" y="36" width="7" height="60" rx="3.5" fill="url(#gd)"/>
+ <rect x="120" y="48" width="7" height="36" rx="3.5" fill="url(#gl)"/>
+</g></g>
+</svg>

@@ -387,26 +387,26 @@ h1{font-size:clamp(24px,2.8vw,31px)}
 
 /* Chapter cards (illustrations made in Canva) */
 .chapters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:0 0 12px}
-.chcard{display:flex;flex-direction:column;padding:0;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow);transition:transform .18s var(--ease),box-shadow .18s,border-color .18s}
-.chcard:hover{transform:translateY(-3px);border-color:var(--accent-line);box-shadow:0 10px 28px color-mix(in oklab,var(--accent) 14%,transparent)}
-.chcard .art{display:block;aspect-ratio:4/3;background:#faf6ee;overflow:hidden;border-bottom:1px solid var(--line)}
-.chcard img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .4s var(--ease)}
-.chcard:hover img{transform:scale(1.04)}
+.chcard{display:flex;flex-direction:column;padding:0;text-align:left;background:var(--surface);border:1.5px solid color-mix(in oklab,var(--accent) 26%,var(--line2));border-radius:18px;overflow:hidden;box-shadow:0 1px 2px color-mix(in oklab,var(--accent) 10%,transparent),0 8px 18px -10px color-mix(in oklab,var(--accent) 30%,transparent);transition:transform .18s var(--ease),box-shadow .18s,border-color .18s}:root{--ic-gl0:color-mix(in oklab,var(--accent) 12%,#fff);--ic-gl1:color-mix(in oklab,var(--accent) 50%,#fff);--ic-gm0:color-mix(in oklab,var(--accent) 56%,#fff);--ic-gm1:var(--accent);--ic-gd0:color-mix(in oklab,var(--accent) 92%,#fff);--ic-gd1:color-mix(in oklab,var(--accent) 78%,#000);--ic-gx0:color-mix(in oklab,var(--accent) 84%,#000);--ic-gx1:color-mix(in oklab,var(--accent) 52%,#000)}
+.chcard:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 1px 2px color-mix(in oklab,var(--accent) 14%,transparent),0 14px 28px -10px color-mix(in oklab,var(--accent) 38%,transparent)}
+.chcard .art{display:flex;justify-content:center;align-items:center;height:126px;padding:14px 10px 0;background:none;overflow:hidden}
+.chcard img{display:block;width:auto;height:100%;max-width:100%;object-fit:contain;transition:transform .3s var(--ease)}.chcard .art .ic{display:block;height:100%;max-width:100%}.chcard .art .ic svg{display:block;height:100%;width:auto;max-width:100%;transition:transform .3s var(--ease)}
+.chcard:hover img,.chcard:hover .art .ic svg{transform:scale(1.04)}
 .chcard .body{display:flex;flex-direction:column;gap:3px;padding:12px 14px 14px;flex:1}
 .chcard .no{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .chcard .nm{font:600 15px/1.3 var(--serif);margin-bottom:auto;padding-bottom:10px}
-.chcard .track{height:5px;background:var(--raised)}
-.chcard .fill{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.chcard .track{height:6px;border-radius:9px;background:var(--raised);overflow:hidden}
+.chcard .fill{height:100%;border-radius:9px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
 .chcard .meta{display:flex;justify-content:space-between;gap:6px;margin-top:7px;font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums}
 .chcard .art.noimg{display:grid;place-items:center;background:radial-gradient(120% 120% at 0 0,color-mix(in oklab,var(--accent) 16%,var(--surface)),var(--surface) 70%)}
 .chcard .art.noimg b{font:600 64px/1 var(--serif);color:var(--accent);opacity:.35}
-.chthumb{width:64px;height:48px;border-radius:10px;object-fit:cover;background:#faf6ee;border:1px solid var(--line);box-shadow:var(--shadow);margin-top:2px}
-.chthumb:not([src]){visibility:hidden}
+.chthumb{width:56px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}.chthumb .ic{display:block;height:100%;max-width:100%}.chthumb svg,.chthumb img{display:block;width:auto;height:100%;max-width:100%;object-fit:contain;border-radius:10px}
+.chthumb:empty{display:none}
 :root[data-theme="dark"] .chcard img,:root[data-theme="dark"] .chthumb{filter:brightness(.9) saturate(1.05)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chcard img,:root:not([data-theme="light"]) .chthumb{filter:brightness(.9) saturate(1.05)}}
 
 @media (max-width:1100px){.dgrid{grid-template-columns:1fr}.chapters{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:640px){.chapters{grid-template-columns:repeat(2,minmax(0,1fr))}.chthumb{display:none}}
+@media (max-width:640px){.chapters{grid-template-columns:repeat(2,minmax(0,1fr))}.chcard .art{height:102px;padding-top:10px}.chthumb{display:none}}
 @media (max-width:920px){.hero::after{right:-40px;width:180px;height:180px}#card::before{left:18px;right:18px}}
 @media (max-width:920px){
  .app{grid-template-columns:1fr}
@@ -605,7 +605,7 @@ mark{background:color-mix(in oklab,var(--accent) 22%,transparent);color:inherit;
 .news>.btn{margin-top:10px}
 /* Study tools and layout fixes */
 [hidden]{display:none!important}
-.chthumb:not([src]){display:none}
+.chthumb:empty{display:none}
 .chapters{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .cells{grid-template-columns:repeat(auto-fit,minmax(48px,1fr))}
 .sec.special{color:var(--text);font-weight:500}
@@ -1102,7 +1102,7 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
   <div class="view" id="studyView" hidden>
    <div class="top">
     <button class="icon menu" onclick="toggleNav(true)" aria-label="Open navigation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <img class="chthumb" id="chthumb" alt="" width="64" height="48"><div style="min-width:0"><div class="crumb" id="crumb"></div><h1 id="title"></h1></div>
+    <span class="chthumb" id="chthumb" aria-hidden="true"></span><div style="min-width:0"><div class="crumb" id="crumb"></div><h1 id="title"></h1></div>
     <div class="secnav">
      <button class="icon" id="chartBtn" onclick="openCharts()" aria-label="Charts" title="Charts" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg></button>
      <button class="icon" id="notesBtn" onclick="openNotes()" aria-label="Notes for this topic" title="Notes for this topic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></button>

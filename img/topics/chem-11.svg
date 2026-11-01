@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140">
+<defs>
+ <linearGradient id="gl" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gl0,#f5f3ff)"/>
+  <stop offset="1" stop-color="var(--ic-gl1,#c4b5fd)"/>
+ </linearGradient>
+ <linearGradient id="gm" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gm0,#c4b5fd)"/>
+  <stop offset="1" stop-color="var(--ic-gm1,#6366f1)"/>
+ </linearGradient>
+ <linearGradient id="gd" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gd0,#818cf8)"/>
+  <stop offset="1" stop-color="var(--ic-gd1,#3730a3)"/>
+ </linearGradient>
+ <linearGradient id="gx" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gx0,#4f46e5)"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)"/>
+ </linearGradient>
+ <radialGradient id="sh" cx="0.5" cy="0.5" r="0.5">
+  <stop offset="0" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".16"/>
+  <stop offset="0.65" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".05"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity="0"/>
+ </radialGradient>
+ <filter id="dp" x="-20%" y="-15%" width="140%" height="145%">
+  <feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#1e1b4b" flood-opacity=".18"/>
+ </filter>
+</defs>
+<ellipse cx="80" cy="120" rx="44" ry="10" fill="url(#sh)"/>
+<g filter="url(#dp)"><g transform="translate(6.9,4.3) scale(0.92)">
+<!-- Liquid puddle base -->
+ <ellipse cx="72" cy="96" rx="36" ry="12" fill="url(#gm)"/>
+ <ellipse cx="64" cy="94" rx="14" ry="4" fill="#fff" opacity=".4"/>
+ <!-- Tilted melting crystal cube -->
+ <rect x="48" y="48" width="42" height="42" rx="9" transform="rotate(-10 69 69)" fill="url(#gl)"/>
+ <path d="M54 52 H80" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".65"/>
+ <!-- Dripping melt drops -->
+ <path d="M56 84 C56 84 52 91 52 94 A4 4 0 1 0 60 94 C60 91 56 84 56 84 Z" fill="url(#gd)"/>
+ <path d="M84 78 C84 78 80 85 80 88 A4 4 0 1 0 88 88 C88 85 84 78 84 78 Z" fill="url(#gd)"/>
+ <!-- Thermometer on right -->
+ <rect x="104" y="24" width="14" height="60" rx="7" fill="url(#gl)"/>
+ <circle cx="111" cy="88" r="12" fill="url(#gl)"/>
+ <rect x="108" y="40" width="6" height="44" rx="3" fill="url(#gx)"/>
+ <circle cx="111" cy="88" r="7.5" fill="url(#gx)"/>
+</g></g>
+</svg>

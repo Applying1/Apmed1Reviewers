@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140">
+<defs>
+ <linearGradient id="gl" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gl0,#f5f3ff)"/>
+  <stop offset="1" stop-color="var(--ic-gl1,#c4b5fd)"/>
+ </linearGradient>
+ <linearGradient id="gm" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gm0,#c4b5fd)"/>
+  <stop offset="1" stop-color="var(--ic-gm1,#6366f1)"/>
+ </linearGradient>
+ <linearGradient id="gd" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gd0,#818cf8)"/>
+  <stop offset="1" stop-color="var(--ic-gd1,#3730a3)"/>
+ </linearGradient>
+ <linearGradient id="gx" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gx0,#4f46e5)"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)"/>
+ </linearGradient>
+ <radialGradient id="sh" cx="0.5" cy="0.5" r="0.5">
+  <stop offset="0" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".16"/>
+  <stop offset="0.65" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".05"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity="0"/>
+ </radialGradient>
+ <filter id="dp" x="-20%" y="-15%" width="140%" height="145%">
+  <feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#1e1b4b" flood-opacity=".18"/>
+ </filter>
+</defs>
+<ellipse cx="80" cy="120" rx="44" ry="10" fill="url(#sh)"/>
+<g filter="url(#dp)"><g transform="translate(14.0,5.5) scale(0.87)">
+<!-- Protective receptor blocker shield -->
+ <path d="M76 24 L116 38 V68 C116 92 98 108 76 114 C54 108 36 92 36 68 V38 Z" fill="url(#gd)"/>
+ <path d="M76 32 L108 43 V67 C108 86 94 99 76 105 C58 99 44 86 44 67 V43 Z" fill="url(#gl)"/>
+ <!-- Adrenergic lightning bolt inside -->
+ <path d="M82 42 L62 70 H77 L70 96 L94 64 H78 Z" fill="url(#gx)"/>
+</g></g>
+</svg>

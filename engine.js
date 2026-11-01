@@ -442,6 +442,9 @@ function goLive(){view=null;draw()}
 try{$('favicon').href=$('logo').src}catch(e){}
 const CH_IMGS=CONFIG.images||{};
 const CH_IMG=ch=>CH_IMGS[ch]||'';
+const ICONS={};const loadIcon=u=>ICONS[u]||(ICONS[u]=fetch(u).then(r=>r.ok?r.text():'').catch(()=>''));
+const inlineIcons=()=>document.querySelectorAll('.ic[data-src]').forEach(el=>{const u=el.dataset.src;loadIcon(u).then(t=>{if(t&&el.isConnected){el.innerHTML=t;el.removeAttribute('data-src')}else if(!t){el.innerHTML='<img src="'+u+'" alt="" height="140" width="160">'}})});
+const chArtHTML=u=>!u?'':/^<svg/.test(u)?'<span class="ic" role="img" aria-hidden="true">'+u+'</span>':/\.svg$/.test(u)?'<span class="ic" data-src="'+esc(u)+'" role="img" aria-hidden="true"></span>':'<img src="'+esc(u)+'" alt="" loading="lazy" width="160" height="140">';
 const FBICON={good:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>',bad:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',look:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'};
 const KIND_NAMES={joke:'★ Bonus question',class:'Class question',statement:'True or false',solving:'Problem solving',structure:'Structures',naming:'IUPAC naming',reaction:'Reactions',concept:'Concept',identification:'Identification',odd:'Odd one out',phonetic:'Phonetic spelling',best:'Best answer',definition:'Concept meaning',scenario:'Application',term:'Identification',recall:'Recall',situational:'Situational',era:'Which era?',civ:'Which civilization?',order:'Timeline'};
 const kindName=k=>KIND_NAMES[k]||'Question';
@@ -651,7 +654,7 @@ function drawStudy(){
  const bp=BANKS.length>1&&state.bank!=='main'?'<span class="pill set">'+esc(bankObj().name)+'</span>':'';
  $('crumb').innerHTML=all?bp+(s==='ALL'?'Mixed review':'Focused review'):'<span class="pill">'+esc(chLabel(secCh(s)))+'</span>'+(ch?'Entire '+unitW:esc(CH_NAMES[chOf(s)]))+(bp?' '+bp:'');
  $('title').textContent=secTitle(s);
- const th=$('chthumb'),tk=all?'logo':secCh(s);if(th.dataset.ch!==tk){th.dataset.ch=tk;const src=all?$('logo').src:CH_IMG(secCh(s));if(src)th.src=src;else th.removeAttribute('src')}
+ const th=$('chthumb'),tk=all?'logo':secCh(s);if(th.dataset.ch!==tk){th.dataset.ch=tk;const src=all?$('logo').src:CH_IMG(secCh(s));th.innerHTML=chArtHTML(src);inlineIcons()}
  document.title=secTitle(s)+' · '+CONFIG.title;
  const what=ch?unitW:'section';
  $('prevSec').disabled=!L.length||idx<=0;$('nextSec').disabled=!L.length||idx>=L.length-1;
@@ -958,8 +961,8 @@ function drawDash(){
 
  $('chcards').innerHTML=chapters.map(ch=>{const p=chProgress(ch),w=Math.round(100*p.done/p.total),secs=sectionKeys.filter(k=>chOf(k)===ch);
   const first=secs.find(k=>!completed(k))||secs[0];
-  return '<button class="chcard" onclick="selectSection(\''+first+'\')" aria-label="'+esc(chLabel(ch))+', '+esc(CH_NAMES[ch])+', '+p.done+' of '+p.total+' '+ITEMS+' mastered">'+(CH_IMG(ch)?'<span class="art"><img src="'+CH_IMG(ch)+'" alt="" loading="lazy" width="960" height="720"></span>':'<span class="art noimg"><b>'+esc(ch)+'</b></span>')+
-   '<span class="body"><span class="no">'+esc(chLabel(ch))+'</span><span class="nm">'+esc(CH_NAMES[ch])+'</span><span class="track"><span class="fill" style="display:block;width:'+w+'%"></span></span><span class="meta"><span>'+p.done+'/'+p.total+' '+ITEMS+'</span><span>'+w+'%</span></span></span></button>'}).join('');
+  const fw=p.done?Math.max(w,4):0;return '<button class="chcard" onclick="selectSection(\''+first+'\')" aria-label="'+esc(chLabel(ch))+', '+esc(CH_NAMES[ch])+', '+p.done+' of '+p.total+' '+ITEMS+' mastered">'+(CH_IMG(ch)?'<span class="art">'+chArtHTML(CH_IMG(ch))+'</span>':'<span class="art noimg"><b>'+esc(ch)+'</b></span>')+
+   '<span class="body"><span class="no">'+esc(chLabel(ch))+'</span><span class="nm">'+esc(CH_NAMES[ch])+'</span><span class="track"><span class="fill" style="display:block;width:'+fw+'%"></span></span><span class="meta"><span>'+p.done+'/'+p.total+' '+ITEMS+'</span><span>'+w+'%</span></span></span></button>'}).join('');inlineIcons();
 
  const rec=state.history.filter(h=>h.cid).slice(-40);
  $('recentN').textContent=rec.length?'last '+rec.length:'';

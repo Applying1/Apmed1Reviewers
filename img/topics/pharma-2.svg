@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140">
+<defs>
+ <linearGradient id="gl" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gl0,#f5f3ff)"/>
+  <stop offset="1" stop-color="var(--ic-gl1,#c4b5fd)"/>
+ </linearGradient>
+ <linearGradient id="gm" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gm0,#c4b5fd)"/>
+  <stop offset="1" stop-color="var(--ic-gm1,#6366f1)"/>
+ </linearGradient>
+ <linearGradient id="gd" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gd0,#818cf8)"/>
+  <stop offset="1" stop-color="var(--ic-gd1,#3730a3)"/>
+ </linearGradient>
+ <linearGradient id="gx" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gx0,#4f46e5)"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)"/>
+ </linearGradient>
+ <radialGradient id="sh" cx="0.5" cy="0.5" r="0.5">
+  <stop offset="0" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".16"/>
+  <stop offset="0.65" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".05"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity="0"/>
+ </radialGradient>
+ <filter id="dp" x="-20%" y="-15%" width="140%" height="145%">
+  <feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#1e1b4b" flood-opacity=".18"/>
+ </filter>
+</defs>
+<ellipse cx="80" cy="120" rx="44" ry="10" fill="url(#sh)"/>
+<g filter="url(#dp)"><g transform="translate(9.1,4.2) scale(0.89)">
+<!-- Bilobed 3D liver organ -->
+ <path d="M32 62 C32 40 54 30 82 34 C108 38 128 46 128 58 C128 74 102 96 82 94 C72 93 68 82 62 84 C52 88 32 82 32 62 Z" fill="url(#gd)"/>
+ <path d="M78 36 C76 54 76 74 80 92" fill="none" stroke="url(#gl)" stroke-width="3.5" stroke-linecap="round"/>
+ <path d="M44 50 C52 42 66 40 72 42" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".5"/>
+ <!-- Capsule below right -->
+ <g transform="rotate(-25 106 92)">
+  <rect x="86" y="82" width="40" height="18" rx="9" fill="url(#gl)"/>
+  <path d="M106 82 H117 A9 9 0 0 1 117 100 H106 Z" fill="url(#gx)"/>
+ </g>
+</g></g>
+</svg>

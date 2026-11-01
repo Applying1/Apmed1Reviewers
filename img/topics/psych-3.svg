@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140">
+<defs>
+ <linearGradient id="gl" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gl0,#f5f3ff)"/>
+  <stop offset="1" stop-color="var(--ic-gl1,#c4b5fd)"/>
+ </linearGradient>
+ <linearGradient id="gm" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gm0,#c4b5fd)"/>
+  <stop offset="1" stop-color="var(--ic-gm1,#6366f1)"/>
+ </linearGradient>
+ <linearGradient id="gd" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gd0,#818cf8)"/>
+  <stop offset="1" stop-color="var(--ic-gd1,#3730a3)"/>
+ </linearGradient>
+ <linearGradient id="gx" x1="0.2" y1="0.08" x2="0.85" y2="0.95">
+  <stop offset="0" stop-color="var(--ic-gx0,#4f46e5)"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)"/>
+ </linearGradient>
+ <radialGradient id="sh" cx="0.5" cy="0.5" r="0.5">
+  <stop offset="0" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".16"/>
+  <stop offset="0.65" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity=".05"/>
+  <stop offset="1" stop-color="var(--ic-gx1,#1e1b4b)" stop-opacity="0"/>
+ </radialGradient>
+ <filter id="dp" x="-20%" y="-15%" width="140%" height="145%">
+  <feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#1e1b4b" flood-opacity=".18"/>
+ </filter>
+</defs>
+<ellipse cx="80" cy="120" rx="44" ry="10" fill="url(#sh)"/>
+<g filter="url(#dp)"><g transform="translate(16.2,17.8) scale(0.80)">
+<!-- Dendrite branches -->
+ <line x1="56" y1="58" x2="34" y2="34" stroke="url(#gm)" stroke-width="5" stroke-linecap="round"/>
+ <line x1="56" y1="58" x2="28" y2="62" stroke="url(#gm)" stroke-width="5" stroke-linecap="round"/>
+ <line x1="56" y1="58" x2="38" y2="88" stroke="url(#gm)" stroke-width="5" stroke-linecap="round"/>
+ <line x1="56" y1="58" x2="66" y2="26" stroke="url(#gm)" stroke-width="5" stroke-linecap="round"/>
+ <!-- Axon & myelin sheath beads -->
+ <path d="M56 58 Q92 68 124 88" fill="none" stroke="url(#gd)" stroke-width="5" stroke-linecap="round"/>
+ <rect x="80" y="61" width="16" height="10" rx="5" transform="rotate(22 88 66)" fill="url(#gl)"/>
+ <rect x="100" y="71" width="16" height="10" rx="5" transform="rotate(28 108 76)" fill="url(#gl)"/>
+ <circle cx="128" cy="90" r="6" fill="url(#gx)"/>
+ <!-- Soma cell body & nucleus -->
+ <circle cx="58" cy="58" r="20" fill="url(#gd)"/>
+ <circle cx="58" cy="58" r="9" fill="url(#gl)"/>
+ <circle cx="55" cy="55" r="3" fill="url(#gx)"/>
+</g></g>
+</svg>
