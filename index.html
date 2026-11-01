@@ -166,37 +166,38 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .wk i.some::before{background:color-mix(in oklab,var(--accent) 35%,var(--raised))}
 .wk i.met::before{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
 .wk i.now{color:var(--text)}
-.due{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line);font-size:13.5px;color:var(--mute)}
-.due a{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--text);text-decoration:none;font-weight:600;font-size:13px}
-.due a:hover{filter:brightness(.97)}.due a em{font-style:normal;color:var(--accent);font-variant-numeric:tabular-nums}
-.due .rm{margin-left:auto;color:var(--accent);font-weight:600;text-decoration:none;font-size:13px}
-@media (max-width:520px){.tdy{gap:12px 14px}.strk{flex-direction:column;align-items:flex-start;gap:6px;padding-right:14px}.strk b{font-size:22px}.strk .fl{width:38px;height:38px;font-size:19px}.gl .gt{flex-direction:column;gap:1px}.wk{max-width:none}.due .rm{margin-left:0}}
+.card .due,.tdy .due{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line);font-size:13.5px;color:var(--mute)}
+.card .due a,.tdy .due a{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--text);text-decoration:none;font-weight:600;font-size:13px}
+.card .due a:hover,.tdy .due a:hover{filter:brightness(.97)}.card .due a em,.tdy .due a em{font-style:normal;color:var(--accent);font-variant-numeric:tabular-nums}
+.card .due .rm,.tdy .due .rm{margin-left:auto;color:var(--accent);font-weight:600;text-decoration:none;font-size:13px}
+@media (max-width:520px){.tdy{gap:12px 14px}.strk{flex-direction:column;align-items:flex-start;gap:6px;padding-right:14px}.strk b{font-size:22px}.strk .fl{width:38px;height:38px;font-size:19px}.gl .gt{flex-direction:column;gap:1px}.wk{max-width:none}.card .due .rm,.tdy .due .rm{margin-left:0}}
 /* Tools: live quiz and grade calculator */
 .tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:0 0 18px}
 .tool{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow);min-width:0;transition:border-color .15s,transform .18s var(--ease)}
 .tool:hover{border-color:var(--accent-line);transform:translateY(-1px)}
 .tool[hidden]{display:none}
-.tool.due{border-color:var(--accent-line)}.tool.due #modsub,.tool.due #dusub{color:var(--accent);font-weight:600}
+.tool.due{border-color:var(--accent-line)}.tool.due #modsub,.tool.due #dusub,.tool.due #bdsub{color:var(--accent);font-weight:600}
 .tool.locked{cursor:default;opacity:.62;filter:grayscale(.5)}.tool.locked:hover{transform:none;border-color:var(--line)}
 .tool .new{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:700 10.5px/1.6 var(--sans);letter-spacing:.04em;text-transform:uppercase;vertical-align:2px}
 .tool .done{color:var(--good);font-weight:600}
 .tool .tic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-size:18px}
-.tool>span:last-child{min-width:0}.tool b{display:block;font-size:14.5px}.tool span span{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:520px){.tool span span{white-space:normal}}
+.tool>span:not(.tic):not(.hg){min-width:0}.tool b{display:block;font-size:14.5px}.tool>span:not(.tic):not(.hg)>span{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:520px){.tool>span:not(.tic):not(.hg)>span{white-space:normal}}
 #gdsub{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal}
 /* compact tiles: two small columns, one line each (Settings → Home page; Auto = on phones) */
 :root[data-home="compact"] .tools{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 :root[data-home="compact"] .tool{padding:9px 10px;gap:9px;border-radius:12px}
 :root[data-home="compact"] .tool .tic{width:30px;height:30px;border-radius:9px}:root[data-home="compact"] .tool .tic .i{width:15px;height:15px}
 :root[data-home="compact"] .tool b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-:root[data-home="compact"] .tool span span,:root[data-home="compact"] #gdsub{display:block!important;white-space:nowrap!important;font-size:12px}
+:root[data-home="compact"] .tool>span:not(.tic):not(.hg)>span,:root[data-home="compact"] #gdsub{display:block!important;white-space:nowrap!important;font-size:12px}
 :root[data-home="compact"] .tool .new{display:none}
-@media (max-width:640px){:root[data-home="auto"] .tools{grid-template-columns:1fr 1fr;gap:8px}:root[data-home="auto"] .tool{padding:9px 10px;gap:9px;border-radius:12px}:root[data-home="auto"] .tool .tic{width:30px;height:30px;border-radius:9px}:root[data-home="auto"] .tool .tic .i{width:15px;height:15px}:root[data-home="auto"] .tool b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root[data-home="auto"] .tool span span,:root[data-home="auto"] #gdsub{display:block!important;white-space:nowrap!important;font-size:12px}:root[data-home="auto"] .tool .new{display:none}}
+@media (max-width:640px){:root[data-home="auto"] .tools{grid-template-columns:1fr 1fr;gap:8px}:root[data-home="auto"] .tool{padding:9px 10px;gap:9px;border-radius:12px}:root[data-home="auto"] .tool .tic{width:30px;height:30px;border-radius:9px}:root[data-home="auto"] .tool .tic .i{width:15px;height:15px}:root[data-home="auto"] .tool b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root[data-home="auto"] .tool>span:not(.tic):not(.hg)>span,:root[data-home="auto"] #gdsub{display:block!important;white-space:nowrap!important;font-size:12px}:root[data-home="auto"] .tool .new{display:none}}
+:root[data-home="compact"] .tool span span span,:root[data-home="auto"] .tool span span span,:root[data-home="compact"] .tool .done,:root[data-home="auto"] .tool .done{display:inline!important}
 .tools .cust{grid-column:1/-1;order:99;justify-self:end;font-size:12.5px;font-weight:600;color:var(--mute);text-decoration:none;padding:2px 4px}.tools .cust:hover{color:var(--accent)}
 /* Customize home (homeedit.js): dashed items, a grip on top, × to hide, the bar at the bottom of the screen */
 .hediting .hed{position:relative;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;outline:2px dashed var(--accent-line);outline-offset:3px}
 .hediting .hed:focus-visible{outline:2px solid var(--accent)}.hediting .hed *{-webkit-user-drag:none}
-.hediting nav.tools>.tool{order:0!important}.tool.hed>span+span:not(.hg){min-width:0}.hediting nav.tools>.cust{display:none}
+.hediting nav.tools>.tool{order:0!important}.tool.hed>span:not(.tic):not(.hg){min-width:0}.hediting nav.tools>.cust{display:none}
 .hediting .tool.hed:hover,.hediting .course.hed:hover{transform:none}
 .hed .hx{position:absolute;top:-11px;right:-11px;z-index:3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--line2);background:var(--surface);color:var(--text);box-shadow:var(--shadow);cursor:pointer}
 .hed .hx:hover{color:var(--bad,#c0392b);border-color:currentColor}
