@@ -13,11 +13,20 @@
     }
     return d;
   }
+  function tok() {
+    try { if (typeof Auth !== 'undefined' && Auth && Auth.token) { if (!Auth.cloud) Auth.cloud = cloud; return Auth.token() } } catch (e) { }
+    try { const s = JSON.parse(localStorage.getItem('reviewer_session') || 'null'); if (s && s.access && (!s.exp || Date.now() < s.exp)) return Promise.resolve(s.access) } catch (e) { }
+    return Promise.resolve('');
+  }
   function ping() {
     if (!cloud || document.visibilityState !== 'visible' || Date.now() - last < 55e3) return;
     last = Date.now();
     const h = { 'Content-Type': 'application/json', apikey: cloud.key }; if (/^eyJ/.test(cloud.key)) h.Authorization = 'Bearer ' + cloud.key;
     fetch(cloud.url + '/rest/v1/rpc/here_ping', { method: 'POST', headers: h, body: JSON.stringify({ p_dev: dev() }), keepalive: true }).catch(() => { });
+    tok().then(tk => {
+      if (!tk) return;
+      fetch(cloud.url + '/rest/v1/rpc/presence_ping', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cloud.key, Authorization: 'Bearer ' + tk }, body: JSON.stringify({ p_course: null, p_studying: false }), keepalive: true }).catch(() => { });
+    });
   }
   fetch('courses.json').then(r => r.json()).then(l => {
     const c = (l.find(x => x.cloud && x.cloud.url) || {}).cloud; if (!c || !c.key) return;

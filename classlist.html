@@ -1,0 +1,211 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Class list · APMed '33</title>
+<meta name="description" content="See which classmates are studying or on the site right now, and choose whether your status is Active or Invisible.">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:620px;margin:0 auto;padding:14px 16px calc(28px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:8px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+.sp{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;padding:9px 16px;font-weight:600;font-size:14.5px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07);background:var(--accent)}
+.btn.wide{width:100%}
+h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 4px;text-align:center}
+.sub{margin:0 0 16px;color:var(--mute);font-size:14px;text-align:center;font-variant-numeric:tabular-nums}
+.sub b{color:var(--text)}
+.card{margin:0 0 14px;padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.card h2{display:flex;align-items:center;gap:7px;margin:0 0 8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute)}
+.card p{margin:0 0 12px;color:var(--mute);font-size:14px}
+.err{margin:8px 0 0;color:var(--bad,#c0392b);font-size:13.5px}
+.empty{color:var(--faint);font-size:14px;text-align:center;padding:14px 0;margin:0}
+/* your row + status picker */
+.mecard{margin:0 0 16px;padding:14px 15px;border-radius:16px;background:var(--surface);border:1.5px solid var(--accent-line,var(--line2));box-shadow:var(--shadow)}
+.metop{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.meinfo{flex:1;min-width:160px}
+.mename{display:flex;align-items:center;gap:7px;font-weight:700;font-size:15px}
+.you{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:2px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.mestate{display:flex;align-items:center;gap:7px;margin-top:2px;font-size:13.5px;color:var(--mute)}
+.mestate em{font-style:normal;color:var(--faint)}
+.seg{display:inline-flex;padding:3px;border-radius:11px;background:var(--raised);border:1px solid var(--line)}
+.seg button{border:0;background:transparent;padding:5px 12px;border-radius:8px;font-size:13px;font-weight:600;color:var(--mute);transition:background .15s,color .15s}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px #0001}
+.seg button:disabled{opacity:.6;cursor:default}
+.menote{margin:10px 0 0;padding-top:9px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mute);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.menote a{color:var(--accent);text-decoration:none;font-weight:600}
+.menote a:hover{text-decoration:underline}
+/* status dots */
+.dot{flex:none;width:9px;height:9px;border-radius:50%;display:inline-block}
+.dot.studying{background:var(--good,#22a06b);box-shadow:0 0 0 3px color-mix(in oklab,var(--good,#22a06b) 24%,transparent)}
+.dot.here{background:var(--accent);box-shadow:0 0 0 3px color-mix(in oklab,var(--accent) 22%,transparent)}
+.dot.offline{background:var(--line2)}
+/* section headers + classmate rows */
+.sec{margin:16px 0 8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);display:flex;align-items:center;gap:7px}
+.list{display:grid;gap:7px}
+.row{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.row .w{flex:1;min-width:0}
+.row b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .st{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mute);white-space:nowrap}
+.row.studying .st{color:var(--good,#22a06b);font-weight:600}
+.row.here .st{color:var(--accent);font-weight:600}
+.row.offline{opacity:.78}
+.toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:480px){
+ .metop{align-items:flex-start}
+ .seg{width:100%;justify-content:stretch}
+ .seg button{flex:1;text-align:center}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<main>
+ <div class="top"><a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a><span class="sp"></span></div>
+ <h1>Class list</h1>
+ <p class="sub" id="sub">See who in the class is studying or on the site right now.</p>
+ <div id="view"><p class="empty">Loading…</p></div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="auth.js"></script>
+<script src="profile.js"></script>
+<script src="update.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ic=n=>'<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
+const short=t=>String(t||'').replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,'');
+function toast(t,ms){const e=$('toast');if(!e)return;e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),ms||2400)}
+
+let COURSES=[],ROWS=[],BUSY=false;
+const courseTitle=id=>{const c=COURSES.find(x=>x.id===id);return c?short(c.title):id};
+function stateLabel(r){
+ if(r.state==='studying')return r.course?'Studying '+courseTitle(r.course):'Studying · Focus timer';
+ if(r.state==='here')return 'On the site';
+ return 'Offline';
+}
+function avHtml(r,sz){
+ return window.Profile?Profile.html({av:r.av||'g',url:r.avatar||'',name:r.name||'Classmate'},sz||38):'';
+}
+
+function signedOut(msg){
+ $('sub').textContent='See who in the class is studying or on the site right now.';
+ $('view').innerHTML='<div class="card"><h2>'+ic('users')+' Sign in to see the class list</h2>'+
+  '<p>The class list is only for signed-in classmates whose attendance is linked.</p>'+
+  '<button class="btn primary wide" onclick="Auth.signIn(location.href)">Sign in with Google</button>'+
+  (msg?'<p class="err">'+esc(msg)+'</p>':'')+'</div>';
+}
+
+function unlinked(msg){
+ $('sub').textContent='Link your attendance to see the class list.';
+ $('view').innerHTML='<div class="card"><h2>'+ic('users')+' Link your attendance first</h2>'+
+  '<p>'+(msg?esc(msg):'Link your Google account to your name on the attendance sheet to see the class list and control your status.')+'</p>'+
+  '<a class="btn primary wide" href="attendance.html">Go to My attendance</a></div>';
+}
+
+function draw(){
+ const rows=ROWS||[];
+ const studying=rows.filter(r=>r.state==='studying'&&(r.me?!r.invisible:true)).length;
+ const here=rows.filter(r=>r.state==='here'&&(r.me?!r.invisible:true)).length;
+ const offline=Math.max(0,rows.length-studying-here);
+ $('sub').innerHTML='<b>'+studying+'</b> studying · <b>'+here+'</b> on the site · <b>'+offline+'</b> offline';
+
+ const me=rows.find(r=>r.me);
+ const others=rows.filter(r=>!r.me);
+ let html='';
+ if(me){
+  const inv=!!me.invisible;
+  html+='<section class="mecard row me '+esc(me.state)+'" id="merow" aria-label="Your status">'+
+   '<div class="metop">'+
+    avHtml(me,42)+
+    '<div class="meinfo">'+
+     '<div class="mename"><b>'+esc(me.name)+'</b><span class="you">You</span></div>'+
+     '<div class="mestate"><i class="dot '+esc(me.state)+'" aria-hidden="true"></i><span id="mestate">'+esc(stateLabel(me))+(inv?' <em>(only you see this)</em>':'')+'</span></div>'+
+    '</div>'+
+    '<div class="seg" role="radiogroup" aria-label="Status visibility">'+
+     '<button type="button" class="'+(!inv?'on':'')+'" data-status="active" role="radio" aria-checked="'+(!inv)+'" '+(BUSY?'disabled':'')+'>Active</button>'+
+     '<button type="button" class="'+(inv?'on':'')+'" data-status="invisible" role="radio" aria-checked="'+inv+'" '+(BUSY?'disabled':'')+'>Invisible</button>'+
+    '</div>'+
+   '</div>'+
+   '<div class="menote"><span>'+(inv?'Classmates see you as Offline right now.':'Classmates can see when you\'re studying or on the site.')+' The anonymous Studying now counter is unaffected.</span><a href="privacy.html#classlist">Privacy</a></div>'+
+  '</section>';
+ }
+ const groups=[
+  ['studying','Studying now',others.filter(r=>r.state==='studying')],
+  ['here','On the site',others.filter(r=>r.state==='here')],
+  ['offline','Offline',others.filter(r=>r.state==='offline')]
+ ];
+ groups.forEach(([key,title,list])=>{
+  if(!list.length)return;
+  html+='<h2 class="sec"><i class="dot '+key+'" aria-hidden="true"></i>'+esc(title)+' ('+list.length+')</h2><div class="list" data-group="'+key+'">'+
+   list.map(r=>'<div class="row '+esc(r.state)+'">'+avHtml(r,36)+'<div class="w"><b>'+esc(r.name)+'</b></div><span class="st"><i class="dot '+esc(r.state)+'" aria-hidden="true"></i>'+esc(stateLabel(r))+'</span></div>').join('')+
+  '</div>';
+ });
+ if(!rows.length)html='<p class="empty">No linked classmates found.</p>';
+ $('view').innerHTML=html;
+ $('view').querySelectorAll('[data-status]').forEach(b=>{
+  b.onclick=()=>setStatus(b.dataset.status);
+ });
+}
+
+async function setStatus(st){
+ if(BUSY||(st!=='active'&&st!=='invisible'))return;
+ BUSY=true;draw();
+ try{
+  const res=await Auth.rpc('presence_set',{p_status:st},true);
+  const inv=(res||st)==='invisible';
+  try{localStorage.setItem('reviewer_presence_status',inv?'invisible':'active');localStorage.setItem('reviewer_presence_notice','1')}catch(e){}
+  const me=ROWS.find(r=>r.me);if(me)me.invisible=inv;
+  BUSY=false;draw();
+  toast(inv?'You are now Invisible — classmates see you as Offline':'You are now Active');
+  load(true);
+ }catch(e){
+  BUSY=false;draw();
+  toast(e.message||'Could not update status');
+ }
+}
+
+async function load(quiet){
+ if(!Auth.ses()){signedOut();return}
+ try{
+  const rows=await Auth.rpc('class_list',{},true);
+  ROWS=Array.isArray(rows)?rows:[];
+  const me=ROWS.find(r=>r.me);
+  if(me){try{localStorage.setItem('reviewer_presence_status',me.invisible?'invisible':'active')}catch(e){}}
+  draw();
+ }catch(e){
+  const m=String(e&&e.message||'');
+  if(/link your attendance/i.test(m)){unlinked(m);return}
+  if(!Auth.ses()){signedOut();return}
+  if(!quiet)$('view').innerHTML='<div class="card"><p class="err">'+esc(m||'Could not load the class list.')+'</p><button class="btn" onclick="load()">Try again</button></div>';
+ }
+}
+
+async function boot(){
+ try{
+  const all=await (await fetch('courses.json')).json();
+  COURSES=all.filter(c=>!c.soon);
+  const cl=all.find(c=>c.cloud&&c.cloud.url);if(cl)Auth.cloud=cl.cloud;
+ }catch(e){}
+ if(!Auth.cloud){$('view').innerHTML='<div class="card"><p>The class list needs the class cloud, which isn\'t set up here.</p></div>';return}
+ let msg='';try{await Auth.finish()}catch(e){msg=e.message}
+ if(!Auth.ses()){signedOut(msg);return}
+ try{await Auth.rpc('presence_ping',{p_course:null,p_studying:false},true)}catch(e){}
+ await load();
+ setInterval(()=>{if(document.visibilityState==='visible'&&Auth.ses())load(true)},30000);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Auth.ses())load(true)});
+}
+boot();
+</script></body></html>

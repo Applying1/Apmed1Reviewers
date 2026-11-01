@@ -336,6 +336,7 @@ html.introing body{overflow:hidden}
  <a class="tool" id="sttool" href="sortit.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-list"/></svg></span><span><b>Sort It</b><span id="stsub">Put today's terms in their groups</span></span></a>
  <a class="tool" id="dutool" href="duel.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-trophy"/></svg></span><span><b>Duels</b><span id="dusub">Challenge a classmate to 7 questions</span></span></a>
  <a class="tool" id="bdtool" href="badges.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crown"/></svg></span><span><b>Badges</b><span id="bdsub">Earn badges for good study habits</span></span></a>
+ <a class="tool" id="cltool" href="classlist.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-users"/></svg></span><span><b>Class list</b><span id="clsub">See who is studying right now</span></span></a>
  <a class="tool" id="atttool" href="attendance.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span><span><b>My attendance</b><span id="attsub">From the class tracker</span></span></a>
  <a class="tool locked" id="shoptool" aria-disabled="true" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b id="shopname">Coming soon</b><span id="shopsub">Stay tuned</span></span></a>
  <a class="tool" id="cdtool" href="classday.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span><span><b>Class day</b><span>Post today's summary, answer questions (only you see this)</span></span></a>
@@ -344,6 +345,7 @@ html.introing body{overflow:hidden}
  </nav>
  <div class="try" id="try" hidden></div>
  <div class="try" id="move" hidden></div>
+ <div class="try" id="prnotice" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <script>try{HomeLayout.place()}catch(e){}</script>
  <p class="note inst" id="install" hidden>Use this like an app, even offline. <button class="linkbtn" id="installbtn">Install app</button></p>
@@ -540,6 +542,45 @@ function shiftDay(d,n){const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDat
   sub.textContent=n+' of '+l.length+' badges'+(u?' · '+u+' new':'');t.classList.toggle('due',!!u);t.hidden=false};
  draw();Badges.check().then(draw).catch(()=>{});Badges.onEarn(()=>setTimeout(draw,50));
 }catch(e){}})();
+// Class list tile (classlist.html) + one-time presence notice (reviewer_presence_notice)
+function curPresence(){try{return localStorage.getItem('reviewer_presence_status')==='invisible'?'invisible':'active'}catch(e){return 'active'}}
+async function setPresence(st,fromNotice){
+ st=st==='invisible'?'invisible':'active';
+ try{localStorage.setItem('reviewer_presence_status',st);localStorage.setItem('reviewer_presence_notice','1')}catch(e){}
+ const pn=document.getElementById('prnotice');if(pn)pn.hidden=true;
+ try{if(Auth.ses())await Auth.rpc('presence_set',{p_status:st},true)}catch(e){}
+ if(window.clTile)window.clTile();
+ if(!fromNotice&&!document.getElementById('sync').hidden)drawSync(st==='invisible'?'Status set to Invisible. Classmates see you as Offline.':'Status set to Active.',true);
+}
+function maybePresenceNotice(){
+ try{if(localStorage.getItem('reviewer_presence_notice'))return}catch(e){return}
+ let tries=0;
+ (function wait(){
+  const busy=document.documentElement.classList.contains('introing')||document.querySelector('.jorts,.modal:not([hidden])');
+  if(busy){if(tries++<120)setTimeout(wait,400);return}
+  try{if(localStorage.getItem('reviewer_presence_notice'))return}catch(e){}
+  const b=document.getElementById('prnotice');if(!b)return;
+  b.innerHTML='<p><b>New: Class list.</b> Classmates can now see when you\'re on the site. Go Invisible anytime.</p>'+
+   '<span class="row"><button class="btn primary" data-pn="active" onclick="setPresence(\'active\',true)">Keep Active</button><button class="btn" data-pn="invisible" onclick="setPresence(\'invisible\',true)">Go Invisible</button></span>';
+  b.hidden=false;
+ })();
+}
+window.clTile=async function(){try{
+ const cl=((await (await fetch('courses.json')).json()).find(c=>c.cloud&&c.cloud.url)||{}).cloud;if(!cl)return;
+ const t=document.getElementById('cltool'),sub=document.getElementById('clsub');if(!t||!sub)return;
+ t.hidden=false;
+ if(!Auth.ses()){sub.textContent='Sign in to see who is online';return}
+ Auth.cloud=Auth.cloud||cl;
+ const rows=await Auth.rpc('class_list',{},true);
+ if(!Array.isArray(rows)||!rows.length)return;
+ const me=rows.find(r=>r.me);
+ if(me){try{localStorage.setItem('reviewer_presence_status',me.invisible?'invisible':'active')}catch(e){}maybePresenceNotice()}
+ const st=rows.filter(r=>r.state==='studying'&&(r.me?!r.invisible:true)).length;
+ const hr=rows.filter(r=>r.state==='here'&&(r.me?!r.invisible:true)).length;
+ const parts=[];if(st)parts.push(st+' studying');if(hr)parts.push(hr+' on the site');
+ sub.textContent=(parts.length?parts.join(' · '):rows.length+' classmates · see who is online')+(me&&me.invisible?' · Invisible':'');
+}catch(e){if(/link your attendance/i.test(String(e&&e.message||''))){const s=document.getElementById('clsub');if(s)s.textContent='Link your attendance to see the class list'}}};
+window.clTile();
 // Sort It tile: only on days with a set; "Sorted ✓" once done, "New" until the page is opened once
 (async function(){try{
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -690,6 +731,8 @@ function drawSync(msg,ok){const c=getCode(),a=getAcc(),b=$('syncbody');$('synch'
    (off?'<div class="ended"><b>Your sign-in ended on this device.</b> Your progress still syncs, but the discussion, attendance and your profile need you to sign in again.<button class="gbtn" onclick="this.disabled=true;signIn()">'+G+'Sign in again</button></div>'
     :'<p class="okline">✓ Your progress in every course syncs to this account. Sign in with the same Google account on your other devices.</p>')+
    '<div class="alinks">'+
+    (off?'':'<div class="al" style="cursor:default"><div><span>Status: <b id="syncstlbl">'+(curPresence()==='invisible'?'Invisible':'Active')+'</b></span><small>'+(curPresence()==='invisible'?'Classmates see you as Offline':'Shown on the class list')+'</small></div><select id="syncst" aria-label="Status" onchange="setPresence(this.value)" style="padding:5px 9px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:600 13px var(--sans)"><option value="active"'+(curPresence()!=='invisible'?' selected':'')+'>Active</option><option value="invisible"'+(curPresence()==='invisible'?' selected':'')+'>Invisible</option></select></div>')+
+    '<a class="al" href="classlist.html"><span>Class list</span><small>See who is studying or on the site</small></a>'+
     '<a class="al" href="attendance.html"><span>My attendance</span><small>From the class tracker</small></a>'+
     '<a class="al" href="notifications.html"><span>Notifications</span><small>Reminders and class updates</small></a>'+
     '<a class="al" href="privacy.html"><span>Privacy and your data</span><small>What is saved and who can see it</small></a></div>'+

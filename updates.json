@@ -840,5 +840,13 @@
   "title": "40 new situational & theoretical questions for PurCom",
   "text": "Added 40 new situational case questions and theoretical items to Topic 4: Nature of Research (now 108 questions total), covering Dr. Arcena's lecture scenarios, Calmorin traits, and proposal rules.",
   "link": "reviewer.html?course=purcom"
+ },
+ {
+  "id": 102,
+  "date": "2026-11-01",
+  "type": "feature",
+  "title": "Class list: see who's studying or on the site",
+  "text": "A new Class list tile shows linked classmates and whether they are studying a course, on the site right now, or offline. Active is the default, and you can switch to Invisible anytime without changing the anonymous Studying now count.",
+  "link": "classlist.html"
  }
 ]

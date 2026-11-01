@@ -8,7 +8,7 @@ const CACHE = 'reviewers-v32';
 const FRESH = 6 * 3600e3, WAIT = 1500;
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'profile.js', 'dialog.js', 'live.js', 'ui.css', 'icons.svg', 'reminders-core.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html', 'update.js',
-  'daily.js', 'move.js', 'homeedit.js', 'classnow.js', 'badges.js', 'badges.html', 'here.js', 'stats.html', 'quiz.html', 'sfx.js', 'slides.html', 'crossword.html', 'crossword/puzzles.json', 'apmeddle.html', 'apmeddle/days.json', 'sortit.html', 'sortit/days.json', 'duel.html', 'attendance.html', 'classday.html', 'classnotes.js', 'shop.html', 'cards.js', 'settings.html',
+  'daily.js', 'move.js', 'homeedit.js', 'classnow.js', 'badges.js', 'badges.html', 'classlist.html', 'here.js', 'stats.html', 'quiz.html', 'sfx.js', 'slides.html', 'crossword.html', 'crossword/puzzles.json', 'apmeddle.html', 'apmeddle/days.json', 'sortit.html', 'sortit/days.json', 'duel.html', 'attendance.html', 'classday.html', 'classnotes.js', 'shop.html', 'cards.js', 'settings.html',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
 // A saved copy remembers when it was saved (x-saved-at), so its age can be checked.

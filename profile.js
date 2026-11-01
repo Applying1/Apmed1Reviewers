@@ -33,7 +33,9 @@
     '.pfm .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:11px;padding:8px 14px;font:600 14px var(--sans,system-ui);border:1px solid var(--line2);background:var(--surface);color:var(--text);cursor:pointer}' +
     '.pfm .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink,#fff)}.pfm .btn:disabled{opacity:.55;cursor:default}' +
     '.pfm .mod{font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent);margin-left:6px;vertical-align:2px}' +
-    '.pfm .real{margin:12px 0 0;font-size:14px;color:var(--mute)}.pfm .real b{color:var(--text)}';
+    '.pfm .real{margin:12px 0 0;font-size:14px;color:var(--mute)}.pfm .real b{color:var(--text)}' +
+    '.pfm .strow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:9px 12px;border-radius:12px;background:var(--raised);border:1px solid var(--line);font-size:13.5px}' +
+    '.pfm .strow select{padding:4px 8px;border-radius:8px;border:1px solid var(--line2);background:var(--surface);color:var(--text);font:600 13px var(--sans,system-ui)}';
   function style() { if (!document.getElementById('pfcss')) { const s = document.createElement('style'); s.id = 'pfcss'; s.textContent = css; document.head.appendChild(s) } }
   style();
 
@@ -82,13 +84,17 @@
         const cur = pid === 'g' ? { av: 'g', url: a.avatar, name: nameNow() } : { av: 'x:' + pid + ':' + col, name: nameNow() };
         const grid = (a.avatar ? '<button type="button" data-p="g" class="' + (pid === 'g' ? 'on' : '') + '" aria-label="Google photo" title="Google photo">' + html({ url: a.avatar, name: nameNow() }, 38) + '</button>' : '') +
           PICS.map(p => '<button type="button" data-p="' + p[0] + '" class="' + (pid === p[0] ? 'on' : '') + '" aria-label="' + p[2] + '" title="' + p[2] + '">' + html({ av: 'x:' + p[0] + ':' + col, name: nameNow() }, 38) + '</button>').join('');
+        const st = (() => { try { return localStorage.getItem('reviewer_presence_status') === 'invisible' ? 'invisible' : 'active' } catch (e) { return 'active' } })();
         modal(head('Your profile') +
-          '<div class="pv">' + html(cur, 56) + '<div><b id="pfn">' + esc(nameNow() || 'Your name') + '</b><span>Shown in the discussion</span></div></div>' +
+          '<div class="pv">' + html(cur, 56) + '<div><b id="pfn">' + esc(nameNow() || 'Your name') + '</b><span>Shown in the discussion and class list</span></div></div>' +
           '<label for="pfin">Display name</label><input id="pfin" maxlength="24" autocomplete="nickname" placeholder="' + esc(first || 'Your name') + '" value="' + esc(typed == null ? (a.dname || '') : typed) + '">' +
           '<p class="pfnote">Leave it empty to use your Google name. Classmates who tap your name can still see your Google account name.</p>' +
           '<label>Picture</label><div class="grid" id="pfgrid">' + grid + '</div>' +
           (pid !== 'g' ? '<label>Color</label><div class="cols" id="pfcols">' + COLORS.map((c, i) => '<button type="button" data-c="' + i + '" class="' + (i === col ? 'on' : '') + '" aria-label="Color ' + (i + 1) + '"><i style="background:' + c + '"></i></button>').join('') + '</div>' : '') +
+          '<div class="strow"><span>Status in <a href="classlist.html" style="color:var(--accent);font-weight:600;text-decoration:none">Class list</a></span><select id="pfst" aria-label="Status"><option value="active"' + (st !== 'invisible' ? ' selected' : '') + '>Active</option><option value="invisible"' + (st === 'invisible' ? ' selected' : '') + '>Invisible</option></select></div>' +
           '<p class="err" id="pferr" role="alert"></p><div class="row"><button class="btn" onclick="Profile.close()">Cancel</button><button class="btn primary" id="pfsave">Save</button></div>');
+        const stSel = document.getElementById('pfst');
+        if (stSel) stSel.onchange = () => { const v = stSel.value; try { localStorage.setItem('reviewer_presence_status', v); localStorage.setItem('reviewer_presence_notice', '1') } catch (e) {} if (typeof Auth !== 'undefined' && Auth.cloud && Auth.ses()) Auth.rpc('presence_set', { p_status: v }, true).catch(() => {}) };
         const inp = document.getElementById('pfin');
         inp.oninput = () => { typed = inp.value; const n = document.getElementById('pfn'); n.textContent = nameNow() || 'Your name'; const pv = box.querySelector('.pv .pfa'); if (pv && pv.tagName === 'SPAN' && !pv.classList.contains('e')) pv.textContent = initial(nameNow()) };
         inp.onkeydown = e => { if (e.key === 'Enter') save() };

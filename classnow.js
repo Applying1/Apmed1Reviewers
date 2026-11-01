@@ -25,10 +25,20 @@ window.ClassNow = (function () {
     const h = { 'Content-Type': 'application/json', apikey: cloud.key }; if (/^eyJ/.test(cloud.key)) h.Authorization = 'Bearer ' + cloud.key;
     return fetch(cloud.url + '/rest/v1/rpc/' + fn, { method: 'POST', headers: h, body: JSON.stringify(body || {}) }).then(r => r.ok ? r.json().catch(() => null) : Promise.reject(new Error(r.status)));
   }
+  function tok() {
+    try { if (typeof Auth !== 'undefined' && Auth && Auth.token) { if (!Auth.cloud) Auth.cloud = cloud; return Auth.token() } } catch (e) { }
+    try { const s = JSON.parse(ls.get('reviewer_session') || 'null'); if (s && s.access && (!s.exp || Date.now() < s.exp)) return Promise.resolve(s.access) } catch (e) { }
+    return Promise.resolve('');
+  }
   function ping(course, force) {
     const t = Date.now(); if (!cloud || (!force && t - last < 60e3)) return; last = t; nowAt = 0;
     const c = course == null ? here : course; lastC = c || '';
-    rpc('study_ping', { p_dev: dev(), p_course: /^[a-z0-9_]{2,40}$/.test(c || '') ? c : null }).catch(() => { });
+    const pc = /^[a-z0-9_]{2,40}$/.test(c || '') ? c : null;
+    rpc('study_ping', { p_dev: dev(), p_course: pc }).catch(() => { });
+    tok().then(tk => {
+      if (!tk || !cloud || !cloud.url) return;
+      fetch(cloud.url + '/rest/v1/rpc/presence_ping', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cloud.key, Authorization: 'Bearer ' + tk }, body: JSON.stringify({ p_course: pc, p_studying: true }) }).catch(() => { });
+    });
   }
   function now() {
     if (nowP && Date.now() - nowAt < 30e3) return nowP;
