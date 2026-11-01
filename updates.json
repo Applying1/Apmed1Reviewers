@@ -856,5 +856,14 @@
   "title": "Pick a classmate in Duels + duel notifications",
   "text": "You can now pick a classmate directly when starting a duel (or tap Duel next to their name on the Class list) — it appears straight in their Duels list and sends them a push notification when you finish, plus a result alert when the second player finishes.",
   "link": "duel.html"
+ },
+ {
+  "id": 104,
+  "date": "2026-11-01",
+  "type": "schedule",
+  "course": "psych",
+  "title": "Psychology Evals moved to Nov 11",
+  "text": "The Evals on Chapters 11 and 12 (Personality; Stress, Health & Coping) have been moved to Wednesday, November 11. Timetable, exam countdowns and reminders have been updated.",
+  "link": "schedule.html"
  }
 ]
