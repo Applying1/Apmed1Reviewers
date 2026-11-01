@@ -18,14 +18,15 @@
   const nameOf = (g, id) => g === 'c' ? courseName(id) : (NAMES[id] || id);
   function items(g) {
     if (g === 't') return HomeLayout.TOP.map($).filter(e => e && !e.hidden).sort((a, b) => a.compareDocumentPosition(b) & 4 ? -1 : 1);
-    if (g === 'o') return [...document.querySelectorAll('nav.tools>.tool:not(.hghost)')].filter(e => !e.hidden);
+    if (g === 'o') return [...document.querySelectorAll('nav.tools:not(.sec-tools)>.tool:not(.hghost)')].filter(e => !e.hidden);
+    if (g === 'a') return [...document.querySelectorAll('#admintools>.tool:not(.hghost)')].filter(e => !e.hidden);
     return [...document.querySelectorAll('#list>[data-c]:not(.hghost)')];
   }
   const visible = el => getComputedStyle(el).display !== 'none';
 
   function decorate() {
     if (!on) return;
-    ['t', 'o', 'c'].forEach(g => items(g).forEach(el => {
+    ['t', 'o', 'a', 'c'].forEach(g => items(g).forEach(el => {
       el.dataset.g = g; el.classList.add('hed'); el.tabIndex = 0; el.setAttribute('draggable', 'false');
       el.querySelectorAll('a,button,input').forEach(x => { if (!x.closest('.hx')) x.tabIndex = -1 });
       if (!el.querySelector(':scope>.hx')) {
@@ -47,7 +48,7 @@
   function drawBar() {
     if (!bar) return;
     const h = HomeLayout.get(), hid = [];
-    h.hide.forEach(id => { const e = $(id); if (e && !e.hidden && (HomeLayout.TOP.includes(id) || e.classList.contains('tool'))) hid.push([HomeLayout.TOP.includes(id) ? 't' : 'o', id]) });
+    h.hide.forEach(id => { const e = $(id); if (e && !e.hidden && (HomeLayout.TOP.includes(id) || e.classList.contains('tool'))) { const isT = HomeLayout.TOP.includes(id), isA = (HomeLayout.ADMIN && HomeLayout.ADMIN.includes(id)); hid.push([isT ? 't' : isA ? 'a' : 'o', id]); } });
     h.hideC.forEach(id => { if (document.querySelector('#list>[data-c="' + id + '"]')) hid.push(['c', id]) });
     const seg = [['auto', 'Auto'], ['compact', 'Compact'], ['full', 'Full']].map(([v, t]) => '<button type="button" role="radio" aria-checked="' + ((h.layout || 'auto') === v) + '" data-l="' + v + '">' + t + '</button>').join('');
     const touch = matchMedia('(pointer: coarse)').matches;
@@ -105,7 +106,8 @@
   function save(g) {
     const h = HomeLayout.get();
     if (g === 't') h.top = HomeLayout.TOP.map($).filter(Boolean).sort((a, b) => a.compareDocumentPosition(b) & 4 ? -1 : 1).map(e => e.id);
-    else if (g === 'o') h.order = [...document.querySelectorAll('nav.tools>.tool:not(.hghost)')].map(e => e.id);
+    else if (g === 'o') h.order = [...document.querySelectorAll('nav.tools:not(.sec-tools)>.tool:not(.hghost)')].map(e => e.id);
+    else if (g === 'a') h.adminOrder = [...document.querySelectorAll('#admintools>.tool:not(.hghost)')].map(e => e.id);
     else h.courses = [...document.querySelectorAll('#list>[data-c]:not(.hghost)')].map(e => e.dataset.c);
     HomeLayout.put(h);
   }

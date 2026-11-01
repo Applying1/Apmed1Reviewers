@@ -9,23 +9,24 @@
 <link rel="stylesheet" href="ui.css">
 <script>/* home layout (this device): hidden cards, tiles and courses, their order, compact tiles, courses first.
  Edited in Settings → Home page and by Customize on this page (homeedit.js). Works without storage (kept in memory). */
-window.HomeLayout=(function(){const K='reviewer_home',TOP=['upnext','tests','today','classnow'],ok=x=>/^[a-z]+$/.test(x),okc=x=>/^[a-z0-9_-]+$/.test(x);let mem=null;
- const norm=h=>{if(!h||typeof h!=='object'||Array.isArray(h))h={};['hide','order','top','courses','hideC'].forEach(k=>{h[k]=Array.isArray(h[k])?h[k].filter(x=>typeof x==='string'):[]});return h};
+window.HomeLayout=(function(){const K='reviewer_home',TOP=['upnext','tests','today','classnow'],ADMIN=['cdtool','modtool'],ok=x=>/^[a-z]+$/.test(x),okc=x=>/^[a-z0-9_-]+$/.test(x);let mem=null;
+ const norm=h=>{if(!h||typeof h!=='object'||Array.isArray(h))h={};['hide','order','top','courses','hideC','adminOrder'].forEach(k=>{h[k]=Array.isArray(h[k])?h[k].filter(x=>typeof x==='string'):[]});h.order=h.order.filter(id=>!ADMIN.includes(id));return h};
  function get(){if(mem)return norm(JSON.parse(JSON.stringify(mem)));let h=null;try{h=JSON.parse(localStorage.getItem(K))}catch(e){}return norm(h)}
  function css(h){let c='';h.hide.filter(ok).forEach(id=>{c+='#'+id+'{display:none!important}'});if(h.hide.includes('upnext'))c+='#prevq{display:none!important}';
-  h.order.filter(ok).forEach((id,i)=>{c+='#'+id+'{order:'+i+'}'});h.hideC.filter(okc).forEach(id=>{c+='#list>[data-c="'+id+'"]{display:none!important}'});return c}
+  h.order.filter(ok).forEach((id,i)=>{c+='#'+id+'{order:'+i+'}'});(h.adminOrder||[]).filter(ok).forEach((id,i)=>{c+='#'+id+'{order:'+i+'}'});h.hideC.filter(okc).forEach(id=>{c+='#list>[data-c="'+id+'"]{display:none!important}'});return c}
  function apply(h){h=h||get();let s=document.getElementById('homecss');if(!s){s=document.createElement('style');s.id='homecss';document.head.appendChild(s)}s.textContent=css(h);
   const d=document.documentElement;d.dataset.home=['compact','full'].includes(h.layout)?h.layout:'auto';if(h.first)d.dataset.first='1';else delete d.dataset.first}
  function put(h){const o={};for(const k in h)if(h[k]!=null&&!(Array.isArray(h[k])&&!h[k].length))o[k]=h[k];
   try{if(Object.keys(o).length)localStorage.setItem(K,JSON.stringify(o));else localStorage.removeItem(K);mem=null}catch(e){mem=o}apply(norm(o))}
  const topOrder=h=>{const t=h.top.filter((x,i,a)=>TOP.includes(x)&&a.indexOf(x)===i);return t.concat(TOP.filter(x=>!t.includes(x)))};
  // put the top cards, the tiles and the course list in the saved order (the tiles' CSS order says the same, so nothing jumps)
- function place(h){h=h||get();const n=document.querySelector('nav.tools'),l=document.getElementById('list'),adm=document.getElementById('admintools');if(!n||!l)return;const p=n.parentNode,mv=document.getElementById('move'),pq=document.getElementById('prevq');
-  if(h.first)p.insertBefore(l,n);else if(mv)mv.after(l);if(adm&&!h.first)l.after(adm);
+ function place(h){h=h||get();const n=document.querySelector('nav.tools:not(.sec-tools)'),l=document.getElementById('list'),adm=document.getElementById('admintools');if(!n||!l)return;const p=n.parentNode,mv=document.getElementById('move'),pq=document.getElementById('prevq');
+  if(h.first)p.insertBefore(l,n);else if(mv)mv.after(l);if(adm)l.after(adm);
   const a=h.first?l:n;topOrder(h).forEach(id=>{const e=document.getElementById(id);if(e)p.insertBefore(e,a);if(id==='upnext'&&pq)p.insertBefore(pq,a)});
-  const cu=n.querySelector('.cust');h.order.forEach(id=>{const e=document.getElementById(id);if(e&&(e.parentNode===n||e.parentNode===adm))n.insertBefore(e,cu)})}
+  const cu=n.querySelector('.cust');h.order.forEach(id=>{if(ADMIN.includes(id))return;const e=document.getElementById(id);if(e&&e.parentNode===n)n.insertBefore(e,cu)});
+  if(adm){const aOrder=(h.adminOrder&&h.adminOrder.length)?h.adminOrder:ADMIN;aOrder.forEach(id=>{const e=document.getElementById(id);if(e)adm.appendChild(e)})}}
  function sortCourses(list){const o=get().courses,rk=c=>{const i=o.indexOf(c.id);return i<0?1e3+list.indexOf(c):i};return list.slice().sort((a,b)=>rk(a)-rk(b))}
- try{apply()}catch(e){}return {TOP,get,put,apply,place,sortCourses}})();</script>
+ try{apply()}catch(e){}return {TOP,ADMIN,get,put,apply,place,sortCourses}})();</script>
 <style>
 /* APMed '33 palette (chosen in a course's Personalize → Appearance) */
 *{box-sizing:border-box}
