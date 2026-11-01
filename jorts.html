@@ -1,0 +1,1995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <title>APMed '33 Jorts Battle — Official Voting System & Runway</title>
+ <link rel="manifest" href="manifest.webmanifest">
+ <link rel="icon" href="icons/icon-192.png">
+ <link rel="apple-touch-icon" href="icons/icon-192.png">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bungee&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="ui.css">
+ <style>
+  :root {
+   --denim-900: #0f2444;
+   --denim-800: #1b3b6f;
+   --denim-700: #214d8c;
+   --denim-600: #2c67b3;
+   --denim-500: #3b82f6;
+   --denim-100: #e8f1fd;
+   --denim-50:  #f3f8fe;
+   --stitch: #f59e0b;
+   --stitch-dark: #b45309;
+   --gold: #fbbf24;
+   --leather: #854d0e;
+   --leather-light: #ca8a04;
+  }
+  body {
+   background-color: var(--denim-900);
+   background-image: 
+    radial-gradient(ellipse at 50% 0%, #1e4b8a 0%, transparent 70%),
+    linear-gradient(rgba(255,255,255,0.03) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 2px, transparent 2px);
+   background-size: 100% 100%, 32px 32px, 32px 32px;
+   color: #f8fafc;
+   font-family: var(--sans, 'Inter', system-ui, sans-serif);
+   min-height: 100vh;
+   margin: 0;
+   padding-bottom: 90px;
+  }
+  .jwrap {
+   max-width: 980px;
+   margin: 0 auto;
+   padding: 16px 16px 40px;
+  }
+  /* Top Bar */
+  .jtop {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+   padding: 10px 0 16px;
+  }
+  .jback {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   color: #cbd5e1;
+   text-decoration: none;
+   font-size: 13.5px;
+   font-weight: 600;
+   background: rgba(255,255,255,0.08);
+   padding: 7px 12px;
+   border-radius: 999px;
+   border: 1px solid rgba(255,255,255,0.14);
+   transition: background .15s, color .15s;
+  }
+  .jback:hover { background: rgba(255,255,255,0.16); color: #fff; }
+  .jadmin-btn {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   font-size: 13px;
+   font-weight: 700;
+   color: var(--gold);
+   background: rgba(245,158,11,0.12);
+   border: 1px dashed var(--stitch);
+   padding: 7px 13px;
+   border-radius: 999px;
+   cursor: pointer;
+   transition: all .15s;
+  }
+  .jadmin-btn:hover { background: rgba(245,158,11,0.22); transform: scale(1.02); }
+
+  /* Hero Banner */
+  .jhero {
+   position: relative;
+   background: linear-gradient(135deg, #18386b 0%, #0d2243 100%);
+   border: 2px dashed var(--stitch);
+   border-radius: 24px;
+   padding: 24px 20px 20px;
+   text-align: center;
+   box-shadow: 0 14px 34px rgba(0,0,0,0.38), inset 0 0 20px rgba(0,0,0,0.25);
+   overflow: hidden;
+   margin-bottom: 20px;
+  }
+  .jhero::before {
+   content: '';
+   position: absolute;
+   inset: 4px;
+   border: 1px solid rgba(255,255,255,0.08);
+   border-radius: 20px;
+   pointer-events: none;
+  }
+  .jhero-tag {
+   display: inline-block;
+   background: var(--leather);
+   color: #fef08a;
+   border: 1px dashed var(--gold);
+   font-size: 12px;
+   font-weight: 800;
+   letter-spacing: 1px;
+   text-transform: uppercase;
+   padding: 4px 14px;
+   border-radius: 6px;
+   margin-bottom: 10px;
+   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .jhero h1 {
+   font-family: 'Bungee', cursive, sans-serif;
+   font-size: clamp(26px, 5.5vw, 44px);
+   line-height: 1.1;
+   margin: 4px 0 8px;
+   color: #fff;
+   text-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 20px rgba(59,130,246,0.35);
+   letter-spacing: 0.5px;
+  }
+  .jhero h1 .jaccent {
+   color: var(--gold);
+   display: inline-block;
+  }
+  .jhero-sub {
+   font-size: clamp(14px, 2.5vw, 16px);
+   color: #cbd5e1;
+   margin: 0 auto 12px;
+   max-width: 580px;
+   line-height: 1.4;
+  }
+  .jhero-pills {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
+   justify-content: center;
+   margin-top: 14px;
+  }
+  .jpill {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   background: rgba(255,255,255,0.08);
+   border: 1px solid rgba(255,255,255,0.12);
+   border-radius: 999px;
+   padding: 5px 12px;
+   font-size: 12.5px;
+   font-weight: 600;
+   color: #e2e8f0;
+  }
+  .jpill.live {
+   background: rgba(34,197,94,0.18);
+   border-color: rgba(34,197,94,0.4);
+   color: #4ade80;
+  }
+  .jpill.testing {
+   background: rgba(245,158,11,0.18);
+   border-color: rgba(245,158,11,0.4);
+   color: #fde047;
+  }
+
+  /* Status Banner */
+  .jstatus-card {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+   background: rgba(245,158,11,0.12);
+   border: 1.5px dashed var(--stitch);
+   border-radius: 16px;
+   padding: 12px 18px;
+   margin-bottom: 20px;
+   font-size: 13.5px;
+   color: #fef08a;
+  }
+  .jstatus-card b { color: #fff; }
+  .jstatus-card.live-mode {
+   background: rgba(34,197,94,0.12);
+   border-color: #22c55e;
+   color: #bbf7d0;
+  }
+
+  /* Tabs Bar */
+  .jnav-tabs {
+   display: flex;
+   gap: 8px;
+   overflow-x: auto;
+   padding: 4px 2px 14px;
+   scrollbar-width: none;
+  }
+  .jnav-tabs::-webkit-scrollbar { display: none; }
+  .jtab {
+   flex: none;
+   display: inline-flex;
+   align-items: center;
+   gap: 7px;
+   padding: 10px 18px;
+   border-radius: 14px;
+   font-size: 14px;
+   font-weight: 700;
+   background: rgba(255,255,255,0.06);
+   color: #cbd5e1;
+   border: 1px solid rgba(255,255,255,0.1);
+   cursor: pointer;
+   transition: all .16s;
+   white-space: nowrap;
+  }
+  .jtab:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .jtab.active {
+   background: var(--denim-600);
+   color: #fff;
+   border-color: var(--denim-500);
+   box-shadow: 0 4px 14px rgba(44,103,179,0.45);
+  }
+
+  /* Cards Grid */
+  .jgrid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+   gap: 16px;
+   margin-top: 14px;
+  }
+  .jcard {
+   position: relative;
+   background: linear-gradient(160deg, #173663 0%, #102646 100%);
+   border: 2px solid rgba(255,255,255,0.1);
+   border-radius: 18px;
+   overflow: hidden;
+   box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+   display: flex;
+   flex-direction: column;
+   transition: transform .18s, border-color .18s, box-shadow .18s;
+  }
+  .jcard:hover {
+   transform: translateY(-2px);
+   border-color: rgba(245,158,11,0.5);
+   box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+  }
+  .jcard.voted {
+   border-color: var(--stitch);
+   background: linear-gradient(160deg, #1a3f78 0%, #122c54 100%);
+   box-shadow: 0 0 0 1px var(--stitch), 0 12px 28px rgba(245,158,11,0.2);
+  }
+  .jcard-img-wrap {
+   position: relative;
+   width: 100%;
+   height: 260px;
+   background: #09172c;
+   overflow: hidden;
+   cursor: pointer;
+  }
+  .jcard-img {
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+   display: block;
+   transition: transform .3s ease;
+  }
+  .jcard:hover .jcard-img { transform: scale(1.03); }
+  .jcard-img-ph {
+   width: 100%;
+   height: 100%;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   color: #64748b;
+   font-size: 13px;
+   gap: 8px;
+   background: repeating-linear-gradient(45deg, #0e1e35, #0e1e35 10px, #132744 10px, #132744 20px);
+  }
+  .jbadge-num {
+   position: absolute;
+   top: 12px;
+   left: 12px;
+   background: var(--leather);
+   color: #fef08a;
+   border: 1px dashed var(--gold);
+   font-size: 12px;
+   font-weight: 800;
+   padding: 4px 10px;
+   border-radius: 8px;
+   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+   z-index: 2;
+  }
+  .jbadge-top5 {
+   position: absolute;
+   top: 12px;
+   right: 12px;
+   background: linear-gradient(135deg, #f59e0b, #d97706);
+   color: #fff;
+   font-size: 11px;
+   font-weight: 800;
+   text-transform: uppercase;
+   letter-spacing: 0.5px;
+   padding: 4px 10px;
+   border-radius: 8px;
+   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+   z-index: 2;
+  }
+  .jcard-body {
+   padding: 16px;
+   display: flex;
+   flex-direction: column;
+   flex: 1;
+  }
+  .jcard-title {
+   font-size: 17px;
+   font-weight: 800;
+   margin: 0 0 2px;
+   color: #fff;
+   line-height: 1.25;
+  }
+  .jcard-fit {
+   font-size: 13px;
+   font-weight: 700;
+   color: var(--gold);
+   margin: 0 0 8px;
+  }
+  .jcard-desc {
+   font-size: 13px;
+   color: #94a3b8;
+   line-height: 1.45;
+   margin: 0 0 14px;
+   flex: 1;
+  }
+  .jcard-acts {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   margin-top: auto;
+  }
+  .jbtn-vote {
+   flex: 1;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 6px;
+   background: var(--denim-600);
+   color: #fff;
+   border: 1px solid rgba(255,255,255,0.16);
+   padding: 10px 14px;
+   border-radius: 12px;
+   font-weight: 700;
+   font-size: 13.5px;
+   cursor: pointer;
+   transition: all .16s;
+  }
+  .jbtn-vote:hover { background: #3b82f6; transform: translateY(-1px); }
+  .jbtn-vote.active {
+   background: linear-gradient(135deg, #f59e0b, #d97706);
+   border-color: var(--gold);
+   color: #fff;
+   box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+  }
+  .jbtn-photo {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   width: 40px;
+   height: 40px;
+   border-radius: 12px;
+   background: rgba(255,255,255,0.08);
+   border: 1px solid rgba(255,255,255,0.12);
+   color: #cbd5e1;
+   cursor: pointer;
+   transition: all .15s;
+  }
+  .jbtn-photo:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+  /* Awards Filter Subnav */
+  .jawards-nav {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
+   background: rgba(0,0,0,0.22);
+   padding: 8px;
+   border-radius: 16px;
+   border: 1px solid rgba(255,255,255,0.08);
+   margin-bottom: 16px;
+  }
+  .jaward-btn {
+   flex: 1;
+   min-width: 140px;
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   padding: 9px 14px;
+   border-radius: 10px;
+   background: transparent;
+   border: 1px solid transparent;
+   color: #94a3b8;
+   font-weight: 600;
+   font-size: 13.5px;
+   cursor: pointer;
+   transition: all .15s;
+   text-align: left;
+  }
+  .jaward-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .jaward-btn.active {
+   background: var(--denim-700);
+   border-color: var(--stitch);
+   color: #fff;
+  }
+  .jaward-badge { font-size: 17px; }
+  .jaward-info { flex: 1; }
+  .jaward-info b { display: block; font-size: 13.5px; line-height: 1.2; }
+  .jaward-info span { font-size: 11.5px; color: var(--gold); }
+
+  /* Ballot Summary Card */
+  .jballot-bar {
+   position: sticky;
+   top: 12px;
+   z-index: 10;
+   background: linear-gradient(135deg, #1d4072 0%, #112747 100%);
+   border: 2px dashed var(--stitch);
+   border-radius: 18px;
+   padding: 14px 18px;
+   box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 14px;
+   margin-bottom: 20px;
+  }
+  .jballot-txt h3 { margin: 0 0 2px; font-size: 16px; color: #fff; font-weight: 800; }
+  .jballot-txt p { margin: 0; font-size: 13px; color: #cbd5e1; }
+  .jballot-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .jchip {
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+   background: rgba(0,0,0,0.3);
+   border: 1px solid rgba(255,255,255,0.14);
+   border-radius: 999px;
+   padding: 3px 10px;
+   font-size: 12px;
+   color: #f1f5f9;
+  }
+  .jchip.done { border-color: #22c55e; color: #86efac; background: rgba(34,197,94,0.15); }
+  .jbtn-submit {
+   display: inline-flex;
+   align-items: center;
+   gap: 8px;
+   background: linear-gradient(135deg, #22c55e, #16a34a);
+   color: #fff;
+   border: none;
+   padding: 11px 22px;
+   border-radius: 12px;
+   font-weight: 800;
+   font-size: 14.5px;
+   cursor: pointer;
+   box-shadow: 0 4px 14px rgba(34,197,94,0.4);
+   transition: all .16s;
+   flex: none;
+  }
+  .jbtn-submit:hover { transform: translateY(-1px); filter: brightness(1.08); }
+  .jbtn-submit:disabled { opacity: 0.5; filter: grayscale(0.5); cursor: not-allowed; }
+
+  /* Leaderboard & Podium */
+  .jpodium {
+   display: flex;
+   align-items: flex-end;
+   justify-content: center;
+   gap: 12px;
+   padding: 24px 8px 10px;
+   margin-bottom: 24px;
+  }
+  .jpod-col {
+   flex: 1;
+   max-width: 170px;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   text-align: center;
+  }
+  .jpod-avatar {
+   width: 64px;
+   height: 64px;
+   border-radius: 50%;
+   border: 3px solid var(--gold);
+   object-fit: cover;
+   margin-bottom: 6px;
+   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  .jpod-name { font-weight: 800; font-size: 13.5px; color: #fff; margin-bottom: 2px; }
+  .jpod-title { font-size: 11.5px; color: var(--gold); margin-bottom: 8px; }
+  .jpod-block {
+   width: 100%;
+   border-radius: 14px 14px 0 0;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   color: #fff;
+   font-weight: 900;
+   border: 2px dashed rgba(255,255,255,0.2);
+   border-bottom: none;
+  }
+  .jpod-block.first {
+   height: 140px;
+   background: linear-gradient(180deg, #f59e0b 0%, #b45309 100%);
+   font-size: 26px;
+   box-shadow: 0 0 24px rgba(245,158,11,0.35);
+  }
+  .jpod-block.second {
+   height: 110px;
+   background: linear-gradient(180deg, #94a3b8 0%, #475569 100%);
+   font-size: 22px;
+  }
+  .jpod-block.third {
+   height: 85px;
+   background: linear-gradient(180deg, #d97706 0%, #78350f 100%);
+   font-size: 20px;
+  }
+  .jpod-votes { font-size: 12px; font-weight: 700; opacity: 0.9; margin-top: 4px; }
+
+  /* Leaderboard List */
+  .jtally-list {
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+  }
+  .jtally-item {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   padding: 12px 16px;
+   border-radius: 14px;
+   background: rgba(255,255,255,0.05);
+   border: 1px solid rgba(255,255,255,0.1);
+  }
+  .jtally-rank {
+   font-family: 'Bungee', cursive;
+   font-size: 18px;
+   color: var(--gold);
+   width: 32px;
+   flex: none;
+   text-align: center;
+  }
+  .jtally-main { flex: 1; min-width: 0; }
+  .jtally-main b { display: block; font-size: 14.5px; color: #fff; }
+  .jtally-main span { font-size: 12.5px; color: #94a3b8; }
+  .jtally-bar-wrap {
+   width: 100%;
+   height: 7px;
+   background: rgba(255,255,255,0.1);
+   border-radius: 999px;
+   overflow: hidden;
+   margin-top: 6px;
+  }
+  .jtally-bar {
+   height: 100%;
+   background: linear-gradient(90deg, var(--denim-500), var(--gold));
+   border-radius: 999px;
+   transition: width .4s ease;
+  }
+  .jtally-cnt {
+   flex: none;
+   text-align: right;
+   font-weight: 800;
+   font-size: 15px;
+   color: #fff;
+  }
+
+  /* Floating Runway DJ Booth Dock */
+  .jdj-dock {
+   position: fixed;
+   bottom: 16px;
+   right: 16px;
+   z-index: 50;
+   background: linear-gradient(135deg, #1a3867 0%, #0c1d38 100%);
+   border: 2px dashed var(--gold);
+   border-radius: 20px;
+   padding: 10px 14px;
+   box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   backdrop-filter: blur(8px);
+   max-width: calc(100vw - 32px);
+  }
+  .jdj-disc {
+   width: 38px;
+   height: 38px;
+   border-radius: 50%;
+   background: #000;
+   border: 3px solid #334155;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   position: relative;
+   flex: none;
+   box-shadow: inset 0 0 0 2px var(--gold);
+  }
+  .jdj-disc.spinning {
+   animation: jspin 2.2s linear infinite;
+  }
+  @keyframes jspin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .jdj-info {
+   display: flex;
+   flex-direction: column;
+   min-width: 120px;
+  }
+  .jdj-info b { font-size: 12.5px; color: #fff; }
+  .jdj-info span { font-size: 11px; color: var(--gold); }
+  .jdj-btn {
+   background: rgba(255,255,255,0.1);
+   border: 1px solid rgba(255,255,255,0.16);
+   color: #fff;
+   width: 34px;
+   height: 34px;
+   border-radius: 10px;
+   display: grid;
+   place-items: center;
+   cursor: pointer;
+   transition: all .15s;
+   flex: none;
+  }
+  .jdj-btn:hover { background: rgba(255,255,255,0.2); }
+  .jdj-btn.playing { background: var(--gold); color: #000; border-color: var(--gold); }
+
+  /* Modals */
+  .jmodal {
+   position: fixed;
+   inset: 0;
+   z-index: 100;
+   display: grid;
+   place-items: center;
+   padding: 16px;
+   background: rgba(10, 20, 38, 0.78);
+   backdrop-filter: blur(6px);
+  }
+  .jmodal[hidden] { display: none; }
+  .jbox {
+   width: 100%;
+   max-width: 520px;
+   max-height: 90vh;
+   overflow-y: auto;
+   background: #153158;
+   border: 2px dashed var(--stitch);
+   border-radius: 22px;
+   padding: 22px;
+   box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+   color: #fff;
+  }
+  .jmhead {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   margin-bottom: 16px;
+  }
+  .jmhead h2 { margin: 0; font-size: 20px; font-weight: 800; color: #fff; }
+  .jmx {
+   background: rgba(255,255,255,0.1);
+   border: none;
+   color: #cbd5e1;
+   width: 34px;
+   height: 34px;
+   border-radius: 10px;
+   cursor: pointer;
+   display: grid;
+   place-items: center;
+  }
+  .jmx:hover { background: rgba(255,255,255,0.2); color: #fff; }
+  .jform-group { margin-bottom: 14px; }
+  .jform-group label { display: block; font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 6px; }
+  .jinput, .jtextarea, .jselect {
+   width: 100%;
+   box-sizing: border-box;
+   background: #0c1d37;
+   border: 1px solid rgba(255,255,255,0.16);
+   border-radius: 12px;
+   padding: 10px 14px;
+   color: #fff;
+   font: inherit;
+   font-size: 14px;
+   outline: none;
+  }
+  .jinput:focus, .jtextarea:focus, .jselect:focus { border-color: var(--gold); }
+  .jtextarea { resize: vertical; min-height: 70px; }
+  .jbtn-primary {
+   width: 100%;
+   background: linear-gradient(135deg, #f59e0b, #d97706);
+   border: none;
+   color: #fff;
+   font-weight: 800;
+   font-size: 15px;
+   padding: 12px;
+   border-radius: 12px;
+   cursor: pointer;
+   transition: all .15s;
+   box-shadow: 0 4px 14px rgba(245,158,11,0.3);
+  }
+  .jbtn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+  /* Soundboard Buttons in DJ modal */
+  .jsfx-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+   gap: 10px;
+   margin-top: 14px;
+  }
+  .jsfx-btn {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   gap: 6px;
+   padding: 12px 10px;
+   background: rgba(255,255,255,0.06);
+   border: 1px solid rgba(255,255,255,0.12);
+   border-radius: 14px;
+   color: #fff;
+   cursor: pointer;
+   transition: all .15s;
+   font-size: 13px;
+   font-weight: 700;
+  }
+  .jsfx-btn:hover { background: rgba(255,255,255,0.14); transform: scale(1.02); }
+  .jsfx-btn span { font-size: 24px; }
+
+  /* Mechanics Section */
+  .jrules-card {
+   background: rgba(255,255,255,0.05);
+   border: 1.5px dashed rgba(245,158,11,0.4);
+   border-radius: 20px;
+   padding: 20px 22px;
+   margin-bottom: 20px;
+  }
+  .jrules-card h3 {
+   font-family: 'Bungee', cursive;
+   font-size: 20px;
+   color: var(--gold);
+   margin: 0 0 12px;
+   letter-spacing: 0.5px;
+  }
+  .jrules-card ul {
+   margin: 0 0 16px;
+   padding-left: 20px;
+   color: #cbd5e1;
+   line-height: 1.6;
+   font-size: 14px;
+  }
+  .jrules-card li { margin-bottom: 6px; }
+
+  /* Lightbox */
+  .jlightbox {
+   position: fixed;
+   inset: 0;
+   z-index: 200;
+   display: grid;
+   place-items: center;
+   padding: 16px;
+   background: rgba(0,0,0,0.85);
+   backdrop-filter: blur(8px);
+  }
+  .jlightbox[hidden] { display: none; }
+  .jlightbox img {
+   max-width: 90vw;
+   max-height: 85vh;
+   border-radius: 16px;
+   border: 2px solid var(--gold);
+   box-shadow: 0 16px 40px rgba(0,0,0,0.7);
+  }
+
+  @media (max-width: 600px) {
+   .jwrap { padding: 10px 12px 100px; }
+   .jhero { padding: 20px 14px 16px; }
+   .jballot-bar { flex-direction: column; align-items: stretch; text-align: center; }
+   .jbtn-submit { width: 100%; justify-content: center; }
+   .jballot-chips { justify-content: center; }
+   .jpodium { gap: 6px; }
+   .jpod-avatar { width: 50px; height: 50px; }
+  }
+ </style>
+</head>
+<body>
+<div class="jwrap">
+
+ <!-- Top header -->
+ <header class="jtop">
+  <a class="jback" href="index.html">
+   <svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+   <span>Back to Reviewers</span>
+  </a>
+  <div class="jtop-right" style="display:flex;gap:8px;align-items:center;">
+   <button class="jadmin-btn" id="djToggleBtn" onclick="toggleDjModal()" title="Runway DJ Booth">
+    🎧 DJ Booth
+   </button>
+   <button class="jadmin-btn" id="adminToggleBtn" onclick="toggleAdminModal()">
+    👑 Organizer Studio
+   </button>
+  </div>
+ </header>
+
+ <!-- Hero Banner -->
+ <section class="jhero">
+  <span class="jhero-tag">Official Class Event · November 4, 2026</span>
+  <h1>APMed '33 <span class="jaccent">JORTS BATTLE</span> 🩳</h1>
+  <p class="jhero-sub">Knee-length confidence only. Raw hems, high stakes, and questionable fashion decisions on the runway.</p>
+  <div class="jhero-pills">
+   <span class="jpill">👖 Any Wash, Any Cut</span>
+   <span class="jpill">🚶‍♂️ Catwalk & Poses</span>
+   <span class="jpill">🎤 The Hard Q&A</span>
+   <span class="jpill live" id="livePill">🟢 Official Ballot</span>
+   <span class="jpill testing" id="testPill" hidden>🧪 Preview / Test Mode</span>
+  </div>
+ </section>
+
+ <!-- Testing notice banner if testing mode is on -->
+ <div class="jstatus-card" id="testBanner">
+  <div>
+   <b>🧪 Organizer Test & Preview Active:</b> You can add contestants, upload fit photos, add awards, and test votes before opening to the class.
+  </div>
+  <button class="jadmin-btn" onclick="openAdmin()" style="flex:none;">Open Studio</button>
+ </div>
+
+ <!-- Navigation Tabs -->
+ <nav class="jnav-tabs" role="tablist">
+  <button class="jtab active" data-tab="runway" onclick="setTab('runway')">🩳 Runway & Lineup</button>
+  <button class="jtab" data-tab="voting" onclick="setTab('voting')">🗳️ Cast Ballot</button>
+  <button class="jtab" data-tab="leaderboard" onclick="setTab('leaderboard')">🏆 Live Results</button>
+  <button class="jtab" data-tab="mechanics" onclick="setTab('mechanics')">📜 Mechanics & Awards</button>
+ </nav>
+
+ <!-- TAB 1: RUNWAY & CONTESTANTS -->
+ <main id="tab-runway" class="jtab-pane">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+   <h2 style="font-size:18px;margin:0;color:#fff;">Contestant Lineup (<span id="contestantCount">0</span>)</h2>
+   <span style="font-size:12.5px;color:#94a3b8;">Click any photo to enlarge</span>
+  </div>
+  <div class="jgrid" id="contestantsGrid"></div>
+ </main>
+
+ <!-- TAB 2: VOTING BALLOT -->
+ <section id="tab-voting" class="jtab-pane" hidden>
+  <!-- Ballot Header Bar -->
+  <div class="jballot-bar">
+   <div class="jballot-txt">
+    <h3 id="ballotAwardTitle">Top 5 Overall (Road to JORTS GOD)</h3>
+    <p id="ballotAwardDesc">Select up to 3 contestants to advance to the Top 5 Final Runway.</p>
+    <div class="jballot-chips" id="ballotChips"></div>
+   </div>
+   <button class="jbtn-submit" id="submitVoteBtn" onclick="submitVotes()">
+    Submit Ballot 🩳
+   </button>
+  </div>
+
+  <!-- Award selection subnav -->
+  <div class="jawards-nav" id="awardsNav"></div>
+
+  <!-- Ballot Cards Selection Grid -->
+  <div class="jgrid" id="ballotGrid"></div>
+ </section>
+
+ <!-- TAB 3: LEADERBOARD & RESULTS -->
+ <section id="tab-leaderboard" class="jtab-pane" hidden>
+  <div class="jrules-card" style="text-align:center;padding:20px;">
+   <h2 style="font-family:'Bungee',cursive;color:var(--gold);margin:0 0 6px;">Catwalk Standings 🏆</h2>
+   <p style="margin:0;color:#94a3b8;font-size:14px;">Live vote tallies from the APMed '33 audience</p>
+  </div>
+
+  <!-- Top 3 Podium for Top 5 / Jorts God -->
+  <div class="jpodium" id="podiumWrap"></div>
+
+  <!-- Category Tallies -->
+  <div class="jawards-nav" id="leaderboardAwardsNav" style="margin-bottom:14px;"></div>
+  <div class="jtally-list" id="tallyList"></div>
+ </section>
+
+ <!-- TAB 4: MECHANICS & RULES -->
+ <section id="tab-mechanics" class="jtab-pane" hidden>
+  <div class="jrules-card">
+   <h3>Mechanics & Guidelines 🩳</h3>
+   <ul>
+    <li><b>Open to all students</b> who want to join the jorts agenda. Male and female are not separated—one unified battle!</li>
+    <li><b>Dress Code:</b> Participants must come wearing their best jorts fit. Any style, any wash, any level of questionable fashion decisions.</li>
+    <li><b>Styling is completely up to you:</b> Accessories, layering, double-belts, waist chains, and other creative additions are highly welcome.</li>
+    <li><b>Runway Moments:</b> Each participant will get their moment to walk the runway, pose, and show off their fit.</li>
+    <li><b>Audience Voting:</b> Everyone gets to vote for their favorite fit. Votes will be based on overall look, creativity, styling, and confidence.</li>
+    <li><b>Reminders:</b> No need to buy new jorts! Work with what you have! DIYs and customized raw-hem jorts are highly encouraged.</li>
+   </ul>
+
+   <h3>Official Awards 🏆</h3>
+   <ul>
+    <li>👑 <b>Best in Jorts (JORTS GOD / GODDESS):</b> The ultimate title determined in the Final Runway & Harder Q&A round!</li>
+    <li>🥈 <b>1st Runner Up (JORTS KING / QUEEN)</b></li>
+    <li>🥉 <b>2nd Runner Up (JORTS MASTER)</b></li>
+    <li>🚶‍♂️ <b>Best Runway Walk:</b> Catwalk presence, stride, and poses.</li>
+    <li>🎤 <b>Best in First Q&A:</b> Wit, poise, and handling the microphone.</li>
+    <li>🎨 <b>Best Styled:</b> Masterclass in denim coordination and accessories.</li>
+   </ul>
+  </div>
+ </section>
+
+</div>
+
+<!-- Floating Runway DJ Booth Dock -->
+<div class="jdj-dock" id="djDock">
+ <div class="jdj-disc" id="djDisc">🩳</div>
+ <div class="jdj-info">
+  <b id="djTrackName">The Catwalk Strut</b>
+  <span id="djTrackStatus">124 BPM House Beat</span>
+ </div>
+ <button class="jdj-btn" id="djPlayBtn" onclick="toggleDjPlay()" title="Play / Pause Catwalk Music">
+  <svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+ </button>
+ <button class="jdj-btn" onclick="openDjModal()" title="Soundboard & Track Selection">
+  🎛️
+ </button>
+</div>
+
+<!-- Lightbox Modal for contestant photo -->
+<div class="jlightbox" id="photoLightbox" hidden onclick="closeLightbox()">
+ <img id="lightboxImg" src="" alt="Contestant Fit">
+</div>
+
+<!-- DJ Booth & Soundboard Modal -->
+<div class="jmodal" id="djModal" hidden onclick="if(event.target===this)closeDjModal()">
+ <div class="jbox">
+  <div class="jmhead">
+   <h2>🎧 Runway DJ Booth</h2>
+   <button class="jmx" onclick="closeDjModal()">✕</button>
+  </div>
+  <p style="margin:0 0 14px;color:#cbd5e1;font-size:13.5px;">Control the music and trigger live runway sound effects for the models!</p>
+  
+  <div class="jform-group">
+   <label>Catwalk Track</label>
+   <select class="jselect" id="djTrackSelect" onchange="switchDjTrack(this.value)">
+    <option value="synth">The Catwalk Strut (Live Synth Beat · 124 BPM)</option>
+    <option value="electro">Euro-Runway Model Strut (Fast 4/4 Beat · 128 BPM)</option>
+    <option value="custom">Load Custom Audio File (MP3 from device)...</option>
+   </select>
+   <input type="file" id="customAudioInput" accept="audio/*" style="display:none;" onchange="loadCustomAudio(event)">
+  </div>
+
+  <div class="jform-group">
+   <label>Volume: <span id="volLabel">70%</span></label>
+   <input type="range" class="jinput" id="djVolume" min="0" max="100" value="70" oninput="setDjVolume(this.value)">
+  </div>
+
+  <label style="display:block;font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:6px;">Live Stage Soundboard 📢</label>
+  <div class="jsfx-grid">
+   <button class="jsfx-btn" onclick="playSfx('shutter')"><span>📸</span> Shutter Flash</button>
+   <button class="jsfx-btn" onclick="playSfx('cheer')"><span>👏</span> Crowd Cheer</button>
+   <button class="jsfx-btn" onclick="playSfx('airhorn')"><span>📢</span> Airhorn</button>
+   <button class="jsfx-btn" onclick="playSfx('drumroll')"><span>🥁</span> Drumroll</button>
+   <button class="jsfx-btn" onclick="playSfx('fanfare')"><span>🎺</span> Fanfare</button>
+   <button class="jsfx-btn" onclick="playSfx('gong')"><span>🔔</span> Runway Gong</button>
+  </div>
+ </div>
+</div>
+
+<!-- Admin / Organizer Modal -->
+<div class="jmodal" id="adminModal" hidden onclick="if(event.target===this)closeAdmin()">
+ <div class="jbox" style="max-width:580px;">
+  <div class="jmhead">
+   <h2>👑 Organizer Studio</h2>
+   <button class="jmx" onclick="closeAdmin()">✕</button>
+  </div>
+
+  <!-- Stage & Voting Phase controls -->
+  <div class="jrules-card" style="padding:14px;margin-bottom:14px;">
+   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <b>Competition Phase:</b>
+    <select class="jselect" id="adminPhaseSelect" style="width:auto;" onchange="adminSetPhase(this.value)">
+     <option value="prelim">Phase 1: Preliminaries (Top 5 & Specials)</option>
+     <option value="final">Phase 2: Final Runway (Top 5 Q&A)</option>
+     <option value="results">Phase 3: Winner Crowning & Results</option>
+    </select>
+   </div>
+   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <b>Voting Status:</b>
+    <button class="jbtn-vote" id="adminVotingToggleBtn" onclick="adminToggleVoting()" style="flex:none;padding:6px 14px;">
+     Toggle Voting
+    </button>
+   </div>
+   <div style="display:flex;justify-content:space-between;align-items:center;">
+    <b>Live Leaderboard Visibility:</b>
+    <button class="jbtn-vote" id="adminTallyToggleBtn" onclick="adminToggleTally()" style="flex:none;padding:6px 14px;">
+     Toggle Audience Tally
+    </button>
+   </div>
+  </div>
+
+  <!-- Contestant Manager -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;">
+   <h3 style="margin:0;font-size:16px;">Contestants (<span id="adminContestantCount">0</span>)</h3>
+   <button class="jadmin-btn" onclick="openAddContestantModal()">+ Add Contestant</button>
+  </div>
+  <div id="adminContestantsList" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;padding-right:4px;"></div>
+
+  <!-- Award Manager -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:20px 0 8px;">
+   <h3 style="margin:0;font-size:16px;">Awards & Categories (<span id="adminAwardCount">0</span>)</h3>
+   <button class="jadmin-btn" onclick="openAddAwardModal()">+ Add New Award</button>
+  </div>
+  <div id="adminAwardsList" style="display:flex;flex-direction:column;gap:8px;max-height:180px;overflow-y:auto;padding-right:4px;"></div>
+
+  <!-- Danger Zone / Reset -->
+  <div style="margin-top:24px;padding-top:14px;border-top:1px dashed rgba(255,255,255,0.15);display:flex;justify-content:space-between;align-items:center;">
+   <span style="font-size:12.5px;color:#f87171;">Clear all test votes for a clean run</span>
+   <button class="jadmin-btn" style="color:#f87171;border-color:#f87171;background:rgba(239,68,68,0.1);" onclick="adminResetVotes()">
+    Reset Test Votes
+   </button>
+  </div>
+ </div>
+</div>
+
+<!-- Modal: Add / Edit Contestant -->
+<div class="jmodal" id="contestantModal" hidden onclick="if(event.target===this)closeContestantModal()">
+ <div class="jbox" style="max-width:460px;">
+  <div class="jmhead">
+   <h2 id="contestantModalTitle">Add Contestant</h2>
+   <button class="jmx" onclick="closeContestantModal()">✕</button>
+  </div>
+  <form id="contestantForm" onsubmit="event.preventDefault();saveContestant();">
+   <input type="hidden" id="cId">
+   <div class="jform-group">
+    <label>Contestant Name *</label>
+    <input type="text" class="jinput" id="cName" placeholder="e.g. Gabriel Santos" required>
+   </div>
+   <div class="jform-group">
+    <label>Fit Nickname / Title</label>
+    <input type="text" class="jinput" id="cTitle" placeholder="e.g. The Acid Wash Assassin">
+   </div>
+   <div class="jform-group">
+    <label>Runway Number (#)</label>
+    <input type="number" class="jinput" id="cNumber" value="1" min="1" max="99">
+   </div>
+   <div class="jform-group">
+    <label>Fit Details & Styling Notes</label>
+    <textarea class="jtextarea" id="cBio" placeholder="Describe the cut, wash, distressing, accessories, shoes, or styling decisions..."></textarea>
+   </div>
+   <div class="jform-group">
+    <label>Fit Photo</label>
+    <input type="file" id="cPhotoFile" accept="image/*" class="jinput" onchange="handlePhotoUpload(event)">
+    <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+     <input type="url" class="jinput" id="cPhotoUrl" placeholder="Or paste image URL...">
+    </div>
+    <div id="cPhotoPreviewWrap" style="margin-top:8px;text-align:center;" hidden>
+     <img id="cPhotoPreview" src="" alt="Preview" style="max-height:120px;border-radius:10px;border:1px solid var(--gold);">
+    </div>
+   </div>
+   <div class="jform-group" style="display:flex;gap:16px;">
+    <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+     <input type="checkbox" id="cTop5"> Top 5 Finalist
+    </label>
+   </div>
+   <button type="submit" class="jbtn-primary">Save Contestant 🩳</button>
+  </form>
+ </div>
+</div>
+
+<!-- Modal: Add / Edit Award -->
+<div class="jmodal" id="awardModal" hidden onclick="if(event.target===this)closeAwardModal()">
+ <div class="jbox" style="max-width:440px;">
+  <div class="jmhead">
+   <h2 id="awardModalTitle">Add New Award</h2>
+   <button class="jmx" onclick="closeAwardModal()">✕</button>
+  </div>
+  <form id="awardForm" onsubmit="event.preventDefault();saveAward();">
+   <input type="hidden" id="awId">
+   <div class="jform-group">
+    <label>Award Title *</label>
+    <input type="text" class="jinput" id="awTitle" placeholder="e.g. Most Unhinged Denim Upcycle" required>
+   </div>
+   <div class="jform-group">
+    <label>Badge Emoji</label>
+    <input type="text" class="jinput" id="awBadge" value="🩳" maxlength="4">
+   </div>
+   <div class="jform-group">
+    <label>Description / Voting Instructions</label>
+    <textarea class="jtextarea" id="awDesc" placeholder="e.g. Pick the fit with the wildest DIY distressing or pocket modifications!"></textarea>
+   </div>
+   <div class="jform-group">
+    <label>Votes Allowed Per Voter</label>
+    <select class="jselect" id="awVotes">
+     <option value="1">1 vote per person (Standard / Special Award)</option>
+     <option value="3">3 votes per person (Top 5 Audition Style)</option>
+     <option value="2">2 votes per person</option>
+    </select>
+   </div>
+   <div class="jform-group">
+    <label>Phase</label>
+    <select class="jselect" id="awPhase">
+     <option value="prelim">Preliminary Phase</option>
+     <option value="final">Final Runway Phase</option>
+    </select>
+   </div>
+   <button type="submit" class="jbtn-primary">Save Award 🏆</button>
+  </form>
+ </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+// --- JORTS BATTLE APPLICATION STATE ---
+const STATE = {
+ settings: {
+  title: "APMed 33 Jorts Battle",
+  date_text: "November 4, 2026 | Wednesday",
+  phase: "prelim", // prelim | final | results
+  voting_open: false,
+  show_live_tally: true,
+  is_admin: true
+ },
+ awards: [
+  { id: "top5", title: "Top 5 Overall (Road to JORTS GOD)", badge: "🩳", description: "Audience Choice: Choose up to 3 contestants to advance to the Top 5 Final Runway!", votes_per_voter: 3, phase: "prelim", sort_order: 1 },
+  { id: "runway", title: "Best Runway Walk", badge: "🚶‍♂️", description: "Who owned the catwalk with the most confidence, stride, and poses?", votes_per_voter: 1, phase: "prelim", sort_order: 2 },
+  { id: "qna", title: "Best in First Q&A", badge: "🎤", description: "Best answers, quick wit, and microphone presence on stage.", votes_per_voter: 1, phase: "prelim", sort_order: 3 },
+  { id: "styled", title: "Best Styled Fit", badge: "🎨", description: "Best denim treatment, layering, accessories, and overall styling decisions.", votes_per_voter: 1, phase: "prelim", sort_order: 4 },
+  { id: "god", title: "JORTS GOD / GODDESS (Finals)", badge: "👑", description: "Final Runway decision: Crown the ultimate APMed 33 Jorts Champion!", votes_per_voter: 1, phase: "final", sort_order: 5 }
+ ],
+ contestants: [
+  { id: 1, number: 1, name: "Gabriel Santos", title: "Acid Wash Assassin", bio: "Raw-cut Bermuda jorts with double-belt styling and chunky sneakers.", photo_url: "img/jorts-battle.jpg", is_top5: false },
+  { id: 2, number: 2, name: "Maria Rivera", title: "Denim Diva", bio: "High-waisted distressed denim cutoffs with rhinestone pockets and oversized blazer.", photo_url: "", is_top5: false },
+  { id: 3, number: 3, name: "Kenji Tan", title: "The Cargo Cutoff", bio: "Military cargo pants chopped at the knee with frayed tassels and combat boots.", photo_url: "", is_top5: false },
+  { id: 4, number: 4, name: "Alyssa Chen", title: "Patchwork Royalty", bio: "Multi-tone upcycled denim patchwork jorts with silver waist chain.", photo_url: "", is_top5: false },
+  { id: 5, number: 5, name: "David Lim", title: "The Minimalist Hem", bio: "Clean dark indigo selvedge cutoffs with vintage loafers and confidence.", photo_url: "", is_top5: false }
+ ],
+ my_votes: {}, // award_id -> [contestant_id, ...]
+ tallies: {},   // award_id -> { contestant_id: count }
+ current_award: "top5"
+};
+
+// Local storage key
+const STORAGE_KEY = "reviewer_jorts_state_v1";
+const VOTER_ID_KEY = "reviewer_jorts_voter_id";
+
+function getVoterId() {
+ let vid = localStorage.getItem(VOTER_ID_KEY);
+ if (!vid) {
+  vid = "voter_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+  localStorage.setItem(VOTER_ID_KEY, vid);
+ }
+ return vid;
+}
+
+// Load local state fallback
+function loadLocalState() {
+ try {
+  const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  if (s) {
+   if (s.settings) Object.assign(STATE.settings, s.settings);
+   if (Array.isArray(s.awards) && s.awards.length) STATE.awards = s.awards;
+   if (Array.isArray(s.contestants) && s.contestants.length) STATE.contestants = s.contestants;
+   if (s.my_votes) STATE.my_votes = s.my_votes;
+   if (s.tallies) STATE.tallies = s.tallies;
+  }
+ } catch(e) {}
+}
+
+function saveLocalState() {
+ try {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+   settings: STATE.settings,
+   awards: STATE.awards,
+   contestants: STATE.contestants,
+   my_votes: STATE.my_votes,
+   tallies: STATE.tallies
+  }));
+ } catch(e) {}
+}
+
+// Sync with Supabase if online
+async function syncCloud() {
+ try {
+  if (window.Auth && Auth.ses && Auth.ses()) {
+   const res = await Auth.rpc('jorts_get_state', { p_voter_id: getVoterId() }, true);
+   if (res) {
+    if (res.settings) Object.assign(STATE.settings, res.settings);
+    if (res.awards) STATE.awards = res.awards;
+    if (res.contestants) STATE.contestants = res.contestants;
+    if (res.my_votes) STATE.my_votes = res.my_votes;
+    if (res.tallies) STATE.tallies = res.tallies;
+    if (typeof res.is_admin === 'boolean') STATE.settings.is_admin = res.is_admin;
+    saveLocalState();
+   }
+  }
+ } catch(e) {
+  console.log("Cloud sync note:", e.message);
+ }
+ render();
+}
+
+// --- RENDER FUNCTIONS ---
+function render() {
+ const set = STATE.settings;
+ // Top pills & banners
+ document.getElementById('testBanner').hidden = set.voting_open;
+ document.getElementById('livePill').hidden = !set.voting_open;
+ document.getElementById('testPill').hidden = set.voting_open;
+ document.getElementById('contestantCount').textContent = STATE.contestants.length;
+
+ renderContestantsGrid();
+ renderAwardsNav();
+ renderBallot();
+ renderLeaderboard();
+ renderAdmin();
+}
+
+function renderContestantsGrid() {
+ const grid = document.getElementById('contestantsGrid');
+ if (!STATE.contestants.length) {
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">No contestants added yet. Click Organizer Studio to add the first model! 🩳</div>';
+  return;
+ }
+ grid.innerHTML = STATE.contestants.map(c => {
+  const isVoted = isContestantSelected(STATE.current_award, c.id);
+  const imgHtml = c.photo_url 
+   ? `<img src="${c.photo_url}" class="jcard-img" alt="${esc(c.name)}" onclick="openLightbox('${c.photo_url}')">`
+   : `<div class="jcard-img-ph" onclick="openLightbox('img/jorts-battle.jpg')"><span style="font-size:32px;">🩳</span><span>No photo yet</span></div>`;
+  
+  return `
+   <div class="jcard ${isVoted ? 'voted' : ''}">
+    <div class="jcard-img-wrap">
+     <span class="jbadge-num">#${c.number}</span>
+     ${c.is_top5 ? '<span class="jbadge-top5">★ Top 5 Finalist</span>' : ''}
+     ${imgHtml}
+    </div>
+    <div class="jcard-body">
+     <h3 class="jcard-title">${esc(c.name)}</h3>
+     <div class="jcard-fit">${esc(c.title || 'Contestant')}</div>
+     <p class="jcard-desc">${esc(c.bio || 'Representing APMed 33 with custom jorts.')}</p>
+     <div class="jcard-acts">
+      <button class="jbtn-vote ${isVoted ? 'active' : ''}" onclick="toggleVote('${STATE.current_award}', ${c.id})">
+       ${isVoted ? '✓ Selected' : '+ Vote for this fit'}
+      </button>
+      ${c.photo_url ? `<button class="jbtn-photo" onclick="openLightbox('${c.photo_url}')" title="View fit photo">🔍</button>` : ''}
+     </div>
+    </div>
+   </div>
+  `;
+ }).join('');
+}
+
+function renderAwardsNav() {
+ const nav = document.getElementById('awardsNav');
+ const lbNav = document.getElementById('leaderboardAwardsNav');
+ const phase = STATE.settings.phase;
+ const activeAwards = STATE.awards.filter(a => phase === 'final' ? a.phase === 'final' || a.id === 'top5' : a.phase === 'prelim');
+
+ const navHtml = activeAwards.map(a => {
+  const isActive = a.id === STATE.current_award;
+  const myVotes = STATE.my_votes[a.id] || [];
+  return `
+   <button class="jaward-btn ${isActive ? 'active' : ''}" onclick="switchAward('${a.id}')">
+    <span class="jaward-badge">${a.badge}</span>
+    <div class="jaward-info">
+     <b>${esc(a.title)}</b>
+     <span>${myVotes.length}/${a.votes_per_voter} selected</span>
+    </div>
+   </button>
+  `;
+ }).join('');
+
+ nav.innerHTML = navHtml;
+ lbNav.innerHTML = navHtml;
+}
+
+function renderBallot() {
+ const currentAwardObj = STATE.awards.find(a => a.id === STATE.current_award) || STATE.awards[0];
+ if (!currentAwardObj) return;
+
+ document.getElementById('ballotAwardTitle').innerHTML = `${currentAwardObj.badge} ${esc(currentAwardObj.title)}`;
+ document.getElementById('ballotAwardDesc').textContent = currentAwardObj.description || `Select up to ${currentAwardObj.votes_per_voter} contestants.`;
+
+ const myVotes = STATE.my_votes[currentAwardObj.id] || [];
+ const chipsWrap = document.getElementById('ballotChips');
+ let chipsHtml = '';
+ for (let i = 0; i < currentAwardObj.votes_per_voter; i++) {
+  const cid = myVotes[i];
+  if (cid) {
+   const c = STATE.contestants.find(x => x.id === cid);
+   chipsHtml += `<span class="jchip done">✓ #${c ? c.number : ''} ${esc(c ? c.name : 'Voted')}</span>`;
+  } else {
+   chipsHtml += `<span class="jchip">+ Pick ${ordinal(i + 1)} choice</span>`;
+  }
+ }
+ chipsWrap.innerHTML = chipsHtml;
+
+ // Ballot cards grid
+ const ballotGrid = document.getElementById('ballotGrid');
+ const contestantsToDisplay = (currentAwardObj.phase === 'final')
+  ? STATE.contestants.filter(c => c.is_top5)
+  : STATE.contestants;
+
+ ballotGrid.innerHTML = contestantsToDisplay.map(c => {
+  const isVoted = isContestantSelected(currentAwardObj.id, c.id);
+  return `
+   <div class="jcard ${isVoted ? 'voted' : ''}">
+    <div class="jcard-img-wrap" onclick="toggleVote('${currentAwardObj.id}', ${c.id})">
+     <span class="jbadge-num">#${c.number}</span>
+     ${c.photo_url ? `<img src="${c.photo_url}" class="jcard-img">` : `<div class="jcard-img-ph"><span style="font-size:28px;">🩳</span></div>`}
+    </div>
+    <div class="jcard-body">
+     <h3 class="jcard-title">${esc(c.name)}</h3>
+     <div class="jcard-fit">${esc(c.title)}</div>
+     <button class="jbtn-vote ${isVoted ? 'active' : ''}" onclick="toggleVote('${currentAwardObj.id}', ${c.id})">
+      ${isVoted ? '✓ Selected for Award' : '+ Pick Contestant'}
+     </button>
+    </div>
+   </div>
+  `;
+ }).join('');
+}
+
+function renderLeaderboard() {
+ const currentAwardObj = STATE.awards.find(a => a.id === STATE.current_award) || STATE.awards[0];
+ const awardId = currentAwardObj ? currentAwardObj.id : 'top5';
+ const tallies = STATE.tallies[awardId] || {};
+
+ // Sort contestants by votes descending
+ const ranked = [...STATE.contestants].map(c => ({
+  ...c,
+  votes: tallies[c.id] || 0
+ })).sort((a, b) => b.votes - a.votes);
+
+ const maxVotes = Math.max(1, ...ranked.map(r => r.votes));
+
+ // Render Top 3 Podium
+ const podiumWrap = document.getElementById('podiumWrap');
+ if (ranked.length >= 3) {
+  const first = ranked[0], second = ranked[1], third = ranked[2];
+  podiumWrap.innerHTML = `
+   <div class="jpod-col">
+    ${second.photo_url ? `<img src="${second.photo_url}" class="jpod-avatar">` : `<div class="jpod-avatar" style="background:#334155;display:grid;place-items:center;">🥈</div>`}
+    <div class="jpod-name">#${second.number} ${esc(second.name)}</div>
+    <div class="jpod-title">${esc(second.title)}</div>
+    <div class="jpod-block second">
+     <span>2nd</span>
+     <span class="jpod-votes">${second.votes} votes</span>
+    </div>
+   </div>
+   <div class="jpod-col">
+    ${first.photo_url ? `<img src="${first.photo_url}" class="jpod-avatar" style="border-color:#f59e0b;transform:scale(1.1);">` : `<div class="jpod-avatar" style="background:#b45309;display:grid;place-items:center;">👑</div>`}
+    <div class="jpod-name">#${first.number} ${esc(first.name)}</div>
+    <div class="jpod-title" style="color:var(--gold);font-weight:800;">★ JORTS CHAMPION ★</div>
+    <div class="jpod-block first">
+     <span>1st 👑</span>
+     <span class="jpod-votes">${first.votes} votes</span>
+    </div>
+   </div>
+   <div class="jpod-col">
+    ${third.photo_url ? `<img src="${third.photo_url}" class="jpod-avatar">` : `<div class="jpod-avatar" style="background:#1e293b;display:grid;place-items:center;">🥉</div>`}
+    <div class="jpod-name">#${third.number} ${esc(third.name)}</div>
+    <div class="jpod-title">${esc(third.title)}</div>
+    <div class="jpod-block third">
+     <span>3rd</span>
+     <span class="jpod-votes">${third.votes} votes</span>
+    </div>
+   </div>
+  `;
+ } else {
+  podiumWrap.innerHTML = '';
+ }
+
+ // Render List
+ const list = document.getElementById('tallyList');
+ list.innerHTML = ranked.map((r, i) => {
+  const pct = Math.round((r.votes / maxVotes) * 100);
+  return `
+   <div class="jtally-item">
+    <div class="jtally-rank">#${i + 1}</div>
+    <div class="jtally-main">
+     <b>#${r.number} ${esc(r.name)} <span style="font-weight:500;color:var(--gold);font-size:12px;">(${esc(r.title)})</span></b>
+     <span>${r.is_top5 ? '★ Top 5 Finalist · ' : ''}${r.votes} votes</span>
+     <div class="jtally-bar-wrap">
+      <div class="jtally-bar" style="width:${pct}%;"></div>
+     </div>
+    </div>
+    <div class="jtally-cnt">${r.votes}</div>
+   </div>
+  `;
+ }).join('');
+}
+
+function renderAdmin() {
+ document.getElementById('adminPhaseSelect').value = STATE.settings.phase;
+ document.getElementById('adminVotingToggleBtn').textContent = STATE.settings.voting_open ? '🟢 Voting is OPEN' : '🔴 Voting is CLOSED';
+ document.getElementById('adminVotingToggleBtn').classList.toggle('active', STATE.settings.voting_open);
+ document.getElementById('adminTallyToggleBtn').textContent = STATE.settings.show_live_tally ? '👁️ Live Tally VISIBLE' : '🔒 Live Tally HIDDEN';
+
+ document.getElementById('adminContestantCount').textContent = STATE.contestants.length;
+ const cList = document.getElementById('adminContestantsList');
+ cList.innerHTML = STATE.contestants.map(c => `
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);">
+   <div>
+    <b>#${c.number} ${esc(c.name)}</b>
+    <span style="font-size:12px;color:var(--gold);margin-left:6px;">${esc(c.title)}</span>
+    ${c.is_top5 ? '<span style="font-size:11px;background:#f59e0b;color:#000;padding:1px 6px;border-radius:4px;margin-left:6px;font-weight:700;">TOP 5</span>' : ''}
+   </div>
+   <div style="display:flex;gap:6px;">
+    <button class="jadmin-btn" style="padding:4px 8px;font-size:11.5px;" onclick="editContestant(${c.id})">Edit</button>
+    <button class="jadmin-btn" style="padding:4px 8px;font-size:11.5px;color:#f87171;border-color:#f87171;" onclick="deleteContestant(${c.id})">✕</button>
+   </div>
+  </div>
+ `).join('');
+
+ document.getElementById('adminAwardCount').textContent = STATE.awards.length;
+ const aList = document.getElementById('adminAwardsList');
+ aList.innerHTML = STATE.awards.map(a => `
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);">
+   <div>
+    <span>${a.badge}</span> <b>${esc(a.title)}</b>
+    <span style="font-size:11.5px;color:#94a3b8;margin-left:6px;">(${a.votes_per_voter} vote${a.votes_per_voter>1?'s':''})</span>
+   </div>
+   <div style="display:flex;gap:6px;">
+    <button class="jadmin-btn" style="padding:4px 8px;font-size:11.5px;color:#f87171;border-color:#f87171;" onclick="deleteAward('${a.id}')">✕</button>
+   </div>
+  </div>
+ `).join('');
+}
+
+// --- VOTING LOGIC ---
+function isContestantSelected(awardId, contestantId) {
+ const arr = STATE.my_votes[awardId] || [];
+ return arr.includes(contestantId);
+}
+
+function toggleVote(awardId, contestantId) {
+ const award = STATE.awards.find(a => a.id === awardId);
+ if (!award) return;
+
+ const myArr = STATE.my_votes[awardId] ? [...STATE.my_votes[awardId]] : [];
+ const idx = myArr.indexOf(contestantId);
+
+ if (idx >= 0) {
+  // Remove vote
+  myArr.splice(idx, 1);
+ } else {
+  // Add vote if within limit
+  if (myArr.length >= award.votes_per_voter) {
+   if (award.votes_per_voter === 1) {
+    // Single choice replaces
+    myArr.length = 0;
+    myArr.push(contestantId);
+   } else {
+    alert(`You can only choose ${award.votes_per_voter} contestants for "${award.title}". Tap a selected contestant to uncheck them first!`);
+    return;
+   }
+  } else {
+   myArr.push(contestantId);
+  }
+ }
+
+ STATE.my_votes[awardId] = myArr;
+ saveLocalState();
+ render();
+}
+
+async function submitVotes() {
+ const set = STATE.settings;
+ if (!set.voting_open && !set.is_admin) {
+  alert("Voting is currently closed. Stay tuned for the runway!");
+  return;
+ }
+
+ const currentAwardObj = STATE.awards.find(a => a.id === STATE.current_award) || STATE.awards[0];
+ const votedArr = STATE.my_votes[currentAwardObj.id] || [];
+
+ if (!votedArr.length) {
+  alert("Please select at least one contestant before submitting!");
+  return;
+ }
+
+ // Cloud vote
+ try {
+  if (window.Auth && Auth.ses && Auth.ses()) {
+   await Auth.rpc('jorts_vote', {
+    p_voter_id: getVoterId(),
+    p_award_id: currentAwardObj.id,
+    p_contestant_ids: votedArr
+   }, true);
+  }
+ } catch(e) {
+  console.log("Local vote recorded:", e.message);
+ }
+
+ // Update local tallies for immediate testing feedback
+ if (!STATE.tallies[currentAwardObj.id]) STATE.tallies[currentAwardObj.id] = {};
+ // Simple increment for test feedback
+ votedArr.forEach(cid => {
+  STATE.tallies[currentAwardObj.id][cid] = (STATE.tallies[currentAwardObj.id][cid] || 0) + 1;
+ });
+
+ saveLocalState();
+ render();
+ playSfx('cheer');
+ alert(`🎉 Ballot Submitted! Your votes for "${currentAwardObj.title}" have been recorded!`);
+}
+
+function switchAward(id) {
+ STATE.current_award = id;
+ renderAwardsNav();
+ renderBallot();
+ renderLeaderboard();
+ renderContestantsGrid();
+}
+
+function setTab(tabId) {
+ document.querySelectorAll('.jtab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+ document.querySelectorAll('.jtab-pane').forEach(p => p.hidden = (p.id !== 'tab-' + tabId));
+}
+
+// --- LIGHTBOX ---
+function openLightbox(url) {
+ document.getElementById('lightboxImg').src = url;
+ document.getElementById('photoLightbox').hidden = false;
+}
+function closeLightbox() {
+ document.getElementById('photoLightbox').hidden = true;
+}
+
+// --- ADMIN ACTIONS ---
+function openAdmin() { document.getElementById('adminModal').hidden = false; }
+function closeAdmin() { document.getElementById('adminModal').hidden = true; }
+function toggleAdminModal() {
+ const m = document.getElementById('adminModal');
+ m.hidden = !m.hidden;
+}
+
+function adminSetPhase(val) {
+ STATE.settings.phase = val;
+ saveLocalState();
+ render();
+ if (window.Auth && Auth.rpc) {
+  Auth.rpc('jorts_admin_update_settings', { p_phase: val }).catch(()=>{});
+ }
+}
+
+function adminToggleVoting() {
+ STATE.settings.voting_open = !STATE.settings.voting_open;
+ saveLocalState();
+ render();
+ if (window.Auth && Auth.rpc) {
+  Auth.rpc('jorts_admin_update_settings', { p_voting_open: STATE.settings.voting_open }).catch(()=>{});
+ }
+}
+
+function adminToggleTally() {
+ STATE.settings.show_live_tally = !STATE.settings.show_live_tally;
+ saveLocalState();
+ render();
+}
+
+function adminResetVotes() {
+ if (!confirm("Are you sure you want to clear all recorded votes? This cannot be undone.")) return;
+ STATE.my_votes = {};
+ STATE.tallies = {};
+ saveLocalState();
+ render();
+ if (window.Auth && Auth.rpc) {
+  Auth.rpc('jorts_admin_reset_votes', {}).catch(()=>{});
+ }
+ alert("All votes reset to 0! Clean slate ready for the event.");
+}
+
+// Contestant CRUD
+function openAddContestantModal() {
+ document.getElementById('contestantModalTitle').textContent = "Add Contestant";
+ document.getElementById('cId').value = "";
+ document.getElementById('cName').value = "";
+ document.getElementById('cTitle').value = "";
+ document.getElementById('cNumber').value = STATE.contestants.length + 1;
+ document.getElementById('cBio').value = "";
+ document.getElementById('cPhotoUrl').value = "";
+ document.getElementById('cTop5').checked = false;
+ document.getElementById('cPhotoPreviewWrap').hidden = true;
+ document.getElementById('contestantModal').hidden = false;
+}
+
+function editContestant(id) {
+ const c = STATE.contestants.find(x => x.id === id);
+ if (!c) return;
+ document.getElementById('contestantModalTitle').textContent = "Edit Contestant";
+ document.getElementById('cId').value = c.id;
+ document.getElementById('cName').value = c.name;
+ document.getElementById('cTitle').value = c.title || "";
+ document.getElementById('cNumber').value = c.number || 1;
+ document.getElementById('cBio').value = c.bio || "";
+ document.getElementById('cPhotoUrl').value = c.photo_url || "";
+ document.getElementById('cTop5').checked = !!c.is_top5;
+ if (c.photo_url) {
+  document.getElementById('cPhotoPreview').src = c.photo_url;
+  document.getElementById('cPhotoPreviewWrap').hidden = false;
+ } else {
+  document.getElementById('cPhotoPreviewWrap').hidden = true;
+ }
+ document.getElementById('contestantModal').hidden = false;
+}
+
+function closeContestantModal() { document.getElementById('contestantModal').hidden = true; }
+
+function handlePhotoUpload(e) {
+ const file = e.target.files && e.target.files[0];
+ if (!file) return;
+ const reader = new FileReader();
+ reader.onload = function(evt) {
+  document.getElementById('cPhotoUrl').value = evt.target.result;
+  document.getElementById('cPhotoPreview').src = evt.target.result;
+  document.getElementById('cPhotoPreviewWrap').hidden = false;
+ };
+ reader.readAsDataURL(file);
+}
+
+function saveContestant() {
+ const idVal = document.getElementById('cId').value;
+ const name = document.getElementById('cName').value.trim();
+ const title = document.getElementById('cTitle').value.trim();
+ const number = parseInt(document.getElementById('cNumber').value, 10) || 1;
+ const bio = document.getElementById('cBio').value.trim();
+ const photo_url = document.getElementById('cPhotoUrl').value.trim();
+ const is_top5 = document.getElementById('cTop5').checked;
+
+ if (!name) return alert("Name is required!");
+
+ if (idVal) {
+  const c = STATE.contestants.find(x => x.id === parseInt(idVal, 10));
+  if (c) {
+   c.name = name;
+   c.title = title;
+   c.number = number;
+   c.bio = bio;
+   c.photo_url = photo_url;
+   c.is_top5 = is_top5;
+  }
+ } else {
+  const newId = Date.now();
+  STATE.contestants.push({
+   id: newId,
+   number,
+   name,
+   title,
+   bio,
+   photo_url,
+   is_top5
+  });
+ }
+
+ saveLocalState();
+ render();
+ closeContestantModal();
+}
+
+function deleteContestant(id) {
+ if (!confirm("Delete this contestant?")) return;
+ STATE.contestants = STATE.contestants.filter(c => c.id !== id);
+ saveLocalState();
+ render();
+}
+
+// Award CRUD
+function openAddAwardModal() {
+ document.getElementById('awardModalTitle').textContent = "Add New Award";
+ document.getElementById('awId').value = "";
+ document.getElementById('awTitle').value = "";
+ document.getElementById('awBadge').value = "🩳";
+ document.getElementById('awDesc').value = "";
+ document.getElementById('awVotes').value = "1";
+ document.getElementById('awPhase').value = "prelim";
+ document.getElementById('awardModal').hidden = false;
+}
+function closeAwardModal() { document.getElementById('awardModal').hidden = true; }
+
+function saveAward() {
+ const title = document.getElementById('awTitle').value.trim();
+ if (!title) return alert("Award title is required!");
+ const id = "aw_" + title.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 16) + "_" + Math.floor(Math.random()*999);
+ const badge = document.getElementById('awBadge').value.trim() || "🩳";
+ const desc = document.getElementById('awDesc').value.trim();
+ const votes = parseInt(document.getElementById('awVotes').value, 10) || 1;
+ const phase = document.getElementById('awPhase').value;
+
+ STATE.awards.push({
+  id,
+  title,
+  badge,
+  description: desc,
+  votes_per_voter: votes,
+  phase,
+  sort_order: STATE.awards.length + 1
+ });
+
+ saveLocalState();
+ render();
+ closeAwardModal();
+ alert(`Award "${title}" added!`);
+}
+
+function deleteAward(id) {
+ if (["top5", "god"].includes(id)) return alert("Default primary award cannot be deleted.");
+ if (!confirm("Delete this award category?")) return;
+ STATE.awards = STATE.awards.filter(a => a.id !== id);
+ saveLocalState();
+ render();
+}
+
+// --- RUNWAY DJ BOOTH (WEB AUDIO CATWALK SYNTHESIZER) ---
+let audioCtx = null;
+let isPlaying = false;
+let djTempo = 124;
+let djVolumeVal = 0.7;
+let currentPatternStep = 0;
+let synthTimer = null;
+let customAudioEl = null;
+
+function initAudio() {
+ if (!audioCtx) {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  audioCtx = new AudioContext();
+ }
+ if (audioCtx.state === 'suspended') {
+  audioCtx.resume();
+ }
+}
+
+function toggleDjPlay() {
+ initAudio();
+ isPlaying = !isPlaying;
+ const btn = document.getElementById('djPlayBtn');
+ const disc = document.getElementById('djDisc');
+ btn.classList.toggle('playing', isPlaying);
+ disc.classList.toggle('spinning', isPlaying);
+
+ if (isPlaying) {
+  btn.innerHTML = '<svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+  document.getElementById('djTrackStatus').textContent = "Playing Catwalk Groove";
+  startCatwalkBeat();
+ } else {
+  btn.innerHTML = '<svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+  document.getElementById('djTrackStatus').textContent = "Paused";
+  stopCatwalkBeat();
+ }
+}
+
+// 124 BPM Catwalk 4/4 Tech-House Loop
+function startCatwalkBeat() {
+ if (synthTimer) clearInterval(synthTimer);
+ currentPatternStep = 0;
+ const stepMs = (60000 / djTempo) / 4; // 16th note interval
+
+ synthTimer = setInterval(() => {
+  if (!isPlaying || !audioCtx) return;
+  const time = audioCtx.currentTime;
+  const step = currentPatternStep % 16;
+
+  // Four on the floor Kick drum: on steps 0, 4, 8, 12
+  if (step % 4 === 0) playKick(time);
+
+  // Offbeat open Hi-Hat on steps 2, 6, 10, 14
+  if (step % 4 === 2) playOpenHat(time);
+  else if (step % 2 === 0) playClosedHat(time);
+
+  // Catwalk Bassline (funky minor groove: D2 - F2 - G2 - D2)
+  if ([0, 3, 6, 8, 10, 14].includes(step)) {
+   const notes = [73.42, 87.31, 98.00, 73.42]; // D2, F2, G2, D2
+   const note = notes[Math.floor(step / 4) % notes.length];
+   playBass(note, time);
+  }
+
+  // Filtered Runway Synth Stab chords on steps 4, 10, 12
+  if ([4, 10, 12].includes(step)) {
+   playRunwayChords(time);
+  }
+
+  currentPatternStep++;
+ }, stepMs);
+}
+
+function stopCatwalkBeat() {
+ if (synthTimer) clearInterval(synthTimer);
+ synthTimer = null;
+}
+
+// Drum & Synth Voices
+function playKick(t) {
+ const osc = audioCtx.createOscillator();
+ const gain = audioCtx.createGain();
+ osc.frequency.setValueAtTime(140, t);
+ osc.frequency.exponentialRampToValueAtTime(38, t + 0.12);
+ gain.gain.setValueAtTime(djVolumeVal * 1.1, t);
+ gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+ osc.connect(gain);
+ gain.connect(audioCtx.destination);
+ osc.start(t);
+ osc.stop(t + 0.22);
+}
+
+function playClosedHat(t) {
+ playNoise(t, 0.04, 7000, 0.25 * djVolumeVal);
+}
+
+function playOpenHat(t) {
+ playNoise(t, 0.28, 6000, 0.45 * djVolumeVal);
+}
+
+function playNoise(t, dur, freq, vol) {
+ const bufSize = audioCtx.sampleRate * dur;
+ const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+ const data = buffer.getChannelData(0);
+ for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+
+ const noise = audioCtx.createBufferSource();
+ noise.buffer = buffer;
+
+ const filter = audioCtx.createBiquadFilter();
+ filter.type = 'highpass';
+ filter.frequency.setValueAtTime(freq, t);
+
+ const gain = audioCtx.createGain();
+ gain.gain.setValueAtTime(vol, t);
+ gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+ noise.connect(filter);
+ filter.connect(gain);
+ gain.connect(audioCtx.destination);
+ noise.start(t);
+}
+
+function playBass(freq, t) {
+ const osc = audioCtx.createOscillator();
+ osc.type = 'sawtooth';
+ osc.frequency.setValueAtTime(freq, t);
+
+ const filter = audioCtx.createBiquadFilter();
+ filter.type = 'lowpass';
+ filter.frequency.setValueAtTime(320, t);
+ filter.frequency.exponentialRampToValueAtTime(140, t + 0.18);
+
+ const gain = audioCtx.createGain();
+ gain.gain.setValueAtTime(djVolumeVal * 0.7, t);
+ gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+
+ osc.connect(filter);
+ filter.connect(gain);
+ gain.connect(audioCtx.destination);
+ osc.start(t);
+ osc.stop(t + 0.2);
+}
+
+function playRunwayChords(t) {
+ [220, 261.63, 329.63].forEach(freq => { // Am chord
+  const osc = audioCtx.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(freq * 1.5, t);
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(djVolumeVal * 0.25, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(t);
+  osc.stop(t + 0.25);
+ });
+}
+
+// Stage SFX
+function playSfx(type) {
+ initAudio();
+ const t = audioCtx.currentTime;
+ if (type === 'shutter') {
+  // Paparazzi camera shutter burst
+  for (let i = 0; i < 4; i++) {
+   setTimeout(() => {
+    initAudio();
+    playNoise(audioCtx.currentTime, 0.08, 3000, 0.6);
+   }, i * 90);
+  }
+ } else if (type === 'airhorn') {
+  [440, 554.37, 659.25].forEach(f => {
+   const osc = audioCtx.createOscillator();
+   osc.type = 'sawtooth';
+   osc.frequency.setValueAtTime(f, t);
+   const gain = audioCtx.createGain();
+   gain.gain.setValueAtTime(0.35, t);
+   gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+   osc.connect(gain);
+   gain.connect(audioCtx.destination);
+   osc.start(t);
+   osc.stop(t + 0.5);
+  });
+ } else if (type === 'cheer') {
+  playNoise(t, 1.4, 1200, 0.5);
+ } else if (type === 'drumroll') {
+  for (let i = 0; i < 24; i++) {
+   setTimeout(() => {
+    initAudio();
+    playNoise(audioCtx.currentTime, 0.04, 800, 0.2 + (i / 40));
+   }, i * 60);
+  }
+ } else if (type === 'fanfare') {
+  const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+  notes.forEach((f, idx) => {
+   setTimeout(() => {
+    initAudio();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(f, now);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.4, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + (idx === 3 ? 0.9 : 0.25));
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + (idx === 3 ? 0.9 : 0.25));
+   }, idx * 140);
+  });
+ } else if (type === 'gong') {
+  const osc = audioCtx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(180, t);
+  osc.frequency.exponentialRampToValueAtTime(80, t + 1.2);
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.7, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(t);
+  osc.stop(t + 1.2);
+ }
+}
+
+function openDjModal() { document.getElementById('djModal').hidden = false; }
+function closeDjModal() { document.getElementById('djModal').hidden = true; }
+function toggleDjModal() {
+ const m = document.getElementById('djModal');
+ m.hidden = !m.hidden;
+}
+
+function setDjVolume(val) {
+ djVolumeVal = val / 100;
+ document.getElementById('volLabel').textContent = val + '%';
+}
+
+function switchDjTrack(val) {
+ if (val === 'custom') {
+  document.getElementById('customAudioInput').click();
+ } else if (val === 'electro') {
+  djTempo = 128;
+  document.getElementById('djTrackName').textContent = "Euro-Runway Model Strut";
+  document.getElementById('djTrackStatus').textContent = "128 BPM Fast Beat";
+  if (isPlaying) startCatwalkBeat();
+ } else {
+  djTempo = 124;
+  document.getElementById('djTrackName').textContent = "The Catwalk Strut";
+  document.getElementById('djTrackStatus').textContent = "124 BPM House Beat";
+  if (isPlaying) startCatwalkBeat();
+ }
+}
+
+function loadCustomAudio(e) {
+ const file = e.target.files && e.target.files[0];
+ if (!file) return;
+ const url = URL.createObjectURL(file);
+ if (!customAudioEl) {
+  customAudioEl = new Audio();
+  customAudioEl.loop = true;
+ }
+ customAudioEl.src = url;
+ stopCatwalkBeat();
+ document.getElementById('djTrackName').textContent = file.name.substring(0, 22);
+ document.getElementById('djTrackStatus').textContent = "Custom MP3 Track";
+ if (isPlaying) {
+  customAudioEl.play();
+ }
+}
+
+// Helpers
+function esc(s) {
+ return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function ordinal(n) {
+ const s = ["th", "st", "nd", "rd"], v = n % 100;
+ return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+// Init
+loadLocalState();
+render();
+syncCloud();
+</script>
+</body>
+</html>
