@@ -20,8 +20,8 @@ window.HomeLayout=(function(){const K='reviewer_home',TOP=['upnext','tests','tod
   try{if(Object.keys(o).length)localStorage.setItem(K,JSON.stringify(o));else localStorage.removeItem(K);mem=null}catch(e){mem=o}apply(norm(o))}
  const topOrder=h=>{const t=h.top.filter((x,i,a)=>TOP.includes(x)&&a.indexOf(x)===i);return t.concat(TOP.filter(x=>!t.includes(x)))};
  // put the top cards, the tiles and the course list in the saved order (the tiles' CSS order says the same, so nothing jumps)
- function place(h){h=h||get();const n=document.querySelector('nav.tools:not(.sec-tools)'),l=document.getElementById('list'),adm=document.getElementById('admintools');if(!n||!l)return;const p=n.parentNode,mv=document.getElementById('move'),pq=document.getElementById('prevq');
-  if(h.first)p.insertBefore(l,n);else if(mv)mv.after(l);if(adm)l.after(adm);
+ function place(h){h=h||get();const n=document.querySelector('nav.tools'),l=document.getElementById('list'),adm=document.getElementById('admintools');if(!n||!l)return;const p=n.parentNode,mv=document.getElementById('move'),pq=document.getElementById('prevq');
+  if(h.first){p.insertBefore(l,n);if(adm)n.after(adm)}else{if(mv)mv.after(l);if(adm)l.after(adm)}
   const a=h.first?l:n;topOrder(h).forEach(id=>{const e=document.getElementById(id);if(e)p.insertBefore(e,a);if(id==='upnext'&&pq)p.insertBefore(pq,a)});
   const cu=n.querySelector('.cust');h.order.forEach(id=>{if(ADMIN.includes(id))return;const e=document.getElementById(id);if(e&&e.parentNode===n)n.insertBefore(e,cu)});
   if(adm){const aOrder=(h.adminOrder&&h.adminOrder.length)?h.adminOrder:ADMIN;aOrder.forEach(id=>{const e=document.getElementById(id);if(e)adm.appendChild(e)})}}
@@ -185,7 +185,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .card .due .rm,.tdy .due .rm{margin-left:auto;color:var(--accent);font-weight:600;text-decoration:none;font-size:13px}
 @media (max-width:520px){.tdy{gap:12px 14px}.strk{flex-direction:column;align-items:flex-start;gap:6px;padding-right:14px}.strk b{font-size:22px}.strk .fl{width:38px;height:38px;font-size:19px}.gl .gt{flex-direction:column;gap:1px}.wk{max-width:none}.card .due .rm,.tdy .due .rm{margin-left:0}}
 /* Tools: live quiz and grade calculator */
-.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:0 0 18px}
+.tools,.sec-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:0 0 18px}
 .sec-tools{margin-top:20px}
 .sec-tools[hidden]{display:none!important}
 .tool{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow);min-width:0;transition:border-color .15s,transform .18s var(--ease)}
@@ -200,13 +200,13 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 @media (max-width:520px){.tool>span:not(.tic):not(.hg)>span{white-space:normal}}
 #gdsub{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal}
 /* compact tiles: two small columns, one line each (Settings → Home page; Auto = on phones) */
-:root[data-home="compact"] .tools{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+:root[data-home="compact"] .tools,:root[data-home="compact"] .sec-tools{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 :root[data-home="compact"] .tool{padding:9px 10px;gap:9px;border-radius:12px}
 :root[data-home="compact"] .tool .tic{width:30px;height:30px;border-radius:9px}:root[data-home="compact"] .tool .tic .i{width:15px;height:15px}
 :root[data-home="compact"] .tool b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 :root[data-home="compact"] .tool>span:not(.tic):not(.hg)>span,:root[data-home="compact"] #gdsub{display:block!important;white-space:nowrap!important;font-size:12px}
 :root[data-home="compact"] .tool .new{display:none}
-@media (max-width:640px){:root[data-home="auto"] .tools{grid-template-columns:1fr 1fr;gap:8px}:root[data-home="auto"] .tool{padding:9px 10px;gap:9px;border-radius:12px}:root[data-home="auto"] .tool .tic{width:30px;height:30px;border-radius:9px}:root[data-home="auto"] .tool .tic .i{width:15px;height:15px}:root[data-home="auto"] .tool b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root[data-home="auto"] .tool>span:not(.tic):not(.hg)>span,:root[data-home="auto"] #gdsub{display:block!important;white-space:nowrap!important;font-size:12px}:root[data-home="auto"] .tool .new{display:none}}
+@media (max-width:640px){:root[data-home="auto"] .tools,:root[data-home="auto"] .sec-tools{grid-template-columns:1fr 1fr;gap:8px}:root[data-home="auto"] .tool{padding:9px 10px;gap:9px;border-radius:12px}:root[data-home="auto"] .tool .tic{width:30px;height:30px;border-radius:9px}:root[data-home="auto"] .tool .tic .i{width:15px;height:15px}:root[data-home="auto"] .tool b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root[data-home="auto"] .tool>span:not(.tic):not(.hg)>span,:root[data-home="auto"] #gdsub{display:block!important;white-space:nowrap!important;font-size:12px}:root[data-home="auto"] .tool .new{display:none}}
 :root[data-home="compact"] .tool span span span,:root[data-home="auto"] .tool span span span,:root[data-home="compact"] .tool .done,:root[data-home="auto"] .tool .done{display:inline!important}
 .tools .cust{grid-column:1/-1;order:99;justify-self:end;font-size:12.5px;font-weight:600;color:var(--mute);text-decoration:none;padding:2px 4px}.tools .cust:hover{color:var(--accent)}
 /* Customize home (homeedit.js): dashed items, a grip on top, × to hide, the bar at the bottom of the screen */
@@ -358,7 +358,7 @@ html.introing body{overflow:hidden}
  <div class="try" id="move" hidden></div>
  <div class="try" id="prnotice" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
- <nav class="tools sec-tools" id="admintools" aria-label="Class management" hidden>
+ <nav class="sec-tools" id="admintools" aria-label="Class management" hidden>
   <a class="tool" id="cdtool" href="classday.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span><span><b>Class day</b><span>Post today's summary, answer questions (only you see this)</span></span></a>
   <a class="tool" id="modtool" href="moderate.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-shield-check"/></svg></span><span><b>Moderator</b><span id="modsub">Link requests, questions, reports, attendance update</span></span></a>
  </nav>
