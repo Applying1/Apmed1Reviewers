@@ -1,2110 +1,1340 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
  <meta charset="utf-8">
- <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
- <title>APMed '33 Jorts Battle — Runway Lookbook & Official Ballot</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+ <title>APMed '33 Jorts Battle — Runway & Official Ballot</title>
+ <meta name="description" content="APMed '33 Jorts Battle: Runway lookbook, voting ballot, and official standings.">
  <link rel="manifest" href="manifest.webmanifest">
+ <meta name="theme-color" content="#d99b26">
  <link rel="icon" href="icons/icon-192.png">
  <link rel="apple-touch-icon" href="icons/icon-192.png">
  <link rel="preconnect" href="https://fonts.googleapis.com">
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
- <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cabinet+Grotesk:wght@800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+ <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+ <script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
  <link rel="stylesheet" href="ui.css">
  <style>
   :root {
-   --bg-deep: #080f1d;
-   --bg-canvas: #0c172c;
-   --denim-panel: rgba(18, 33, 62, 0.72);
-   --denim-card: #11203b;
-   --denim-hover: #172b4f;
-   --border-subtle: rgba(148, 163, 184, 0.14);
-   --border-focus: rgba(245, 158, 11, 0.45);
-   --gold: #f59e0b;
-   --gold-light: #fef08a;
-   --gold-glow: rgba(245, 158, 11, 0.25);
-   --sky: #38bdf8;
-   --text-main: #f8fafc;
-   --text-sub: #94a3b8;
-   --text-mute: #64748b;
+   --paper: #f7f2e4;
+   --denim: #1b3154;
+   --denim-soft: #274574;
+   --denim-wash: #e8eef6;
+   --gold: #d99b26;
+   --gold-soft: #fcf4de;
+   --gold-ink: #3b2804;
+   --gingham: rgba(27, 49, 84, 0.045);
+  }
+  @media (prefers-color-scheme: dark) {
+   :root:not([data-theme="light"]) {
+    --paper: #0d1624;
+    --denim: #1c304f;
+    --denim-soft: #294570;
+    --denim-wash: #142238;
+    --gold: #f2c14e;
+    --gold-soft: #2f2714;
+    --gold-ink: #fef3c7;
+    --gingham: rgba(255, 255, 255, 0.025);
+   }
+  }
+  :root[data-theme="dark"] {
+   --paper: #0d1624;
+   --denim: #1c304f;
+   --denim-soft: #294570;
+   --denim-wash: #142238;
+   --gold: #f2c14e;
+   --gold-soft: #2f2714;
+   --gold-ink: #fef3c7;
+   --gingham: rgba(255, 255, 255, 0.025);
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
   body {
-   background-color: var(--bg-deep);
-   background-image: 
-    radial-gradient(ellipse at 50% 0%, #162f59 0%, transparent 75%),
-    repeating-linear-gradient(135deg, rgba(255,255,255,0.015) 0, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 8px);
-   background-attachment: fixed;
-   color: var(--text-main);
-   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-   min-height: 100vh;
-   margin: 0;
-   padding-bottom: 100px;
+   background-color: var(--paper);
+   background-image:
+    linear-gradient(90deg, var(--gingham) 50%, transparent 50%),
+    linear-gradient(var(--gingham) 50%, transparent 50%);
+   background-size: 32px 32px;
+   color: var(--text);
+   font: 15px/1.5 var(--sans);
    -webkit-font-smoothing: antialiased;
+   min-height: 100vh;
   }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  .jwrap {
-   max-width: 1040px;
+  main {
+   max-width: 860px;
    margin: 0 auto;
-   padding: 16px 20px 48px;
+   padding: 18px 16px 120px;
   }
 
-  /* SVG Icon Helper */
-  .v-icon {
-   display: inline-block;
-   vertical-align: middle;
-   stroke-width: 2;
-   stroke: currentColor;
-   fill: none;
-   flex-shrink: 0;
-  }
-
-  /* Header Navigation Bar */
-  .jtopbar {
-   display: flex;
-   align-items: center;
-   justify-content: space-between;
-   gap: 12px;
-   margin-bottom: 24px;
-   padding-top: 4px;
-  }
-  .jbtn-back {
-   display: inline-flex;
-   align-items: center;
-   gap: 8px;
-   font-size: 13.5px;
-   font-weight: 600;
-   color: #cbd5e1;
-   background: rgba(255,255,255,0.05);
-   border: 1px solid var(--border-subtle);
-   padding: 7px 14px;
-   border-radius: 10px;
-   text-decoration: none;
-   transition: all .18s ease;
-  }
-  .jbtn-back:hover {
-   background: rgba(255,255,255,0.1);
-   color: #fff;
-   border-color: rgba(255,255,255,0.25);
-  }
-  .jtop-actions {
+  /* Top Navigation Bar */
+  .top {
    display: flex;
    align-items: center;
    gap: 8px;
+   margin-bottom: 14px;
   }
-  .jbtn-header {
-   display: inline-flex;
-   align-items: center;
-   gap: 7px;
-   font-size: 13px;
-   font-weight: 600;
-   color: #e2e8f0;
-   background: var(--denim-panel);
-   border: 1px solid var(--border-subtle);
-   padding: 7px 13px;
-   border-radius: 10px;
-   cursor: pointer;
-   transition: all .18s ease;
-  }
-  .jbtn-header:hover {
-   background: var(--denim-hover);
-   border-color: var(--gold);
-   color: #fff;
-   transform: translateY(-1px);
-  }
-  .jbtn-header.highlight {
-   border-color: rgba(245, 158, 11, 0.4);
-   color: var(--gold-light);
-  }
-
-  /* Editorial Hero Showcase */
-  .jhero {
-   position: relative;
-   background: linear-gradient(135deg, rgba(20, 39, 73, 0.85) 0%, rgba(12, 23, 44, 0.95) 100%);
-   border: 1px solid rgba(245, 158, 11, 0.3);
-   border-radius: 20px;
-   padding: 32px 24px 28px;
-   text-align: center;
-   box-shadow: 0 16px 40px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.1);
-   overflow: hidden;
-   margin-bottom: 24px;
-   backdrop-filter: blur(16px);
-  }
-  .jhero::after {
-   content: '';
-   position: absolute;
-   top: 0; left: 0; right: 0; height: 3px;
-   background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  }
-  .jhero-subtag {
+  .back {
    display: inline-flex;
    align-items: center;
    gap: 6px;
-   background: rgba(245, 158, 11, 0.12);
-   color: var(--gold);
-   border: 1px solid rgba(245, 158, 11, 0.28);
-   font-family: 'JetBrains Mono', monospace;
-   font-size: 11.5px;
-   font-weight: 700;
-   letter-spacing: 1.5px;
-   text-transform: uppercase;
-   padding: 4px 12px;
-   border-radius: 6px;
-   margin-bottom: 12px;
+   text-decoration: none;
+   color: var(--mute);
+   font-size: 14px;
+   font-weight: 600;
+   padding: 6px 10px 6px 6px;
+   border-radius: 10px;
   }
-  .jhero h1 {
-   font-family: 'Cabinet Grotesk', system-ui, sans-serif;
-   font-weight: 900;
-   font-size: clamp(32px, 6vw, 52px);
-   letter-spacing: -0.5px;
-   line-height: 1.05;
-   margin: 4px 0 10px;
-   color: #fff;
-   text-transform: uppercase;
+  .back:hover {
+   color: var(--text);
+   background: var(--raised);
   }
-  .jhero h1 span.gold {
-   color: var(--gold);
-   text-shadow: 0 0 30px rgba(245, 158, 11, 0.35);
+  .sp { flex: 1; }
+  .btn-top {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   font-size: 13.5px;
+   font-weight: 600;
+   padding: 6px 12px;
+   border-radius: 99px;
+   border: 1px solid var(--line2);
+   background: var(--surface);
+   color: var(--text);
+   transition: all .15s ease;
   }
-  .jhero-sub {
-   font-size: clamp(14px, 2.2vw, 16px);
-   color: #94a3b8;
-   margin: 0 auto 18px;
-   max-width: 620px;
-   line-height: 1.5;
+  .btn-top:hover {
+   background: var(--raised);
+   border-color: var(--accent-line);
   }
-  .jhero-pills {
+  .btn-top.active {
+   background: var(--gold-soft);
+   border-color: var(--gold);
+   color: var(--gold-ink);
+  }
+
+  /* Hero Banner */
+  .hero {
+   position: relative;
+   background: var(--surface);
+   border: 1px solid var(--line);
+   border-radius: 20px;
+   padding: 16px;
    display: flex;
-   flex-wrap: wrap;
-   gap: 8px;
-   justify-content: center;
+   gap: 16px;
+   align-items: center;
+   box-shadow: var(--shadow);
+   margin-bottom: 18px;
   }
-  .jpill {
+  .hero-poster-wrap {
+   flex: none;
+   width: 84px;
+   aspect-ratio: 4 / 5;
+   border-radius: 12px;
+   overflow: hidden;
+   cursor: pointer;
+   background: var(--denim-wash);
+   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+   position: relative;
+  }
+  .hero-poster-wrap img {
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+   display: block;
+   transition: transform .2s ease;
+  }
+  .hero-poster-wrap:hover img {
+   transform: scale(1.05);
+  }
+  .hero-body {
+   flex: 1;
+   min-width: 0;
+  }
+  .hero-tagline {
    display: inline-flex;
    align-items: center;
    gap: 6px;
    font-size: 12px;
-   font-weight: 600;
-   padding: 5px 12px;
-   border-radius: 8px;
-   background: rgba(255,255,255,0.04);
-   border: 1px solid var(--border-subtle);
-   color: #cbd5e1;
+   font-weight: 700;
+   letter-spacing: .04em;
+   text-transform: uppercase;
+   color: var(--gold);
+   margin-bottom: 2px;
   }
-  .jpill.live {
-   background: rgba(16, 185, 129, 0.12);
-   border-color: rgba(16, 185, 129, 0.3);
-   color: #6ee7b7;
+  .hero h1 {
+   font: 600 clamp(22px, 4vw, 30px)/1.15 Fredoka, var(--sans);
+   margin: 0 0 6px;
+   color: var(--text);
   }
-  .jpill.live::before {
-   content: '';
-   width: 6px; height: 6px;
-   border-radius: 50%;
-   background: #10b981;
-   box-shadow: 0 0 8px #10b981;
+  .hero p {
+   margin: 0;
+   color: var(--mute);
+   font-size: 14px;
+   line-height: 1.4;
   }
-  .jpill.test {
-   background: rgba(245, 158, 11, 0.12);
-   border-color: rgba(245, 158, 11, 0.3);
-   color: #fde047;
-  }
-
-  /* Testing / Organizer Banner */
-  .jstatus-card {
+  .hero-meta {
    display: flex;
    align-items: center;
-   justify-content: space-between;
-   gap: 16px;
-   background: rgba(245, 158, 11, 0.08);
-   border: 1px solid rgba(245, 158, 11, 0.28);
-   padding: 12px 18px;
-   border-radius: 12px;
-   font-size: 13.5px;
-   color: #fde68a;
-   margin-bottom: 22px;
+   gap: 8px;
+   flex-wrap: wrap;
+   margin-top: 10px;
   }
-  .jstatus-card b { color: #fff; }
+  .state {
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+   font-size: 12px;
+   font-weight: 700;
+   padding: 3px 10px;
+   border-radius: 99px;
+   background: color-mix(in srgb, var(--good) 14%, transparent);
+   color: var(--good);
+  }
+  .state.warn {
+   background: var(--gold-soft);
+   color: var(--gold-ink);
+  }
+  .state.off {
+   background: var(--raised);
+   color: var(--mute);
+  }
 
-  /* Navigation Tabs Bar */
-  .jnav-tabs {
+  /* Segmented Nav Tabs (.seg from shop.html) */
+  .tabs-wrap {
+   margin: 0 0 16px;
    display: flex;
-   gap: 6px;
-   background: rgba(12, 23, 44, 0.85);
-   padding: 5px;
-   border-radius: 14px;
-   border: 1px solid var(--border-subtle);
-   margin-bottom: 24px;
+   gap: 10px;
+   align-items: center;
+   flex-wrap: wrap;
+  }
+  .seg {
+   display: inline-flex;
+   background: var(--raised);
+   border: 1px solid var(--line);
+   border-radius: 99px;
+   padding: 3px;
+   gap: 2px;
+  }
+  .seg button {
+   border: 0;
+   background: none;
+   border-radius: 99px;
+   padding: 7px 15px;
+   font-family: Fredoka, var(--sans);
+   font-size: 14.5px;
+   font-weight: 500;
+   color: var(--mute);
+   transition: all .15s ease;
+  }
+  .seg button[aria-selected="true"] {
+   background: var(--surface);
+   color: var(--text);
+   box-shadow: 0 1px 2px #0000001a;
+  }
+
+  /* Category Award Chips (.chips from shop.html) */
+  .chips {
+   display: flex;
+   gap: 8px;
    overflow-x: auto;
+   padding: 4px 2px 14px;
    scrollbar-width: none;
   }
-  .jnav-tabs::-webkit-scrollbar { display: none; }
-  .jtab {
-   flex: 1;
-   min-width: 140px;
-   display: inline-flex;
-   align-items: center;
-   justify-content: center;
-   gap: 8px;
-   padding: 10px 16px;
-   font-size: 13.5px;
-   font-weight: 600;
-   color: var(--text-sub);
-   background: transparent;
-   border: 1px solid transparent;
-   border-radius: 10px;
-   cursor: pointer;
-   transition: all .16s ease;
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+   flex: none;
+   border: 1px solid var(--line2);
+   background: var(--surface);
+   border-radius: 99px;
+   padding: 7px 14px;
+   font: 500 14px Fredoka, var(--sans);
+   color: var(--mute);
    white-space: nowrap;
+   transition: all .15s ease;
   }
-  .jtab:hover {
-   color: #fff;
-   background: rgba(255,255,255,0.04);
+  .chip:hover {
+   color: var(--text);
+   border-color: var(--accent-line);
   }
-  .jtab.active {
-   background: var(--denim-card);
-   color: #fff;
-   border-color: rgba(245, 158, 11, 0.4);
-   box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-  }
-  .jtab.active .v-icon {
-   stroke: var(--gold);
+  .chip[aria-pressed="true"] {
+   background: var(--gold);
+   border-color: var(--gold);
+   color: #2b1c02;
+   box-shadow: 0 2px 8px rgba(217, 155, 38, 0.25);
   }
 
-  /* Gallery Top Control Bar */
-  .jgallery-head {
+  /* Lead text under chips */
+  .award-lead {
+   background: var(--surface);
+   border: 1px solid var(--line);
+   border-radius: 14px;
+   padding: 12px 16px;
+   margin-bottom: 18px;
+   box-shadow: var(--shadow);
    display: flex;
    align-items: center;
    justify-content: space-between;
-   flex-wrap: wrap;
    gap: 12px;
-   margin-bottom: 16px;
+   flex-wrap: wrap;
   }
-  .jgallery-title {
-   font-family: 'Cabinet Grotesk', system-ui, sans-serif;
-   font-size: 20px;
-   font-weight: 800;
-   color: #fff;
-   margin: 0;
-   display: flex;
-   align-items: center;
-   gap: 8px;
+  .award-lead-text b {
+   display: block;
+   font: 600 16px Fredoka, var(--sans);
+   color: var(--text);
   }
-  .jgallery-badge {
-   font-family: 'JetBrains Mono', monospace;
-   font-size: 12px;
-   background: rgba(255,255,255,0.06);
-   border: 1px solid var(--border-subtle);
-   padding: 2px 8px;
-   border-radius: 6px;
-   color: #94a3b8;
+  .award-lead-text span {
+   font-size: 13.5px;
+   color: var(--mute);
   }
-  .jgallery-cta {
-   display: inline-flex;
-   align-items: center;
-   gap: 6px;
+  .award-lead-status {
    font-size: 13px;
-   font-weight: 600;
+   font-weight: 700;
    color: var(--gold);
-   background: transparent;
-   border: none;
-   cursor: pointer;
-   padding: 4px 8px;
-   border-radius: 6px;
-   transition: color .15s;
-  }
-  .jgallery-cta:hover {
-   color: var(--gold-light);
-   text-decoration: underline;
   }
 
-  /* High-Fashion Lookbook Gallery Grid */
-  .jlookbook-grid {
+  /* Contestant Cards Grid (.it style from shop.html) */
+  .grid {
    display: grid;
-   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-   gap: 20px;
+   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+   gap: 16px;
   }
-
-  /* Editorial Look Card */
-  .jlook-card {
-   background: var(--denim-card);
-   border: 1px solid var(--border-subtle);
-   border-radius: 16px;
+  @media (max-width: 520px) {
+   .grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  }
+  .it {
+   background: var(--surface);
+   border: 1px solid var(--line);
+   border-radius: 18px;
    overflow: hidden;
    display: flex;
    flex-direction: column;
-   transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1), border-color .22s ease, box-shadow .22s ease;
-   position: relative;
+   box-shadow: var(--shadow);
+   transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
   }
-  .jlook-card:hover {
-   transform: translateY(-4px);
-   border-color: rgba(245, 158, 11, 0.45);
-   box-shadow: 0 16px 36px rgba(0,0,0,0.5), 0 0 20px var(--gold-glow);
+  .it:hover {
+   transform: translateY(-2px);
+   border-color: var(--accent-line);
+   box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+  .it.picked {
+   border-color: var(--gold);
+   box-shadow: 0 0 0 2px var(--gold), 0 8px 24px rgba(217, 155, 38, 0.18);
   }
 
-  /* Look Photo Container (Fashion Portrait 4:5 ratio) */
-  .jlook-photo-wrap {
+  /* Card Portrait Wrapper */
+  .pic {
    position: relative;
-   width: 100%;
    aspect-ratio: 4 / 5;
-   background: #091222;
+   background: var(--denim-wash);
+   border: 0;
+   padding: 0;
+   display: block;
+   width: 100%;
    overflow: hidden;
    cursor: pointer;
   }
-  .jlook-img {
+  .pic img {
    width: 100%;
    height: 100%;
    object-fit: cover;
    object-position: center 20%;
-   transition: transform .35s ease;
+   display: block;
+   transition: transform .25s ease;
   }
-  .jlook-card:hover .jlook-img {
+  .it:hover .pic img {
    transform: scale(1.04);
   }
 
-  /* Editorial Placeholder when NO photo is uploaded */
-  .jlook-ph {
+  /* Tactile Numbered Ticket when NO photo exists */
+  .pic-placeholder {
    width: 100%;
    height: 100%;
    display: flex;
    flex-direction: column;
    align-items: center;
    justify-content: center;
-   padding: 24px;
+   background: radial-gradient(circle at 50% 40%, var(--gold-soft) 0%, var(--raised) 70%);
+   color: var(--mute);
+   padding: 16px;
    text-align: center;
-   background: linear-gradient(180deg, #0e1b33 0%, #08101f 100%);
-   border-bottom: 1px solid var(--border-subtle);
-   color: var(--text-mute);
    user-select: none;
   }
-  .jlook-ph-icon {
-   width: 52px;
-   height: 52px;
-   border-radius: 50%;
-   background: rgba(255,255,255,0.03);
-   border: 1px dashed rgba(148, 163, 184, 0.25);
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   margin-bottom: 12px;
-   color: #64748b;
-  }
-  .jlook-ph-title {
-   font-size: 11px;
-   font-family: 'JetBrains Mono', monospace;
-   font-weight: 700;
-   letter-spacing: 1.5px;
-   text-transform: uppercase;
-   color: #94a3b8;
-   margin-bottom: 4px;
-  }
-  .jlook-ph-sub {
-   font-size: 12px;
-   color: #64748b;
-   max-width: 180px;
-   line-height: 1.4;
-  }
-
-  /* Badges on Lookbook Photo */
-  .jlook-num {
-   position: absolute;
-   top: 12px;
-   left: 12px;
-   font-family: 'JetBrains Mono', monospace;
-   font-size: 11px;
-   font-weight: 700;
-   color: #fff;
-   background: rgba(8, 15, 29, 0.85);
-   border: 1px solid rgba(255,255,255,0.18);
-   padding: 3px 8px;
-   border-radius: 6px;
-   backdrop-filter: blur(8px);
-   letter-spacing: 0.5px;
-  }
-  .jlook-finalist {
-   position: absolute;
-   top: 12px;
-   right: 12px;
-   display: inline-flex;
-   align-items: center;
-   gap: 4px;
-   font-size: 10.5px;
-   font-weight: 700;
-   text-transform: uppercase;
-   letter-spacing: 0.5px;
-   color: #0f172a;
-   background: var(--gold);
-   padding: 3px 8px;
-   border-radius: 6px;
-   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  }
-
-  /* Hover Zoom Pill */
-  .jlook-zoom-overlay {
-   position: absolute;
-   inset: 0;
-   background: linear-gradient(180deg, transparent 60%, rgba(8, 15, 29, 0.8) 100%);
-   opacity: 0;
-   display: flex;
-   align-items: flex-end;
-   justify-content: center;
-   padding: 16px;
-   transition: opacity .2s ease;
-  }
-  .jlook-card:hover .jlook-zoom-overlay {
-   opacity: 1;
-  }
-  .jzoom-pill {
-   display: inline-flex;
-   align-items: center;
-   gap: 6px;
-   font-size: 12px;
-   font-weight: 600;
-   color: #fff;
-   background: rgba(15, 23, 42, 0.85);
-   border: 1px solid rgba(255,255,255,0.2);
-   padding: 6px 12px;
-   border-radius: 20px;
-   backdrop-filter: blur(8px);
-  }
-
-  /* Look Details Section */
-  .jlook-info {
-   padding: 18px;
-   display: flex;
-   flex-direction: column;
-   flex: 1;
-  }
-  .jlook-name {
-   font-family: 'Cabinet Grotesk', system-ui, sans-serif;
-   font-size: 19px;
-   font-weight: 800;
-   color: #fff;
-   margin: 0 0 14px;
-   line-height: 1.25;
-  }
-  .jlook-fit-title {
-   font-size: 13px;
-   font-weight: 600;
+  .ticket-num {
+   font: 700 36px/1 Fredoka, var(--sans);
    color: var(--gold);
+   margin-bottom: 4px;
+   letter-spacing: -1px;
+  }
+  .ticket-label {
+   font: 600 11px/1.2 var(--sans);
+   letter-spacing: .08em;
+   text-transform: uppercase;
+   color: var(--mute);
    margin-bottom: 8px;
   }
-  .jlook-bio {
-   font-size: 13px;
-   color: var(--text-sub);
-   line-height: 1.5;
-   margin: 0 0 16px;
-   flex: 1;
-  }
-  .jlook-foot {
-   display: flex;
-   align-items: center;
-   gap: 8px;
-   margin-top: auto;
-   padding-top: 14px;
-   border-top: 1px solid var(--border-subtle);
-  }
-  .jbtn-look-vote {
-   flex: 1;
-   display: inline-flex;
-   align-items: center;
-   justify-content: center;
-   gap: 6px;
-   background: rgba(255,255,255,0.06);
-   border: 1px solid var(--border-subtle);
-   color: #e2e8f0;
-   font-size: 12.5px;
-   font-weight: 600;
-   padding: 8px 12px;
-   border-radius: 8px;
-   cursor: pointer;
-   transition: all .16s ease;
-  }
-  .jbtn-look-vote:hover {
-   background: rgba(245, 158, 11, 0.15);
-   border-color: var(--gold);
-   color: #fff;
-  }
-  .jbtn-look-vote.selected {
-   background: var(--gold);
-   border-color: var(--gold);
-   color: #0f172a;
-   font-weight: 700;
-  }
-  .jbtn-look-zoom {
-   width: 36px;
-   height: 36px;
-   display: inline-flex;
-   align-items: center;
-   justify-content: center;
-   background: rgba(255,255,255,0.05);
-   border: 1px solid var(--border-subtle);
-   border-radius: 8px;
-   color: #94a3b8;
-   cursor: pointer;
-   transition: all .15s ease;
-  }
-  .jbtn-look-zoom:hover {
-   background: rgba(255,255,255,0.1);
-   color: #fff;
+  .ticket-hint {
+   font-size: 12px;
+   color: var(--faint);
   }
 
-  /* TAB 2: BALLOT */
-  .jballot-head {
-   background: var(--denim-card);
-   border: 1px solid var(--border-subtle);
-   border-radius: 16px;
-   padding: 20px;
-   margin-bottom: 20px;
+  /* Look & Finalist Badges on photo */
+  .look-badge {
+   position: absolute;
+   top: 10px;
+   left: 10px;
+   background: rgba(15, 23, 42, 0.85);
+   color: #fff;
+   font: 700 11.5px/1 var(--sans);
+   padding: 4px 8px;
+   border-radius: 6px;
+   backdrop-filter: blur(4px);
+   letter-spacing: .04em;
+  }
+  .finalist-tag {
+   position: absolute;
+   top: 10px;
+   right: 10px;
+   background: var(--gold);
+   color: #2b1c02;
+   font: 700 10.5px/1 Fredoka, var(--sans);
+   padding: 4px 8px;
+   border-radius: 6px;
+   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+   text-transform: uppercase;
+   letter-spacing: .04em;
+  }
+
+  /* Card Body */
+  .ib {
+   padding: 12px 14px 14px;
+   display: flex;
+   flex-direction: column;
+   gap: 8px;
+   flex: 1;
+  }
+  .ib-name {
+   font: 600 16px/1.25 Fredoka, var(--sans);
+   color: var(--text);
+   margin: 0;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
+  }
+  .ib-meta {
    display: flex;
    align-items: center;
    justify-content: space-between;
-   flex-wrap: wrap;
-   gap: 16px;
-  }
-  .jballot-info h3 {
-   font-family: 'Cabinet Grotesk', system-ui, sans-serif;
-   font-size: 19px;
-   font-weight: 800;
-   margin: 0 0 4px;
-   color: #fff;
-  }
-  .jballot-info p {
-   font-size: 13.5px;
-   color: var(--text-sub);
-   margin: 0 0 10px;
-  }
-  .jballot-chips {
-   display: flex;
-   flex-wrap: wrap;
-   gap: 6px;
-  }
-  .jchip {
-   display: inline-flex;
-   align-items: center;
-   gap: 6px;
-   background: rgba(245, 158, 11, 0.14);
-   border: 1px solid rgba(245, 158, 11, 0.35);
-   color: var(--gold-light);
-   font-size: 12px;
-   font-weight: 600;
-   padding: 3px 10px;
-   border-radius: 6px;
-  }
-  .jchip-x {
-   cursor: pointer;
-   opacity: 0.6;
-   padding: 0 2px;
-  }
-  .jchip-x:hover { opacity: 1; }
-  .jbtn-submit {
-   display: inline-flex;
-   align-items: center;
-   gap: 8px;
-   background: var(--gold);
-   color: #0f172a;
-   border: none;
-   font-size: 14px;
-   font-weight: 700;
-   padding: 11px 22px;
-   border-radius: 10px;
-   cursor: pointer;
-   transition: all .16s ease;
-   box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
-  }
-  .jbtn-submit:hover {
-   filter: brightness(1.1);
-   transform: translateY(-1px);
-  }
-
-  /* Subnav for Award Tabs in Ballot */
-  .jawards-subnav {
-   display: flex;
-   gap: 8px;
-   overflow-x: auto;
-   padding-bottom: 6px;
-   margin-bottom: 20px;
-   scrollbar-width: none;
-  }
-  .jawards-subnav::-webkit-scrollbar { display: none; }
-  .jaward-tab {
-   display: inline-flex;
-   align-items: center;
-   gap: 8px;
-   background: var(--denim-card);
-   border: 1px solid var(--border-subtle);
-   padding: 9px 15px;
-   border-radius: 10px;
-   color: var(--text-sub);
-   cursor: pointer;
-   font-size: 13px;
-   font-weight: 600;
-   white-space: nowrap;
-   transition: all .15s ease;
-  }
-  .jaward-tab:hover {
-   color: #fff;
-   border-color: rgba(255,255,255,0.25);
-  }
-  .jaward-tab.active {
-   background: rgba(245, 158, 11, 0.12);
-   border-color: var(--gold);
-   color: var(--gold-light);
-  }
-
-  /* Ballot Selectable Card */
-  .jballot-card {
-   background: var(--denim-card);
-   border: 1px solid var(--border-subtle);
-   border-radius: 14px;
-   padding: 14px;
-   display: flex;
-   gap: 14px;
-   align-items: center;
-   cursor: pointer;
-   transition: all .16s ease;
-   user-select: none;
-  }
-  .jballot-card:hover {
-   border-color: rgba(255,255,255,0.3);
-   background: var(--denim-hover);
-  }
-  .jballot-card.selected {
-   border-color: var(--gold);
-   background: rgba(245, 158, 11, 0.08);
-   box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
-  }
-  .jballot-thumb {
-   width: 64px;
-   height: 64px;
-   border-radius: 10px;
-   object-fit: cover;
-   background: #091222;
-   flex-shrink: 0;
-  }
-  .jballot-meta {
-   flex: 1;
-   min-width: 0;
-  }
-  .jballot-name {
-   font-size: 15px;
-   font-weight: 700;
-   color: #fff;
-   margin: 0 0 2px;
-  }
-  .jballot-fit {
    font-size: 12.5px;
-   color: var(--gold);
-   margin: 0;
-   overflow: hidden;
-   text-overflow: ellipsis;
-   white-space: nowrap;
+   color: var(--mute);
+   margin-top: auto;
   }
-  .jballot-check {
-   width: 26px;
-   height: 26px;
-   border-radius: 50%;
-   border: 2px solid var(--border-subtle);
-   display: flex;
+  .btn-vote {
+   width: 100%;
+   border: 1px solid var(--line2);
+   background: var(--raised);
+   color: var(--text);
+   border-radius: 10px;
+   padding: 8px 10px;
+   font: 600 13px/1.2 var(--sans);
+   display: inline-flex;
    align-items: center;
    justify-content: center;
-   flex-shrink: 0;
+   gap: 6px;
    transition: all .15s ease;
   }
-  .jballot-card.selected .jballot-check {
+  .btn-vote:hover {
+   background: var(--gold-soft);
+   border-color: var(--gold);
+   color: var(--gold-ink);
+  }
+  .it.picked .btn-vote {
    background: var(--gold);
    border-color: var(--gold);
-   color: #0f172a;
+   color: #2b1c02;
+   font-weight: 700;
   }
 
-  /* TAB 3: LEADERBOARD & PODIUM */
-  .jpodium-wrap {
+  /* Sticky Bottom Voting Bar (.bar from shop.html) */
+  .bar {
+   position: fixed;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   z-index: 30;
+   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+   pointer-events: none;
+  }
+  .bar .in {
+   pointer-events: auto;
+   max-width: 520px;
+   margin: 0 auto;
+   background: var(--denim);
+   color: #fff;
+   border-radius: 99px;
+   padding: 8px 8px 8px 22px;
+   box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+   display: flex;
+   align-items: center;
+   gap: 12px;
+  }
+  .bar .tot {
+   flex: 1;
+   font-size: 13px;
+   color: rgba(255,255,255,0.75);
+   line-height: 1.25;
+  }
+  .bar .tot b {
+   display: block;
+   font: 600 16px Fredoka, var(--sans);
+   color: #fff;
+  }
+  .bar .btn.primary {
+   border-radius: 99px;
+   background: var(--gold);
+   border-color: var(--gold);
+   color: #2b1c02;
+   font-family: Fredoka, var(--sans);
+   font-size: 15px;
+   font-weight: 600;
+   padding: 10px 20px;
+  }
+  .bar .btn.primary:disabled {
+   opacity: .5;
+   cursor: not-allowed;
+  }
+
+  /* Live Standings & Podium (Tab 2) */
+  .standings-head {
+   background: var(--surface);
+   border: 1px solid var(--line);
+   border-radius: 16px;
+   padding: 18px;
+   text-align: center;
+   margin-bottom: 18px;
+   box-shadow: var(--shadow);
+  }
+  .standings-head h2 {
+   font: 600 22px Fredoka, var(--sans);
+   margin: 0 0 4px;
+   color: var(--text);
+  }
+  .standings-head p {
+   margin: 0;
+   color: var(--mute);
+   font-size: 14px;
+  }
+
+  .podium {
    display: grid;
    grid-template-columns: repeat(3, 1fr);
-   gap: 16px;
+   gap: 12px;
    align-items: flex-end;
-   margin: 32px 0 32px;
+   margin-bottom: 24px;
   }
-  .jpodium-col {
-   background: var(--denim-card);
-   border: 1px solid var(--border-subtle);
-   border-radius: 16px 16px 0 0;
-   padding: 20px 16px 16px;
+  @media (max-width: 520px) {
+   .podium { grid-template-columns: 1fr; }
+  }
+  .podium-card {
+   background: var(--surface);
+   border: 1px solid var(--line);
+   border-radius: 16px;
+   padding: 16px 12px;
    text-align: center;
    display: flex;
    flex-direction: column;
    align-items: center;
-   position: relative;
+   box-shadow: var(--shadow);
   }
-  .jpodium-col.gold {
+  .podium-card.gold {
    border-color: var(--gold);
-   background: linear-gradient(180deg, rgba(245, 158, 11, 0.14) 0%, var(--denim-card) 60%);
-   padding-top: 28px;
+   background: radial-gradient(circle at 50% 20%, var(--gold-soft) 0%, var(--surface) 80%);
+   padding-top: 22px;
    order: 2;
   }
-  .jpodium-col.silver {
-   order: 1;
+  .podium-card.silver { order: 1; }
+  .podium-card.bronze { order: 3; }
+  @media (max-width: 520px) {
+   .podium-card.gold { order: 1; }
+   .podium-card.silver { order: 2; }
+   .podium-card.bronze { order: 3; }
   }
-  .jpodium-col.bronze {
-   order: 3;
+  .podium-rank {
+   font: 700 13px Fredoka, var(--sans);
+   padding: 2px 10px;
+   border-radius: 99px;
+   margin-bottom: 8px;
   }
-  .jrank-badge {
-   font-family: 'Cabinet Grotesk', system-ui, sans-serif;
-   font-size: 16px;
-   font-weight: 900;
-   width: 34px;
-   height: 34px;
-   border-radius: 50%;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   margin-bottom: 10px;
-  }
-  .gold .jrank-badge { background: var(--gold); color: #0f172a; }
-  .silver .jrank-badge { background: #cbd5e1; color: #0f172a; }
-  .bronze .jrank-badge { background: #b45309; color: #fff; }
-
-  .jpodium-thumb {
-   width: 72px;
-   height: 72px;
+  .gold .podium-rank { background: var(--gold); color: #2b1c02; }
+  .silver .podium-rank { background: #cbd5e1; color: #1e293b; }
+  .bronze .podium-rank { background: #d97706; color: #fff; }
+  .podium-avatar {
+   width: 64px;
+   height: 64px;
    border-radius: 50%;
    object-fit: cover;
-   border: 2px solid var(--border-subtle);
-   margin-bottom: 10px;
+   margin-bottom: 8px;
+   border: 2px solid var(--line);
   }
-  .gold .jpodium-thumb {
+  .gold .podium-avatar {
+   width: 76px;
+   height: 76px;
    border-color: var(--gold);
-   width: 84px;
-   height: 84px;
-   box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
   }
-  .jpodium-name {
-   font-size: 15px;
-   font-weight: 700;
-   color: #fff;
+  .podium-name {
+   font: 600 15px Fredoka, var(--sans);
+   color: var(--text);
    margin: 0 0 2px;
   }
-  .jpodium-fit {
-   font-size: 12px;
-   color: var(--gold);
-   margin: 0 0 8px;
-  }
-  .jpodium-votes {
-   font-family: 'JetBrains Mono', monospace;
+  .podium-votes {
    font-size: 13px;
    font-weight: 700;
-   color: #cbd5e1;
+   color: var(--gold);
   }
 
-  /* Tally List */
-  .jtally-list {
+  .tally-list {
    display: flex;
    flex-direction: column;
-   gap: 10px;
+   gap: 8px;
   }
-  .jtally-row {
-   background: var(--denim-card);
-   border: 1px solid var(--border-subtle);
+  .tally-row {
+   background: var(--surface);
+   border: 1px solid var(--line);
    border-radius: 12px;
-   padding: 12px 18px;
+   padding: 10px 14px;
    display: flex;
    align-items: center;
-   gap: 16px;
+   gap: 12px;
+   box-shadow: var(--shadow);
   }
-  .jtally-pos {
-   font-family: 'JetBrains Mono', monospace;
-   font-size: 13px;
-   font-weight: 700;
-   color: #64748b;
+  .tally-pos {
+   font: 700 14px Fredoka, var(--sans);
+   color: var(--faint);
    width: 24px;
   }
-  .jtally-info {
-   flex: 1;
-  }
-  .jtally-bar {
-   height: 6px;
-   background: rgba(255,255,255,0.06);
-   border-radius: 3px;
-   overflow: hidden;
-   margin-top: 6px;
-  }
-  .jtally-fill {
-   height: 100%;
-   background: var(--gold);
-   border-radius: 3px;
-  }
-  .jtally-cnt {
-   font-family: 'JetBrains Mono', monospace;
+  .tally-info { flex: 1; min-width: 0; }
+  .tally-top {
+   display: flex;
+   justify-content: space-between;
    font-size: 14px;
-   font-weight: 700;
-   color: #fff;
+   font-weight: 600;
+   margin-bottom: 4px;
+  }
+  .tally-bar {
+   height: 6px;
+   border-radius: 99px;
+   background: var(--raised);
+   overflow: hidden;
+  }
+  .tally-fill {
+   height: 100%;
+   border-radius: 99px;
+   background: var(--gold);
+   transition: width .5s ease;
   }
 
-  /* TAB 4: MECHANICS & RULES (Editorial Layout) */
-  .jrules-card {
-   background: var(--denim-card);
-   border: 1px solid var(--border-subtle);
+  /* Mechanics & Awards (Tab 3) */
+  .section-card {
+   background: var(--surface);
+   border: 1px solid var(--line);
    border-radius: 18px;
-   padding: 28px 24px;
-   margin-bottom: 24px;
+   padding: 22px 20px;
+   margin-bottom: 20px;
+   box-shadow: var(--shadow);
   }
-  .jrules-card h3 {
-   font-family: 'Cabinet Grotesk', system-ui, sans-serif;
-   font-size: 20px;
-   font-weight: 800;
-   color: #fff;
+  .section-card h2 {
+   font: 600 21px/1.2 var(--serif);
    margin: 0 0 14px;
    display: flex;
    align-items: center;
    gap: 8px;
   }
-  .jrules-list {
+  .rule-list {
    list-style: none;
    padding: 0;
-   margin: 0 0 24px;
+   margin: 0;
    display: flex;
    flex-direction: column;
    gap: 12px;
   }
-  .jrules-list li {
+  .rule-list li {
    display: flex;
    align-items: flex-start;
-   gap: 12px;
-   font-size: 14px;
+   gap: 10px;
+   font-size: 14.5px;
    line-height: 1.5;
-   color: #cbd5e1;
+   color: var(--text);
   }
-  .jrules-list li .v-bullet {
-   width: 6px;
-   height: 6px;
+  .rule-dot {
+   width: 7px;
+   height: 7px;
    border-radius: 50%;
    background: var(--gold);
-   margin-top: 7px;
+   margin-top: 8px;
    flex-shrink: 0;
   }
 
-
-  /* Prestigious Awards & Titles */
-  .jaward-grid {
+  /* Awards Grid */
+  .awards-grid {
    display: grid;
-   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-   gap: 16px;
+   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+   gap: 12px;
   }
-  .jaward-hero-card {
-   grid-column: 1 / -1;
-   position: relative;
-   background: radial-gradient(ellipse at 85% 20%, rgba(245, 158, 11, 0.16) 0%, transparent 65%), linear-gradient(135deg, rgba(26, 42, 77, 0.9) 0%, rgba(13, 22, 41, 0.95) 100%);
-   border: 1.5px solid rgba(245, 158, 11, 0.45);
-   border-radius: 18px;
-   padding: 24px;
-   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), 0 0 24px rgba(245, 158, 11, 0.15);
-   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-   overflow: hidden;
-  }
-  .jaward-hero-card::before {
-   content: '';
-   position: absolute;
-   top: 0;
-   left: 0;
-   right: 0;
-   height: 3px;
-   background: linear-gradient(90deg, #f59e0b, #fde047, #d97706);
-  }
-  .jaward-hero-card:hover {
-   transform: translateY(-2px);
-   border-color: rgba(245, 158, 11, 0.7);
-   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.5), 0 0 32px rgba(245, 158, 11, 0.25);
-  }
-
-  .jaward-box {
-   position: relative;
-   background: linear-gradient(145deg, rgba(17, 28, 51, 0.7) 0%, rgba(10, 18, 34, 0.85) 100%);
-   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
-   border-radius: 16px;
-   padding: 20px;
+  .award-box {
+   background: var(--raised);
+   border: 1px solid var(--line);
+   border-radius: 14px;
+   padding: 14px 16px;
    display: flex;
    flex-direction: column;
-   gap: 12px;
-   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+   gap: 6px;
   }
-  .jaward-box:hover {
-   transform: translateY(-3px);
-   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
-   border-color: rgba(255, 255, 255, 0.22);
+  .award-box.champ {
+   grid-column: 1 / -1;
+   background: var(--gold-soft);
+   border-color: var(--gold);
   }
-  .jaward-box.silver {
-   border-color: rgba(203, 213, 225, 0.35);
-   background: radial-gradient(ellipse at 85% 15%, rgba(203, 213, 225, 0.1) 0%, transparent 60%), linear-gradient(145deg, rgba(20, 32, 56, 0.8) 0%, rgba(10, 18, 34, 0.9) 100%);
-  }
-  .jaward-box.silver:hover {
-   border-color: rgba(226, 232, 240, 0.6);
-   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(203, 213, 225, 0.15);
-  }
-  .jaward-box.bronze {
-   border-color: rgba(217, 119, 6, 0.35);
-   background: radial-gradient(ellipse at 85% 15%, rgba(217, 119, 6, 0.1) 0%, transparent 60%), linear-gradient(145deg, rgba(26, 29, 44, 0.8) 0%, rgba(12, 16, 28, 0.9) 100%);
-  }
-  .jaward-box.bronze:hover {
-   border-color: rgba(245, 158, 11, 0.6);
-   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(217, 119, 6, 0.15);
-  }
-  .jaward-box.blue {
-   border-color: rgba(56, 189, 248, 0.3);
-  }
-  .jaward-box.blue:hover {
-   border-color: rgba(56, 189, 248, 0.6);
-   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.15);
-  }
-  .jaward-box.purple {
-   border-color: rgba(192, 132, 252, 0.3);
-  }
-  .jaward-box.purple:hover {
-   border-color: rgba(192, 132, 252, 0.6);
-   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(192, 132, 252, 0.15);
-  }
-  .jaward-box.emerald {
-   border-color: rgba(52, 211, 153, 0.3);
-  }
-  .jaward-box.emerald:hover {
-   border-color: rgba(52, 211, 153, 0.6);
-   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(52, 211, 153, 0.15);
-  }
-
-  .jaward-top {
+  .award-box-top {
    display: flex;
    align-items: center;
    justify-content: space-between;
-   gap: 10px;
-  }
-  .jaward-crest {
-   width: 40px;
-   height: 40px;
-   border-radius: 12px;
-   display: grid;
-   place-items: center;
-   background: rgba(255, 255, 255, 0.06);
-   border: 1px solid rgba(255, 255, 255, 0.12);
-   color: #e2e8f0;
-   flex-shrink: 0;
-  }
-  .jaward-crest.gold {
-   background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.15));
-   border-color: rgba(245, 158, 11, 0.5);
-   color: #fde047;
-   box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
-  }
-  .jaward-crest.silver {
-   background: linear-gradient(135deg, rgba(226, 232, 240, 0.2), rgba(148, 163, 184, 0.15));
-   border-color: rgba(203, 213, 225, 0.4);
-   color: #f8fafc;
-   box-shadow: 0 0 14px rgba(203, 213, 225, 0.2);
-  }
-  .jaward-crest.bronze {
-   background: linear-gradient(135deg, rgba(217, 119, 6, 0.25), rgba(180, 83, 9, 0.15));
-   border-color: rgba(217, 119, 6, 0.4);
-   color: #fbbf24;
-   box-shadow: 0 0 14px rgba(217, 119, 6, 0.2);
-  }
-  .jaward-crest.blue {
-   background: rgba(56, 189, 248, 0.12);
-   border-color: rgba(56, 189, 248, 0.35);
-   color: #38bdf8;
-  }
-  .jaward-crest.purple {
-   background: rgba(192, 132, 252, 0.12);
-   border-color: rgba(192, 132, 252, 0.35);
-   color: #c084fc;
-  }
-  .jaward-crest.emerald {
-   background: rgba(52, 211, 153, 0.12);
-   border-color: rgba(52, 211, 153, 0.35);
-   color: #34d399;
-  }
-
-  .jaward-badge {
-   display: inline-flex;
-   align-items: center;
-   gap: 5px;
-   font-size: 11px;
-   font-weight: 800;
-   letter-spacing: 0.8px;
-   text-transform: uppercase;
-   padding: 3px 9px;
-   border-radius: 999px;
-   border: 1px solid currentColor;
-  }
-  .jaward-badge.supreme {
-   color: #fde047;
-   background: rgba(245, 158, 11, 0.18);
-   border-color: rgba(245, 158, 11, 0.5);
-  }
-  .jaward-badge.silver {
-   color: #e2e8f0;
-   background: rgba(203, 213, 225, 0.14);
-   border-color: rgba(203, 213, 225, 0.4);
-  }
-  .jaward-badge.bronze {
-   color: #f59e0b;
-   background: rgba(217, 119, 6, 0.14);
-   border-color: rgba(217, 119, 6, 0.4);
-  }
-  .jaward-badge.blue {
-   color: #38bdf8;
-   background: rgba(56, 189, 248, 0.12);
-   border-color: rgba(56, 189, 248, 0.35);
-  }
-  .jaward-badge.purple {
-   color: #c084fc;
-   background: rgba(192, 132, 252, 0.12);
-   border-color: rgba(192, 132, 252, 0.35);
-  }
-  .jaward-badge.emerald {
-   color: #34d399;
-   background: rgba(52, 211, 153, 0.12);
-   border-color: rgba(52, 211, 153, 0.35);
-  }
-
-  .jaward-title {
-   font-family: 'Cabinet Grotesk', system-ui, sans-serif;
-   font-size: 17px;
-   font-weight: 800;
-   color: #fff;
-   margin: 0;
-   line-height: 1.25;
-  }
-  .jaward-hero-card .jaward-title {
-   font-size: 22px;
-   color: #fef08a;
-   letter-spacing: 0.3px;
-  }
-  .jaward-desc {
-   font-size: 13px;
-   color: #94a3b8;
-   line-height: 1.5;
-   margin: 0;
-  }
-  .jaward-hero-card .jaward-desc {
-   font-size: 14px;
-   color: #cbd5e1;
-   max-width: 680px;
-  }
-  .jaward-meta {
-   display: flex;
-   flex-wrap: wrap;
    gap: 8px;
-   margin-top: 4px;
   }
-  .jaward-chip {
-   font-size: 11.5px;
-   font-weight: 600;
-   color: #cbd5e1;
-   background: rgba(255, 255, 255, 0.05);
-   border: 1px solid rgba(255, 255, 255, 0.1);
-   padding: 3px 10px;
-   border-radius: 8px;
+  .award-box-title {
+   font: 600 16px Fredoka, var(--sans);
+   color: var(--text);
+   margin: 0;
   }
-  .jaward-chip.gold {
-   color: #fef08a;
-   background: rgba(245, 158, 11, 0.15);
-   border-color: rgba(245, 158, 11, 0.35);
+  .champ .award-box-title {
+   color: var(--gold-ink);
+   font-size: 18px;
   }
-
-
-  /* Floating DJ Player Dock */
-  .jdj-dock {
-   position: fixed;
-   bottom: 18px;
-   right: 20px;
-   background: rgba(12, 23, 44, 0.92);
-   border: 1px solid rgba(245, 158, 11, 0.35);
-   box-shadow: 0 10px 28px rgba(0,0,0,0.55);
-   backdrop-filter: blur(14px);
-   border-radius: 999px;
-   padding: 6px 14px 6px 8px;
-   display: flex;
-   align-items: center;
-   gap: 12px;
-   z-index: 100;
+  .award-tag {
+   font: 700 11px Fredoka, var(--sans);
+   padding: 2px 8px;
+   border-radius: 99px;
+   background: var(--surface);
+   color: var(--mute);
+   border: 1px solid var(--line2);
   }
-  .jvinyl {
-   width: 38px;
-   height: 38px;
-   border-radius: 50%;
-   background: #111827;
-   border: 2px solid #374151;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   color: var(--gold);
-   flex-shrink: 0;
-   transition: transform .2s ease;
+  .champ .award-tag {
+   background: var(--gold);
+   color: #2b1c02;
+   border-color: var(--gold);
   }
-  .jvinyl.playing {
-   animation: spinVinyl 3.5s linear infinite;
-  }
-  @keyframes spinVinyl {
-   from { transform: rotate(0deg); }
-   to { transform: rotate(360deg); }
-  }
-  .jdj-dock-info {
-   display: flex;
-   flex-direction: column;
-  }
-  .jdj-dock-info b {
-   font-size: 12.5px;
-   color: #fff;
-   line-height: 1.2;
-  }
-  .jdj-dock-info span {
-   font-size: 11px;
-   color: var(--gold);
-  }
-  .jdj-dock-btn {
-   width: 32px;
-   height: 32px;
-   border-radius: 50%;
-   background: rgba(255,255,255,0.08);
-   border: 1px solid var(--border-subtle);
-   color: #fff;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   cursor: pointer;
-   transition: all .15s ease;
-  }
-  .jdj-dock-btn:hover {
-   background: rgba(255,255,255,0.18);
+  .award-box p {
+   margin: 0;
+   font-size: 13.5px;
+   color: var(--mute);
+   line-height: 1.45;
   }
 
-  /* Modals */
-  .jmodal {
+  /* Modals & In-Page Sheets (from shop.html) */
+  .modal {
    position: fixed;
    inset: 0;
-   background: rgba(4, 9, 18, 0.82);
-   backdrop-filter: blur(10px);
+   z-index: 50;
+   background: rgba(0, 0, 0, 0.6);
    display: flex;
-   align-items: center;
+   align-items: flex-end;
    justify-content: center;
-   padding: 16px;
-   z-index: 999;
+   backdrop-filter: blur(4px);
   }
-  .jmodal[hidden] { display: none; }
-  .jbox {
-   background: #0f1d36;
-   border: 1px solid rgba(255,255,255,0.14);
-   border-radius: 18px;
+  @media (min-width: 640px) {
+   .modal { align-items: center; }
+  }
+  .sheet {
+   background: var(--surface);
    width: 100%;
    max-width: 520px;
    max-height: 90vh;
-   overflow-y: auto;
-   padding: 24px;
-   box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+   overflow: auto;
+   border-radius: 20px 20px 0 0;
+   padding: 18px 20px calc(20px + env(safe-area-inset-bottom));
+   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   }
-  .jmhead {
+  @media (min-width: 640px) {
+   .sheet { border-radius: 20px; }
+  }
+  .sheet h3 {
+   font: 600 20px/1.2 Fredoka, var(--sans);
+   margin: 0 0 14px;
    display: flex;
-   align-items: center;
    justify-content: space-between;
-   margin-bottom: 20px;
+   align-items: center;
   }
-  .jmhead h2 {
-   font-family: 'Cabinet Grotesk', system-ui, sans-serif;
+  .x {
+   border: 0;
+   background: var(--raised);
+   width: 32px;
+   height: 32px;
+   border-radius: 50%;
    font-size: 20px;
-   font-weight: 800;
-   color: #fff;
-   margin: 0;
+   line-height: 1;
+   color: var(--mute);
+   display: grid;
+   place-items: center;
   }
-  .jmx {
-   width: 30px;
-   height: 30px;
-   border-radius: 8px;
-   background: rgba(255,255,255,0.06);
-   border: 1px solid var(--border-subtle);
-   color: #94a3b8;
-   cursor: pointer;
+  .x:hover { color: var(--text); }
+
+  label.f {
+   display: block;
+   margin-top: 12px;
+   font-size: 13px;
+   font-weight: 600;
+   color: var(--mute);
+  }
+  label.f input, label.f select, label.f textarea {
+   display: block;
+   width: 100%;
+   margin-top: 5px;
+   padding: 10px 12px;
+   border-radius: 11px;
+   border: 1px solid var(--line2);
+   background: var(--bg);
+   font-size: 14.5px;
+  }
+  label.f textarea { resize: vertical; min-height: 65px; }
+
+  .row-actions {
    display: flex;
+   gap: 8px;
+   margin-top: 16px;
+  }
+  .btn {
+   display: inline-flex;
    align-items: center;
    justify-content: center;
-  }
-  .jmx:hover { color: #fff; background: rgba(255,255,255,0.12); }
-
-  /* Soundboard Pad Grid */
-  .jsound-grid {
-   display: grid;
-   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-   gap: 10px;
-   margin-bottom: 18px;
-  }
-  .jpad-btn {
-   background: rgba(255,255,255,0.04);
-   border: 1px solid var(--border-subtle);
-   padding: 12px 10px;
-   border-radius: 10px;
-   color: #cbd5e1;
-   font-size: 12px;
+   gap: 6px;
+   border-radius: 12px;
+   padding: 10px 16px;
    font-weight: 600;
+   font-size: 14px;
+   border: 1px solid var(--line2);
+   background: var(--surface);
+   text-decoration: none;
+   transition: all .15s ease;
+  }
+  .btn.primary {
+   background: var(--accent);
+   border-color: var(--accent);
+   color: var(--accent-ink);
+  }
+  .btn.danger {
+   background: color-mix(in srgb, var(--bad) 12%, var(--surface));
+   border-color: color-mix(in srgb, var(--bad) 40%, transparent);
+   color: var(--bad);
+  }
+  .btn.wide { width: 100%; }
+
+  /* Manage list inside sheet */
+  .manage-list {
    display: flex;
    flex-direction: column;
-   align-items: center;
    gap: 8px;
-   cursor: pointer;
-   transition: all .14s ease;
+   margin: 12px 0 16px;
   }
-  .jpad-btn:hover {
-   background: rgba(245, 158, 11, 0.14);
-   border-color: var(--gold);
-   color: #fff;
-   transform: translateY(-2px);
-  }
-  .jpad-btn:active {
-   transform: scale(0.96);
-  }
-
-
-  /* Floating DJ Equalizer */
-  .jdj-equalizer {
-   display: flex;
-   align-items: flex-end;
-   gap: 2.5px;
-   height: 16px;
-   padding: 0 4px;
-   flex-shrink: 0;
-  }
-  .jbar {
-   width: 3px;
-   background: var(--gold, #fbbf24);
-   border-radius: 999px;
-   height: 4px;
-   transition: height 0.15s ease;
-  }
-  .jdj-dock.playing .jbar {
-   animation: eqBounce 0.8s ease-in-out infinite alternate;
-  }
-  .jdj-dock.playing .bar-1 { animation-delay: 0.1s; animation-duration: 0.6s; }
-  .jdj-dock.playing .bar-2 { animation-delay: 0.3s; animation-duration: 0.75s; }
-  .jdj-dock.playing .bar-3 { animation-delay: 0.0s; animation-duration: 0.5s; }
-  .jdj-dock.playing .bar-4 { animation-delay: 0.25s; animation-duration: 0.65s; }
-  @keyframes eqBounce {
-   0% { height: 3px; }
-   100% { height: 16px; }
-  }
-
-  /* Range Slider */
-  .jrange {
-   -webkit-appearance: none;
-   appearance: none;
-   width: 100%;
-   height: 6px;
-   border-radius: 999px;
-   background: rgba(255, 255, 255, 0.14);
-   outline: none;
-  }
-  .jrange::-webkit-slider-thumb {
-   -webkit-appearance: none;
-   appearance: none;
-   width: 18px;
-   height: 18px;
-   border-radius: 50%;
-   background: var(--gold, #fbbf24);
-   cursor: pointer;
-   box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
-   border: 2px solid #0f1d36;
-   transition: transform 0.15s ease;
-  }
-  .jrange::-webkit-slider-thumb:hover {
-   transform: scale(1.15);
-  }
-
-  /* Custom Fashion Dropdown */
-  .jcustom-select {
-   position: relative;
-   width: 100%;
-   user-select: none;
-  }
-  .jcustom-select-trigger {
-   width: 100%;
-   background: rgba(13, 22, 41, 0.75);
-   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.14));
-   color: #f8fafc;
-   padding: 11px 14px;
-   border-radius: 12px;
-   font-family: inherit;
-   font-size: 13.5px;
+  .manage-item {
    display: flex;
    align-items: center;
    justify-content: space-between;
    gap: 10px;
-   cursor: pointer;
-   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-   text-align: left;
+   padding: 9px 12px;
+   border-radius: 11px;
+   background: var(--raised);
+   border: 1px solid var(--line);
+   font-size: 14px;
   }
-  .jcustom-select-trigger:hover,
-  .jcustom-select.open .jcustom-select-trigger {
-   border-color: var(--gold, #fbbf24);
-   background: rgba(26, 41, 74, 0.9);
-   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18), 0 4px 14px rgba(0, 0, 0, 0.35);
-  }
-  .jcustom-select-label {
-   display: flex;
-   align-items: center;
-   gap: 10px;
-   min-width: 0;
+  .manage-item-info {
    flex: 1;
+   min-width: 0;
   }
-  .jcustom-select-label b {
-   font-weight: 600;
-   color: #fff;
+  .manage-item-info b {
+   display: block;
+   font: 600 14px Fredoka, var(--sans);
    white-space: nowrap;
    overflow: hidden;
    text-overflow: ellipsis;
   }
-  .jchevron {
-   flex: none;
-   color: var(--gold, #fbbf24);
-   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  .manage-item-info span {
+   font-size: 12px;
+   color: var(--mute);
   }
-  .jcustom-select.open .jchevron {
-   transform: rotate(180deg);
-  }
-  .jcustom-select-menu {
-   position: absolute;
-   top: calc(100% + 6px);
-   left: 0;
-   right: 0;
-   z-index: 1200;
-   background: rgba(11, 20, 38, 0.98);
-   backdrop-filter: blur(20px);
-   border: 1px solid rgba(245, 158, 11, 0.35);
-   border-radius: 14px;
-   padding: 6px;
-   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85), 0 0 20px rgba(245, 158, 11, 0.12);
-   display: flex;
-   flex-direction: column;
-   gap: 4px;
-   opacity: 0;
-   pointer-events: none;
-   transform: translateY(-8px) scale(0.98);
-   transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-   max-height: 290px;
-   overflow-y: auto;
-  }
-  .jcustom-select.open .jcustom-select-menu {
-   opacity: 1;
-   pointer-events: auto;
-   transform: translateY(0) scale(1);
-  }
-  .jcustom-select-option {
+  .manage-item-acts {
    display: flex;
    align-items: center;
-   justify-content: space-between;
-   gap: 12px;
-   padding: 10px 12px;
-   border-radius: 10px;
-   cursor: pointer;
-   transition: all 0.15s ease;
-   color: #cbd5e1;
-   border: 1px solid transparent;
+   gap: 4px;
   }
-  .jcustom-select-option:hover {
-   background: rgba(245, 158, 11, 0.12);
-   border-color: rgba(245, 158, 11, 0.25);
-   color: #fff;
-   transform: translateX(2px);
-  }
-  .jcustom-select-option.selected {
-   background: rgba(245, 158, 11, 0.2);
-   border-color: rgba(245, 158, 11, 0.45);
-   color: #fef08a;
-   font-weight: 600;
-  }
-  .jcustom-select-option .jopt-icon {
-   flex: none;
+  .btn-icon {
    width: 28px;
    height: 28px;
    border-radius: 8px;
-   background: rgba(255, 255, 255, 0.06);
+   border: 1px solid var(--line2);
+   background: var(--surface);
+   color: var(--mute);
    display: grid;
    place-items: center;
-   color: #94a3b8;
+   padding: 0;
   }
-  .jcustom-select-option.selected .jopt-icon {
-   background: rgba(245, 158, 11, 0.25);
-   color: var(--gold, #fbbf24);
-  }
-  .jcustom-select-option .jopt-content {
-   flex: 1;
-   min-width: 0;
-   display: flex;
-   flex-direction: column;
-   gap: 2px;
-  }
-  .jcustom-select-option .jopt-title {
-   font-size: 13.5px;
-   font-weight: 600;
-   color: inherit;
-  }
-  .jcustom-select-option .jopt-sub {
-   font-size: 11.5px;
-   color: #94a3b8;
-  }
-  .jcustom-select-option .jopt-check {
-   flex: none;
-   opacity: 0;
-   color: var(--gold, #fbbf24);
-   transform: scale(0.7);
-   transition: all 0.15s ease;
-  }
-  .jcustom-select-option.selected .jopt-check {
-   opacity: 1;
-   transform: scale(1);
-  }
+  .btn-icon:hover { color: var(--text); border-color: var(--accent); }
+  .btn-icon.del:hover { color: var(--bad); border-color: var(--bad); }
 
-  /* Form Inputs */
-  .jform-group {
-   margin-bottom: 16px;
+  /* Toast Notification */
+  .toast {
+   position: fixed;
+   left: 50%;
+   top: 18px;
+   transform: translate(-50%, -24px);
+   opacity: 0;
+   background: var(--text);
+   color: var(--bg);
+   padding: 9px 18px;
+   border-radius: 99px;
+   font: 600 13.5px var(--sans);
+   pointer-events: none;
+   transition: .22s cubic-bezier(.2,.7,.2,1);
+   z-index: 70;
+   box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+   text-align: center;
+   max-width: calc(100vw - 32px);
   }
-  .jform-group label {
-   display: block;
-   font-size: 13px;
-   font-weight: 600;
-   color: #cbd5e1;
-   margin-bottom: 6px;
+  .toast.on {
+   opacity: 1;
+   transform: translate(-50%, 0);
   }
-  .jinput, .jtextarea, .jselect {
-   width: 100%;
-   background: rgba(0,0,0,0.3);
-   border: 1px solid var(--border-subtle);
-   color: #fff;
-   padding: 10px 14px;
-   border-radius: 8px;
-   font-family: inherit;
-   font-size: 13.5px;
-  }
-  .jinput:focus, .jtextarea:focus, .jselect:focus {
-   outline: none;
-   border-color: var(--gold);
-  }
-  .jtextarea { resize: vertical; min-height: 70px; }
 
   /* Lightbox */
-  .jlightbox-modal {
+  .zoom {
    position: fixed;
    inset: 0;
-   background: rgba(4, 9, 18, 0.94);
-   backdrop-filter: blur(12px);
+   z-index: 60;
+   background: rgba(0, 0, 0, 0.88);
+   display: grid;
+   place-items: center;
+   padding: 20px;
+   backdrop-filter: blur(8px);
+   cursor: pointer;
+  }
+  .zoom img {
+   max-width: 90vw;
+   max-height: 84vh;
+   object-fit: contain;
+   border-radius: 12px;
+   box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .zoom b {
+   position: absolute;
+   bottom: 24px;
+   left: 0;
+   right: 0;
+   text-align: center;
+   color: #fff;
+   font: 600 15px var(--sans);
+   text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  }
+
+  /* Soundboard pad grid inside music sheet */
+  .sound-pads {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+   gap: 8px;
+   margin-top: 12px;
+  }
+  .sound-pad {
+   padding: 10px 8px;
+   border-radius: 12px;
+   border: 1px solid var(--line2);
+   background: var(--raised);
+   color: var(--text);
+   font: 600 12px Fredoka, var(--sans);
    display: flex;
    flex-direction: column;
    align-items: center;
-   justify-content: center;
-   padding: 20px;
-   z-index: 1000;
+   gap: 4px;
+   transition: all .15s ease;
   }
-  .jlightbox-modal[hidden] { display: none; }
-  .jlightbox-img {
-   max-width: 90vw;
-   max-height: 80vh;
-   border-radius: 12px;
-   box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-   border: 1px solid rgba(255,255,255,0.15);
-  }
-  .jlightbox-caption {
-   color: #cbd5e1;
-   font-size: 14px;
-   margin-top: 14px;
-   text-align: center;
-   max-width: 500px;
-  }
-
-  @media (max-width: 640px) {
-   .jwrap { padding: 12px 14px 40px; }
-   .jpodium-wrap { grid-template-columns: 1fr; }
-   .jpodium-col.gold { order: 1; }
-   .jpodium-col.silver { order: 2; }
-   .jpodium-col.bronze { order: 3; }
-   .jhero h1 { font-size: 30px; }
+  .sound-pad:hover {
+   background: var(--gold-soft);
+   border-color: var(--gold);
+   color: var(--gold-ink);
+   transform: translateY(-1px);
   }
  </style>
 </head>
 <body>
 
-<div class="jwrap">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+ <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+ <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+ <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+ <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+ <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></symbol>
+ <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+ <symbol id="i-crown" viewBox="0 0 24 24"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></symbol>
+ <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></symbol>
+ <symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol>
+ <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+ <symbol id="i-timer" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></symbol>
+ <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
+</svg>
 
- <!-- Top Header Navigation -->
- <header class="jtopbar">
-  <a href="./" class="jbtn-back">
-   <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
-   Reviewers
+<main>
+ <!-- Top Header -->
+ <div class="top">
+  <a class="back" href="./">
+   <svg class="i" width="16" height="16" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+   All courses
   </a>
-  <div class="jtop-actions">
-   <button class="jbtn-header" id="djToggleBtn" onclick="toggleDjModal()" title="Runway DJ & Soundboard">
-    <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-    DJ Booth
-   </button>
-   <button class="jbtn-header highlight" id="adminToggleBtn" onclick="toggleAdminModal()" title="Organizer Studio">
-    <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><line x1="4" x2="20" y1="21" y2="21"/><line x1="4" x2="20" y1="14" y2="14"/><line x1="4" x2="20" y1="7" y2="7"/><circle cx="8" cy="7" r="2"/><circle cx="16" cy="14" r="2"/><circle cx="10" cy="21" r="2"/></svg>
-    Studio
-   </button>
-  </div>
- </header>
+  <span class="sp"></span>
+  <button class="btn-top" id="musicToggleBtn" onclick="openMusicSheet()">
+   <svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-play"/></svg>
+   <span id="musicBtnLabel">Music</span>
+  </button>
+  <button class="btn-top" onclick="openManageSheet()">
+   <svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-settings"/></svg>
+   Manage
+  </button>
+ </div>
 
- <!-- Hero Showcase Section -->
- <section class="jhero">
-  <div class="jhero-subtag">Official Class Event · November 4, 2026</div>
-  <h1>APMed '33 <span class="gold">Jorts Battle</span></h1>
-  <p class="jhero-sub">The high-fashion denim runway & lookbook. Knee-length confidence, questionable styling, and raw hems competing for the ultimate title.</p>
-  <div class="jhero-pills">
-   <span class="jpill">
-    <svg class="v-icon" width="13" height="13" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg>
-    All Denim Cuts & Washes
-   </span>
-   <span class="jpill">
-    <svg class="v-icon" width="13" height="13" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-    Top 5 Final Runway
-   </span>
-   <span class="jpill live" id="livePill">Official Ballot Active</span>
-   <span class="jpill test" id="testPill" hidden>Organizer Preview Mode</span>
+ <!-- Hero Event Card -->
+ <section class="hero">
+  <div class="hero-poster-wrap" onclick="openLightbox('img/jorts-battle.jpg', 'APMed \'33 Jorts Battle Poster')">
+   <img src="img/jorts-battle.jpg" alt="Poster thumbnail">
+  </div>
+  <div class="hero-body">
+   <span class="hero-tagline">Official Class Event · Wednesday, Nov 4</span>
+   <h1>APMed '33 Jorts Battle</h1>
+   <p>Knee-length confidence only. Vote for the Top 5 finalists and official special awards.</p>
+   <div class="hero-meta">
+    <span class="state" id="phaseStatus">Preliminaries · Top 5 Voting</span>
+    <span class="state warn" id="previewStatus">Organizer Testing Mode</span>
+   </div>
   </div>
  </section>
 
- <!-- Testing Notice Banner (organizer only) -->
- <div class="jstatus-card" id="testBanner">
-  <div>
-   <b>Organizer Studio Preview:</b> Pre-event testing is active. You can add contestants, upload lookbook photos, add awards, and verify ballot scoring.
+ <!-- Segmented Navigation Tabs -->
+ <div class="tabs-wrap">
+  <div class="seg" role="tablist">
+   <button role="tab" id="tabbtn-contestants" aria-selected="true" onclick="setTab('contestants')">Contestants &amp; Ballot</button>
+   <button role="tab" id="tabbtn-results" aria-selected="false" onclick="setTab('results')">Live Standings</button>
+   <button role="tab" id="tabbtn-mechanics" aria-selected="false" onclick="setTab('mechanics')">Rules &amp; Awards</button>
   </div>
-  <button class="jbtn-header" onclick="openAdmin()" style="flex:none;">Open Studio</button>
  </div>
 
- <!-- Navigation Tabs Bar -->
- <nav class="jnav-tabs" role="tablist">
-  <button class="jtab active" data-tab="runway" onclick="setTab('runway')">
-   <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-   Runway Lookbook
-  </button>
-  <button class="jtab" data-tab="voting" onclick="setTab('voting')">
-   <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"/><path d="M22 19H2"/></svg>
-   Cast Ballot
-  </button>
-  <button class="jtab" data-tab="leaderboard" onclick="setTab('leaderboard')">
-   <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34c3.2-1.2 5.5-4.2 5.5-7.66V4H4.5v3c0 3.46 2.3 6.46 5.5 7.66Z"/></svg>
-   Live Podium
-  </button>
-  <button class="jtab" data-tab="mechanics" onclick="setTab('mechanics')">
-   <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
-   Rules & Awards
-  </button>
- </nav>
+ <!-- TAB 1: CONTESTANTS & BALLOT -->
+ <section id="tab-contestants">
+  <!-- Category Award Selection Chips -->
+  <div class="chips" id="awardChips"></div>
 
- <!-- TAB 1: RUNWAY LOOKBOOK GALLERY -->
- <main id="tab-runway" class="jtab-pane">
-  <div class="jgallery-head">
-   <h2 class="jgallery-title">
-    The Runway Collection
-    <span class="jgallery-badge" id="contestantCount">5 Looks</span>
+  <!-- Category info summary -->
+  <div class="award-lead">
+   <div class="award-lead-text">
+    <b id="curAwardTitle">Top 5 Finalists (Advance to Finale)</b>
+    <span id="curAwardDesc">Pick up to 3 contestants to advance to the Top 5 Final Runway.</span>
+   </div>
+   <div class="award-lead-status" id="curAwardPicks">0 of 3 picked</div>
+  </div>
+
+  <!-- Contestants Cards Grid -->
+  <div class="grid" id="contestantsGrid"></div>
+ </section>
+
+ <!-- TAB 2: LIVE STANDINGS -->
+ <section id="tab-results" hidden>
+  <div class="standings-head">
+   <h2 id="resultsAwardTitle">Top 5 Overall Standings</h2>
+   <p>Audience vote tallies for the current round</p>
+  </div>
+
+  <div class="chips" id="resultsChips"></div>
+  <div class="podium" id="podiumWrap"></div>
+  <div class="tally-list" id="tallyList"></div>
+ </section>
+
+ <!-- TAB 3: RULES & AWARDS -->
+ <section id="tab-mechanics" hidden>
+  <div class="section-card">
+   <h2>
+    <svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-file-text"/></svg>
+    Official Mechanics
    </h2>
-   <button class="jgallery-cta" onclick="setTab('voting')">
-    Open Ballot to Vote
-    <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-   </button>
-  </div>
-  <div class="jlookbook-grid" id="contestantsGrid"></div>
- </main>
-
- <!-- TAB 2: VOTING BALLOT -->
- <section id="tab-voting" class="jtab-pane" hidden>
-  <div class="jballot-head">
-   <div class="jballot-info">
-    <h3 id="ballotAwardTitle">Top 5 Overall (Road to JORTS GOD)</h3>
-    <p id="ballotAwardDesc">Select up to 3 contestants to advance to the Top 5 Final Runway.</p>
-    <div class="jballot-chips" id="ballotChips"></div>
-   </div>
-   <button class="jbtn-submit" id="submitVoteBtn" onclick="submitVotes()">
-    <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>
-    Submit Official Ballot
-   </button>
-  </div>
-
-  <div class="jawards-subnav" id="awardsNav"></div>
-  <div class="jlookbook-grid" id="ballotGrid" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));"></div>
- </section>
-
- <!-- TAB 3: LEADERBOARD & RESULTS -->
- <section id="tab-leaderboard" class="jtab-pane" hidden>
-  <div class="jrules-card" style="text-align:center;padding:24px 20px 20px;">
-   <h2 style="font-family:'Cabinet Grotesk',system-ui,sans-serif;font-size:24px;font-weight:900;color:var(--gold);margin:0 0 6px;">Catwalk Standings</h2>
-   <p style="margin:0;color:var(--text-sub);font-size:14px;">Live official tallies from the APMed '33 audience</p>
-  </div>
-
-  <div class="jpodium-wrap" id="podiumWrap"></div>
-  <div class="jawards-subnav" id="leaderboardAwardsNav" style="margin-bottom:16px;"></div>
-  <div class="jtally-list" id="tallyList"></div>
- </section>
-
- <!-- TAB 4: MECHANICS & RULES -->
- <section id="tab-mechanics" class="jtab-pane" hidden>
-  <div class="jrules-card">
-   <h3>
-    <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><circle cx="7" cy="7" r=".5" fill="currentColor"/></svg>
-    Official Event Mechanics
-   </h3>
-   <ul class="jrules-list">
-    <li><span class="v-bullet"></span><span><b>Open to all students:</b> Join the jorts agenda! Male and female are competing together in one unified catwalk showcase.</span></li>
-    <li><span class="v-bullet"></span><span><b>Dress Code:</b> Participants must arrive wearing their best jorts fit. Any style, any wash, any level of questionable fashion decisions.</span></li>
-    <li><span class="v-bullet"></span><span><b>Styling is up to you:</b> Layering, statement belts, chains, footwear, and creative accessories are strongly encouraged.</span></li>
-    <li><span class="v-bullet"></span><span><b>Runway Walk:</b> Every contestant gets their moment to walk, strike signature poses, and show off their fit.</span></li>
-    <li><span class="v-bullet"></span><span><b>Audience Voting:</b> Everyone gets to vote. Top 5 overall advance from the audience vote to the Final Runway round.</span></li>
-    <li><span class="v-bullet"></span><span><b>No need to buy new:</b> Work with what you have. DIY cutoffs and frayed hems are highly celebrated!</span></li>
+   <ul class="rule-list">
+    <li><span class="rule-dot"></span><span><b>Open to all students:</b> Join the jorts agenda! Male and female compete together in one unified catwalk.</span></li>
+    <li><span class="rule-dot"></span><span><b>Dress Code:</b> Participants must wear their best jorts fit. Any style, any wash, any level of questionable fashion decisions.</span></li>
+    <li><span class="rule-dot"></span><span><b>Styling is up to you:</b> Layering, statement belts, chains, shoes, and creative accessories are welcome.</span></li>
+    <li><span class="rule-dot"></span><span><b>Runway Walk:</b> Each participant gets their moment to walk, strike signature poses, and show off their fit.</span></li>
+    <li><span class="rule-dot"></span><span><b>Voting:</b> Everyone gets to vote based on overall look, creativity, styling, and confidence.</span></li>
+    <li><span class="rule-dot"></span><span><b>No need to buy new:</b> Work with what you have. DIY cutoffs and frayed hems are highly celebrated!</span></li>
    </ul>
+  </div>
 
-   <h3>
-    <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
-    Titles & Official Awards
-   </h3>
-   <div class="jaward-grid">
-    <!-- Grand Champion Award Hero -->
-    <div class="jaward-hero-card">
-     <div class="jaward-top">
-      <div class="jaward-crest gold">
-       <svg class="v-icon" width="22" height="22" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      </div>
-      <span class="jaward-badge supreme">SUPREME GRAND TITLE</span>
+  <div class="section-card">
+   <h2>
+    <svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-crown"/></svg>
+    Titles &amp; Official Awards
+   </h2>
+   <div class="awards-grid">
+    <div class="award-box champ">
+     <div class="award-box-top">
+      <h3 class="award-box-title">Best in Jorts (JORTS GOD / GODDESS)</h3>
+      <span class="award-tag">Supreme Title</span>
      </div>
-     <h4 class="jaward-title" style="margin-top:10px;">Best in Jorts (JORTS GOD / GODDESS)</h4>
-     <p class="jaward-desc">The supreme title of APMed '33. Crowned after the Top 5 Final Runway walk and harder Q&A questions, determined by overall style, catwalk confidence, and audience acclaim.</p>
-     <div class="jaward-meta">
-      <span class="jaward-chip gold">Final Runway Championship</span>
-      <span class="jaward-chip">Top 5 Finalists</span>
-      <span class="jaward-chip">Supreme Title</span>
-     </div>
+     <p>The highest title of APMed '33. Crowned after the Top 5 Final Runway walk and harder Q&amp;A round, determined by style, catwalk performance, and answers.</p>
     </div>
 
-    <!-- 1st Runner Up -->
-    <div class="jaward-box silver">
-     <div class="jaward-top">
-      <div class="jaward-crest silver">
-       <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
-      </div>
-      <span class="jaward-badge silver">SILVER DISTINCTION</span>
+    <div class="award-box">
+     <div class="award-box-top">
+      <h3 class="award-box-title">1st Runner Up (JORTS KING / QUEEN)</h3>
+      <span class="award-tag">Silver</span>
      </div>
-     <h4 class="jaward-title">1st Runner Up (JORTS KING / QUEEN)</h4>
-     <p class="jaward-desc">Silver distinction honoring exceptional catwalk poise, styling execution, and stage charisma in the final round.</p>
-     <div class="jaward-meta">
-      <span class="jaward-chip">Final Runway</span>
-      <span class="jaward-chip">Silver Rank</span>
-     </div>
+     <p>Second highest distinction honoring exceptional catwalk poise, styling execution, and stage charisma.</p>
     </div>
 
-    <!-- 2nd Runner Up -->
-    <div class="jaward-box bronze">
-     <div class="jaward-top">
-      <div class="jaward-crest bronze">
-       <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="12 7 13.5 10.5 17 11 14.5 13.5 15 17 12 15 9 17 9.5 13.5 7 11 10.5 10.5 12 7"/></svg>
-      </div>
-      <span class="jaward-badge bronze">BRONZE DISTINCTION</span>
+    <div class="award-box">
+     <div class="award-box-top">
+      <h3 class="award-box-title">2nd Runner Up (JORTS MASTER)</h3>
+      <span class="award-tag">Bronze</span>
      </div>
-     <h4 class="jaward-title">2nd Runner Up (JORTS MASTER)</h4>
-     <p class="jaward-desc">Bronze distinction for outstanding catwalk presence, denim creativity, and top-tier runway confidence.</p>
-     <div class="jaward-meta">
-      <span class="jaward-chip">Final Runway</span>
-      <span class="jaward-chip">Bronze Rank</span>
-     </div>
+     <p>Third highest distinction for outstanding stage presence and denim creativity.</p>
     </div>
 
-    <!-- Special Award: Best Runway Walk -->
-    <div class="jaward-box blue">
-     <div class="jaward-top">
-      <div class="jaward-crest blue">
-       <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      </div>
-      <span class="jaward-badge blue">STRIDE & PRESENCE</span>
+    <div class="award-box">
+     <div class="award-box-top">
+      <h3 class="award-box-title">Best Runway Walk</h3>
+      <span class="award-tag">Audience Vote</span>
      </div>
-     <h4 class="jaward-title">Best Runway Walk</h4>
-     <p class="jaward-desc">Awarded to the model with the best strut, posture, rhythm, model turn, and unmistakable catwalk poise.</p>
-     <div class="jaward-meta">
-      <span class="jaward-chip">Audience Vote</span>
-     </div>
+     <p>Awarded to the model with the best strut, rhythm, model turn, and catwalk confidence.</p>
     </div>
 
-    <!-- Special Award: Best in First Q&A -->
-    <div class="jaward-box purple">
-     <div class="jaward-top">
-      <div class="jaward-crest purple">
-       <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-      </div>
-      <span class="jaward-badge purple">WIT & CHARISMA</span>
+    <div class="award-box">
+     <div class="award-box-top">
+      <h3 class="award-box-title">Best in First Q&amp;A</h3>
+      <span class="award-tag">Audience Vote</span>
      </div>
-     <h4 class="jaward-title">Best in First Q&amp;A</h4>
-     <p class="jaward-desc">Quick wit, humor, audience connection, and microphone composure during the opening question round.</p>
-     <div class="jaward-meta">
-      <span class="jaward-chip">Audience Vote</span>
-     </div>
+     <p>Quick wit, humor, audience connection, and microphone composure during the opening question round.</p>
     </div>
 
-    <!-- Special Award: Best Styled -->
-    <div class="jaward-box emerald">
-     <div class="jaward-top">
-      <div class="jaward-crest emerald">
-       <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-      </div>
-      <span class="jaward-badge emerald">JUDGES' CHOICE</span>
+    <div class="award-box">
+     <div class="award-box-top">
+      <h3 class="award-box-title">Best Styled</h3>
+      <span class="award-tag">Judges' Choice</span>
      </div>
-     <h4 class="jaward-title">Best Styled (Judges' Choice)</h4>
-     <p class="jaward-desc">Curated directly by judges for superior denim execution, styling coordination, accessories, and cut aesthetics.</p>
-     <div class="jaward-meta">
-      <span class="jaward-chip">Executive Jury</span>
-     </div>
+     <p>Decided directly by the judges for superior denim execution, styling coordination, and accessories.</p>
     </div>
    </div>
   </div>
  </section>
+</main>
 
-</div>
-
-<!-- Floating Runway DJ Player Dock -->
-<div class="jdj-dock" id="djDock">
- <div class="jvinyl" id="djDisc" title="Vinyl DJ Turntable">
-  <svg class="v-icon" width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
- </div>
- <div class="jdj-equalizer" id="djEqualizer">
-  <span class="jbar bar-1"></span>
-  <span class="jbar bar-2"></span>
-  <span class="jbar bar-3"></span>
-  <span class="jbar bar-4"></span>
- </div>
- <div class="jdj-dock-info">
-  <b id="djTrackName">Official Runway Anthem</b>
-  <span id="djTrackStatus">BEST FASHION SHOW MUSIC · Ready</span>
- </div>
- <button class="jdj-dock-btn" id="djPlayBtn" onclick="toggleDjPlay()" title="Play / Pause Runway Beat">
-  <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
- </button>
- <button class="jdj-dock-btn" onclick="nextDjTrack()" title="Next Runway Track">
-  <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
- </button>
- <button class="jdj-dock-btn" onclick="openDjModal()" title="Soundboard & DJ Controls">
-  <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
- </button>
-</div>
-
-<!-- Modal: DJ Booth & Soundboard -->
-<div class="jmodal" id="djModal" hidden onclick="if(event.target===this)closeDjModal()">
- <div class="jbox" style="max-width:480px;">
-  <div class="jmhead">
-   <div style="display:flex;align-items:center;gap:10px;">
-    <div class="jvinyl" style="width:28px;height:28px;">
-     <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-    </div>
-    <h2>Runway DJ & Soundboard</h2>
-   </div>
-   <button class="jmx" onclick="closeDjModal()">
-    <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-   </button>
+<!-- Sticky Bottom Ballot Submission Bar -->
+<div class="bar" id="ballotBar" hidden>
+ <div class="in">
+  <div class="tot">
+   <span id="barAwardName">Top 5 Finalists</span>
+   <b id="barPickCount">1 of 3 selected</b>
   </div>
-
-  <!-- Music Track Swapping (Custom Luxury Dropdown) -->
-  <div class="jform-group">
-   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-    <label style="margin:0;font-size:13px;font-weight:700;color:#cbd5e1;">Runway Music Track</label>
-    <span id="currentBpmBadge" style="font-size:11px;color:#f59e0b;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">Official Audio</span>
-   </div>
-   <div class="jcustom-select" id="trackDropdown" data-value="anthem">
-    <button type="button" class="jcustom-select-trigger" onclick="toggleCustomDropdown('trackDropdown')">
-     <span class="jcustom-select-label">
-      <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
-      <b id="trackDropdownSelectedText">Official Runway Anthem (BEST FASHION SHOW MUSIC)</b>
-     </span>
-     <svg class="v-icon jchevron" width="16" height="16" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="jcustom-select-menu">
-     <div class="jcustom-select-option selected" data-val="anthem" onclick="selectTrackOption('anthem')">
-      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></div>
-      <div class="jopt-content">
-       <span class="jopt-title">Official Runway Anthem</span>
-       <span class="jopt-sub">BEST FASHION SHOW MUSIC · High-Energy Continuous Mix</span>
-      </div>
-      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-     </div>
-     <div class="jcustom-select-option" data-val="euro_synth" onclick="selectTrackOption('euro_synth')">
-      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-      <div class="jopt-content">
-       <span class="jopt-title">Euro-Runway Model Strut</span>
-       <span class="jopt-sub">124 BPM Catwalk Deep House · Live Web Audio Synth</span>
-      </div>
-      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-     </div>
-     <div class="jcustom-select-option" data-val="vogue_synth" onclick="selectTrackOption('vogue_synth')">
-      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
-      <div class="jopt-content">
-       <span class="jopt-title">Vogue Club Minimal</span>
-       <span class="jopt-sub">128 BPM Tech-House Groove · Live Web Audio Synth</span>
-      </div>
-      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-     </div>
-     <div class="jcustom-select-option" data-val="custom" onclick="selectTrackOption('custom')">
-      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-      <div class="jopt-content">
-       <span class="jopt-title">Load Custom Local MP3...</span>
-       <span class="jopt-sub">Select any audio file stored on your phone or computer</span>
-      </div>
-      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-     </div>
-    </div>
-    <input type="hidden" id="djTrackSelect" value="anthem">
-   </div>
-  </div>
-
-  <!-- Master Volume Control -->
-  <div class="jform-group" style="margin-top:14px;background:rgba(0,0,0,0.22);padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
-   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-    <label style="margin:0;display:flex;align-items:center;gap:7px;font-size:12.5px;color:#cbd5e1;">
-     <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-     <span>Master Runway Volume</span>
-    </label>
-    <span id="volLabel" style="font-size:12px;color:#f59e0b;font-weight:700;">80%</span>
-   </div>
-   <input type="range" min="0" max="100" value="80" class="jrange" id="djVolSlider" oninput="setDjVolume(this.value)">
-  </div>
-
-  <!-- Quick Play/Pause inside modal -->
-  <div style="margin-bottom:18px;">
-   <button type="button" class="jbtn-submit" id="modalPlayBtn" style="width:100%;justify-content:center;gap:10px;" onclick="toggleDjPlay()">
-    <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-    <span id="modalPlayLabel">Play Runway Track</span>
-   </button>
-  </div>
-
-  <!-- Distinct SFX Soundboard -->
-  <div style="margin-bottom:8px;">
-   <label style="display:block;font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:8px;">Live Stage Soundboard (Distinct Effects)</label>
-   <div class="jsound-grid">
-    <button class="jpad-btn" onclick="playSfx('camera')" title="Mechanical DSLR Shutter Burst + Flash">
-     <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-     Camera Flash
-    </button>
-    <button class="jpad-btn" onclick="playSfx('airhorn')" title="Triple Stadium DJ Airhorn Blasts">
-     <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-     Stadium Airhorn
-    </button>
-    <button class="jpad-btn" onclick="playSfx('cheer')" title="Real Rushing Stadium Cheer & Applause">
-     <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-     Crowd Cheer
-    </button>
-    <button class="jpad-btn" onclick="playSfx('drumroll')" title="Snare Roll Crescendo + Rimshot Crash">
-     <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><ellipse cx="12" cy="8" rx="9" ry="3"/><path d="M3 8v8c0 1.66 4 3 9 3s9-1.34 9-3V8"/></svg>
-     Snare Drumroll
-    </button>
-    <button class="jpad-btn" onclick="playSfx('fanfare')" title="Triumphant Brass Trumpet March Melody">
-     <svg class="v-icon" width="20" height="20" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-     Victory Fanfare
-    </button>
-   </div>
-  </div>
-
-  <input type="file" id="customAudioFile" accept="audio/*" style="display:none;" onchange="loadCustomTrack(event)">
+  <button class="btn primary" id="barSubmitBtn" onclick="submitCurrentBallot()">Submit ballot</button>
  </div>
 </div>
 
-<!-- Modal: Organizer Studio -->
-<div class="jmodal" id="adminModal" hidden onclick="if(event.target===this)closeAdmin()">
- <div class="jbox" style="max-width:540px;">
-  <div class="jmhead">
-   <h2>Organizer Studio</h2>
-   <button class="jmx" onclick="closeAdmin()">
-    <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-   </button>
-  </div>
+<!-- Modal Sheet: Organizer Studio -->
+<div class="modal" id="manageModal" hidden onclick="if(event.target===this)closeManageSheet()">
+ <div class="sheet">
+  <h3>
+   Organizer Studio
+   <button class="x" onclick="closeManageSheet()" aria-label="Close">✕</button>
+  </h3>
 
-  <div style="display:flex;gap:10px;margin-bottom:20px;">
-   <button class="jbtn-header highlight" style="flex:1;" onclick="openAddContestantModal()">
-    <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-    Add Contestant
-   </button>
-   <button class="jbtn-header" style="flex:1;" onclick="openAddAwardModal()">
-    <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
-    Add New Award
-   </button>
-  </div>
+  <label class="f">
+   Competition Phase
+   <select id="phaseSelect" onchange="onPhaseChange(this.value)">
+    <option value="prelim">Auditions &amp; Preliminaries (Top 5 Advance)</option>
+    <option value="final">Final Runway (Top 5 Finalists · JORTS GOD/GODDESS)</option>
+   </select>
+  </label>
 
-  <div class="jform-group">
-   <label style="font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:8px;display:block;">Competition Phase</label>
-   <div class="jcustom-select" id="phaseDropdown" data-value="prelim">
-    <button type="button" class="jcustom-select-trigger" onclick="toggleCustomDropdown('phaseDropdown')" aria-haspopup="listbox">
-     <span class="jcustom-select-label">
-      <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      <b id="phaseDropdownSelectedText">Auditions &amp; Preliminaries (Top 5 Advance)</b>
-     </span>
-     <svg class="v-icon jchevron" width="16" height="16" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="jcustom-select-menu" role="listbox">
-     <div class="jcustom-select-option selected" data-val="prelim" onclick="selectDropdownOption('phaseDropdown', 'prelim', 'Auditions &amp; Preliminaries (Top 5 Advance)', setCompetitionPhase)">
-      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-      <div class="jopt-content">
-       <span class="jopt-title">Auditions &amp; Preliminaries</span>
-       <span class="jopt-sub">Audience gets 3 votes for Top 5 overall + category picks</span>
-      </div>
-      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-     </div>
-     <div class="jcustom-select-option" data-val="final" onclick="selectDropdownOption('phaseDropdown', 'final', 'Final Runway (Top 5 Q&amp;A · JORTS GOD/GODDESS)', setCompetitionPhase)">
-      <div class="jopt-icon"><svg class="v-icon" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg></div>
-      <div class="jopt-content">
-       <span class="jopt-title">Final Runway Championship</span>
-       <span class="jopt-sub">Top 5 finalists walk with harder Q&amp;A to crown JORTS GOD</span>
-      </div>
-      <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-     </div>
-    </div>
-    <input type="hidden" id="phaseSelect" value="prelim">
-   </div>
+  <!-- Contestants Management -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;">
+   <label class="f" style="margin:0;">Contestants (<span id="manageCount">0</span>)</label>
+   <button class="btn sm" onclick="openAddContestantSheet()" style="padding:4px 10px;font-size:12.5px;">+ Add model</button>
   </div>
+  <div class="manage-list" id="manageContestantsList"></div>
 
-  <div class="jform-group">
-   <label>Reset / Testing</label>
-   <button type="button" class="jbtn-header" style="width:100%;color:#ef4444;border-color:rgba(239,68,68,0.3);" onclick="clearAllTestVotes()">
-    Clear All Test Votes
-   </button>
+  <!-- Award Categories Management -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;">
+   <label class="f" style="margin:0;">Award Categories</label>
+   <button class="btn sm" onclick="openAddAwardSheet()" style="padding:4px 10px;font-size:12.5px;">+ Add award</button>
+  </div>
+  <div class="manage-list" id="manageAwardsList"></div>
+
+  <div style="margin-top:20px;border-top:1px solid var(--line);padding-top:14px;">
+   <button class="btn danger wide" onclick="clearAllVotes()">Clear All Test Votes</button>
   </div>
  </div>
 </div>
 
-<!-- Modal: Add / Edit Contestant -->
-<div class="jmodal" id="contestantModal" hidden onclick="if(event.target===this)closeContestantModal()">
- <div class="jbox" style="max-width:460px;">
-  <div class="jmhead">
-   <h2 id="contestantModalTitle">Add Contestant</h2>
-   <button class="jmx" onclick="closeContestantModal()">
-    <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-   </button>
-  </div>
-  <form id="contestantForm" onsubmit="event.preventDefault();saveContestant();">
+<!-- Modal Sheet: Add/Edit Contestant -->
+<div class="modal" id="editContestantModal" hidden onclick="if(event.target===this)closeEditContestant()">
+ <div class="sheet">
+  <h3>
+   <span id="cModalTitle">Add Contestant</span>
+   <button class="x" onclick="closeEditContestant()" aria-label="Close">✕</button>
+  </h3>
+  <form onsubmit="event.preventDefault();saveContestant();">
    <input type="hidden" id="cId">
-   <div class="jform-group">
-    <label>Model / Student Name *</label>
-    <input type="text" class="jinput" id="cName" placeholder="e.g. Gabriel Santos" required>
+   <label class="f">
+    Model / Student Name *
+    <input type="text" id="cName" placeholder="e.g. Gabriel Santos" required>
+   </label>
+   <label class="f">
+    Runway Look #
+    <input type="number" id="cNumber" value="1" min="1" max="99">
+   </label>
+   <label class="f">
+    Lookbook Photo
+    <input type="file" id="cFile" accept="image/*" onchange="handlePhotoUpload(event)">
+   </label>
+   <label class="f">
+    Or Image URL
+    <input type="url" id="cUrl" placeholder="https://...">
+   </label>
+   <div id="cPreviewWrap" style="margin-top:10px;text-align:center;" hidden>
+    <img id="cPreview" src="" alt="Preview" style="max-height:100px;border-radius:10px;border:1px solid var(--line2);">
    </div>
-   <div class="jform-group">
-    <label>Runway Number (#)</label>
-    <input type="number" class="jinput" id="cNumber" value="1" min="1" max="99">
+   <label class="f" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:14px;">
+    <input type="checkbox" id="cFinalist">
+    <span>Mark as Top 5 Finalist</span>
+   </label>
+   <div class="row-actions">
+    <button type="submit" class="btn primary wide">Save Contestant</button>
    </div>
-   <div class="jform-group">
-    <label>Upload Lookbook Photo</label>
-    <input type="file" id="cPhotoFile" accept="image/*" class="jinput" onchange="handlePhotoUpload(event)">
-    <div style="margin-top:6px;">
-     <input type="url" class="jinput" id="cPhotoUrl" placeholder="Or paste image URL...">
-    </div>
-    <div id="cPhotoPreviewWrap" style="margin-top:8px;text-align:center;" hidden>
-     <img id="cPhotoPreview" src="" alt="Preview" style="max-height:120px;border-radius:10px;border:1px solid var(--gold);">
-    </div>
-   </div>
-   <div class="jform-group">
-    <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-     <input type="checkbox" id="cTop5"> Mark as Top 5 Finalist
-    </label>
-   </div>
-   <button type="submit" class="jbtn-submit" style="width:100%;justify-content:center;">Save Model Look</button>
   </form>
  </div>
 </div>
 
-<!-- Modal: Add / Edit Award -->
-<div class="jmodal" id="awardModal" hidden onclick="if(event.target===this)closeAwardModal()">
- <div class="jbox" style="max-width:440px;">
-  <div class="jmhead">
-   <h2 id="awardModalTitle">Add New Award</h2>
-   <button class="jmx" onclick="closeAwardModal()">
-    <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+<!-- Modal Sheet: Add/Edit Award -->
+<div class="modal" id="editAwardModal" hidden onclick="if(event.target===this)closeEditAward()">
+ <div class="sheet">
+  <h3>
+   <span id="aModalTitle">Add New Award</span>
+   <button class="x" onclick="closeEditAward()" aria-label="Close">✕</button>
+  </h3>
+  <form onsubmit="event.preventDefault();saveAward();">
+   <input type="hidden" id="aId">
+   <label class="f">
+    Award Title *
+    <input type="text" id="aTitle" placeholder="e.g. Most Unhinged Raw Hem" required>
+   </label>
+   <label class="f">
+    Description / Criteria
+    <textarea id="aDesc" placeholder="e.g. Fit with the most daring cut and creative styling."></textarea>
+   </label>
+   <label class="f">
+    Picks Allowed Per Voter
+    <select id="aVotes">
+     <option value="1">1 pick per voter (Standard award)</option>
+     <option value="3">3 picks per voter (Top 5 audition style)</option>
+     <option value="2">2 picks per voter</option>
+    </select>
+   </label>
+   <div class="row-actions">
+    <button type="submit" class="btn primary wide">Save Award</button>
+   </div>
+  </form>
+ </div>
+</div>
+
+<!-- Modal Sheet: Music & Soundboard -->
+<div class="modal" id="musicModal" hidden onclick="if(event.target===this)closeMusicSheet()">
+ <div class="sheet">
+  <h3>
+   Runway Music &amp; DJ
+   <button class="x" onclick="closeMusicSheet()" aria-label="Close">✕</button>
+  </h3>
+
+  <label class="f">
+   Runway Track
+   <select id="musicTrackSelect" onchange="switchMusicTrack(this.value)">
+    <option value="anthem">Official Runway Anthem (BEST FASHION SHOW MUSIC)</option>
+    <option value="euro">Euro-Runway Model Strut (124 BPM Synth)</option>
+    <option value="vogue">Vogue Club Minimal (128 BPM Synth)</option>
+    <option value="custom">Load Custom Local MP3...</option>
+   </select>
+  </label>
+  <input type="file" id="customAudioFile" accept="audio/*" style="display:none;" onchange="loadCustomMp3(event)">
+
+  <div style="margin-top:14px;display:flex;align-items:center;gap:10px;">
+   <button class="btn primary wide" id="sheetPlayBtn" onclick="togglePlayMusic()">
+    <svg class="i" width="16" height="16" aria-hidden="true"><use href="#i-play"/></svg>
+    <span id="sheetPlayLabel">Play Runway Track</span>
    </button>
   </div>
-  <form id="awardForm" onsubmit="event.preventDefault();saveAward();">
-   <input type="hidden" id="awId">
-   <div class="jform-group">
-    <label>Award Title *</label>
-    <input type="text" class="jinput" id="awTitle" placeholder="e.g. Most Unhinged Raw Hem" required>
-   </div>
-   <div class="jform-group">
-    <label>Description / Voting Instructions</label>
-    <textarea class="jtextarea" id="awDesc" placeholder="e.g. Pick the fit with the most creative frayed fringes."></textarea>
-   </div>
-   <div class="jform-group">
-    <label style="font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:6px;display:block;">Votes Allowed Per Voter</label>
-    <div class="jcustom-select" id="awVotesDropdown" data-value="1">
-     <button type="button" class="jcustom-select-trigger" onclick="toggleCustomDropdown('awVotesDropdown')">
-      <span class="jcustom-select-label">
-       <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-       <b id="awVotesDropdownSelectedText">1 vote per student (Standard Award)</b>
-      </span>
-      <svg class="v-icon jchevron" width="16" height="16" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-     </button>
-     <div class="jcustom-select-menu">
-      <div class="jcustom-select-option selected" data-val="1" onclick="selectDropdownOption('awVotesDropdown', '1', '1 vote per student (Standard Award)')">
-       <div class="jopt-content"><span class="jopt-title">1 Vote per Student</span><span class="jopt-sub">Standard single-winner special award</span></div>
-       <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div class="jcustom-select-option" data-val="3" onclick="selectDropdownOption('awVotesDropdown', '3', '3 votes per student (Top 5 Selection)')">
-       <div class="jopt-content"><span class="jopt-title">3 Votes per Student</span><span class="jopt-sub">Allows selecting multiple contestants (Top 5 audition style)</span></div>
-       <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div class="jcustom-select-option" data-val="2" onclick="selectDropdownOption('awVotesDropdown', '2', '2 votes per student (Duo selection)')">
-       <div class="jopt-content"><span class="jopt-title">2 Votes per Student</span><span class="jopt-sub">Pair or duo voting</span></div>
-       <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-     </div>
-     <input type="hidden" id="awVotes" value="1">
-    </div>
-   </div>
 
-   <div class="jform-group">
-    <label style="font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:6px;display:block;">Award Phase</label>
-    <div class="jcustom-select" id="awPhaseDropdown" data-value="prelim">
-     <button type="button" class="jcustom-select-trigger" onclick="toggleCustomDropdown('awPhaseDropdown')">
-      <span class="jcustom-select-label">
-       <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-       <b id="awPhaseDropdownSelectedText">Preliminary Phase</b>
-      </span>
-      <svg class="v-icon jchevron" width="16" height="16" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-     </button>
-     <div class="jcustom-select-menu">
-      <div class="jcustom-select-option selected" data-val="prelim" onclick="selectDropdownOption('awPhaseDropdown', 'prelim', 'Preliminary Phase')">
-       <div class="jopt-content"><span class="jopt-title">Preliminary Phase</span><span class="jopt-sub">Voted during open runway walk</span></div>
-       <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div class="jcustom-select-option" data-val="final" onclick="selectDropdownOption('awPhaseDropdown', 'final', 'Final Championship Phase')">
-       <div class="jopt-content"><span class="jopt-title">Final Championship Phase</span><span class="jopt-sub">Voted during final Top 5 round</span></div>
-       <svg class="v-icon jopt-check" width="16" height="16" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-     </div>
-     <input type="hidden" id="awPhase" value="prelim">
-    </div>
-   </div>
-   <button type="submit" class="jbtn-submit" style="width:100%;justify-content:center;">Save Category</button>
-  </form>
+  <label class="f" style="margin-top:14px;">
+   Master Volume (<span id="volValText">80%</span>)
+   <input type="range" min="0" max="100" value="80" oninput="setMusicVolume(this.value)">
+  </label>
+
+  <label class="f" style="margin-top:16px;">Catwalk Soundboard</label>
+  <div class="sound-pads">
+   <button class="sound-pad" onclick="playSfx('camera')">
+    <svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-sparkles"/></svg>
+    Camera Flash
+   </button>
+   <button class="sound-pad" onclick="playSfx('airhorn')">
+    <svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-megaphone"/></svg>
+    Airhorn
+   </button>
+   <button class="sound-pad" onclick="playSfx('cheer')">
+    <svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-users"/></svg>
+    Crowd Cheer
+   </button>
+   <button class="sound-pad" onclick="playSfx('drumroll')">
+    <svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-timer"/></svg>
+    Drumroll
+   </button>
+   <button class="sound-pad" onclick="playSfx('fanfare')">
+    <svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-trophy"/></svg>
+    Fanfare
+   </button>
+  </div>
  </div>
 </div>
 
-<!-- Lightbox Modal for Photo Zoom -->
-<div class="jlightbox-modal" id="lightboxModal" hidden onclick="closeLightbox()">
- <button class="jmx" style="position:absolute;top:20px;right:20px;z-index:1001;" onclick="closeLightbox()">
-  <svg class="v-icon" width="18" height="18" viewBox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
- </button>
- <img id="lightboxImg" class="jlightbox-img" src="" alt="Enlarged Fit">
- <p id="lightboxCaption" class="jlightbox-caption"></p>
+<!-- Image Lightbox Zoom -->
+<div class="zoom" id="lightbox" hidden onclick="closeLightbox()">
+ <img id="lightboxImg" src="" alt="Enlarged preview">
+ <b id="lightboxCaption"></b>
 </div>
 
-<!-- Application Logic -->
-<script src="auth.js"></script>
-<script>
-const CLOUD = {
- url: "https://olvjhdxmdrtuktfxgjsu.supabase.co",
- key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdmpoZHhtZHJ0dWt0ZnhnanN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk0MzY2NTQsImV4cCI6MjA0NTAxMjY1NH0.lTz9_6Q5xK-72DszkR4Hh1z_3K4M3i_mG7gC96YnQyY"
-};
+<!-- Toast notification banner -->
+<div class="toast" id="toast" role="status"></div>
 
-const STATE = {
- settings: { phase: 'prelim', allow_voting: true, is_testing: true },
- current_award: 'top5',
+<!-- Background audio elements -->
+<audio id="anthemAudio" preload="auto" loop src="audio/runway-anthem.mp3"></audio>
+
+<script>
+/* -------------------------------------------------------------------------
+   APMed '33 Jorts Battle — Core State & Storage (v2)
+   ------------------------------------------------------------------------- */
+const STORAGE_KEY = 'jorts_state_v2';
+
+const DEFAULT_STATE = {
+ phase: 'prelim', // 'prelim' | 'final'
+ currentAward: 'top5',
  awards: [
-  { id: 'top5', title: 'Top 5 Overall (Advance to Finale)', desc: 'Audience picks 3 favorites to advance to the Top 5 Final Runway.', votes_allowed: 3, phase: 'prelim' },
-  { id: 'qna', title: 'Best in First Q&A', desc: 'Poise, wit, humor, and microphone composure.', votes_allowed: 1, phase: 'prelim' },
-  { id: 'walk', title: 'Best Runway Walk', desc: 'Catwalk presence, stride, turns, and signature poses.', votes_allowed: 1, phase: 'prelim' },
-  { id: 'styled', title: 'Best Styled', desc: 'Creative denim coordination, accessories, and cut execution.', votes_allowed: 1, phase: 'prelim' }
+  { id: 'top5', title: 'Top 5 Finalists', desc: 'Pick up to 3 contestants to advance to the Top 5 Final Runway.', maxVotes: 3 },
+  { id: 'walk', title: 'Best Runway Walk', desc: 'Catwalk presence, rhythm, posture, and signature poses.', maxVotes: 1 },
+  { id: 'qna', title: 'Best in First Q&A', desc: 'Quick wit, humor, audience connection, and microphone composure.', maxVotes: 1 },
+  { id: 'styled', title: 'Best Styled', desc: 'Curated directly by judges for styling, accessories, and cut execution.', maxVotes: 1 }
  ],
  contestants: [
   { id: 1, name: "Gabriel Santos", number: 1, photo_url: "img/jorts-battle.jpg", is_top5: true },
@@ -2113,542 +1343,608 @@ const STATE = {
   { id: 4, name: "Sophia Diaz", number: 4, photo_url: "", is_top5: false },
   { id: 5, name: "Lucas Chen", number: 5, photo_url: "", is_top5: false }
  ],
- my_votes: {},
- scores: {},
- voter_id: ''
+ myVotes: {}, // awardId: [contestantId, ...]
+ scores: {}   // awardId: { contestantId: voteCount, ... }
 };
+
+let STATE = JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+function loadState() {
+ try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+   const parsed = JSON.parse(saved);
+   STATE = Object.assign({}, DEFAULT_STATE, parsed);
+   if (!Array.isArray(STATE.contestants) || !STATE.contestants.length) {
+    STATE.contestants = JSON.parse(JSON.stringify(DEFAULT_STATE.contestants));
+   }
+   if (!Array.isArray(STATE.awards) || !STATE.awards.length) {
+    STATE.awards = JSON.parse(JSON.stringify(DEFAULT_STATE.awards));
+   }
+  }
+ } catch (e) {
+  STATE = JSON.parse(JSON.stringify(DEFAULT_STATE));
+ }
+}
+
+function saveState() {
+ try {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+ } catch (e) {}
+}
+
+function toast(msg, ms) {
+ const t = document.getElementById('toast');
+ if (!t) return;
+ t.textContent = msg;
+ t.classList.add('on');
+ clearTimeout(toast.timer);
+ toast.timer = setTimeout(() => t.classList.remove('on'), ms || 2400);
+}
 
 function esc(s) {
  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function initVoterId() {
- let vid = localStorage.getItem('jorts_voter_uuid');
- if (!vid) {
-  vid = 'voter_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-  localStorage.setItem('jorts_voter_uuid', vid);
- }
- STATE.voter_id = vid;
-}
-
-function loadLocalState() {
- try {
-  const v = localStorage.getItem('jorts_my_votes');
-  if (v) STATE.my_votes = JSON.parse(v);
- } catch(e){}
- try {
-  const p = localStorage.getItem('jorts_phase');
-  if (p) {
-   STATE.settings.phase = p;
-   const label = p === 'final' ? 'Final Runway (Top 5 Q&A · JORTS GOD/GODDESS)' : 'Auditions & Preliminaries (Top 5 Advance)';
-   selectDropdownOption('phaseDropdown', p, label);
-  }
- } catch(e){}
-}
-
-function saveLocalVotes() {
- try {
-  localStorage.setItem('jorts_my_votes', JSON.stringify(STATE.my_votes));
- } catch(e){}
-}
+/* -------------------------------------------------------------------------
+   Tab Navigation & Rendering
+   ------------------------------------------------------------------------- */
+let currentTab = 'contestants';
 
 function setTab(tabId) {
- document.querySelectorAll('.jtab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
- document.querySelectorAll('.jtab-pane').forEach(p => p.hidden = (p.id !== 'tab-' + tabId));
- if (tabId === 'voting') renderBallot();
- if (tabId === 'leaderboard') renderLeaderboard();
+ currentTab = tabId;
+ document.querySelectorAll('.seg button').forEach(b => {
+  b.setAttribute('aria-selected', b.id === 'tabbtn-' + tabId);
+ });
+ document.getElementById('tab-contestants').hidden = (tabId !== 'contestants');
+ document.getElementById('tab-results').hidden = (tabId !== 'results');
+ document.getElementById('tab-mechanics').hidden = (tabId !== 'mechanics');
+
+ if (tabId === 'contestants') {
+  renderContestantsTab();
+ } else if (tabId === 'results') {
+  renderResultsTab();
+ }
+ updateBallotBar();
 }
 
-/* RENDER 1: RUNWAY LOOKBOOK GALLERY */
-function renderLookbookGallery() {
- const grid = document.getElementById('contestantsGrid');
- const count = document.getElementById('contestantCount');
- count.textContent = `${STATE.contestants.length} Look${STATE.contestants.length === 1 ? '' : 's'}`;
+function selectAward(awardId) {
+ STATE.currentAward = awardId;
+ saveState();
+ renderContestantsTab();
+ updateBallotBar();
+}
 
+function renderContestantsTab() {
+ const curAward = STATE.awards.find(a => a.id === STATE.currentAward) || STATE.awards[0];
+ STATE.currentAward = curAward.id;
+
+ // Render award selection chips
+ const chipsWrap = document.getElementById('awardChips');
+ chipsWrap.innerHTML = STATE.awards.map(a => `
+  <button class="chip" aria-pressed="${a.id === curAward.id}" onclick="selectAward('${a.id}')">
+   ${esc(a.title)}
+  </button>
+ `).join('');
+
+ // Render lead text
+ document.getElementById('curAwardTitle').textContent = curAward.title;
+ document.getElementById('curAwardDesc').textContent = curAward.desc;
+
+ const myPicks = STATE.myVotes[curAward.id] || [];
+ document.getElementById('curAwardPicks').textContent = `${myPicks.length} of ${curAward.maxVotes} picked`;
+
+ // Render contestants grid
+ const grid = document.getElementById('contestantsGrid');
  if (!STATE.contestants.length) {
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 20px;color:#64748b;background:var(--denim-card);border-radius:16px;">No runway looks added yet. Open Organizer Studio to add the first model!</div>';
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--mute);">No contestants added yet. Tap Manage to add contestants.</div>';
   return;
  }
 
  grid.innerHTML = STATE.contestants.map(c => {
-  const isVoted = isContestantSelected(STATE.current_award, c.id);
+  const isPicked = myPicks.includes(c.id);
   const photoHtml = c.photo_url
-   ? `<img src="${c.photo_url}" class="jlook-img" alt="${esc(c.name)}" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} — Look #${c.number}')">`
-   : `<div class="jlook-ph" onclick="openLightbox('img/jorts-battle.jpg', 'Fitting in Progress — ${esc(c.name)}')">
-       <div class="jlook-ph-icon">
-        <svg class="v-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-       </div>
-       <span class="jlook-ph-title">Fitting in Progress</span>
-       <span class="jlook-ph-sub">Official runway look photo coming soon</span>
+   ? `<img src="${c.photo_url}" alt="${esc(c.name)}" loading="lazy" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} · Look #${c.number}')">`
+   : `<div class="pic-placeholder" onclick="openLightbox('img/jorts-battle.jpg', 'APMed \'33 Jorts Battle')">
+       <div class="ticket-num">#${String(c.number).padStart(2, '0')}</div>
+       <div class="ticket-label">Runway Model</div>
+       <div class="ticket-hint">Photo coming soon</div>
       </div>`;
 
   return `
-   <article class="jlook-card">
-    <div class="jlook-photo-wrap">
-     <span class="jlook-num">LOOK #${String(c.number).padStart(2, '0')}</span>
-     ${c.is_top5 ? '<span class="jlook-finalist"><svg class="v-icon" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Finalist</span>' : ''}
+   <article class="it ${isPicked ? 'picked' : ''}">
+    <div class="pic">
+     <span class="look-badge">LOOK #${String(c.number).padStart(2, '0')}</span>
+     ${c.is_top5 ? '<span class="finalist-tag">Finalist</span>' : ''}
      ${photoHtml}
-     ${c.photo_url ? `
-     <div class="jlook-zoom-overlay" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} — Look #${c.number}')">
-      <span class="jzoom-pill">
-       <svg class="v-icon" width="12" height="12" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
-       View Full Look
-      </span>
-     </div>` : ''}
     </div>
-    <div class="jlook-info">
-     <h3 class="jlook-name">${esc(c.name)}</h3>
-     <div class="jlook-foot">
-      <button class="jbtn-look-vote ${isVoted ? 'selected' : ''}" onclick="toggleVote('${STATE.current_award}', ${c.id})">
-       <svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"/></svg>
-       ${isVoted ? 'Selected for Ballot' : 'Vote for Look'}
-      </button>
-      ${c.photo_url ? `
-      <button class="jbtn-look-zoom" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} — Look #${c.number}')" title="Enlarge Lookbook Photo">
-       <svg class="v-icon" width="15" height="15" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
-      </button>` : ''}
+    <div class="ib">
+     <h3 class="ib-name">${esc(c.name)}</h3>
+     <div class="ib-meta">
+      <span>Candidate #${c.number}</span>
+      ${c.is_top5 ? '<span style="color:var(--gold);font-weight:700;">Top 5</span>' : ''}
      </div>
+     <button class="btn-vote" onclick="togglePick('${curAward.id}', ${c.id})">
+      <svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-${isPicked ? 'check' : 'plus'}"/></svg>
+      <span>${isPicked ? 'Picked' : 'Vote for Look'}</span>
+     </button>
     </div>
    </article>
   `;
  }).join('');
 }
 
-/* RENDER 2: BALLOT */
-function renderBallot() {
- const award = STATE.awards.find(a => a.id === STATE.current_award) || STATE.awards[0];
- document.getElementById('ballotAwardTitle').textContent = award.title;
- document.getElementById('ballotAwardDesc').textContent = award.desc;
-
- // Subnav
- const subnav = document.getElementById('awardsNav');
- subnav.innerHTML = STATE.awards.map(a => `
-  <button class="jaward-tab ${a.id === STATE.current_award ? 'active' : ''}" onclick="switchAward('${a.id}')">
-   ${esc(a.title)}
-  </button>
- `).join('');
-
- // Chips of current selected
- const chipsWrap = document.getElementById('ballotChips');
- const myVotes = STATE.my_votes[award.id] || [];
- chipsWrap.innerHTML = myVotes.map(cid => {
-  const c = STATE.contestants.find(x => x.id === cid);
-  if (!c) return '';
-  return `
-   <span class="jchip">
-    ${esc(c.name)} (#${c.number})
-    <span class="jchip-x" onclick="toggleVote('${award.id}', ${c.id})">✕</span>
-   </span>
-  `;
- }).join('');
-
- // Selectable cards grid
- const grid = document.getElementById('ballotGrid');
- grid.innerHTML = STATE.contestants.map(c => {
-  const isSelected = isContestantSelected(award.id, c.id);
-  const thumb = c.photo_url || 'icons/icon-192.png';
-  return `
-   <div class="jballot-card ${isSelected ? 'selected' : ''}" onclick="toggleVote('${award.id}', ${c.id})">
-    <img src="${thumb}" class="jballot-thumb" alt="${esc(c.name)}">
-    <div class="jballot-meta">
-     <div class="jballot-name">${esc(c.name)}</div>
-     <div class="jballot-fit">Runway Look #${c.number}</div>
-    </div>
-    <div class="jballot-check">
-     ${isSelected ? '<svg class="v-icon" width="14" height="14" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-    </div>
-   </div>
-  `;
- }).join('');
-}
-
-function isContestantSelected(awardId, cId) {
- const votes = STATE.my_votes[awardId] || [];
- return votes.includes(cId);
-}
-
-function toggleVote(awardId, cId) {
- if (!STATE.my_votes[awardId]) STATE.my_votes[awardId] = [];
- const award = STATE.awards.find(a => a.id === awardId) || { votes_allowed: 1 };
- const list = STATE.my_votes[awardId];
- const idx = list.indexOf(cId);
+function togglePick(awardId, contestantId) {
+ const award = STATE.awards.find(a => a.id === awardId) || { maxVotes: 1 };
+ if (!STATE.myVotes[awardId]) STATE.myVotes[awardId] = [];
+ const list = STATE.myVotes[awardId];
+ const idx = list.indexOf(contestantId);
 
  if (idx > -1) {
   list.splice(idx, 1);
  } else {
-  if (list.length >= award.votes_allowed) {
-   if (award.votes_allowed === 1) {
-    STATE.my_votes[awardId] = [cId];
+  if (list.length >= award.maxVotes) {
+   if (award.maxVotes === 1) {
+    STATE.myVotes[awardId] = [contestantId];
    } else {
-    alert(`You can only cast up to ${award.votes_allowed} votes for ${award.title}.`);
+    toast(`You can only choose up to ${award.maxVotes} contestants for ${award.title}.`);
     return;
    }
   } else {
-   list.push(cId);
+   list.push(contestantId);
   }
  }
- saveLocalVotes();
- renderLookbookGallery();
- renderBallot();
+ saveState();
+ renderContestantsTab();
+ updateBallotBar();
 }
 
-function switchAward(awId) {
- STATE.current_award = awId;
- renderBallot();
+function updateBallotBar() {
+ const bar = document.getElementById('ballotBar');
+ if (currentTab !== 'contestants') {
+  bar.hidden = true;
+  return;
+ }
+ const curAward = STATE.awards.find(a => a.id === STATE.currentAward) || STATE.awards[0];
+ const myPicks = STATE.myVotes[curAward.id] || [];
+
+ document.getElementById('barAwardName').textContent = curAward.title;
+ document.getElementById('barPickCount').textContent = `${myPicks.length} of ${curAward.maxVotes} selected`;
+
+ const submitBtn = document.getElementById('barSubmitBtn');
+ submitBtn.disabled = (myPicks.length === 0);
+ bar.hidden = (myPicks.length === 0);
 }
 
-/* RENDER 3: LEADERBOARD */
-function renderLeaderboard() {
- const award = STATE.awards.find(a => a.id === STATE.current_award) || STATE.awards[0];
- const subnav = document.getElementById('leaderboardAwardsNav');
- subnav.innerHTML = STATE.awards.map(a => `
-  <button class="jaward-tab ${a.id === STATE.current_award ? 'active' : ''}" onclick="switchAward('${a.id}');renderLeaderboard();">
+function submitCurrentBallot() {
+ const curAward = STATE.awards.find(a => a.id === STATE.currentAward) || STATE.awards[0];
+ const myPicks = STATE.myVotes[curAward.id] || [];
+ if (!myPicks.length) {
+  toast(`Pick at least 1 contestant for ${curAward.title}.`);
+  return;
+ }
+
+ // Accumulate to scores
+ if (!STATE.scores[curAward.id]) STATE.scores[curAward.id] = {};
+ myPicks.forEach(cid => {
+  STATE.scores[curAward.id][cid] = (STATE.scores[curAward.id][cid] || 0) + 1;
+ });
+ saveState();
+ toast(`Ballot submitted! Your vote for ${curAward.title} was recorded.`);
+ setTab('results');
+}
+
+/* -------------------------------------------------------------------------
+   Standings & Results Tab
+   ------------------------------------------------------------------------- */
+let resultsAwardId = 'top5';
+
+function renderResultsTab() {
+ const curAward = STATE.awards.find(a => a.id === resultsAwardId) || STATE.awards[0];
+ resultsAwardId = curAward.id;
+ document.getElementById('resultsAwardTitle').textContent = curAward.title + ' Standings';
+
+ const chips = document.getElementById('resultsChips');
+ chips.innerHTML = STATE.awards.map(a => `
+  <button class="chip" aria-pressed="${a.id === curAward.id}" onclick="resultsAwardId='${a.id}';renderResultsTab();">
    ${esc(a.title)}
   </button>
  `).join('');
 
- const scores = STATE.scores[award.id] || {};
+ const scores = STATE.scores[curAward.id] || {};
  const sorted = [...STATE.contestants].map(c => ({
   ...c,
-  votes: scores[c.id] || (c.id === 1 ? 42 : c.id === 2 ? 38 : c.id === 3 ? 29 : c.id === 4 ? 21 : 14)
+  votes: scores[c.id] || 0
  })).sort((a, b) => b.votes - a.votes);
 
- const top3 = sorted.slice(0, 3);
+ // Render Top 3 Podium
  const podium = document.getElementById('podiumWrap');
+ const top3 = sorted.slice(0, 3);
  podium.innerHTML = `
-  <div class="jpodium-col silver">
-   <div class="jrank-badge">II</div>
-   <img src="${top3[1] ? top3[1].photo_url || 'icons/icon-192.png' : 'icons/icon-192.png'}" class="jpodium-thumb" alt="2nd">
-   <div class="jpodium-name">${top3[1] ? esc(top3[1].name) : '—'}</div>
-   <div class="jpodium-fit">${top3[1] ? 'Look #' + top3[1].number : ''}</div>
-   <div class="jpodium-votes">${top3[1] ? top3[1].votes + ' Votes' : ''}</div>
+  <div class="podium-card silver">
+   <span class="podium-rank">2nd Place</span>
+   <img src="${top3[1] && top3[1].photo_url ? top3[1].photo_url : 'icons/icon-192.png'}" class="podium-avatar" alt="2nd">
+   <div class="podium-name">${top3[1] ? esc(top3[1].name) : '—'}</div>
+   <div class="podium-votes">${top3[1] ? top3[1].votes + ' Votes' : ''}</div>
   </div>
-  <div class="jpodium-col gold">
-   <div class="jrank-badge">I</div>
-   <img src="${top3[0] ? top3[0].photo_url || 'icons/icon-192.png' : 'icons/icon-192.png'}" class="jpodium-thumb" alt="1st">
-   <div class="jpodium-name">${top3[0] ? esc(top3[0].name) : '—'}</div>
-   <div class="jpodium-fit">${top3[0] ? 'Look #' + top3[0].number : ''}</div>
-   <div class="jpodium-votes">${top3[0] ? top3[0].votes + ' Votes' : ''}</div>
+  <div class="podium-card gold">
+   <span class="podium-rank">1st Place</span>
+   <img src="${top3[0] && top3[0].photo_url ? top3[0].photo_url : 'icons/icon-192.png'}" class="podium-avatar" alt="1st">
+   <div class="podium-name">${top3[0] ? esc(top3[0].name) : '—'}</div>
+   <div class="podium-votes">${top3[0] ? top3[0].votes + ' Votes' : ''}</div>
   </div>
-  <div class="jpodium-col bronze">
-   <div class="jrank-badge">III</div>
-   <img src="${top3[2] ? top3[2].photo_url || 'icons/icon-192.png' : 'icons/icon-192.png'}" class="jpodium-thumb" alt="3rd">
-   <div class="jpodium-name">${top3[2] ? esc(top3[2].name) : '—'}</div>
-   <div class="jpodium-fit">${top3[2] ? 'Look #' + top3[2].number : ''}</div>
-   <div class="jpodium-votes">${top3[2] ? top3[2].votes + ' Votes' : ''}</div>
+  <div class="podium-card bronze">
+   <span class="podium-rank">3rd Place</span>
+   <img src="${top3[2] && top3[2].photo_url ? top3[2].photo_url : 'icons/icon-192.png'}" class="podium-avatar" alt="3rd">
+   <div class="podium-name">${top3[2] ? esc(top3[2].name) : '—'}</div>
+   <div class="podium-votes">${top3[2] ? top3[2].votes + ' Votes' : ''}</div>
   </div>
  `;
 
- const maxV = Math.max(1, sorted[0].votes);
- const listWrap = document.getElementById('tallyList');
- listWrap.innerHTML = sorted.map((c, i) => `
-  <div class="jtally-row">
-   <div class="jtally-pos">#${i + 1}</div>
-   <div class="jtally-info">
-    <div style="display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;color:#fff;">
-     <span>${esc(c.name)} · <span style="color:var(--gold);font-weight:400;">Look #${c.number}</span></span>
-     <span>${c.votes} votes</span>
+ // Render Tally List
+ const maxVotes = Math.max(1, sorted[0]?.votes || 1);
+ const list = document.getElementById('tallyList');
+ list.innerHTML = sorted.map((c, idx) => {
+  const pct = Math.round((c.votes / maxVotes) * 100);
+  return `
+   <div class="tally-row">
+    <div class="tally-pos">#${idx + 1}</div>
+    <div class="tally-info">
+     <div class="tally-top">
+      <span>${esc(c.name)} <small style="color:var(--mute);font-weight:400;">(Look #${c.number})</small></span>
+      <span style="color:var(--gold);">${c.votes} vote${c.votes === 1 ? '' : 's'}</span>
+     </div>
+     <div class="tally-bar">
+      <div class="tally-fill" style="width:${pct}%"></div>
+     </div>
     </div>
-    <div class="jtally-bar">
-     <div class="jtally-fill" style="width:${(c.votes / maxV) * 100}%"></div>
-    </div>
+   </div>
+  `;
+ }).join('');
+}
+
+/* -------------------------------------------------------------------------
+   Organizer Studio Management
+   ------------------------------------------------------------------------- */
+function openManageSheet() {
+ document.getElementById('phaseSelect').value = STATE.phase || 'prelim';
+ document.getElementById('manageCount').textContent = STATE.contestants.length;
+ renderManageContestantsList();
+ renderManageAwardsList();
+ document.getElementById('manageModal').hidden = false;
+}
+function closeManageSheet() {
+ document.getElementById('manageModal').hidden = true;
+}
+
+function onPhaseChange(phase) {
+ STATE.phase = phase;
+ saveState();
+ updatePhaseBadges();
+ toast(`Phase switched to: ${phase === 'final' ? 'Final Runway (Top 5)' : 'Auditions & Preliminaries'}`);
+}
+
+function updatePhaseBadges() {
+ const isFinal = (STATE.phase === 'final');
+ document.getElementById('phaseStatus').textContent = isFinal
+  ? 'Final Runway · Top 5 Q&A'
+  : 'Preliminaries · Top 5 Voting';
+}
+
+function renderManageContestantsList() {
+ const wrap = document.getElementById('manageContestantsList');
+ wrap.innerHTML = STATE.contestants.map(c => `
+  <div class="manage-item">
+   <div class="manage-item-info">
+    <b>#${c.number} · ${esc(c.name)}</b>
+    <span>${c.photo_url ? 'Has photo' : 'No photo yet'} ${c.is_top5 ? '· Top 5 Finalist' : ''}</span>
+   </div>
+   <div class="manage-item-acts">
+    <button class="btn-icon" onclick="openEditContestant(${c.id})" title="Edit contestant">
+     <svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-pencil"/></svg>
+    </button>
+    <button class="btn-icon del" onclick="deleteContestant(${c.id})" title="Delete contestant">
+     <svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-trash"/></svg>
+    </button>
    </div>
   </div>
  `).join('');
 }
 
-/* LIGHTBOX */
-function openLightbox(url, caption) {
- document.getElementById('lightboxImg').src = url;
- document.getElementById('lightboxCaption').textContent = caption || '';
- document.getElementById('lightboxModal').hidden = false;
-}
-function closeLightbox() {
- document.getElementById('lightboxModal').hidden = true;
-}
-
-/* RUNWAY DJ & AUDIO SYSTEM */
-let audioCtx = null;
-let discoTimer = null;
-let isPlaying = false;
-let djVolumeVal = 0.8;
-let currentTrackId = 'anthem';
-let customAudioEl = null;
-
-function toggleDjModal() {
- const m = document.getElementById('djModal');
- if (m) m.hidden = !m.hidden;
-}
-function openDjModal() {
- const m = document.getElementById('djModal');
- if (m) m.hidden = false;
-}
-function closeDjModal() {
- const m = document.getElementById('djModal');
- if (m) m.hidden = true;
+function renderManageAwardsList() {
+ const wrap = document.getElementById('manageAwardsList');
+ wrap.innerHTML = STATE.awards.map(a => `
+  <div class="manage-item">
+   <div class="manage-item-info">
+    <b>${esc(a.title)}</b>
+    <span>${a.maxVotes} vote${a.maxVotes === 1 ? '' : 's'} allowed</span>
+   </div>
+   <div class="manage-item-acts">
+    <button class="btn-icon" onclick="openEditAward('${a.id}')" title="Edit award">
+     <svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-pencil"/></svg>
+    </button>
+    <button class="btn-icon del" onclick="deleteAward('${a.id}')" title="Delete award">
+     <svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-trash"/></svg>
+    </button>
+   </div>
+  </div>
+ `).join('');
 }
 
-const DJ_TRACKS = [
- {
-  id: 'anthem',
-  name: 'Official Runway Anthem',
-  sub: 'BEST FASHION SHOW MUSIC · High-Energy Continuous Mix',
-  badge: 'Official Audio',
-  type: 'audio'
- },
- {
-  id: 'euro_synth',
-  name: 'Euro-Runway Model Strut',
-  sub: '124 BPM Catwalk Deep House · Live Web Audio Synth',
-  badge: '124 BPM Synth',
-  type: 'synth',
-  tempo: 124
- },
- {
-  id: 'vogue_synth',
-  name: 'Vogue Club Minimal',
-  sub: '128 BPM Tech-House Groove · Live Web Audio Synth',
-  badge: '128 BPM Synth',
-  type: 'synth',
-  tempo: 128
- },
- {
-  id: 'custom',
-  name: 'Custom Local MP3',
-  sub: 'Loaded from your device',
-  badge: 'Local MP3',
-  type: 'custom'
+function openAddContestantSheet() {
+ document.getElementById('cModalTitle').textContent = "Add Contestant";
+ document.getElementById('cId').value = "";
+ document.getElementById('cName').value = "";
+ document.getElementById('cNumber').value = STATE.contestants.length + 1;
+ document.getElementById('cUrl').value = "";
+ document.getElementById('cFinalist').checked = false;
+ document.getElementById('cPreviewWrap').hidden = true;
+ document.getElementById('editContestantModal').hidden = false;
+}
+
+function openEditContestant(id) {
+ const c = STATE.contestants.find(x => x.id === id);
+ if (!c) return;
+ document.getElementById('cModalTitle').textContent = "Edit Contestant";
+ document.getElementById('cId').value = c.id;
+ document.getElementById('cName').value = c.name;
+ document.getElementById('cNumber').value = c.number;
+ document.getElementById('cUrl').value = c.photo_url || "";
+ document.getElementById('cFinalist').checked = !!c.is_top5;
+ if (c.photo_url) {
+  document.getElementById('cPreview').src = c.photo_url;
+  document.getElementById('cPreviewWrap').hidden = false;
+ } else {
+  document.getElementById('cPreviewWrap').hidden = true;
  }
-];
-
-function toggleCustomDropdown(dropdownId) {
- const dd = document.getElementById(dropdownId);
- if (!dd) return;
- const isOpen = dd.classList.contains('open');
- document.querySelectorAll('.jcustom-select.open').forEach(el => {
-  if (el !== dd) el.classList.remove('open');
- });
- dd.classList.toggle('open', !isOpen);
+ document.getElementById('editContestantModal').hidden = false;
+}
+function closeEditContestant() {
+ document.getElementById('editContestantModal').hidden = true;
 }
 
-function selectDropdownOption(dropdownId, val, labelText, onchangeFn) {
- const dd = document.getElementById(dropdownId);
- if (!dd) return;
- dd.querySelectorAll('.jcustom-select-option').forEach(opt => {
-  opt.classList.toggle('selected', opt.dataset.val === String(val));
- });
- const b = dd.querySelector('.jcustom-select-label b');
- if (b) b.textContent = labelText;
- const hiddenInput = dd.querySelector('input[type="hidden"]');
- if (hiddenInput) hiddenInput.value = val;
- dd.classList.remove('open');
- if (typeof onchangeFn === 'function') onchangeFn(val);
-}
+function saveContestant() {
+ const idVal = document.getElementById('cId').value;
+ const id = idVal ? parseInt(idVal) : Date.now();
+ const name = document.getElementById('cName').value.trim();
+ const number = parseInt(document.getElementById('cNumber').value) || (STATE.contestants.length + 1);
+ const photo_url = document.getElementById('cUrl').value.trim();
+ const is_top5 = document.getElementById('cFinalist').checked;
 
-document.addEventListener('click', (e) => {
- if (!e.target.closest('.jcustom-select')) {
-  document.querySelectorAll('.jcustom-select.open').forEach(el => el.classList.remove('open'));
+ const idx = STATE.contestants.findIndex(x => x.id === id);
+ if (idx > -1) {
+  STATE.contestants[idx] = { id, name, number, photo_url, is_top5 };
+ } else {
+  STATE.contestants.push({ id, name, number, photo_url, is_top5 });
  }
-});
+ saveState();
+ closeEditContestant();
+ renderManageContestantsList();
+ renderContestantsTab();
+ toast("Contestant saved.");
+}
 
-function selectTrackOption(trackId) {
- if (trackId === 'custom' && !customAudioEl) {
-  document.getElementById('customAudioFile').click();
+function deleteContestant(id) {
+ STATE.contestants = STATE.contestants.filter(x => x.id !== id);
+ saveState();
+ renderManageContestantsList();
+ renderContestantsTab();
+ toast("Contestant removed.");
+}
+
+function handlePhotoUpload(e) {
+ const file = e.target.files[0];
+ if (!file) return;
+ const reader = new FileReader();
+ reader.onload = function(evt) {
+  document.getElementById('cUrl').value = evt.target.result;
+  document.getElementById('cPreview').src = evt.target.result;
+  document.getElementById('cPreviewWrap').hidden = false;
+ };
+ reader.readAsDataURL(file);
+}
+
+function openAddAwardSheet() {
+ document.getElementById('aModalTitle').textContent = "Add New Award";
+ document.getElementById('aId').value = "";
+ document.getElementById('aTitle').value = "";
+ document.getElementById('aDesc').value = "";
+ document.getElementById('aVotes').value = "1";
+ document.getElementById('editAwardModal').hidden = false;
+}
+
+function openEditAward(id) {
+ const a = STATE.awards.find(x => x.id === id);
+ if (!a) return;
+ document.getElementById('aModalTitle').textContent = "Edit Award";
+ document.getElementById('aId').value = a.id;
+ document.getElementById('aTitle').value = a.title;
+ document.getElementById('aDesc').value = a.desc || "";
+ document.getElementById('aVotes').value = String(a.maxVotes || 1);
+ document.getElementById('editAwardModal').hidden = false;
+}
+function closeEditAward() {
+ document.getElementById('editAwardModal').hidden = true;
+}
+
+function saveAward() {
+ const idVal = document.getElementById('aId').value;
+ const id = idVal || ('aw_' + Date.now().toString(36));
+ const title = document.getElementById('aTitle').value.trim();
+ const desc = document.getElementById('aDesc').value.trim();
+ const maxVotes = parseInt(document.getElementById('aVotes').value) || 1;
+
+ const idx = STATE.awards.findIndex(x => x.id === id);
+ if (idx > -1) {
+  STATE.awards[idx] = { id, title, desc, maxVotes };
+ } else {
+  STATE.awards.push({ id, title, desc, maxVotes });
+ }
+ saveState();
+ closeEditAward();
+ renderManageAwardsList();
+ renderContestantsTab();
+ toast("Award saved.");
+}
+
+function deleteAward(id) {
+ if (STATE.awards.length <= 1) {
+  toast("You must have at least one award category.");
   return;
  }
- const wasPlaying = isPlaying;
- stopCurrentTrack();
- currentTrackId = trackId;
- updateTrackUi();
- if (wasPlaying) {
-  startCurrentTrack();
- }
- const dd = document.getElementById('trackDropdown');
- if (dd) dd.classList.remove('open');
+ STATE.awards = STATE.awards.filter(x => x.id !== id);
+ if (STATE.currentAward === id) STATE.currentAward = STATE.awards[0].id;
+ saveState();
+ renderManageAwardsList();
+ renderContestantsTab();
+ toast("Award category removed.");
 }
 
-function updateTrackUi() {
- const track = DJ_TRACKS.find(t => t.id === currentTrackId) || DJ_TRACKS[0];
- const trackText = document.getElementById('trackDropdownSelectedText');
- if (trackText) trackText.textContent = track.name + ' (' + track.badge + ')';
- 
- const dd = document.getElementById('trackDropdown');
- if (dd) {
-  dd.querySelectorAll('.jcustom-select-option').forEach(opt => {
-   opt.classList.toggle('selected', opt.dataset.val === currentTrackId);
-  });
- }
- const badge = document.getElementById('currentBpmBadge');
- if (badge) badge.textContent = track.badge;
- const dockName = document.getElementById('djTrackName');
- if (dockName) dockName.textContent = track.name;
- const dockStatus = document.getElementById('djTrackStatus');
- if (dockStatus) dockStatus.textContent = track.sub;
+function clearAllVotes() {
+ STATE.myVotes = {};
+ STATE.scores = {};
+ saveState();
+ renderContestantsTab();
+ renderResultsTab();
+ updateBallotBar();
+ toast("All test votes cleared.");
 }
 
-function nextDjTrack() {
- const order = ['anthem', 'euro_synth', 'vogue_synth'];
- const idx = order.indexOf(currentTrackId);
- const nextId = order[(idx + 1) % order.length];
- selectTrackOption(nextId);
-}
+/* -------------------------------------------------------------------------
+   Music & Catwalk Soundboard Engine
+   ------------------------------------------------------------------------- */
+let audioCtx = null;
+let isPlaying = false;
+let currentTrack = 'anthem';
+let customAudio = null;
+let masterVolume = 0.8;
+let synthTimer = null;
 
-function setDjVolume(val) {
- djVolumeVal = parseInt(val) / 100;
- document.getElementById('volLabel').textContent = val + '%';
- const anthem = document.getElementById('anthemAudio');
- if (anthem) anthem.volume = djVolumeVal;
- if (customAudioEl) customAudioEl.volume = djVolumeVal;
-}
-
-function toggleDjPlay() {
- initAudioContext();
- isPlaying = !isPlaying;
- updatePlaybackUi();
- if (isPlaying) {
-  startCurrentTrack();
- } else {
-  stopCurrentTrack();
- }
-}
-
-function initAudioContext() {
+function initAudio() {
  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
  if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-function updatePlaybackUi() {
- const disc = document.getElementById('djDisc');
- const dock = document.getElementById('djDock');
- const btn = document.getElementById('djPlayBtn');
- const modalBtn = document.getElementById('modalPlayBtn');
- const modalLabel = document.getElementById('modalPlayLabel');
+function openMusicSheet() {
+ document.getElementById('musicModal').hidden = false;
+}
+function closeMusicSheet() {
+ document.getElementById('musicModal').hidden = true;
+}
 
+function setMusicVolume(val) {
+ masterVolume = parseInt(val) / 100;
+ document.getElementById('volValText').textContent = val + '%';
+ const anthem = document.getElementById('anthemAudio');
+ if (anthem) anthem.volume = masterVolume;
+ if (customAudio) customAudio.volume = masterVolume;
+}
+
+function switchMusicTrack(trackId) {
+ if (trackId === 'custom' && !customAudio) {
+  document.getElementById('customAudioFile').click();
+  return;
+ }
+ const wasPlaying = isPlaying;
+ stopTrack();
+ currentTrack = trackId;
+ if (wasPlaying) startTrack();
+}
+
+function togglePlayMusic() {
+ initAudio();
+ isPlaying = !isPlaying;
  if (isPlaying) {
-  if (disc) disc.classList.add('playing');
-  if (dock) dock.classList.add('playing');
-  if (btn) btn.innerHTML = '<svg class="v-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
-  if (modalBtn) modalBtn.classList.add('highlight');
-  if (modalLabel) modalLabel.textContent = 'Pause Runway Track';
+  startTrack();
+  document.getElementById('musicToggleBtn').classList.add('active');
+  document.getElementById('musicBtnLabel').textContent = "Playing...";
+  document.getElementById('sheetPlayLabel').textContent = "Pause Runway Track";
  } else {
-  if (disc) disc.classList.remove('playing');
-  if (dock) dock.classList.remove('playing');
-  if (btn) btn.innerHTML = '<svg class="v-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-  if (modalBtn) modalBtn.classList.remove('highlight');
-  if (modalLabel) modalLabel.textContent = 'Play Runway Track';
+  stopTrack();
+  document.getElementById('musicToggleBtn').classList.remove('active');
+  document.getElementById('musicBtnLabel').textContent = "Music";
+  document.getElementById('sheetPlayLabel').textContent = "Play Runway Track";
  }
 }
 
-function startCurrentTrack() {
- if (currentTrackId === 'anthem') {
+function startTrack() {
+ if (currentTrack === 'anthem') {
   const anthem = document.getElementById('anthemAudio');
   if (anthem) {
-   anthem.volume = djVolumeVal;
-   anthem.play().catch(e => console.log('Autoplay restriction:', e));
+   anthem.volume = masterVolume;
+   anthem.play().catch(() => {});
   }
- } else if (currentTrackId === 'euro_synth') {
-  startCatwalkLoop(124);
- } else if (currentTrackId === 'vogue_synth') {
-  startCatwalkLoop(128);
- } else if (currentTrackId === 'custom') {
-  if (customAudioEl) {
-   customAudioEl.volume = djVolumeVal;
-   customAudioEl.play().catch(e => console.log('Custom play error:', e));
-  } else {
-   document.getElementById('customAudioFile').click();
-  }
+ } else if (currentTrack === 'euro') {
+  startSynthBeat(124);
+ } else if (currentTrack === 'vogue') {
+  startSynthBeat(128);
+ } else if (currentTrack === 'custom' && customAudio) {
+  customAudio.volume = masterVolume;
+  customAudio.play().catch(() => {});
  }
 }
 
-function stopCurrentTrack() {
+function stopTrack() {
  const anthem = document.getElementById('anthemAudio');
  if (anthem) anthem.pause();
- if (customAudioEl) customAudioEl.pause();
- stopCatwalkLoop();
+ if (customAudio) customAudio.pause();
+ if (synthTimer) { clearInterval(synthTimer); synthTimer = null; }
 }
 
-function startCatwalkLoop(bpm) {
- bpm = bpm || 124;
- if (discoTimer) clearInterval(discoTimer);
+function startSynthBeat(bpm) {
+ if (synthTimer) clearInterval(synthTimer);
  let step = 0;
  const interval = (60 / bpm / 4) * 1000;
- discoTimer = setInterval(() => {
-  if (!isPlaying) return;
-  // 4-on-the-floor kick drum
+ synthTimer = setInterval(() => {
+  if (!isPlaying || !audioCtx) return;
+  // 4-on-the-floor kick
   if (step % 4 === 0) playKick();
-  // Crisp offbeat hi-hat
+  // Offbeat hi-hat
   if (step % 4 === 2) playHiHat();
-  // Deep syncopated bassline
-  if (step % 2 === 0) {
-   const bassFreqs = bpm === 128 ? [116.5, 116.5, 138.6, 155.6] : [110, 110, 130.8, 146.8];
-   playBass(bassFreqs[(step / 2) % bassFreqs.length]);
-  }
   step = (step + 1) % 16;
  }, interval);
 }
 
-function stopCatwalkLoop() {
- if (discoTimer) clearInterval(discoTimer);
-}
-
 function playKick() {
- if (!audioCtx) return;
  const osc = audioCtx.createOscillator();
  const gain = audioCtx.createGain();
- osc.frequency.setValueAtTime(145, audioCtx.currentTime);
- osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
- gain.gain.setValueAtTime(djVolumeVal * 0.75, audioCtx.currentTime);
- gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+ osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+ osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+ gain.gain.setValueAtTime(masterVolume * 0.7, audioCtx.currentTime);
+ gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
  osc.connect(gain);
  gain.connect(audioCtx.destination);
  osc.start();
- osc.stop(audioCtx.currentTime + 0.35);
+ osc.stop(audioCtx.currentTime + 0.3);
 }
 
 function playHiHat() {
- if (!audioCtx) return;
- const bufferSize = audioCtx.sampleRate * 0.05;
- const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
- const data = buffer.getChannelData(0);
- for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
- const noise = audioCtx.createBufferSource();
- noise.buffer = buffer;
+ const bSize = audioCtx.sampleRate * 0.04;
+ const buf = audioCtx.createBuffer(1, bSize, audioCtx.sampleRate);
+ const data = buf.getChannelData(0);
+ for (let i = 0; i < bSize; i++) data[i] = Math.random() * 2 - 1;
+ const src = audioCtx.createBufferSource();
+ src.buffer = buf;
  const filter = audioCtx.createBiquadFilter();
  filter.type = 'highpass';
- filter.frequency.value = 7500;
+ filter.frequency.value = 7000;
  const gain = audioCtx.createGain();
- gain.gain.setValueAtTime(djVolumeVal * 0.22, audioCtx.currentTime);
- gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
- noise.connect(filter);
+ gain.gain.setValueAtTime(masterVolume * 0.2, audioCtx.currentTime);
+ gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+ src.connect(filter);
  filter.connect(gain);
  gain.connect(audioCtx.destination);
- noise.start();
+ src.start();
 }
 
-function playBass(freq) {
- if (!audioCtx) return;
- const osc = audioCtx.createOscillator();
- const gain = audioCtx.createGain();
- osc.type = 'sawtooth';
- osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
- gain.gain.setValueAtTime(djVolumeVal * 0.26, audioCtx.currentTime);
- gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
- osc.connect(gain);
- gain.connect(audioCtx.destination);
- osc.start();
- osc.stop(audioCtx.currentTime + 0.2);
-}
-
-/* REVAMPED DISTINCT SOUNDBOARD SFX */
 function playSfx(type) {
- initAudioContext();
+ initAudio();
  const t0 = audioCtx.currentTime;
 
  if (type === 'camera') {
-  // Mechanical DSLR Shutter Burst (3 fast mirror clicks) + flash charge whine
-  [0, 0.13, 0.30].forEach((st) => {
+  [0, 0.12, 0.28].forEach(st => {
    const t = t0 + st;
-   const bSize = Math.floor(audioCtx.sampleRate * 0.035);
+   const bSize = Math.floor(audioCtx.sampleRate * 0.03);
    const buf = audioCtx.createBuffer(1, bSize, audioCtx.sampleRate);
    const d = buf.getChannelData(0);
    for (let i = 0; i < bSize; i++) d[i] = Math.random() * 2 - 1;
@@ -2658,310 +1954,129 @@ function playSfx(type) {
    filter.type = 'bandpass';
    filter.frequency.value = 4500;
    const g = audioCtx.createGain();
-   g.gain.setValueAtTime(0.65, t);
-   g.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+   g.gain.setValueAtTime(0.6, t);
+   g.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
    src.connect(filter);
    filter.connect(g);
    g.connect(audioCtx.destination);
    src.start(t);
-   src.stop(t + 0.035);
   });
-  // Strobe capacitor charging high whine
-  const osc = audioCtx.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(2400, t0 + 0.35);
-  osc.frequency.exponentialRampToValueAtTime(8500, t0 + 0.75);
-  const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(0.08, t0 + 0.35);
-  gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.75);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start(t0 + 0.35);
-  osc.stop(t0 + 0.75);
-
  } else if (type === 'airhorn') {
-  // Triple Reggae/Stadium Airhorn Stutter Blast
-  const bursts = [
-   { start: 0, dur: 0.12 },
-   { start: 0.16, dur: 0.12 },
-   { start: 0.32, dur: 0.48 }
-  ];
-  bursts.forEach(b => {
-   const t = t0 + b.start;
-   [587.33, 739.99, 880.00].forEach((freq) => {
+  [0, 0.15, 0.32].forEach(st => {
+   const t = t0 + st;
+   [587.33, 739.99, 880.00].forEach(f => {
     const osc = audioCtx.createOscillator();
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(freq, t);
-    const gain = audioCtx.createGain();
-    gain.gain.setValueAtTime(0.24, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + b.dur);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    osc.frequency.setValueAtTime(f, t);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.2, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
     osc.start(t);
-    osc.stop(t + b.dur);
+    osc.stop(t + 0.14);
    });
   });
-
  } else if (type === 'cheer') {
-  // Real Rushing Stadium Crowd Applause & Roar (Poisson clapping bursts + crowd filter)
-  const dur = 2.5;
+  const dur = 2.2;
   const bSize = Math.floor(audioCtx.sampleRate * dur);
-  const buffer = audioCtx.createBuffer(1, bSize, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bSize; i++) {
-   data[i] = (Math.random() * 2 - 1) * 0.35;
-  }
-  const numClaps = Math.floor(dur * 90);
-  for (let c = 0; c < numClaps; c++) {
-   const clapPos = Math.floor(Math.random() * bSize);
-   for (let k = 0; k < 60 && clapPos + k < bSize; k++) {
-    data[clapPos + k] += (Math.random() * 2 - 1) * 0.9 * Math.exp(-k / 12);
+  const buf = audioCtx.createBuffer(1, bSize, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < bSize; i++) d[i] = (Math.random() * 2 - 1) * 0.4;
+  for (let c = 0; c < 120; c++) {
+   const pos = Math.floor(Math.random() * bSize);
+   for (let k = 0; k < 50 && pos + k < bSize; k++) {
+    d[pos + k] += (Math.random() * 2 - 1) * 0.8 * Math.exp(-k / 10);
    }
   }
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = buffer;
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
   const filter = audioCtx.createBiquadFilter();
   filter.type = 'bandpass';
-  filter.frequency.setValueAtTime(1150, t0);
-  filter.Q.setValueAtTime(1.3, t0);
-  const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(0.01, t0);
-  gain.gain.linearRampToValueAtTime(0.75, t0 + 0.25);
-  gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-  noise.connect(filter);
-  filter.connect(gain);
-  gain.connect(audioCtx.destination);
-  noise.start(t0);
-  noise.stop(t0 + dur);
-
+  filter.frequency.setValueAtTime(1100, t0);
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.01, t0);
+  g.gain.linearRampToValueAtTime(0.65, t0 + 0.2);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  src.connect(filter);
+  filter.connect(g);
+  g.connect(audioCtx.destination);
+  src.start(t0);
+  src.stop(t0 + dur);
  } else if (type === 'drumroll') {
-  // Snare Drumroll Crescendo + Crash Cymbal at end
-  const count = 28;
+  const count = 24;
   for (let i = 0; i < count; i++) {
-   const t = t0 + (i * 0.045) * Math.pow(0.98, i);
-   const vol = 0.08 + (i / count) * 0.55;
+   const t = t0 + (i * 0.045);
    const osc = audioCtx.createOscillator();
    osc.type = 'triangle';
-   osc.frequency.setValueAtTime(190, t);
-   osc.frequency.exponentialRampToValueAtTime(60, t + 0.04);
+   osc.frequency.setValueAtTime(180, t);
    const g = audioCtx.createGain();
-   g.gain.setValueAtTime(vol * 0.65, t);
+   g.gain.setValueAtTime(0.05 + (i / count) * 0.4, t);
    g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
    osc.connect(g);
    g.connect(audioCtx.destination);
    osc.start(t);
    osc.stop(t + 0.04);
   }
-  // Crash Cymbal
-  const tCrash = t0 + 1.15;
-  const cSize = Math.floor(audioCtx.sampleRate * 0.9);
-  const cBuf = audioCtx.createBuffer(1, cSize, audioCtx.sampleRate);
-  const cd = cBuf.getChannelData(0);
-  for (let i = 0; i < cSize; i++) cd[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.28));
-  const crashSrc = audioCtx.createBufferSource();
-  crashSrc.buffer = cBuf;
-  const crashF = audioCtx.createBiquadFilter();
-  crashF.type = 'highpass';
-  crashF.frequency.value = 4000;
-  const crashG = audioCtx.createGain();
-  crashG.gain.setValueAtTime(0.55, tCrash);
-  crashG.gain.exponentialRampToValueAtTime(0.001, tCrash + 0.9);
-  crashSrc.connect(crashF);
-  crashF.connect(crashG);
-  crashG.connect(audioCtx.destination);
-  crashSrc.start(tCrash);
-  crashSrc.stop(tCrash + 0.9);
-
  } else if (type === 'fanfare') {
-  // Triumphant Brass Trumpet March Melody: G4 -> C5 -> E5 -> G5 -> C6 with harmony chords!
-  const sequence = [
-   { f: 392.00, start: 0,    dur: 0.13 },
-   { f: 523.25, start: 0.13, dur: 0.13 },
-   { f: 659.25, start: 0.26, dur: 0.13 },
-   { f: 783.99, start: 0.39, dur: 0.22 },
-   { f: 1046.50, start: 0.61, dur: 0.95 }
+  const notes = [
+   { f: 392.00, s: 0, d: 0.12 },
+   { f: 523.25, s: 0.12, d: 0.12 },
+   { f: 659.25, s: 0.24, d: 0.12 },
+   { f: 783.99, s: 0.36, d: 0.22 },
+   { f: 1046.50, s: 0.58, d: 0.85 }
   ];
-  sequence.forEach(note => {
-   const t = t0 + note.start;
-   [-3, 3].forEach(detune => {
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(note.f, t);
-    osc.detune.setValueAtTime(detune, t);
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(note.f * 3.5, t);
-    filter.Q.setValueAtTime(3.0, t);
-    const gain = audioCtx.createGain();
-    gain.gain.setValueAtTime(0.001, t);
-    gain.gain.linearRampToValueAtTime(0.28, t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + note.dur);
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(t);
-    osc.stop(t + note.dur);
-   });
-  });
-  // Grand final harmony chord (E5 and G5 underneath C6)
-  [659.25, 783.99].forEach(f => {
-   const t = t0 + 0.61;
+  notes.forEach(n => {
+   const t = t0 + n.s;
    const osc = audioCtx.createOscillator();
    osc.type = 'sawtooth';
-   osc.frequency.setValueAtTime(f, t);
-   const filter = audioCtx.createBiquadFilter();
-   filter.type = 'lowpass';
-   filter.frequency.setValueAtTime(f * 2.8, t);
-   const gain = audioCtx.createGain();
-   gain.gain.setValueAtTime(0.001, t);
-   gain.gain.linearRampToValueAtTime(0.18, t + 0.02);
-   gain.gain.exponentialRampToValueAtTime(0.001, t + 0.95);
-   osc.connect(filter);
-   filter.connect(gain);
-   gain.connect(audioCtx.destination);
+   osc.frequency.setValueAtTime(n.f, t);
+   const g = audioCtx.createGain();
+   g.gain.setValueAtTime(0.25, t);
+   g.gain.exponentialRampToValueAtTime(0.001, t + n.d);
+   osc.connect(g);
+   g.connect(audioCtx.destination);
    osc.start(t);
-   osc.stop(t + 0.95);
+   osc.stop(t + n.d);
   });
  }
 }
 
-function loadCustomTrack(e) {
+function loadCustomMp3(e) {
  const file = e.target.files[0];
  if (!file) return;
  const url = URL.createObjectURL(file);
- if (!customAudioEl) {
-  customAudioEl = new Audio();
-  customAudioEl.loop = true;
+ if (!customAudio) {
+  customAudio = new Audio();
+  customAudio.loop = true;
  }
- customAudioEl.src = url;
- stopCurrentTrack();
- currentTrackId = 'custom';
- const name = file.name.replace(/\.[^/.]+$/, "");
- const customObj = DJ_TRACKS.find(t => t.id === 'custom');
- if (customObj) {
-  customObj.name = name;
-  customObj.sub = 'Custom MP3 File (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)';
- }
- updateTrackUi();
- if (isPlaying) {
-  startCurrentTrack();
- }
- closeDjModal();
+ customAudio.src = url;
+ stopTrack();
+ currentTrack = 'custom';
+ if (isPlaying) startTrack();
+ toast("Loaded " + file.name);
 }
 
-/* ORGANIZER STUDIO FUNCTIONS */
-function toggleAdminModal() {
- const m = document.getElementById('adminModal');
- m.hidden = !m.hidden;
+/* -------------------------------------------------------------------------
+   Lightbox
+   ------------------------------------------------------------------------- */
+function openLightbox(url, caption) {
+ document.getElementById('lightboxImg').src = url;
+ document.getElementById('lightboxCaption').textContent = caption || '';
+ document.getElementById('lightbox').hidden = false;
 }
-function openAdmin() { document.getElementById('adminModal').hidden = false; }
-function closeAdmin() { document.getElementById('adminModal').hidden = true; }
-
-function openAddContestantModal() {
- document.getElementById('contestantModalTitle').textContent = "Add Contestant";
- document.getElementById('cId').value = "";
- document.getElementById('cName').value = "";
- document.getElementById('cNumber').value = STATE.contestants.length + 1;
- document.getElementById('cPhotoUrl').value = "";
- document.getElementById('cPhotoPreviewWrap').hidden = true;
- document.getElementById('cTop5').checked = false;
- document.getElementById('contestantModal').hidden = false;
-}
-function closeContestantModal() { document.getElementById('contestantModal').hidden = true; }
-
-function saveContestant() {
- const id = document.getElementById('cId').value ? parseInt(document.getElementById('cId').value) : Date.now();
- const name = document.getElementById('cName').value.trim();
- const number = parseInt(document.getElementById('cNumber').value) || (STATE.contestants.length + 1);
- const photo_url = document.getElementById('cPhotoUrl').value.trim();
- const is_top5 = document.getElementById('cTop5').checked;
-
- const existingIdx = STATE.contestants.findIndex(c => c.id === id);
- if (existingIdx > -1) {
-  STATE.contestants[existingIdx] = { id, name, number, photo_url, is_top5 };
- } else {
-  STATE.contestants.push({ id, name, number, photo_url, is_top5 });
- }
- closeContestantModal();
- renderLookbookGallery();
- renderBallot();
+function closeLightbox() {
+ document.getElementById('lightbox').hidden = true;
 }
 
-function handlePhotoUpload(e) {
- const file = e.target.files[0];
- if (!file) return;
- const reader = new FileReader();
- reader.onload = function(evt) {
-  document.getElementById('cPhotoUrl').value = evt.target.result;
-  document.getElementById('cPhotoPreview').src = evt.target.result;
-  document.getElementById('cPhotoPreviewWrap').hidden = false;
- };
- reader.readAsDataURL(file);
-}
-
-function openAddAwardModal() {
- document.getElementById('awardModalTitle').textContent = "Add New Award";
- document.getElementById('awId').value = "";
- document.getElementById('awTitle').value = "";
- document.getElementById('awDesc').value = "";
- selectDropdownOption('awVotesDropdown', '1', '1 vote per student (Standard Award)');
- selectDropdownOption('awPhaseDropdown', 'prelim', 'Preliminary Phase');
- document.getElementById('awardModal').hidden = false;
-}
-function closeAwardModal() { document.getElementById('awardModal').hidden = true; }
-
-function saveAward() {
- const id = 'aw_' + Math.random().toString(36).substring(2, 8);
- const title = document.getElementById('awTitle').value.trim();
- const desc = document.getElementById('awDesc').value.trim();
- const votes_allowed = parseInt(document.getElementById('awVotes').value) || 1;
- const phase = document.getElementById('awPhase').value;
-
- STATE.awards.push({ id, title, desc, votes_allowed, phase });
- closeAwardModal();
- renderBallot();
-}
-
-function setCompetitionPhase(phase) {
- STATE.settings.phase = phase;
- try { localStorage.setItem('jorts_phase', phase); } catch(e){}
- alert(`Competition phase switched to: ${phase === 'final' ? 'Final Runway (Top 5)' : 'Auditions & Preliminaries'}`);
- renderBallot();
- renderLeaderboard();
-}
-
-function clearAllTestVotes() {
- if (!confirm("Clear all cast votes and reset the live podium?")) return;
- STATE.my_votes = {};
- STATE.scores = {};
- localStorage.removeItem('jorts_my_votes');
- renderLookbookGallery();
- renderBallot();
- renderLeaderboard();
- alert("Test votes cleared successfully.");
-}
-
-function submitVotes() {
- const award = STATE.awards.find(a => a.id === STATE.current_award) || STATE.awards[0];
- const myVotes = STATE.my_votes[award.id] || [];
- if (!myVotes.length) {
-  alert(`Please select at least 1 contestant for ${award.title} before submitting.`);
-  return;
- }
- alert(`Ballot submitted for ${award.title}! Your votes have been officially counted.`);
- setTab('leaderboard');
-}
-
-/* INITIALIZATION */
+/* -------------------------------------------------------------------------
+   Boot
+   ------------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
- initVoterId();
- loadLocalState();
- updateTrackUi();
- renderLookbookGallery();
- renderBallot();
- renderLeaderboard();
+ loadState();
+ updatePhaseBadges();
+ setTab('contestants');
 });
 </script>
-<audio id="anthemAudio" preload="auto" loop src="audio/runway-anthem.mp3"></audio>
 </body>
 </html>
