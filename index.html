@@ -410,6 +410,14 @@ html.introing body{overflow:hidden}
    </div>
    <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
   </a>
+  <a class="gitem" id="dmtool" href="dm.html">
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>Direct messages</b></div>
+    <p id="dmsub">Private 1-on-1 chats with classmates</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
   <a class="gitem" id="atttool" href="attendance.html">
    <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span>
    <div class="gmain">
@@ -845,6 +853,7 @@ function drawSync(msg,ok){const c=getCode(),a=getAcc(),b=$('syncbody');$('synch'
    '<div class="alinks">'+
     (off?'':'<div class="al" style="cursor:default"><div><span>Status: <b id="syncstlbl">'+(curPresence()==='invisible'?'Invisible':'Active')+'</b></span><small>'+(curPresence()==='invisible'?'Classmates see you as Offline':'Shown on the class list')+'</small></div><select id="syncst" aria-label="Status" onchange="setPresence(this.value)" style="padding:5px 9px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:600 13px var(--sans)"><option value="active"'+(curPresence()!=='invisible'?' selected':'')+'>Active</option><option value="invisible"'+(curPresence()==='invisible'?' selected':'')+'>Invisible</option></select></div>')+
     '<a class="al" href="classlist.html"><span>Class list</span><small>See who is studying or on the site</small></a>'+
+    '<a class="al" href="dm.html"><span>Direct messages</span><small>Chat 1-on-1 with classmates</small></a>'+
     '<a class="al" href="attendance.html"><span>My attendance</span><small>From the class tracker</small></a>'+
     '<a class="al" href="notifications.html"><span>Notifications</span><small>Reminders and class updates</small></a>'+
     '<a class="al" href="privacy.html"><span>Privacy and your data</span><small>What is saved and who can see it</small></a></div>'+

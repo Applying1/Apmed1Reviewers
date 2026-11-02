@@ -10,45 +10,66 @@
 <style>
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{margin:0;height:100%}
-body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+html,body{margin:0;height:100%;overflow:hidden;scrollbar-gutter:stable}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
 a{color:inherit}
-button,textarea{font:inherit;color:inherit}
+button,textarea,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.top{display:flex;align-items:center;gap:10px;padding:12px 16px;background:color-mix(in oklab,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
-.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+
+/* Global Top Header Bar */
+.top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:color-mix(in oklab,var(--bg) 94%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;flex:none}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px;transition:background .15s}
 .back:hover{color:var(--text);background:var(--raised)}
 .sp{flex:1}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;padding:9px 16px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;padding:8px 14px;font-weight:600;font-size:13.5px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s,filter .15s}
 .btn:hover{background:var(--raised)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.btn.primary:hover{filter:brightness(1.07);background:var(--accent)}
-.btn.sm{padding:5px 8px;font-size:12px;border-radius:9px;gap:4px}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:5px 9px;font-size:12px;border-radius:9px;gap:4px}
 .btn.wide{width:100%}
 .btn:disabled{opacity:.5;cursor:default}
-.card{margin:16px auto;padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);max-width:540px}
+
+.card{margin:24px auto;padding:20px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);max-width:540px}
 .card h2{display:flex;align-items:center;gap:7px;margin:0 0 8px;font:700 13px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute)}
 .card p{margin:0 0 12px;color:var(--mute);font-size:14px}
 .err{margin:8px 0 0;color:var(--bad,#c0392b);font-size:13.5px}
 .empty{color:var(--faint);font-size:14px;text-align:center;padding:24px 0}
-/* status dots */
-.dot{flex:none;width:9px;height:9px;border-radius:50%;display:inline-block}
+
+/* Status dots with safe margins so 3px outer halo is never clipped */
+.dot{flex:none;width:9px;height:9px;border-radius:50%;display:inline-block;margin:3px 3px 3px 4px}
 .dot.studying{background:var(--good,#22a06b);box-shadow:0 0 0 3px color-mix(in oklab,var(--good,#22a06b) 24%,transparent)}
 .dot.here{background:var(--accent);box-shadow:0 0 0 3px color-mix(in oklab,var(--accent) 22%,transparent)}
 .dot.offline{background:var(--line2)}
+
 /* Partner header in chat */
-.phead{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.phead{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+#partnerAv{flex:none;display:flex;align-items:center;justify-content:center}
 .pinfo{min-width:0;flex:1}
 .pname{display:block;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pstatus{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* Thread chat stream */
-#chatWrap{flex:1;display:flex;flex-direction:column;max-width:680px;width:100%;margin:0 auto;padding:14px 16px 100px;min-height:0}
-.stream{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+.pstatus{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 0 1px 2px}
+
+/* Main Split Container */
+#mainWrap{flex:1;display:flex;min-height:0;height:100%;overflow:hidden;position:relative}
+
+/* Left Sidebar (Conversations & Classmate Search) */
+#inboxWrap{width:360px;flex:none;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--line);min-height:0;height:100%;overflow:hidden;position:relative}
+.inbox-top{padding:12px 14px 10px;border-bottom:1px solid var(--line);flex:none}
+.inbox-title{margin:0;font:800 18px/1.2 var(--sans);letter-spacing:-.3px;display:flex;align-items:center;gap:7px}
+.inbox-sub{margin:2px 0 0;color:var(--mute);font-size:12px}
+.inbox-search{position:relative;margin-top:10px}
+.inbox-search input{width:100%;padding:7px 10px 7px 30px;border-radius:10px;border:1px solid var(--line2);background:var(--raised);font-size:13px;outline:0;transition:border-color .15s}
+.inbox-search input:focus{border-color:var(--accent);background:var(--surface)}
+.inbox-search .s-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none;display:flex}
+.clist{flex:1;overflow-y:auto;padding:8px 10px;display:grid;gap:6px;min-height:0;scrollbar-gutter:stable}
+
+/* Right Chat Area */
+#chatWrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;overflow:hidden;background:var(--bg);position:relative}
+.stream{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;scrollbar-gutter:stable;padding:14px 18px}
 .dsep{text-align:center;margin:12px 0 6px;position:relative}
 .dsep span{font-size:12px;font-weight:600;color:var(--faint);background:var(--raised);padding:3px 10px;border-radius:99px;border:1px solid var(--line)}
-.msg{display:flex;flex-direction:column;max-width:82%;position:relative;animation:fadeIn .18s ease-out}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.msg{display:flex;flex-direction:column;max-width:80%;position:relative;animation:fadeIn .16s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 .msg.me{align-self:flex-end;align-items:flex-end}
 .msg.them{align-self:flex-start;align-items:flex-start}
 .bubble{padding:9px 13px;border-radius:16px;font-size:14.5px;line-height:1.45;word-break:break-word;white-space:pre-wrap;box-shadow:0 1px 2px #0000000a}
@@ -60,37 +81,52 @@ button{cursor:pointer}
 .msg .mdel{opacity:0;border:0;background:none;padding:2px 4px;color:var(--faint);font-size:11px;cursor:pointer;border-radius:4px;transition:opacity .15s}
 .msg:hover .mdel{opacity:1}
 .msg.sending{opacity:.6}
-/* Composer dock */
-.dock{position:fixed;bottom:0;left:0;right:0;background:color-mix(in oklab,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:20}
-.din{max-width:680px;margin:0 auto;display:flex;align-items:flex-end;gap:8px}
-.din textarea{flex:1;min-height:42px;max-height:130px;resize:none;padding:9px 12px;border-radius:14px;border:1.5px solid var(--line2);background:var(--surface);outline:0;font-size:14.5px;line-height:1.4}
+
+/* In-pane Composer dock */
+.dock{background:color-mix(in oklab,var(--bg) 95%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 16px;flex:none}
+.din{max-width:760px;margin:0 auto;display:flex;align-items:flex-end;gap:8px}
+.din textarea{flex:1;min-height:42px;max-height:120px;resize:none;padding:9px 12px;border-radius:13px;border:1.5px solid var(--line2);background:var(--surface);outline:0;font-size:14.5px;line-height:1.4}
 .din textarea:focus{border-color:var(--accent)}
 .sendbtn{flex:none;width:42px;height:42px;border-radius:12px;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;transition:filter .15s,transform .1s}
 .sendbtn:hover:not(:disabled){filter:brightness(1.08)}
 .sendbtn:active:not(:disabled){transform:scale(.95)}
 .sendbtn:disabled{opacity:.4;cursor:default}
-/* Inbox mode */
-#inboxWrap{max-width:620px;width:100%;margin:0 auto;padding:14px 16px 40px}
-.inbox-title{margin:10px 0 2px;font:800 24px/1.2 var(--sans);letter-spacing:-.4px}
-.inbox-sub{margin:0 0 16px;color:var(--mute);font-size:14px}
-.clist{display:grid;gap:8px}
-.crow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--surface);border:1px solid var(--line);text-decoration:none;transition:border-color .15s,background .15s}
-.crow:hover{border-color:var(--accent-line);background:var(--raised)}
+
+/* Conversation Row Cards */
+.crow{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid transparent;text-decoration:none;transition:background .15s,border-color .15s;cursor:pointer}
+.crow:hover{background:var(--raised);border-color:var(--line)}
+.crow.active{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 1px 3px #00000008}
 .crow .cw{flex:1;min-width:0}
 .crow-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
-.crow b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.crow time{font-size:12px;color:var(--faint);flex:none}
+.crow b{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow time{font-size:11.5px;color:var(--faint);flex:none}
 .crow-bot{display:flex;align-items:center;gap:8px}
-.crow-prev{font-size:13px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.crow-prev{font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
 .badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;flex:none}
+
+/* Section divider in search */
+.csec{font:700 11px/1 var(--sans);text-transform:uppercase;letter-spacing:.5px;color:var(--faint);padding:8px 6px 2px}
+
 .toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
-@media (max-width:480px){
- body.in-chat #backTxt{display:none}
- body.in-chat .back{padding:6px 8px}
+
+/* Responsive media queries */
+@media (max-width:719px){
+ #inboxWrap{width:100%;border-right:none}
+ body.in-chat #inboxWrap{display:none!important}
+ body:not(.in-chat) #chatWrap{display:none!important}
+ body:not(.in-chat) #partnerHead{display:none!important}
+ body:not(.in-chat) #duelBtn{display:none!important}
+ body.in-chat #backTxt{display:inline}
+}
+@media (min-width:720px){
+ #inboxWrap{display:flex!important}
+ #chatWrap{display:flex!important}
+ body.in-chat #backTxt{display:inline!important}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
+
 <header class="top" id="topBar">
  <a class="back" id="backBtn" href="classlist.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg><span id="backTxt">Class list</span></a>
  <div class="phead" id="partnerHead" hidden>
@@ -105,24 +141,41 @@ button{cursor:pointer}
 </header>
 
 <main id="mainWrap">
- <div id="inboxWrap" hidden>
-  <h1 class="inbox-title">Direct Messages</h1>
-  <p class="inbox-sub">Private messages with attendance-linked classmates.</p>
-  <div class="clist" id="convList"><p class="empty">Loading conversations…</p></div>
-  <div style="margin-top:16px"><a class="btn wide" href="classlist.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-users"/></svg>Browse Class list to message someone</a></div>
+ <div id="inboxWrap">
+  <div class="inbox-top">
+   <h1 class="inbox-title">
+    <svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg>
+    Direct Messages
+   </h1>
+   <p class="inbox-sub">Private messages with attendance-linked classmates.</p>
+   <div class="inbox-search">
+    <span class="s-icon"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-search"/></svg></span>
+    <input type="text" id="dmSearch" placeholder="Search conversations or classmates…">
+   </div>
+  </div>
+  <div class="clist" id="convList">
+   <p class="empty">Loading conversations…</p>
+  </div>
  </div>
 
- <div id="chatWrap" hidden>
-  <div class="stream" id="stream"><p class="empty">Loading messages…</p></div>
+ <div id="chatWrap">
+  <div class="stream" id="stream">
+   <div class="empty" id="noChatSelected" style="margin:auto;max-width:320px;text-align:center">
+    <div style="width:48px;height:48px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:inline-grid;place-items:center;margin-bottom:12px">
+     <svg class="i" width="24" height="24" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg>
+    </div>
+    <p style="font-size:16px;font-weight:700;color:var(--text);margin:0 0 4px">Your Messages</p>
+    <p style="font-size:13px;color:var(--mute);margin:0">Select a classmate from the list to start chatting.</p>
+   </div>
+  </div>
+  <div class="dock" id="composerDock" hidden>
+   <div class="din">
+    <textarea id="msgInput" rows="1" placeholder="Message…" maxlength="1000"></textarea>
+    <button class="sendbtn" id="sendBtn" title="Send message"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+   </div>
+  </div>
  </div>
 </main>
-
-<div class="dock" id="composerDock" hidden>
- <div class="din">
-  <textarea id="msgInput" rows="1" placeholder="Message…" maxlength="1000"></textarea>
-  <button class="sendbtn" id="sendBtn" title="Send message"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
- </div>
-</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -137,7 +190,8 @@ function toast(t,ms){const e=$('toast');if(!e)return;e.textContent=t;e.classList
 
 const Q=new URLSearchParams(location.search);
 let PARTNER_ID=Q.get('with')||'',PARTNER_NAME=Q.get('to')||'';
-let COURSES=[],MESSAGES=[],POLL_TIMER=null,IS_SENDING=false;
+let COURSES=[],MESSAGES=[],ALL_CLASSMATES=[],CONVERSATIONS=[];
+let POLL_TIMER=null,IS_SENDING=false,LAST_CONVS_HASH='',LAST_SEARCH='';
 
 function timeAgo(t){
  if(!t)return '';
@@ -178,29 +232,45 @@ function unlinked(msg){
   '<a class="btn primary wide" href="attendance.html">Go to My attendance</a></div>';
 }
 
-/* -------------------- INBOX VIEW -------------------- */
-async function loadInbox(){
- document.body.classList.remove('in-chat');
- $('inboxWrap').hidden=false;
- $('chatWrap').hidden=true;
- $('composerDock').hidden=true;
- $('partnerHead').hidden=true;
- $('duelBtn').hidden=true;
- $('backTxt').textContent='Class list';
- $('backBtn').href='classlist.html';
-
+/* -------------------- INBOX / CONVERSATIONS -------------------- */
+async function loadInbox(quiet){
  try{
-  const convs=await Auth.rpc('dm_conversations',{},true);
-  const list=$('convList');
-  if(!Array.isArray(convs)||!convs.length){
-   list.innerHTML='<div class="card" style="margin:8px 0;text-align:center"><p>No direct messages yet.</p><p style="font-size:13px;color:var(--faint)">Tap "DM" beside any classmate on the Class list to start a conversation.</p></div>';
-   return;
-  }
-  list.innerHTML=convs.map(c=>{
+  const [convs, classList] = await Promise.all([
+   Auth.rpc('dm_conversations',{},true).catch(()=>[]),
+   ALL_CLASSMATES.length ? Promise.resolve(ALL_CLASSMATES) : Auth.rpc('class_list',{},true).catch(()=>[])
+  ]);
+  if(Array.isArray(classList)&&classList.length) ALL_CLASSMATES=classList;
+
+  const convsArray = Array.isArray(convs) ? convs : [];
+  CONVERSATIONS = convsArray;
+
+  // Don't re-render sidebar if data hasn't changed and no active filter query
+  const hash = JSON.stringify(convsArray) + '|' + (PARTNER_ID||'') + '|' + LAST_SEARCH;
+  if(hash === LAST_CONVS_HASH && quiet) return;
+  LAST_CONVS_HASH = hash;
+
+  renderSidebarList();
+ }catch(e){
+  if(!quiet) $('convList').innerHTML='<p class="err">'+esc(e.message||'Could not load conversations.')+'</p>';
+ }
+}
+
+function renderSidebarList(){
+ const list=$('convList');
+ const q=(LAST_SEARCH||'').trim().toLowerCase();
+ let html='';
+
+ let filteredConvs = CONVERSATIONS;
+ if(q){
+  filteredConvs = CONVERSATIONS.filter(c => (c.name||'').toLowerCase().includes(q) || (c.last_message||'').toLowerCase().includes(q));
+ }
+
+ if(filteredConvs.length){
+  html += filteredConvs.map(c=>{
    const stateCls=esc(c.state||'offline');
-   const stateDesc=c.state==='studying'?(c.course?'Studying '+c.course:'Studying'):(c.state==='here'?'On the site':(c.seen_at?'Last online '+timeAgo(c.seen_at):'Offline'));
-   return '<a class="crow" href="dm.html?with='+encodeURIComponent(c.id)+'&to='+encodeURIComponent(c.name)+'">'+
-    '<div style="position:relative">'+avHtml(c.name,c.av,c.avatar,44)+'<i class="dot '+stateCls+'" style="position:absolute;bottom:0;right:0;border:2px solid var(--surface)"></i></div>'+
+   const isActive = (c.id === PARTNER_ID);
+   return '<a class="crow '+(isActive?'active':'')+'" href="dm.html?with='+encodeURIComponent(c.id)+'&to='+encodeURIComponent(c.name)+'" onclick="onConvoClick(event,\''+esc(c.id)+'\',\''+esc(c.name)+'\')">'+
+    '<div style="position:relative;flex:none">'+avHtml(c.name,c.av,c.avatar,40)+'<i class="dot '+stateCls+'" style="position:absolute;bottom:-2px;right:-2px;border:2px solid var(--surface)"></i></div>'+
     '<div class="cw">'+
      '<div class="crow-top"><b>'+esc(c.name)+'</b><time>'+timeAgo(c.last_at)+'</time></div>'+
      '<div class="crow-bot">'+
@@ -210,8 +280,66 @@ async function loadInbox(){
     '</div>'+
    '</a>';
   }).join('');
- }catch(e){
-  $('convList').innerHTML='<p class="err">'+esc(e.message||'Could not load conversations.')+'</p>';
+ }
+
+ // If searching or no convos, show matching classmates from ALL_CLASSMATES
+ if(q || !CONVERSATIONS.length){
+  const existingIds = new Set(CONVERSATIONS.map(c=>c.id));
+  const classmates = ALL_CLASSMATES.filter(cm => !cm.me && !existingIds.has(cm.id) && (!q || cm.name.toLowerCase().includes(q)));
+  if(classmates.length){
+   html += '<div class="csec">Classmates</div>';
+   html += classmates.map(cm => {
+    const stCls = esc(cm.state || 'offline');
+    let stText = 'Offline';
+    if(cm.state==='studying') stText = cm.course ? 'Studying '+cm.course : 'Studying';
+    else if(cm.state==='here') stText = 'On the site';
+    else if(cm.seen_at) stText = 'Last online '+timeAgo(cm.seen_at);
+
+    const isActive = (cm.id === PARTNER_ID);
+    return '<a class="crow '+(isActive?'active':'')+'" href="dm.html?with='+encodeURIComponent(cm.id)+'&to='+encodeURIComponent(cm.name)+'" onclick="onConvoClick(event,\''+esc(cm.id)+'\',\''+esc(cm.name)+'\')">'+
+     '<div style="position:relative;flex:none">'+avHtml(cm.name,cm.av,cm.avatar,40)+'<i class="dot '+stCls+'" style="position:absolute;bottom:-2px;right:-2px;border:2px solid var(--surface)"></i></div>'+
+     '<div class="cw">'+
+      '<div class="crow-top"><b>'+esc(cm.name)+'</b></div>'+
+      '<div class="crow-bot"><span class="crow-prev">'+esc(stText)+'</span></div>'+
+     '</div>'+
+    '</a>';
+   }).join('');
+  }
+ }
+
+ if(!html){
+  html = '<p class="empty">No conversations found.</p>';
+ }
+ list.innerHTML = html;
+}
+
+function onConvoClick(e, id, name){
+ e.preventDefault();
+ selectPartner(id, name);
+}
+
+function selectPartner(id, name){
+ PARTNER_ID = id;
+ PARTNER_NAME = name;
+ history.replaceState(null, '', 'dm.html?with='+encodeURIComponent(id)+'&to='+encodeURIComponent(name));
+ setupPartnerHeader();
+ loadThread();
+ renderSidebarList();
+}
+
+function handleBack(e){
+ if(window.innerWidth < 720 && document.body.classList.contains('in-chat')){
+  e.preventDefault();
+  document.body.classList.remove('in-chat');
+  PARTNER_ID = '';
+  PARTNER_NAME = '';
+  history.replaceState(null, '', 'dm.html');
+  $('partnerHead').hidden = true;
+  $('duelBtn').hidden = true;
+  $('composerDock').hidden = true;
+  $('backTxt').textContent = 'Class list';
+  $('backBtn').href = 'classlist.html';
+  renderSidebarList();
  }
 }
 
@@ -246,9 +374,21 @@ function renderMessages(){
  st.innerHTML=html;
 }
 
-function scrollToBottom(){
+function scrollToBottom(smooth){
  const st=$('stream');
- if(st)st.scrollTop=st.scrollHeight;
+ if(!st)return;
+ if(smooth) st.scrollTo({top:st.scrollHeight, behavior:'smooth'});
+ else st.scrollTop=st.scrollHeight;
+}
+
+function isThreadSame(newMsgs, oldMsgs){
+ if(newMsgs.length !== oldMsgs.length) return false;
+ if(!newMsgs.length) return true;
+ if(newMsgs[newMsgs.length-1].id !== oldMsgs[oldMsgs.length-1].id) return false;
+ for(let i=0; i<newMsgs.length; i++){
+  if(newMsgs[i].read !== oldMsgs[i].read || newMsgs[i].sending !== oldMsgs[i].sending) return false;
+ }
+ return true;
 }
 
 async function loadThread(quiet){
@@ -256,6 +396,8 @@ async function loadThread(quiet){
  try{
   const msgs=await Auth.rpc('dm_thread',{p_with:PARTNER_ID},true);
   if(Array.isArray(msgs)){
+   if(isThreadSame(msgs, MESSAGES) && quiet) return;
+
    const wasNearBottom=(()=>{
     const st=$('stream');
     return st?(st.scrollHeight-st.scrollTop-st.clientHeight<80):true;
@@ -290,6 +432,7 @@ async function sendMsg(){
   tempMsg.sending=false;
   if(res&&res.id)tempMsg.id=res.id;
   renderMessages();
+  loadInbox(true);
  }catch(e){
   toast(e.message||'Could not send message');
   MESSAGES=MESSAGES.filter(m=>m.id!==tempId);
@@ -308,6 +451,7 @@ async function delMsg(id){
   MESSAGES=MESSAGES.filter(m=>m.id!==id);
   renderMessages();
   toast('Message removed');
+  loadInbox(true);
  }catch(e){
   toast(e.message||'Could not delete');
  }
@@ -318,12 +462,15 @@ function btrim(s){return String(s||'').trim()}
 /* Setup partner details in header */
 async function setupPartnerHeader(){
  document.body.classList.add('in-chat');
- $('inboxWrap').hidden=true;
- $('chatWrap').hidden=false;
  $('composerDock').hidden=false;
  $('partnerHead').hidden=false;
- $('backTxt').textContent='Messages';
- $('backBtn').href='dm.html';
+ if(window.innerWidth < 720){
+  $('backTxt').textContent='Messages';
+  $('backBtn').href='#messages';
+ }else{
+  $('backTxt').textContent='Class list';
+  $('backBtn').href='classlist.html';
+ }
 
  if(PARTNER_NAME){
   $('partnerName').textContent=PARTNER_NAME;
@@ -334,7 +481,11 @@ async function setupPartnerHeader(){
 
  // Fetch class list to get partner's avatar and real live presence / last online
  try{
-  const rows=await Auth.rpc('class_list',{},true);
+  let rows = ALL_CLASSMATES;
+  if(!rows.length){
+   rows=await Auth.rpc('class_list',{},true);
+   if(Array.isArray(rows)) ALL_CLASSMATES=rows;
+  }
   let p=null;
   if(Array.isArray(rows)){
    if(PARTNER_ID)p=rows.find(r=>r.id===PARTNER_ID);
@@ -365,7 +516,7 @@ function setupInput(){
  const inp=$('msgInput');
  inp.addEventListener('input',()=>{
   inp.style.height='auto';
-  inp.style.height=Math.min(130,inp.scrollHeight)+'px';
+  inp.style.height=Math.min(120,inp.scrollHeight)+'px';
  });
  inp.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&!e.shiftKey){
@@ -374,6 +525,13 @@ function setupInput(){
   }
  });
  $('sendBtn').onclick=sendMsg;
+
+ $('dmSearch').addEventListener('input', e=>{
+  LAST_SEARCH = e.target.value;
+  renderSidebarList();
+ });
+
+ $('backBtn').addEventListener('click', handleBack);
 }
 
 /* -------------------- BOOT -------------------- */
@@ -400,25 +558,25 @@ async function boot(){
  }
 
  setupInput();
+ await loadInbox();
 
  if(PARTNER_ID||PARTNER_NAME){
   await setupPartnerHeader();
   await loadThread();
   scrollToBottom();
-  POLL_TIMER=setInterval(()=>{
-   if(document.visibilityState==='visible'&&Auth.ses())loadThread(true);
-  },3500);
- }else{
-  await loadInbox();
-  POLL_TIMER=setInterval(()=>{
-   if(document.visibilityState==='visible'&&Auth.ses())loadInbox();
-  },5000);
  }
+
+ POLL_TIMER=setInterval(()=>{
+  if(document.visibilityState==='visible'&&Auth.ses()){
+   loadInbox(true);
+   if(PARTNER_ID)loadThread(true);
+  }
+ },3500);
 
  document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&Auth.ses()){
+   loadInbox(true);
    if(PARTNER_ID)loadThread(true);
-   else loadInbox();
   }
  });
 }
