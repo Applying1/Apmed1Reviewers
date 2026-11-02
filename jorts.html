@@ -1693,8 +1693,13 @@
 <!-- Toast notification banner -->
 <div class="toast" id="toast" role="status"></div>
 
-<!-- Background audio elements -->
+<!-- Background audio & preloaded soundboard effects -->
 <audio id="anthemAudio" preload="auto" loop src="audio/runway-anthem.mp3"></audio>
+<audio id="sfxCamera" preload="auto" src="audio/sfx-camera.mp3"></audio>
+<audio id="sfxAirhorn" preload="auto" src="audio/sfx-airhorn.mp3"></audio>
+<audio id="sfxCheer" preload="auto" src="audio/sfx-cheer.mp3"></audio>
+<audio id="sfxDrumroll" preload="auto" src="audio/sfx-drumroll.mp3"></audio>
+<audio id="sfxFanfare" preload="auto" src="audio/sfx-fanfare.mp3"></audio>
 
 <script>
 /* -------------------------------------------------------------------------
@@ -2426,7 +2431,31 @@ function playHiHat() {
  src.start();
 }
 
+const SFX_FILES = {
+ camera: 'audio/sfx-camera.mp3',
+ airhorn: 'audio/sfx-airhorn.mp3',
+ cheer: 'audio/sfx-cheer.mp3',
+ drumroll: 'audio/sfx-drumroll.mp3',
+ fanfare: 'audio/sfx-fanfare.mp3'
+};
+
 function playSfx(type) {
+ const src = SFX_FILES[type];
+ if (src) {
+  try {
+   const snd = new Audio(src);
+   snd.volume = masterVolume;
+   const p = snd.play();
+   if (p) p.catch(() => playSynthSfx(type));
+   return;
+  } catch (_) {
+   // Fallback to web audio synthesis
+  }
+ }
+ playSynthSfx(type);
+}
+
+function playSynthSfx(type) {
  initAudio();
  const t0 = audioCtx.currentTime;
 
