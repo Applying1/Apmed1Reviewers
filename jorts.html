@@ -239,12 +239,12 @@
    box-shadow: 0 1px 2px #0000001a;
   }
 
-  /* Category Award Chips (.chips from shop.html) */
+  /* Unified Category Control & Chips */
   .chips {
    display: flex;
-   gap: 8px;
+   gap: 6px;
    overflow-x: auto;
-   padding: 4px 2px 14px;
+   padding: 2px 0;
    scrollbar-width: none;
   }
   .chips::-webkit-scrollbar { display: none; }
@@ -253,8 +253,8 @@
    border: 1px solid var(--line2);
    background: var(--surface);
    border-radius: 99px;
-   padding: 7px 14px;
-   font: 500 14px Fredoka, var(--sans);
+   padding: 6px 13px;
+   font: 500 13.5px Fredoka, var(--sans);
    color: var(--mute);
    white-space: nowrap;
    transition: all .15s ease;
@@ -270,33 +270,54 @@
    box-shadow: 0 2px 8px rgba(217, 155, 38, 0.25);
   }
 
-  /* Lead text under chips */
-  .award-lead {
+  /* Single Unified Category Control Container (Merged Category Filter + Status) */
+  .unified-control {
    background: var(--surface);
    border: 1px solid var(--line);
-   border-radius: 14px;
-   padding: 12px 16px;
-   margin-bottom: 18px;
+   border-radius: 16px;
+   padding: 9px 12px;
+   margin-bottom: 14px;
    box-shadow: var(--shadow);
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+  }
+  .control-main {
    display: flex;
    align-items: center;
    justify-content: space-between;
-   gap: 12px;
-   flex-wrap: wrap;
+   gap: 10px;
   }
-  .award-lead-text b {
-   display: block;
-   font: 600 16px Fredoka, var(--sans);
-   color: var(--text);
+  .control-main .chips {
+   flex: 1;
+   min-width: 0;
   }
-  .award-lead-text span {
-   font-size: 13.5px;
+  .control-status {
+   flex-shrink: 0;
+  }
+  .status-pill {
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+   font: 700 12px/1.2 Fredoka, var(--sans);
+   padding: 5px 11px;
+   border-radius: 99px;
+   background: var(--gold-soft);
+   color: var(--gold-ink);
+   border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+   white-space: nowrap;
+   letter-spacing: .02em;
+  }
+  .status-pill.full {
+   background: color-mix(in srgb, var(--good) 15%, var(--surface));
+   color: var(--good);
+   border-color: color-mix(in srgb, var(--good) 40%, transparent);
+  }
+  .control-sub {
+   font-size: 12.5px;
    color: var(--mute);
-  }
-  .award-lead-status {
-   font-size: 13px;
-   font-weight: 700;
-   color: var(--gold);
+   line-height: 1.35;
+   padding: 0 2px;
   }
 
   /* Contestant Cards Grid (.it style from shop.html) */
@@ -352,7 +373,7 @@
    transform: scale(1.04);
   }
 
-  /* Tactile Numbered Ticket when NO photo exists */
+  /* Editorial Hyped Placeholder with Subtle Diagonal Denim Twill */
   .pic-placeholder {
    width: 100%;
    height: 100%;
@@ -360,28 +381,83 @@
    flex-direction: column;
    align-items: center;
    justify-content: center;
-   background: radial-gradient(circle at 50% 40%, var(--gold-soft) 0%, var(--raised) 70%);
-   color: var(--mute);
-   padding: 16px;
+   position: relative;
+   overflow: hidden;
+   background:
+     repeating-linear-gradient(
+       -45deg,
+       rgba(27, 49, 84, 0.08),
+       rgba(27, 49, 84, 0.08) 2px,
+       transparent 2px,
+       transparent 8px
+     ),
+     radial-gradient(circle at 50% 42%, var(--gold-soft) 0%, var(--raised) 80%);
+   padding: 16px 14px;
    text-align: center;
    user-select: none;
+   cursor: pointer;
+  }
+  :root[data-theme="dark"] .pic-placeholder,
+  @media (prefers-color-scheme: dark) {
+   :root:not([data-theme="light"]) .pic-placeholder {
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.04),
+        rgba(255, 255, 255, 0.04) 2px,
+        transparent 2px,
+        transparent 8px
+      ),
+      radial-gradient(circle at 50% 42%, var(--gold-soft) 0%, var(--raised) 80%);
+   }
+  }
+  /* Tailor's perimeter chalk stitching */
+  .pic-placeholder::before {
+   content: '';
+   position: absolute;
+   inset: 8px;
+   border: 1.5px dashed color-mix(in srgb, var(--gold) 45%, transparent);
+   border-radius: 10px;
+   pointer-events: none;
   }
   .ticket-num {
-   font: 700 36px/1 Fredoka, var(--sans);
+   font: 700 38px/1 Fredoka, var(--sans);
    color: var(--gold);
-   margin-bottom: 4px;
-   letter-spacing: -1px;
-  }
-  .ticket-label {
-   font: 600 11px/1.2 var(--sans);
-   letter-spacing: .08em;
-   text-transform: uppercase;
-   color: var(--mute);
    margin-bottom: 8px;
+   letter-spacing: -1px;
+   text-shadow: 0 2px 10px rgba(217, 155, 38, 0.25);
+  }
+  /* Editorial Stamped Badge */
+  .placeholder-stamp {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 5px;
+   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+   font-size: 10px;
+   font-weight: 800;
+   letter-spacing: .12em;
+   text-transform: uppercase;
+   padding: 5px 9px;
+   border-radius: 4px;
+   background: var(--surface);
+   color: var(--gold-ink);
+   border: 1.5px solid var(--gold);
+   box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+   transform: rotate(-3deg);
+   margin-bottom: 8px;
+   max-width: 90%;
+   line-height: 1.2;
+   transition: transform .2s ease;
+  }
+  .pic-placeholder:hover .placeholder-stamp {
+   transform: rotate(0deg) scale(1.05);
   }
   .ticket-hint {
-   font-size: 12px;
-   color: var(--faint);
+   font-size: 11.5px;
+   color: var(--mute);
+   font-weight: 500;
+   line-height: 1.3;
   }
 
   /* Look & Finalist Badges on photo */
@@ -655,84 +731,256 @@
    align-items: center;
    gap: 8px;
   }
-  .rule-list {
-   list-style: none;
-   padding: 0;
-   margin: 0;
-   display: flex;
-   flex-direction: column;
-   gap: 12px;
-  }
-  .rule-list li {
-   display: flex;
-   align-items: flex-start;
-   gap: 10px;
-   font-size: 14.5px;
-   line-height: 1.5;
-   color: var(--text);
-  }
-  .rule-dot {
-   width: 7px;
-   height: 7px;
-   border-radius: 50%;
-   background: var(--gold);
-   margin-top: 8px;
-   flex-shrink: 0;
-  }
-
-  /* Awards Grid */
-  .awards-grid {
+  /* Official Mechanics 2x3 Bento Grid (Tab 3) */
+  .mechanics-bento {
    display: grid;
-   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+   grid-template-columns: repeat(2, 1fr);
    gap: 12px;
   }
-  .award-box {
+  @media (max-width: 620px) {
+   .mechanics-bento { grid-template-columns: 1fr; }
+  }
+  .bento-card {
    background: var(--raised);
    border: 1px solid var(--line);
    border-radius: 14px;
    padding: 14px 16px;
    display: flex;
    flex-direction: column;
-   gap: 6px;
+   gap: 8px;
+   transition: transform .18s ease, border-color .18s ease;
   }
-  .award-box.champ {
-   grid-column: 1 / -1;
-   background: var(--gold-soft);
-   border-color: var(--gold);
+  .bento-card:hover {
+   transform: translateY(-1px);
+   border-color: var(--accent-line);
   }
-  .award-box-top {
+  .bento-head {
    display: flex;
    align-items: center;
-   justify-content: space-between;
    gap: 8px;
   }
-  .award-box-title {
-   font: 600 16px Fredoka, var(--sans);
-   color: var(--text);
-   margin: 0;
-  }
-  .champ .award-box-title {
-   color: var(--gold-ink);
-   font-size: 18px;
-  }
-  .award-tag {
-   font: 700 11px Fredoka, var(--sans);
-   padding: 2px 8px;
-   border-radius: 99px;
+  .bento-num {
+   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+   font-size: 11px;
+   font-weight: 800;
+   color: var(--gold);
+   letter-spacing: .08em;
    background: var(--surface);
-   color: var(--mute);
+   padding: 2px 7px;
+   border-radius: 6px;
    border: 1px solid var(--line2);
   }
-  .champ .award-tag {
-   background: var(--gold);
-   color: #2b1c02;
-   border-color: var(--gold);
+  .bento-title {
+   font: 700 13.5px/1 Fredoka, var(--sans);
+   letter-spacing: .04em;
+   color: var(--text);
+   margin: 0;
+   text-transform: uppercase;
   }
-  .award-box p {
+  .bento-body {
    margin: 0;
    font-size: 13.5px;
    color: var(--mute);
    line-height: 1.45;
+  }
+
+  /* Prestige Awards Grid & Colored Crests (Tab 3) */
+  .awards-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+   gap: 14px;
+  }
+  .award-box {
+   background: var(--surface);
+   border: 1px solid var(--line);
+   border-radius: 16px;
+   padding: 16px;
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+   position: relative;
+   overflow: hidden;
+   box-shadow: var(--shadow);
+   transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .award-box:hover {
+   transform: translateY(-2px);
+  }
+  .award-crest-row {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+  }
+  .award-crest {
+   width: 42px;
+   height: 42px;
+   border-radius: 12px;
+   display: grid;
+   place-items: center;
+   flex-shrink: 0;
+   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .award-crest .i { width: 22px; height: 22px; }
+  .award-box-header {
+   flex: 1;
+   min-width: 0;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 8px;
+   flex-wrap: wrap;
+  }
+  .award-box-title {
+   font: 600 15.5px Fredoka, var(--sans);
+   color: var(--text);
+   margin: 0;
+  }
+  .award-tag {
+   font: 700 10.5px Fredoka, var(--sans);
+   padding: 3px 8px;
+   border-radius: 99px;
+   text-transform: uppercase;
+   letter-spacing: .04em;
+  }
+  .award-box p {
+   margin: 0;
+   font-size: 13px;
+   color: var(--mute);
+   line-height: 1.45;
+  }
+
+  /* Gold Tier — JORTS GOD / GODDESS Supreme Championship */
+  .award-box.tier-gold {
+   grid-column: 1 / -1;
+   background: radial-gradient(circle at 10% 20%, rgba(217, 155, 38, 0.16) 0%, var(--surface) 75%);
+   border: 2px solid transparent;
+   position: relative;
+   box-shadow: 0 8px 32px rgba(217, 155, 38, 0.28), 0 0 1px 1px rgba(255, 224, 130, 0.4);
+  }
+  .award-box.tier-gold::before {
+   content: '';
+   position: absolute;
+   inset: -2px;
+   border-radius: 17px;
+   background: linear-gradient(135deg, #ffd700 0%, #d99b26 40%, #fff0a8 70%, #b8860b 100%);
+   z-index: -1;
+  }
+  .tier-gold .award-crest {
+   background: linear-gradient(135deg, #ffd700, #b8860b);
+   color: #2a1800;
+   box-shadow: 0 4px 16px rgba(217, 155, 38, 0.45);
+  }
+  .tier-gold .award-box-title {
+   font-size: 18.5px;
+   font-weight: 700;
+   color: var(--gold-ink);
+  }
+  .tier-gold .award-tag {
+   background: linear-gradient(135deg, #d99b26, #b8860b);
+   color: #fff;
+   border: 0;
+   font-weight: 700;
+   box-shadow: 0 2px 8px rgba(184, 134, 11, 0.35);
+  }
+
+  /* Silver Tier — 1st Runner Up (JORTS KING / QUEEN) */
+  .award-box.tier-silver {
+   border-color: #94a3b8;
+   box-shadow: 0 4px 18px rgba(148, 163, 184, 0.14);
+  }
+  .tier-silver .award-crest {
+   background: linear-gradient(135deg, #f8fafc, #94a3b8);
+   color: #1e293b;
+  }
+  .tier-silver .award-tag {
+   background: rgba(148, 163, 184, 0.2);
+   color: var(--text);
+   border: 1px solid #94a3b8;
+  }
+
+  /* Bronze Tier — 2nd Runner Up (JORTS MASTER) */
+  .award-box.tier-bronze {
+   border-color: #d97706;
+   box-shadow: 0 4px 18px rgba(217, 119, 6, 0.14);
+  }
+  .tier-bronze .award-crest {
+   background: linear-gradient(135deg, #fef3c7, #d97706);
+   color: #451a03;
+  }
+  .tier-bronze .award-tag {
+   background: rgba(217, 119, 6, 0.15);
+   color: #d97706;
+   border: 1px solid #d97706;
+  }
+
+  /* Blue Tier — Best Runway Walk */
+  .award-box.tier-blue {
+   border-color: #0284c7;
+   box-shadow: 0 4px 18px rgba(2, 132, 199, 0.14);
+  }
+  .tier-blue .award-crest {
+   background: linear-gradient(135deg, #e0f2fe, #0284c7);
+   color: #0c4a6e;
+  }
+  .tier-blue .award-tag {
+   background: rgba(2, 132, 199, 0.15);
+   color: #0284c7;
+   border: 1px solid #0284c7;
+  }
+
+  /* Purple Tier — Best in First Q&A */
+  .award-box.tier-purple {
+   border-color: #9333ea;
+   box-shadow: 0 4px 18px rgba(147, 51, 234, 0.14);
+  }
+  .tier-purple .award-crest {
+   background: linear-gradient(135deg, #f3e8ff, #9333ea);
+   color: #3b0764;
+  }
+  .tier-purple .award-tag {
+   background: rgba(147, 51, 234, 0.15);
+   color: #9333ea;
+   border: 1px solid #9333ea;
+  }
+
+  /* Emerald Tier — Best Styled (Judges' Choice) */
+  .award-box.tier-emerald {
+   border-color: #059669;
+   box-shadow: 0 4px 18px rgba(5, 150, 105, 0.14);
+  }
+  .tier-emerald .award-crest {
+   background: linear-gradient(135deg, #d1fae5, #059669);
+   color: #064e3b;
+  }
+  .tier-emerald .award-tag {
+   background: rgba(5, 150, 105, 0.15);
+   color: #059669;
+   border: 1px solid #059669;
+  }
+  :root[data-theme="dark"] .tier-silver .award-tag {
+   background: rgba(148, 163, 184, 0.25);
+   color: #e2e8f0;
+   border-color: #64748b;
+  }
+  :root[data-theme="dark"] .tier-bronze .award-tag {
+   background: rgba(217, 119, 6, 0.25);
+   color: #fde68a;
+   border-color: #b45309;
+  }
+  :root[data-theme="dark"] .tier-blue .award-tag {
+   background: rgba(2, 132, 199, 0.25);
+   color: #bae6fd;
+   border-color: #0369a1;
+  }
+  :root[data-theme="dark"] .tier-purple .award-tag {
+   background: rgba(147, 51, 234, 0.25);
+   color: #e9d5ff;
+   border-color: #7e22ce;
+  }
+  :root[data-theme="dark"] .tier-emerald .award-tag {
+   background: rgba(5, 150, 105, 0.25);
+   color: #a7f3d0;
+   border-color: #047857;
   }
 
   /* Modals & In-Page Sheets (from shop.html) */
@@ -965,6 +1213,30 @@
    color: var(--gold-ink);
    transform: translateY(-1px);
   }
+
+  /* Floating switch for organizer to exit audience preview */
+  .floating-mod-switch {
+   position: fixed;
+   bottom: 18px;
+   right: 18px;
+   z-index: 45;
+   background: var(--denim);
+   color: #fff;
+   border: 1.5px solid var(--gold);
+   border-radius: 99px;
+   padding: 8px 16px;
+   font: 600 13px Fredoka, var(--sans);
+   display: inline-flex;
+   align-items: center;
+   gap: 7px;
+   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+   cursor: pointer;
+   transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .floating-mod-switch:hover {
+   transform: translateY(-2px);
+   box-shadow: 0 14px 36px rgba(0,0,0,0.45);
+  }
  </style>
 </head>
 <body>
@@ -984,6 +1256,10 @@
  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
  <symbol id="i-timer" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></symbol>
  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
+ <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></symbol>
+ <symbol id="i-gem" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></symbol>
+ <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></symbol>
+ <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
 </svg>
 
 <main>
@@ -998,7 +1274,7 @@
    <svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-play"/></svg>
    <span id="musicBtnLabel">Music</span>
   </button>
-  <button class="btn-top" onclick="openManageSheet()">
+  <button class="btn-top" id="manageBtn" onclick="openManageSheet()">
    <svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-settings"/></svg>
    Manage
   </button>
@@ -1031,16 +1307,15 @@
 
  <!-- TAB 1: CONTESTANTS & BALLOT -->
  <section id="tab-contestants">
-  <!-- Category Award Selection Chips -->
-  <div class="chips" id="awardChips"></div>
-
-  <!-- Category info summary -->
-  <div class="award-lead">
-   <div class="award-lead-text">
-    <b id="curAwardTitle">Top 5 Finalists (Advance to Finale)</b>
-    <span id="curAwardDesc">Pick up to 3 contestants to advance to the Top 5 Final Runway.</span>
+  <!-- Unified Category Control Container (Merged chips + status pill + hint) -->
+  <div class="unified-control">
+   <div class="control-main">
+    <div class="chips" id="awardChips"></div>
+    <div class="control-status">
+     <span class="status-pill" id="curAwardPicks">0 of 3 picked</span>
+    </div>
    </div>
-   <div class="award-lead-status" id="curAwardPicks">0 of 3 picked</div>
+   <div class="control-sub" id="curAwardDesc">Pick up to 3 contestants to advance to the Top 5 Final Runway.</div>
   </div>
 
   <!-- Contestants Cards Grid -->
@@ -1066,14 +1341,55 @@
     <svg class="i" width="18" height="18" aria-hidden="true"><use href="#i-file-text"/></svg>
     Official Mechanics
    </h2>
-   <ul class="rule-list">
-    <li><span class="rule-dot"></span><span><b>Open to all students:</b> Join the jorts agenda! Male and female compete together in one unified catwalk.</span></li>
-    <li><span class="rule-dot"></span><span><b>Dress Code:</b> Participants must wear their best jorts fit. Any style, any wash, any level of questionable fashion decisions.</span></li>
-    <li><span class="rule-dot"></span><span><b>Styling is up to you:</b> Layering, statement belts, chains, shoes, and creative accessories are welcome.</span></li>
-    <li><span class="rule-dot"></span><span><b>Runway Walk:</b> Each participant gets their moment to walk, strike signature poses, and show off their fit.</span></li>
-    <li><span class="rule-dot"></span><span><b>Voting:</b> Everyone gets to vote based on overall look, creativity, styling, and confidence.</span></li>
-    <li><span class="rule-dot"></span><span><b>No need to buy new:</b> Work with what you have. DIY cutoffs and frayed hems are highly celebrated!</span></li>
-   </ul>
+   <div class="mechanics-bento">
+    <div class="bento-card">
+     <div class="bento-head">
+      <span class="bento-num">01</span>
+      <h3 class="bento-title">OPEN TO ALL</h3>
+     </div>
+     <p class="bento-body">Join the jorts agenda! Male and female compete together in one unified catwalk.</p>
+    </div>
+
+    <div class="bento-card">
+     <div class="bento-head">
+      <span class="bento-num">02</span>
+      <h3 class="bento-title">DRESS CODE</h3>
+     </div>
+     <p class="bento-body">Participants must wear their best jorts fit. Any style, any wash, any level of questionable fashion decisions.</p>
+    </div>
+
+    <div class="bento-card">
+     <div class="bento-head">
+      <span class="bento-num">03</span>
+      <h3 class="bento-title">STYLING</h3>
+     </div>
+     <p class="bento-body">Layering, statement belts, chains, shoes, and creative accessories are fully welcomed and encouraged.</p>
+    </div>
+
+    <div class="bento-card">
+     <div class="bento-head">
+      <span class="bento-num">04</span>
+      <h3 class="bento-title">RUNWAY WALK</h3>
+     </div>
+     <p class="bento-body">Each participant gets their moment to walk, strike signature poses, and show off their fit on stage.</p>
+    </div>
+
+    <div class="bento-card">
+     <div class="bento-head">
+      <span class="bento-num">05</span>
+      <h3 class="bento-title">VOTING</h3>
+     </div>
+     <p class="bento-body">Audience votes based on overall look, creativity, styling execution, and stage confidence.</p>
+    </div>
+
+    <div class="bento-card">
+     <div class="bento-head">
+      <span class="bento-num">06</span>
+      <h3 class="bento-title">DIY CUTOFFS</h3>
+     </div>
+     <p class="bento-body">No need to buy new! Work with what you have. DIY cutoffs, raw edges, and frayed hems are highly celebrated.</p>
+    </div>
+   </div>
   </div>
 
   <div class="section-card">
@@ -1082,50 +1398,80 @@
     Titles &amp; Official Awards
    </h2>
    <div class="awards-grid">
-    <div class="award-box champ">
-     <div class="award-box-top">
-      <h3 class="award-box-title">Best in Jorts (JORTS GOD / GODDESS)</h3>
-      <span class="award-tag">Supreme Title</span>
+    <div class="award-box tier-gold">
+     <div class="award-crest-row">
+      <div class="award-crest" aria-hidden="true">
+       <svg class="i" width="22" height="22"><use href="#i-crown"/></svg>
+      </div>
+      <div class="award-box-header">
+       <h3 class="award-box-title">Best in Jorts (JORTS GOD / GODDESS)</h3>
+       <span class="award-tag">Supreme Title</span>
+      </div>
      </div>
      <p>The highest title of APMed '33. Crowned after the Top 5 Final Runway walk and harder Q&amp;A round, determined by style, catwalk performance, and answers.</p>
     </div>
 
-    <div class="award-box">
-     <div class="award-box-top">
-      <h3 class="award-box-title">1st Runner Up (JORTS KING / QUEEN)</h3>
-      <span class="award-tag">Silver</span>
+    <div class="award-box tier-silver">
+     <div class="award-crest-row">
+      <div class="award-crest" aria-hidden="true">
+       <svg class="i" width="22" height="22"><use href="#i-award"/></svg>
+      </div>
+      <div class="award-box-header">
+       <h3 class="award-box-title">1st Runner Up (JORTS KING / QUEEN)</h3>
+       <span class="award-tag">Silver Distinction</span>
+      </div>
      </div>
      <p>Second highest distinction honoring exceptional catwalk poise, styling execution, and stage charisma.</p>
     </div>
 
-    <div class="award-box">
-     <div class="award-box-top">
-      <h3 class="award-box-title">2nd Runner Up (JORTS MASTER)</h3>
-      <span class="award-tag">Bronze</span>
+    <div class="award-box tier-bronze">
+     <div class="award-crest-row">
+      <div class="award-crest" aria-hidden="true">
+       <svg class="i" width="22" height="22"><use href="#i-award"/></svg>
+      </div>
+      <div class="award-box-header">
+       <h3 class="award-box-title">2nd Runner Up (JORTS MASTER)</h3>
+       <span class="award-tag">Bronze Distinction</span>
+      </div>
      </div>
      <p>Third highest distinction for outstanding stage presence and denim creativity.</p>
     </div>
 
-    <div class="award-box">
-     <div class="award-box-top">
-      <h3 class="award-box-title">Best Runway Walk</h3>
-      <span class="award-tag">Audience Vote</span>
+    <div class="award-box tier-blue">
+     <div class="award-crest-row">
+      <div class="award-crest" aria-hidden="true">
+       <svg class="i" width="22" height="22"><use href="#i-flame"/></svg>
+      </div>
+      <div class="award-box-header">
+       <h3 class="award-box-title">Best Runway Walk</h3>
+       <span class="award-tag">Audience Vote</span>
+      </div>
      </div>
      <p>Awarded to the model with the best strut, rhythm, model turn, and catwalk confidence.</p>
     </div>
 
-    <div class="award-box">
-     <div class="award-box-top">
-      <h3 class="award-box-title">Best in First Q&amp;A</h3>
-      <span class="award-tag">Audience Vote</span>
+    <div class="award-box tier-purple">
+     <div class="award-crest-row">
+      <div class="award-crest" aria-hidden="true">
+       <svg class="i" width="22" height="22"><use href="#i-mic"/></svg>
+      </div>
+      <div class="award-box-header">
+       <h3 class="award-box-title">Best in First Q&amp;A</h3>
+       <span class="award-tag">Audience Vote</span>
+      </div>
      </div>
      <p>Quick wit, humor, audience connection, and microphone composure during the opening question round.</p>
     </div>
 
-    <div class="award-box">
-     <div class="award-box-top">
-      <h3 class="award-box-title">Best Styled</h3>
-      <span class="award-tag">Judges' Choice</span>
+    <div class="award-box tier-emerald">
+     <div class="award-crest-row">
+      <div class="award-crest" aria-hidden="true">
+       <svg class="i" width="22" height="22"><use href="#i-gem"/></svg>
+      </div>
+      <div class="award-box-header">
+       <h3 class="award-box-title">Best Styled</h3>
+       <span class="award-tag">Judges' Choice</span>
+      </div>
      </div>
      <p>Decided directly by the judges for superior denim execution, styling coordination, and accessories.</p>
     </div>
@@ -1145,6 +1491,12 @@
  </div>
 </div>
 
+<!-- Floating Switch to Return to Organizer View (visible only during Audience preview) -->
+<button class="floating-mod-switch" id="modReturnBtn" hidden onclick="toggleAudiencePreview(false)">
+ <svg class="i" width="15" height="15" aria-hidden="true"><use href="#i-settings"/></svg>
+ <span>Organizer Mode</span>
+</button>
+
 <!-- Modal Sheet: Organizer Studio -->
 <div class="modal" id="manageModal" hidden onclick="if(event.target===this)closeManageSheet()">
  <div class="sheet">
@@ -1153,13 +1505,36 @@
    <button class="x" onclick="closeManageSheet()" aria-label="Close">✕</button>
   </h3>
 
-  <label class="f">
-   Competition Phase
-   <select id="phaseSelect" onchange="onPhaseChange(this.value)">
-    <option value="prelim">Auditions &amp; Preliminaries (Top 5 Advance)</option>
-    <option value="final">Final Runway (Top 5 Finalists · JORTS GOD/GODDESS)</option>
-   </select>
-  </label>
+  <div style="background:var(--raised);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px;">
+   <label class="f" style="margin-bottom:8px;">
+    Current Competition Phase
+    <select id="phaseSelect" onchange="onPhaseChange(this.value)">
+     <option value="prelim">Auditions &amp; Preliminaries (Top 5 Advance)</option>
+     <option value="final">Final Runway (Top 5 Finalists · JORTS GOD/GODDESS)</option>
+    </select>
+   </label>
+   <div id="advanceActionWrap">
+    <button class="btn primary wide" id="advanceToFinalsBtn" onclick="advanceToRound2()">
+     🏆 Advance Top 5 to Round 2 (Finale)
+    </button>
+    <small style="display:block;margin-top:6px;font-size:12px;color:var(--mute);line-height:1.35;">
+     Picks the Top 5 vote getters from Preliminaries, flags them as finalists, and activates the JORTS GOD / GODDESS ballot.
+    </small>
+   </div>
+   <div id="revertActionWrap" hidden>
+    <button class="btn wide" onclick="revertToPrelims()">
+     ↺ Revert to Preliminaries &amp; Auditions
+    </button>
+   </div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--raised);border-radius:12px;border:1px solid var(--line);margin-bottom:14px;">
+   <div>
+    <b style="font-size:13.5px;display:block;">Audience View Preview</b>
+    <span style="font-size:12px;color:var(--mute);">Simulate what classmates see (hides Manage button)</span>
+   </div>
+   <button class="btn sm" onclick="toggleAudiencePreview(true)" style="padding:5px 12px;font-size:12.5px;">Preview</button>
+  </div>
 
   <!-- Contestants Management -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;">
@@ -1327,21 +1702,29 @@
    ------------------------------------------------------------------------- */
 const STORAGE_KEY = 'jorts_state_v2';
 
+const PRELIM_AWARDS = [
+ { id: 'top5', title: 'Top 5 Finalists', desc: 'Pick up to 3 contestants to advance to the Top 5 Final Runway.', maxVotes: 3 },
+ { id: 'walk', title: 'Best Runway Walk', desc: 'Catwalk presence, rhythm, posture, and signature poses.', maxVotes: 1 },
+ { id: 'qna', title: 'Best in First Q&A', desc: 'Quick wit, humor, audience connection, and microphone composure.', maxVotes: 1 },
+ { id: 'styled', title: 'Best Styled', desc: 'Curated directly by judges for styling, accessories, and cut execution.', maxVotes: 1 }
+];
+
+const FINAL_AWARDS = [
+ { id: 'god', title: 'Best in Jorts (JORTS GOD / GODDESS)', desc: 'The Supreme Title of APMed \'33. Pick your champion based on style, catwalk strut, and harder Q&A.', maxVotes: 1 },
+ { id: 'king', title: '1st Runner Up (JORTS KING / QUEEN)', desc: 'Second highest distinction for exceptional catwalk poise and stage charisma.', maxVotes: 1 },
+ { id: 'master', title: '2nd Runner Up (JORTS MASTER)', desc: 'Third highest distinction for outstanding denim creativity and crowd presence.', maxVotes: 1 }
+];
+
 const DEFAULT_STATE = {
  phase: 'prelim', // 'prelim' | 'final'
  currentAward: 'top5',
- awards: [
-  { id: 'top5', title: 'Top 5 Finalists', desc: 'Pick up to 3 contestants to advance to the Top 5 Final Runway.', maxVotes: 3 },
-  { id: 'walk', title: 'Best Runway Walk', desc: 'Catwalk presence, rhythm, posture, and signature poses.', maxVotes: 1 },
-  { id: 'qna', title: 'Best in First Q&A', desc: 'Quick wit, humor, audience connection, and microphone composure.', maxVotes: 1 },
-  { id: 'styled', title: 'Best Styled', desc: 'Curated directly by judges for styling, accessories, and cut execution.', maxVotes: 1 }
- ],
+ awards: JSON.parse(JSON.stringify(PRELIM_AWARDS)),
  contestants: [
   { id: 1, name: "Gabriel Santos", number: 1, photo_url: "img/jorts-battle.jpg", is_top5: true },
-  { id: 2, name: "Maria Rivera", number: 2, photo_url: "", is_top5: false },
-  { id: 3, name: "Kenji Tan", number: 3, photo_url: "", is_top5: false },
-  { id: 4, name: "Sophia Diaz", number: 4, photo_url: "", is_top5: false },
-  { id: 5, name: "Lucas Chen", number: 5, photo_url: "", is_top5: false }
+  { id: 2, name: "Maria Rivera", number: 2, photo_url: "", is_top5: true },
+  { id: 3, name: "Kenji Tan", number: 3, photo_url: "", is_top5: true },
+  { id: 4, name: "Sophia Diaz", number: 4, photo_url: "", is_top5: true },
+  { id: 5, name: "Lucas Chen", number: 5, photo_url: "", is_top5: true }
  ],
  myVotes: {}, // awardId: [contestantId, ...]
  scores: {}   // awardId: { contestantId: voteCount, ... }
@@ -1387,6 +1770,50 @@ function esc(s) {
 }
 
 /* -------------------------------------------------------------------------
+   Moderator vs. Student Audience View Detection
+   ------------------------------------------------------------------------- */
+function isModerator() {
+ const urlParams = new URLSearchParams(window.location.search);
+ if (urlParams.get('mod') === '1' || window.location.hash === '#manage') return true;
+ if (urlParams.get('mod') === '0') return false;
+ if (localStorage.getItem('jorts_preview_audience') === 'true') return false;
+
+ // If logged in as moderator on this device or testing mode enabled
+ const modPass = sessionStorage.getItem('reviewer_mod_pass') || localStorage.getItem('reviewer_mod_pass');
+ if (modPass) return true;
+ const isModFlag = localStorage.getItem('jorts_is_mod');
+ if (isModFlag !== null) return (isModFlag === 'true');
+
+ return true; // Organizer workstation default
+}
+
+function toggleAudiencePreview(asAudience) {
+ if (asAudience) {
+  localStorage.setItem('jorts_preview_audience', 'true');
+  closeManageSheet();
+  toast('Switched to Audience View (what classmates see)');
+ } else {
+  localStorage.removeItem('jorts_preview_audience');
+  toast('Returned to Organizer / Moderator View');
+ }
+ updateModeratorUI();
+}
+
+function updateModeratorUI() {
+ const mod = isModerator();
+ const isPreviewingAudience = (localStorage.getItem('jorts_preview_audience') === 'true');
+
+ const manageBtn = document.getElementById('manageBtn');
+ if (manageBtn) manageBtn.hidden = !mod;
+
+ const previewBadge = document.getElementById('previewStatus');
+ if (previewBadge) previewBadge.hidden = !mod;
+
+ const returnBtn = document.getElementById('modReturnBtn');
+ if (returnBtn) returnBtn.hidden = !isPreviewingAudience;
+}
+
+/* -------------------------------------------------------------------------
    Tab Navigation & Rendering
    ------------------------------------------------------------------------- */
 let currentTab = 'contestants';
@@ -1427,12 +1854,22 @@ function renderContestantsTab() {
   </button>
  `).join('');
 
- // Render lead text
- document.getElementById('curAwardTitle').textContent = curAward.title;
- document.getElementById('curAwardDesc').textContent = curAward.desc;
+ // Render lead text & status
+ const titleEl = document.getElementById('curAwardTitle');
+ if (titleEl) titleEl.textContent = curAward.title;
+ const descEl = document.getElementById('curAwardDesc');
+ if (descEl) descEl.textContent = curAward.desc;
 
  const myPicks = STATE.myVotes[curAward.id] || [];
- document.getElementById('curAwardPicks').textContent = `${myPicks.length} of ${curAward.maxVotes} picked`;
+ const picksEl = document.getElementById('curAwardPicks');
+ if (picksEl) {
+  picksEl.textContent = `${myPicks.length} of ${curAward.maxVotes} picked`;
+  if (myPicks.length >= curAward.maxVotes) {
+   picksEl.classList.add('full');
+  } else {
+   picksEl.classList.remove('full');
+  }
+ }
 
  // Render contestants grid
  const grid = document.getElementById('contestantsGrid');
@@ -1441,14 +1878,18 @@ function renderContestantsTab() {
   return;
  }
 
- grid.innerHTML = STATE.contestants.map(c => {
+ const isFinal = (STATE.phase === 'final');
+ const finalists = STATE.contestants.filter(c => c.is_top5);
+ const listToRender = (isFinal && finalists.length) ? finalists : STATE.contestants;
+
+ grid.innerHTML = listToRender.map(c => {
   const isPicked = myPicks.includes(c.id);
   const photoHtml = c.photo_url
    ? `<img src="${c.photo_url}" alt="${esc(c.name)}" loading="lazy" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} · Look #${c.number}')">`
    : `<div class="pic-placeholder" onclick="openLightbox('img/jorts-battle.jpg', 'APMed \'33 Jorts Battle')">
        <div class="ticket-num">#${String(c.number).padStart(2, '0')}</div>
-       <div class="ticket-label">Runway Model</div>
-       <div class="ticket-hint">Photo coming soon</div>
+       <div class="placeholder-stamp">CLASSIFIED // FITTING IN PROGRESS</div>
+       <div class="ticket-hint">Runway Model · Tap to view poster</div>
       </div>`;
 
   return `
@@ -1462,7 +1903,7 @@ function renderContestantsTab() {
      <h3 class="ib-name">${esc(c.name)}</h3>
      <div class="ib-meta">
       <span>Candidate #${c.number}</span>
-      ${c.is_top5 ? '<span style="color:var(--gold);font-weight:700;">Top 5</span>' : ''}
+      ${c.is_top5 ? '<span style="color:var(--gold);font-weight:700;">Top 5 Finalist</span>' : ''}
      </div>
      <button class="btn-vote" onclick="togglePick('${curAward.id}', ${c.id})">
       <svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-${isPicked ? 'check' : 'plus'}"/></svg>
@@ -1617,18 +2058,66 @@ function closeManageSheet() {
  document.getElementById('manageModal').hidden = true;
 }
 
-function onPhaseChange(phase) {
- STATE.phase = phase;
+function advanceToRound2() {
+ const scores = STATE.scores['top5'] || {};
+ const sorted = [...STATE.contestants].sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0));
+ sorted.forEach((c, idx) => {
+  const original = STATE.contestants.find(x => x.id === c.id);
+  if (original) original.is_top5 = (idx < 5);
+ });
+ STATE.phase = 'final';
+ STATE.awards = JSON.parse(JSON.stringify(FINAL_AWARDS));
+ STATE.currentAward = 'god';
  saveState();
  updatePhaseBadges();
- toast(`Phase switched to: ${phase === 'final' ? 'Final Runway (Top 5)' : 'Auditions & Preliminaries'}`);
+ renderContestantsTab();
+ renderResultsTab();
+ renderManageContestantsList();
+ renderManageAwardsList();
+ updateBallotBar();
+ closeManageSheet();
+ toast('🏆 Top 5 Finalists advanced to Round 2: Final Runway & Supreme Crown!');
+}
+
+function revertToPrelims() {
+ STATE.phase = 'prelim';
+ STATE.awards = JSON.parse(JSON.stringify(PRELIM_AWARDS));
+ STATE.currentAward = 'top5';
+ saveState();
+ updatePhaseBadges();
+ renderContestantsTab();
+ renderResultsTab();
+ renderManageContestantsList();
+ renderManageAwardsList();
+ updateBallotBar();
+ closeManageSheet();
+ toast('Switched back to Auditions & Preliminaries.');
+}
+
+function onPhaseChange(phase) {
+ if (phase === 'final') {
+  advanceToRound2();
+ } else {
+  revertToPrelims();
+ }
 }
 
 function updatePhaseBadges() {
  const isFinal = (STATE.phase === 'final');
- document.getElementById('phaseStatus').textContent = isFinal
-  ? 'Final Runway · Top 5 Q&A'
-  : 'Preliminaries · Top 5 Voting';
+ const phaseSelect = document.getElementById('phaseSelect');
+ if (phaseSelect) phaseSelect.value = isFinal ? 'final' : 'prelim';
+
+ const advanceWrap = document.getElementById('advanceActionWrap');
+ const revertWrap = document.getElementById('revertActionWrap');
+ if (advanceWrap) advanceWrap.hidden = isFinal;
+ if (revertWrap) revertWrap.hidden = !isFinal;
+
+ const statusEl = document.getElementById('phaseStatus');
+ if (statusEl) {
+  statusEl.textContent = isFinal
+   ? 'Final Runway · Top 5 Q&A'
+   : 'Preliminaries · Top 5 Voting';
+ }
 }
 
 function renderManageContestantsList() {
@@ -2075,6 +2564,7 @@ function closeLightbox() {
 document.addEventListener('DOMContentLoaded', () => {
  loadState();
  updatePhaseBadges();
+ updateModeratorUI();
  setTab('contestants');
 });
 </script>
