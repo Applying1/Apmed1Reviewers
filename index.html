@@ -191,9 +191,9 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .tool{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;box-shadow:var(--shadow);min-width:0;transition:border-color .15s,transform .18s var(--ease)}
 .tool:hover{border-color:var(--accent-line);transform:translateY(-1px)}
 .tool[hidden]{display:none}
-.tool.due{border-color:var(--accent-line)}.tool.due #modsub,.tool.due #dusub,.tool.due #bdsub{color:var(--accent);font-weight:600}
+.tool.due,.gitem.due{border-color:var(--accent-line)}.tool.due #modsub,.tool.due #dusub,.tool.due #bdsub,.gitem.due #dusub{color:var(--accent);font-weight:600}
 .tool.locked{cursor:default;opacity:.62;filter:grayscale(.5)}.tool.locked:hover{transform:none;border-color:var(--line)}
-.tool .new{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:700 10.5px/1.6 var(--sans);letter-spacing:.04em;text-transform:uppercase;vertical-align:2px}
+.tool .new,.gitem .new{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:700 10.5px/1.6 var(--sans);letter-spacing:.04em;text-transform:uppercase;vertical-align:2px}
 .tool .done{color:var(--good);font-weight:600}
 .tool .tic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-size:18px}
 .tool>span:not(.tic):not(.hg){min-width:0}.tool b{display:block;font-size:14.5px}.tool>span:not(.tic):not(.hg)>span{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -346,9 +346,8 @@ html.introing body{overflow:hidden}
  <section class="classnow" id="classnow" hidden aria-label="Class"></section>
  <nav class="tools" aria-label="Tools">
   <a class="tool" id="gdtool" href="discuss.html?c=general" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg></span><span><b>General discussion</b><span id="gdsub">Talk with the whole class</span></span></a>
-  <a class="tool" id="qztool" href="quiz.html"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Live quiz</b><span>Quiz your study group, live: everyone joins on their phone with a code</span></span></a>
+  <a class="tool" id="qztool" href="#quiz" onclick="event.preventDefault();openQuizChallenges()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Quiz challenges</b><span id="qzsub">Live quiz &middot; Duels</span></span></a>
   <a class="tool" id="gamestool" href="#games" onclick="event.preventDefault();openGames()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-gamepad"/></svg></span><span><b>Daily games</b><span id="gamessub">Crossword &middot; APMed&#39;le &middot; Sort It</span></span></a>
-  <a class="tool" id="dutool" href="duel.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-trophy"/></svg></span><span><b>Duels</b><span id="dusub">Challenge a classmate to 7 questions</span></span></a>
   <a class="tool" id="bdtool" href="badges.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crown"/></svg></span><span><b>Badges</b><span id="bdsub">Earn badges for good study habits</span></span></a>
   <a class="tool" id="classtool" href="#class" onclick="event.preventDefault();openClassModal()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-users"/></svg></span><span><b>Class &amp; attendance</b><span id="classsub">Class list &middot; My attendance</span></span></a>
   <a class="tool locked" id="shoptool" aria-disabled="true" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b id="shopname">Coming soon</b><span id="shopsub">Stay tuned</span></span></a>
@@ -368,6 +367,28 @@ html.introing body{overflow:hidden}
  <p class="note setl"><a href="settings.html">Settings</a>: colors, daily goal, notifications, sounds and storage.</p>
  <div class="class"><p class="legal"><a href="privacy.html">Privacy &amp; terms</a></p></div>
 </main>
+<div class="modal" id="quizdlg" hidden onclick="if(event.target===this)closeQuizChallenges()"><div class="box games-box" role="dialog" aria-modal="true" aria-labelledby="quizh">
+ <div class="mhead"><h2 id="quizh">Quiz challenges</h2><button class="mx" onclick="closeQuizChallenges()" aria-label="Close" title="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></div>
+ <p class="gsub">Compete live with your study group or challenge a classmate 1-on-1.</p>
+ <div class="ghub">
+  <a class="gitem" id="livequizitem" href="quiz.html">
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>Live quiz</b></div>
+    <p id="livequizsub">Quiz your study group, live: everyone joins on their phone with a code</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+  <a class="gitem" id="dutool" href="duel.html">
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-trophy"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>Duels</b></div>
+    <p id="dusub">Challenge a classmate to 7 questions</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+ </div>
+</div></div>
 <div class="modal" id="gamesdlg" hidden onclick="if(event.target===this)closeGames()"><div class="box games-box" role="dialog" aria-modal="true" aria-labelledby="gamesh">
  <div class="mhead"><h2 id="gamesh">Daily games</h2><button class="mx" onclick="closeGames()" aria-label="Close" title="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></div>
  <p class="gsub">Three short daily games to test your recall and keep your mind sharp.</p>
@@ -596,17 +617,24 @@ async function modTile(){try{const m=await Auth.rpc('mod_counts',{},true),n=(m.l
  t.hidden=false;syncGamesTile();
 }catch(e){}
 function shiftDay(d,n){const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)}})();
-// Duels tile (duel.html): shows when the class cloud is on; signed in, it counts the duels waiting for you
+// Quiz challenges & Duels: counts waiting duels & syncs Quiz challenges home tile
+function syncQuizTile(turn,done,total){
+ const qz=document.getElementById('qztool'),sub=document.getElementById('qzsub');if(!qz||!sub)return;
+ if(turn){sub.textContent=turn+(turn>1?' duels waiting':' duel waiting')+' · Live quiz';qz.classList.add('due')}
+ else if(total){sub.textContent=(done?done+' finished':'Duels')+' · Live quiz'}
+ else{sub.textContent='Live quiz · Duels'}
+}
 (async function(){try{
  const cl=((await (await fetch('courses.json')).json()).find(c=>c.cloud&&c.cloud.url)||{}).cloud;if(!cl)return;
- const t=document.getElementById('dutool'),sub=document.getElementById('dusub');t.hidden=false;
+ const t=document.getElementById('dutool'),sub=document.getElementById('dusub');if(!t)return;t.hidden=false;
  let seen=false;try{seen=!!localStorage.getItem('reviewer_duels')}catch(e){}
  if(!seen)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
- if(!Auth.ses()){sub.textContent='Sign in to challenge a classmate';return}
+ if(!Auth.ses()){sub.textContent='Sign in to challenge a classmate';syncQuizTile();return}
  Auth.cloud=Auth.cloud||cl;const list=await Auth.rpc('duel_mine',{},true)||[];
  const turn=list.filter(d=>d.me&&!d[d.me].done).length,done=list.filter(d=>d.me&&d.a.res!=null&&d.b&&d.b.res!=null&&d.a.done&&d.b.done).length;
  if(turn){sub.textContent=turn+(turn>1?' duels are':' duel is')+' waiting for you';t.classList.add('due')}
  else if(list.length)sub.textContent=done+' finished · start a new one';
+ syncQuizTile(turn,done,list.length);
 }catch(e){}})();
 // Badges tile (badges.html): "7 of 26 badges" + new ones; hidden when badges are off in Settings
 (function(){try{
@@ -759,6 +787,8 @@ function rpc(fn,body){const h={'Content-Type':'application/json',apikey:CLOUD.ke
  return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body)}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})}
 function openSync(){drawSync();$('sync').hidden=false}
 function closeSync(){$('sync').hidden=true}
+function openQuizChallenges(){const d=$('quizdlg');if(d)d.hidden=false;history.replaceState(null,'','#quiz')}
+function closeQuizChallenges(){const d=$('quizdlg');if(d)d.hidden=true;if(location.hash==='#quiz'||location.hash==='#challenges')history.replaceState(null,'',location.pathname+location.search)}
 function openGames(){const d=$('gamesdlg');if(d)d.hidden=false;history.replaceState(null,'','#games')}
 function closeGames(){const d=$('gamesdlg');if(d)d.hidden=true;if(location.hash==='#games')history.replaceState(null,'',location.pathname+location.search)}
 function openClassModal(){const d=$('classdlg');if(d)d.hidden=false;history.replaceState(null,'','#class')}
@@ -766,18 +796,22 @@ function closeClassModal(){const d=$('classdlg');if(d)d.hidden=true;if(location.
 addEventListener('keydown',e=>{
  if(e.key==='Escape'){
   if($('sync')&&!$('sync').hidden)closeSync();
+  if($('quizdlg')&&!$('quizdlg').hidden)closeQuizChallenges();
   if($('gamesdlg')&&!$('gamesdlg').hidden)closeGames();
   if($('classdlg')&&!$('classdlg').hidden)closeClassModal();
  }
 });
 addEventListener('hashchange',()=>{
- if(location.hash==='#games')openGames();
+ if(location.hash==='#quiz'||location.hash==='#challenges')openQuizChallenges();
+ else if(location.hash==='#games')openGames();
  else if(location.hash==='#class')openClassModal();
  else{
+  if($('quizdlg')&&!$('quizdlg').hidden)closeQuizChallenges();
   if($('gamesdlg')&&!$('gamesdlg').hidden)closeGames();
   if($('classdlg')&&!$('classdlg').hidden)closeClassModal();
  }
 });
+if(location.hash==='#quiz'||location.hash==='#challenges')setTimeout(openQuizChallenges,60);
 if(location.hash==='#games')setTimeout(openGames,60);
 if(location.hash==='#class')setTimeout(openClassModal,60);
 function syncGamesTile(){
