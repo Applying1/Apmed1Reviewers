@@ -18,7 +18,9 @@ button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* Global Top Header Bar */
-.top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:color-mix(in oklab,var(--bg) 94%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;flex:none}
+.top{display:flex;align-items:center;background:color-mix(in oklab,var(--bg) 94%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;flex:none;padding:0}
+.top-inbox-cell{display:flex;align-items:center;padding:10px 14px}
+.top-chat-cell{display:flex;align-items:center;gap:10px;padding:10px 16px;flex:1;min-width:0}
 .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px;transition:background .15s}
 .back:hover{color:var(--text);background:var(--raised)}
 .sp{flex:1}
@@ -61,7 +63,7 @@ button{cursor:pointer}
 .inbox-search input{width:100%;padding:7px 10px 7px 30px;border-radius:10px;border:1px solid var(--line2);background:var(--raised);font-size:13px;outline:0;transition:border-color .15s}
 .inbox-search input:focus{border-color:var(--accent);background:var(--surface)}
 .inbox-search .s-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none;display:flex}
-.clist{flex:1;overflow-y:auto;padding:8px 10px;display:grid;gap:6px;min-height:0;scrollbar-gutter:stable}
+.clist{flex:1;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:6px;min-height:0;scrollbar-gutter:stable}
 
 /* Right Chat Area */
 #chatWrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;overflow:hidden;background:var(--bg);position:relative}
@@ -93,7 +95,7 @@ button{cursor:pointer}
 .sendbtn:disabled{opacity:.4;cursor:default}
 
 /* Conversation Row Cards */
-.crow{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid transparent;text-decoration:none;transition:background .15s,border-color .15s;cursor:pointer}
+.crow{flex:none;min-height:56px;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid transparent;text-decoration:none;transition:background .15s,border-color .15s;cursor:pointer}
 .crow:hover{background:var(--raised);border-color:var(--line)}
 .crow.active{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 1px 3px #00000008}
 .crow .cw{flex:1;min-width:0}
@@ -113,6 +115,9 @@ button{cursor:pointer}
 /* Responsive media queries */
 @media (max-width:719px){
  #inboxWrap{width:100%;border-right:none}
+ .top-inbox-cell{display:contents}
+ .top-chat-cell{display:contents}
+ .top{padding:10px 16px;gap:10px}
  body.in-chat #inboxWrap{display:none!important}
  body:not(.in-chat) #chatWrap{display:none!important}
  body:not(.in-chat) #partnerHead{display:none!important}
@@ -122,22 +127,28 @@ button{cursor:pointer}
 @media (min-width:720px){
  #inboxWrap{display:flex!important}
  #chatWrap{display:flex!important}
+ .top-inbox-cell{width:360px;flex:none;border-right:1px solid var(--line);box-sizing:border-box}
+ .top-chat-cell{flex:1;min-width:0}
  body.in-chat #backTxt{display:inline!important}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
 
 <header class="top" id="topBar">
- <a class="back" id="backBtn" href="classlist.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg><span id="backTxt">Class list</span></a>
- <div class="phead" id="partnerHead" hidden>
-  <div id="partnerAv"></div>
-  <div class="pinfo">
-   <span class="pname" id="partnerName"></span>
-   <span class="pstatus" id="partnerStatus"><i class="dot offline"></i>Offline</span>
-  </div>
+ <div class="top-inbox-cell">
+  <a class="back" id="backBtn" href="classlist.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg><span id="backTxt">Class list</span></a>
  </div>
- <span class="sp"></span>
- <a class="btn sm" id="duelBtn" href="#" hidden title="Challenge to a duel"><svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-zap"/></svg>Duel</a>
+ <div class="top-chat-cell">
+  <div class="phead" id="partnerHead" hidden>
+   <div id="partnerAv"></div>
+   <div class="pinfo">
+    <span class="pname" id="partnerName"></span>
+    <span class="pstatus" id="partnerStatus"><i class="dot offline"></i>Offline</span>
+   </div>
+  </div>
+  <span class="sp"></span>
+  <a class="btn sm" id="duelBtn" href="#" hidden title="Challenge to a duel"><svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-zap"/></svg>Duel</a>
+ </div>
 </header>
 
 <main id="mainWrap">
