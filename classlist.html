@@ -57,6 +57,7 @@ h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 4px;text-al
 .sec{margin:16px 0 8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);display:flex;align-items:center;gap:7px}
 .list{display:grid;gap:7px}
 .row{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.mecard.row{display:block;padding:14px 15px;border-radius:16px;border:1.5px solid var(--accent-line,var(--line2))}
 .row .w{flex:1;min-width:0}
 .who{flex:1;min-width:0;display:flex;align-items:center;gap:11px;border:0;background:none;padding:0;text-align:left;cursor:pointer}
 .who:hover b,.who:hover .mename b{text-decoration:underline}
@@ -157,10 +158,11 @@ function draw(){
   const inv=!!me.invisible;
   html+='<section class="mecard row me '+esc(me.state)+'" id="merow" aria-label="Your status">'+
    '<div class="metop">'+
-    '<button type="button" class="who" data-prof="me" title="View or edit your profile">'+avHtml(me,42)+
-    '<div class="meinfo">'+
+    avHtml(me,42)+
+    '<div class="meinfo" data-prof="me" style="cursor:pointer" title="View or edit your profile">'+
      '<div class="mename"><b>'+esc(me.name)+'</b><span class="you">You</span></div>'+
-     '<div class="mestate"><i class="dot '+esc(me.state)+'" aria-hidden="true"></i><span id="mestate">'+esc(stateLabel(me))+(inv?' <em>(only you see this)</em>':'')+'</span></div></div></button>'+
+     '<div class="mestate"><i class="dot '+esc(me.state)+'" aria-hidden="true"></i><span id="mestate">'+esc(stateLabel(me))+(inv?' <em>(only you see this)</em>':'')+'</span></div>'+
+    '</div>'+
     '<div class="seg" role="radiogroup" aria-label="Status visibility">'+
      '<button type="button" class="'+(!inv?'on':'')+'" data-status="active" role="radio" aria-checked="'+(!inv)+'" '+(BUSY?'disabled':'')+'>Active</button>'+
      '<button type="button" class="'+(inv?'on':'')+'" data-status="invisible" role="radio" aria-checked="'+inv+'" '+(BUSY?'disabled':'')+'>Invisible</button>'+
