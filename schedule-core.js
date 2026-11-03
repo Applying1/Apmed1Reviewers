@@ -6,9 +6,11 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const Sched = {
   data: null,
-  async load() {
-    if (!this.data) this.data = await (await fetch('schedule.json')).json();
-    return this.data;
+  _p: null,
+  load() {
+    if (this.data) return Promise.resolve(this.data);
+    if (!this._p) this._p = fetch('schedule.json').then(r => r.json()).then(d => { this.data = d; return d; });
+    return this._p;
   },
   dayStart(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; },
   // Monday of the week containing d

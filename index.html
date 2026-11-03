@@ -509,10 +509,16 @@ async function pullSummaries(list){let n=0;
   if(sm&&sm.at>((loc&&loc.at)||0)){try{localStorage.setItem(c.storageKey+'_summary',JSON.stringify(sm));n++}catch(e){}}}).catch(()=>{})));
  if(n){drawCourses();if(window.afterCourses)afterCourses();if(window.Daily)Daily.digestSoon()}}
 function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.endsWith('_summary'))continue;const v=JSON.parse(localStorage.getItem(k));if(v&&v.name)return v.name}}catch(e){}return ''}
+let _coursesPromise=null;
+function getCourses(){
+ if(window.COURSE_LIST)return Promise.resolve(window.COURSE_LIST);
+ if(!_coursesPromise)_coursesPromise=fetch('courses.json').then(r=>r.json()).then(l=>{window.COURSE_LIST=l;return l});
+ return _coursesPromise;
+}
 (async function(){
  const n=name();if(n)document.getElementById('hi').textContent='Hi, '+n+'. Pick a course';
  let list;
- try{list=await (await fetch('courses.json')).json()}
+ try{list=await getCourses()}
  catch(e){document.getElementById('list').innerHTML='<p class="empty">Courses could not be loaded. Check your connection and reload.</p>';return}
  CLOUD=(list.find(c=>c.cloud&&c.cloud.url)||{}).cloud||null;document.getElementById('syncbtn').hidden=!CLOUD;if(CLOUD)Auth.cloud=CLOUD;
  if(CLOUD&&window.Push){Push.init(CLOUD);setTimeout(()=>Push.heal(),1500)}
@@ -573,7 +579,7 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  if(crs&&c.preview&&!c.now&&hrs>0&&hrs<=40){const p=document.getElementById('prevq');p.href='reviewer.html?course='+encodeURIComponent(crs)+'#preview='+encodeURIComponent(c.preview);p.textContent='Warm up: 5 questions on '+(c.topic||'the next topic').replace(/ \(.*$/,'').slice(0,60);p.hidden=false}}catch(err){}})();
 // Announcements (the class secretary's, pinned in the General discussion): the newest one not closed yet, as a banner.
 // General discussion tile: the latest post. Both read without signing in.
-(async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c)return;Auth.cloud=Auth.cloud||c.cloud;
+(async function(){try{const cl=await getCourses(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c)return;Auth.cloud=Auth.cloud||c.cloud;
  $('gdtool').hidden=false;
  const [an,rec]=await Promise.all([Auth.rpc('discussion_announcements',{},!!Auth.ses()).catch(()=>[]),Auth.rpc('discussion_recent',{p_course:'general'},!!Auth.ses()).catch(()=>[])]);
  const last=(rec||[])[0];if(last){const t=last.body.split('\n').map(x=>x.trim()).filter(Boolean)[0]||'';$('gdsub').textContent=last.author.split(' ')[0]+': '+(t.length>90?t.slice(0,88).trim()+'…':t)}
@@ -584,7 +590,7 @@ function closeSpot(){document.getElementById('spot').hidden=true}
 function annClose(id){if(window.Notify)Notify.annDone(id);$('annc').hidden=true}
 // My attendance tile: for signed-in students (att_mine); not linked yet = a link to send a request. A missed day with
 // its chat still open comes first; the owner (class secretary) also gets the Class day tile.
-(async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c||!Auth.ses())return;Auth.cloud=c.cloud;
+(async function(){try{const cl=await getCourses(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c||!Auth.ses())return;Auth.cloud=c.cloud;
  const a=await Auth.rpc('att_mine',{},true);if(!a)return;if(a.owner){$('cdtool').hidden=false;if($('admintools'))$('admintools').hidden=false;modTile()};
  if(!a.linked){$('attsub').textContent=a.request&&a.request.status==='pending'?'Request waiting for the class secretary':'Link your account to see your attendance';$('atttool').hidden=false;return}
  const m=(a.missed||[]).find(x=>x.open),them=m&&(m.chat||[]).length&&m.chat[m.chat.length-1].o;
@@ -594,7 +600,7 @@ async function modTile(){try{const m=await Auth.rpc('mod_counts',{},true),n=(m.l
  const p=[[m.links,'link request'],[m.questions,'question'],[m.reports,'report'],[m.cards,'flashcard']].filter(x=>x[0]).map(x=>x[0]+' '+x[1]+(x[0]>1?'s':''));
  $('modsub').textContent=n?p.join(' · ')+' waiting':'Nothing waiting · update attendance';$('modtool').classList.toggle('due',n>0);$('modtool').hidden=false;if($('admintools'))$('admintools').hidden=false}catch(e){}}
 // Upcoming tile: until launch everyone sees only the icon and "Coming soon" (a surprise); its testers get the real tile
-(async function(){try{const cl=await (await fetch('courses.json')).json(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c)return;Auth.cloud=Auth.cloud||c.cloud;
+(async function(){try{const cl=await getCourses(),c=cl.find(x=>x.cloud&&x.cloud.url);if(!c)return;Auth.cloud=Auth.cloud||c.cloud;
  const d=await Auth.rpc('shop_catalog',{},!!Auth.ses()),t=$('shoptool');if(!d)return;
  if(d.soon&&!d.manager){t.hidden=false;return}
  if(!d.soon&&d.settings.open&&window.shopPoster)shopPoster(d);
@@ -608,7 +614,7 @@ async function modTile(){try{const m=await Auth.rpc('mod_counts',{},true),n=(m.l
  if(!all.length)return;
  let st={};try{st=JSON.parse(localStorage.getItem('reviewer_crossword'))||{}}catch(e){}
  const g=st.g||{},done=p=>!!(g[p.id]&&g[p.id].done),today=all.filter(p=>p.date===day),t=$('cwtool'),sub=$('cwsub');
- let names={};try{for(const c of await (await fetch('courses.json')).json())names[c.id]=c.title.replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,'')}catch(e){}
+ let names={};try{for(const c of await getCourses())names[c.id]=c.title.replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,'')}catch(e){}
  const nm=p=>p.courses.map(c=>names[c]||c).join(' + ');
  if(today.length){
   if(today.every(done))sub.innerHTML='<span class="done">Solved today ✓</span> · a new one tomorrow';
@@ -627,7 +633,7 @@ function syncQuizTile(turn,done,total){
  else{sub.textContent='Live quiz · Duels'}
 }
 (async function(){try{
- const cl=((await (await fetch('courses.json')).json()).find(c=>c.cloud&&c.cloud.url)||{}).cloud;if(!cl)return;
+ const cl=((await getCourses()).find(c=>c.cloud&&c.cloud.url)||{}).cloud;if(!cl)return;
  const t=document.getElementById('dutool'),sub=document.getElementById('dusub');if(!t)return;t.hidden=false;
  let seen=false;try{seen=!!localStorage.getItem('reviewer_duels')}catch(e){}
  if(!seen)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
@@ -671,7 +677,7 @@ function maybePresenceNotice(){
  })();
 }
 window.clTile=async function(){try{
- const cl=((await (await fetch('courses.json')).json()).find(c=>c.cloud&&c.cloud.url)||{}).cloud;if(!cl)return;
+ const cl=((await getCourses()).find(c=>c.cloud&&c.cloud.url)||{}).cloud;if(!cl)return;
  const t=document.getElementById('cltool'),sub=document.getElementById('clsub');if(!t||!sub)return;
  t.hidden=false;
  if(!Auth.ses()){sub.textContent='Sign in to see who is online';return}
@@ -727,7 +733,7 @@ window.clTile();
 // Class card (Oct 31, classnow.js): answers the class sent before the next test (toward the next milestone), how many are
 // studying right now, and a 25-minute focus timer. Counts only, never names.
 (async function(){const box=document.getElementById('classnow');if(!box||!window.ClassNow)return;
- let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){return}
+ let list=[];try{list=await getCourses()}catch(e){return}
  const cloud=(list.find(c=>c.cloud&&c.cloud.url)||{}).cloud;if(!cloud)return;
  ClassNow.init(cloud,'');try{await Sched.load()}catch(e){}
  const short=id=>{const c=list.find(x=>x.id===id);return c?c.title.replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,''):''};
@@ -999,7 +1005,7 @@ if(window.Daily)Daily.digest();
  $('.iskip').onclick=e=>{e.stopPropagation();finish(true)};ov.addEventListener('click',()=>finish(true));
  addEventListener('keydown',function k(e){if(e.key==='Escape'||e.key==='Enter'||e.key===' '){removeEventListener('keydown',k);finish(true)}});
  const rnd=(a,b)=>a+Math.random()*(b-a);
- fetch('courses.json').then(r=>r.json()).catch(()=>[]).then(list=>{
+ getCourses().catch(()=>[]).then(list=>{
   const pics=(Array.isArray(list)?list:[]).map(c=>c.image).filter(Boolean).slice(0,10);
   const n=Math.max(pics.length,6),cw=Math.round(Math.min(150,R*0.3)),ch=Math.round(cw*0.75),box=$('.icards');
   for(let i=0;i<n;i++){const c=document.createElement('div');c.className='icard';c.style.width=cw+'px';c.style.height=ch+'px';
