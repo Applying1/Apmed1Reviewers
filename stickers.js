@@ -548,7 +548,7 @@
    el.className = 'stk-zoom-overlay';
    el.innerHTML = `
     <div class="stk-zoom-card" onclick="event.stopPropagation()">
-     <button class="stk-zoom-x" onclick="this.closest('.stk-zoom-overlay').remove()" aria-label="Close">✕</button>
+     <button class="stk-zoom-x" type="button" aria-label="Close">✕</button>
      <img class="stk-zoom-img" src="${esc(img)}" alt="${esc(name)}">
      <h3 class="stk-zoom-name">${esc(name)}</h3>
      <p class="stk-zoom-cat">${esc(catName)} · Class fund</p>
@@ -557,8 +557,12 @@
      </a>
     </div>
    `;
-   el.onclick = () => el.remove();
-   const onKey = e => { if (e.key === 'Escape') { el.remove(); document.removeEventListener('keydown', onKey); } };
+   let onKey;
+   const closeZoom = () => { el.remove(); document.removeEventListener('keydown', onKey); };
+   onKey = e => { if (e.key === 'Escape') closeZoom(); };
+   el.onclick = closeZoom;
+   const xBtn = el.querySelector('.stk-zoom-x');
+   if (xBtn) xBtn.onclick = closeZoom;
    document.addEventListener('keydown', onKey);
    document.body.appendChild(el);
   },
@@ -673,7 +677,7 @@
      document.removeEventListener('click', onDocClick);
     }
    };
-   setTimeout(() => document.addEventListener('click', onDocClick), 20);
+   const docTimer = setTimeout(() => document.addEventListener('click', onDocClick), 20);
 
    const onEsc = e => {
     if (e.key === 'Escape') {
@@ -682,9 +686,18 @@
     }
    };
    document.addEventListener('keydown', onEsc);
+   this._cleanup = () => {
+    clearTimeout(docTimer);
+    document.removeEventListener('click', onDocClick);
+    document.removeEventListener('keydown', onEsc);
+   };
   },
 
   closePicker() {
+   if (this._cleanup) {
+    this._cleanup();
+    this._cleanup = null;
+   }
    if (this.currentDrawer) {
     this.currentDrawer.remove();
     this.currentDrawer = null;

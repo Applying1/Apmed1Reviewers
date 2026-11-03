@@ -157,7 +157,7 @@ async function drawClass(){
  if(!a.linked){$('sub').innerHTML=a.owner?'<a href="classday.html">Class day (owner)</a>':'';drawRequest(a.request);return}
  A=a;const upd=a.updated?new Date(a.updated).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
  $('sub').innerHTML=esc(a.name)+' · from the class tracker'+(upd?', updated '+esc(upd):'')+(a.owner?' · <a href="classday.html">Class day (owner)</a>':'');
- draw();Push.attRefresh();checkDmUnread();
+ draw();Push.attRefresh();
 })();
 async function checkDmUnread(){
  if(typeof Auth==='undefined'||!Auth.ses())return;

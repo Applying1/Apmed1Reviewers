@@ -274,7 +274,7 @@ button{cursor:pointer}
 
 <script src="auth.js"></script>
 <script src="profile.js"></script>
-<script src="update.js"></script><script src="stickers.js"></script>
+<script src="update.js"></script><script src="dialog.js"></script><script src="stickers.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -370,7 +370,7 @@ function renderSidebarList(){
   html += filteredConvs.map(c=>{
    const stateCls=esc(c.state||'offline');
    const isActive = (c.id === PARTNER_ID);
-   return '<a class="crow '+(isActive?'active':'')+'" href="dm.html?with='+encodeURIComponent(c.id)+'&to='+encodeURIComponent(c.name)+'" onclick="onConvoClick(event,\''+esc(c.id)+'\',\''+esc(c.name)+'\')">'+
+   return '<a class="crow '+(isActive?'active':'')+'" href="dm.html?with='+encodeURIComponent(c.id)+'&to='+encodeURIComponent(c.name)+'" data-id="'+esc(c.id)+'" data-name="'+esc(c.name)+'">'+
     '<div style="position:relative;flex:none">'+avHtml(c.name,c.av,c.avatar,40)+'<i class="dot '+stateCls+'" style="position:absolute;bottom:-2px;right:-2px;border:2px solid var(--surface)"></i></div>'+
     '<div class="cw">'+
      '<div class="crow-top"><b>'+esc(formatDisplayName(c.name))+'</b><time>'+timeAgo(c.last_at)+'</time></div>'+
@@ -397,7 +397,7 @@ function renderSidebarList(){
     else if(cm.seen_at) stText = 'Last online '+timeAgo(cm.seen_at);
 
     const isActive = (cm.id === PARTNER_ID);
-    return '<a class="crow '+(isActive?'active':'')+'" href="dm.html?with='+encodeURIComponent(cm.id)+'&to='+encodeURIComponent(cm.name)+'" onclick="onConvoClick(event,\''+esc(cm.id)+'\',\''+esc(cm.name)+'\')">'+
+    return '<a class="crow '+(isActive?'active':'')+'" href="dm.html?with='+encodeURIComponent(cm.id)+'&to='+encodeURIComponent(cm.name)+'" data-id="'+esc(cm.id)+'" data-name="'+esc(cm.name)+'">'+
      '<div style="position:relative;flex:none">'+avHtml(cm.name,cm.av,cm.avatar,40)+'<i class="dot '+stCls+'" style="position:absolute;bottom:-2px;right:-2px;border:2px solid var(--surface)"></i></div>'+
      '<div class="cw">'+
       '<div class="crow-top"><b>'+esc(formatDisplayName(cm.name))+'</b></div>'+
@@ -773,7 +773,7 @@ async function sendSticker(stk){
 async function delMsg(id){
  closeRxPicker();
  if(REPLY_TARGET&&REPLY_TARGET.id===id)cancelReply();
- if(!confirm('Delete this message for yourself?'))return;
+ if(window.ask){if(!(await ask('This removes the message from your view.',{title:'Delete this message for yourself?',ok:'Delete',danger:1})))return;}else if(!confirm('Delete this message for yourself?'))return;
  try{
   await Auth.rpc('dm_delete',{p_id:id},true);
   MESSAGES=MESSAGES.filter(m=>m.id!==id);
@@ -903,6 +903,11 @@ function setupInput(){
  });
 
  $('backBtn').addEventListener('click', handleBack);
+ $('convList').addEventListener('click', e=>{
+  if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button)return;
+  const row=e.target.closest('.crow[data-id]');
+  if(row)onConvoClick(e,row.dataset.id,row.dataset.name||'');
+ });
 
  const st=$('stream');
  if(st){

@@ -512,7 +512,7 @@ function name(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.
 let _coursesPromise=null;
 function getCourses(){
  if(window.COURSE_LIST)return Promise.resolve(window.COURSE_LIST);
- if(!_coursesPromise)_coursesPromise=fetch('courses.json').then(r=>r.json()).then(l=>{window.COURSE_LIST=l;return l});
+ if(!_coursesPromise)_coursesPromise=fetch('courses.json').then(r=>r.json()).then(l=>{window.COURSE_LIST=l;return l}).catch(e=>{_coursesPromise=null;throw e});
  return _coursesPromise;
 }
 (async function(){
@@ -859,7 +859,7 @@ async function updateDmBadges(){
  }
  if(!Auth.cloud){
   try{
-   const all=await (await fetch('courses.json')).json();
+   const all=await getCourses();
    const cl=all.find(c=>c.cloud&&c.cloud.url);
    if(cl)Auth.cloud=cl.cloud;
   }catch(_){}

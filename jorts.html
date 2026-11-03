@@ -2102,7 +2102,7 @@ function renderContestantsTab() {
  grid.innerHTML = listToRender.map(c => {
   const isPicked = myPicks.includes(c.id);
   const photoHtml = c.photo_url
-   ? `<img src="${c.photo_url}" alt="${esc(c.name)}" loading="lazy" onclick="openLightbox('${c.photo_url}', '${esc(c.name)} · Look #${c.number}')">`
+   ? `<img src="${esc(c.photo_url)}" alt="${esc(c.name)}" loading="lazy" onclick="openContestantLightbox(${c.id})">`
    : `<div class="pic-placeholder" onclick="openLightbox('img/jorts-battle.jpg', 'APMed \'33 Jorts Battle')">
        <div class="ticket-num">#${String(c.number).padStart(2, '0')}</div>
        <div class="placeholder-stamp">CLASSIFIED // FITTING IN PROGRESS</div>
@@ -2454,9 +2454,30 @@ function handlePhotoUpload(e) {
  if (!file) return;
  const reader = new FileReader();
  reader.onload = function(evt) {
-  document.getElementById('cUrl').value = evt.target.result;
-  document.getElementById('cPreview').src = evt.target.result;
-  document.getElementById('cPreviewWrap').hidden = false;
+  const raw = evt.target.result;
+  const img = new Image();
+  img.onload = function() {
+   const maxD = 720;
+   let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+   if (w > maxD || h > maxD) {
+    if (w >= h) { h = Math.round(h * maxD / w); w = maxD; }
+    else { w = Math.round(w * maxD / h); h = maxD; }
+   }
+   const cv = document.createElement('canvas');
+   cv.width = w; cv.height = h;
+   cv.getContext('2d').drawImage(img, 0, 0, w, h);
+   let out = cv.toDataURL('image/webp', 0.82);
+   if (!out.startsWith('data:image/webp')) out = cv.toDataURL('image/jpeg', 0.82);
+   document.getElementById('cUrl').value = out;
+   document.getElementById('cPreview').src = out;
+   document.getElementById('cPreviewWrap').hidden = false;
+  };
+  img.onerror = function() {
+   document.getElementById('cUrl').value = raw;
+   document.getElementById('cPreview').src = raw;
+   document.getElementById('cPreviewWrap').hidden = false;
+  };
+  img.src = raw;
  };
  reader.readAsDataURL(file);
 }
@@ -2969,6 +2990,7 @@ function loadCustomMp3(e) {
   customAudio = new Audio();
   customAudio.loop = true;
  }
+ if (customAudio && customAudio.src && customAudio.src.startsWith('blob:')) URL.revokeObjectURL(customAudio.src);
  customAudio.src = url;
  stopTrack();
  currentTrack = 'custom';
@@ -2979,6 +3001,10 @@ function loadCustomMp3(e) {
 /* -------------------------------------------------------------------------
    Lightbox
    ------------------------------------------------------------------------- */
+function openContestantLightbox(id) {
+ const c = STATE.contestants.find(x => x.id === id);
+ if (c && c.photo_url) openLightbox(c.photo_url, c.name + ' · Look #' + c.number);
+}
 function openLightbox(url, caption) {
  document.getElementById('lightboxImg').src = url;
  document.getElementById('lightboxCaption').textContent = caption || '';

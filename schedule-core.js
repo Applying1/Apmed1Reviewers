@@ -9,7 +9,7 @@ const Sched = {
   _p: null,
   load() {
     if (this.data) return Promise.resolve(this.data);
-    if (!this._p) this._p = fetch('schedule.json').then(r => r.json()).then(d => { this.data = d; return d; });
+    if (!this._p) this._p = fetch('schedule.json').then(r => r.json()).then(d => { this.data = d; return d; }).catch(e => { this._p = null; throw e; });
     return this._p;
   },
   dayStart(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; },
