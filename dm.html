@@ -130,7 +130,8 @@ button{cursor:pointer}
 /* In-pane Composer dock */
 .dock{background:color-mix(in oklab,var(--bg) 95%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 16px;flex:none}
 .din{max-width:760px;margin:0 auto;display:flex;align-items:flex-end;gap:8px}
-.din textarea{flex:1;min-height:42px;max-height:120px;resize:none;padding:9px 12px;border-radius:13px;border:1.5px solid var(--line2);background:var(--surface);outline:0;font-size:14.5px;line-height:1.4}
+.din textarea{flex:1;height:42px;min-height:42px;max-height:120px;resize:none;padding:9px 12px;border-radius:13px;border:1.5px solid var(--line2);background:var(--surface);outline:0;font-size:14.5px;line-height:1.4;overflow-y:hidden}
+.din textarea::placeholder{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--faint)}
 .din textarea:focus{border-color:var(--accent)}
 .sendbtn{flex:none;width:42px;height:42px;border-radius:12px;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;transition:filter .15s,transform .1s}
 .sendbtn:hover:not(:disabled){filter:brightness(1.08)}
@@ -164,12 +165,22 @@ button{cursor:pointer}
  #inboxWrap{width:100%;border-right:none}
  .top-inbox-cell{display:contents}
  .top-chat-cell{display:contents}
- .top{padding:10px 16px;gap:10px}
+ .top{padding:8px 12px;gap:8px}
+ body.in-chat .top .sp{display:none!important}
+ .phead{gap:8px;min-width:0;flex:1}
+ .pname{font-size:14px;line-height:1.25}
+ .pstatus{font-size:11.5px}
+ .back{padding:6px 8px 6px 4px;font-size:13px;gap:4px}
+ #duelBtn{padding:5px 8px;font-size:12px;gap:4px}
  body.in-chat #inboxWrap{display:none!important}
  body:not(.in-chat) #chatWrap{display:none!important}
  body:not(.in-chat) #partnerHead{display:none!important}
  body:not(.in-chat) #duelBtn{display:none!important}
  body.in-chat #backTxt{display:inline}
+ .dock{padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+ .din{gap:6px}
+ .din textarea{height:40px;min-height:40px;padding:8px 11px;font-size:14px;border-radius:12px;overflow-y:hidden}
+ .sendbtn, .din .stkbtn{width:40px;height:40px;border-radius:11px}
 }
 @media (min-width:720px){
  #inboxWrap{display:flex!important}
@@ -357,7 +368,7 @@ function renderSidebarList(){
    return '<a class="crow '+(isActive?'active':'')+'" href="dm.html?with='+encodeURIComponent(c.id)+'&to='+encodeURIComponent(c.name)+'" onclick="onConvoClick(event,\''+esc(c.id)+'\',\''+esc(c.name)+'\')">'+
     '<div style="position:relative;flex:none">'+avHtml(c.name,c.av,c.avatar,40)+'<i class="dot '+stateCls+'" style="position:absolute;bottom:-2px;right:-2px;border:2px solid var(--surface)"></i></div>'+
     '<div class="cw">'+
-     '<div class="crow-top"><b>'+esc(c.name)+'</b><time>'+timeAgo(c.last_at)+'</time></div>'+
+     '<div class="crow-top"><b>'+esc(formatDisplayName(c.name))+'</b><time>'+timeAgo(c.last_at)+'</time></div>'+
      '<div class="crow-bot">'+
       '<span class="crow-prev">'+(c.last_mine?'You: ':'')+esc(cleanMsgPreview(c.last_message))+'</span>'+
       (c.unread_count>0?'<span class="badge">'+c.unread_count+'</span>':'')+
@@ -384,7 +395,7 @@ function renderSidebarList(){
     return '<a class="crow '+(isActive?'active':'')+'" href="dm.html?with='+encodeURIComponent(cm.id)+'&to='+encodeURIComponent(cm.name)+'" onclick="onConvoClick(event,\''+esc(cm.id)+'\',\''+esc(cm.name)+'\')">'+
      '<div style="position:relative;flex:none">'+avHtml(cm.name,cm.av,cm.avatar,40)+'<i class="dot '+stCls+'" style="position:absolute;bottom:-2px;right:-2px;border:2px solid var(--surface)"></i></div>'+
      '<div class="cw">'+
-      '<div class="crow-top"><b>'+esc(cm.name)+'</b></div>'+
+      '<div class="crow-top"><b>'+esc(formatDisplayName(cm.name))+'</b></div>'+
       '<div class="crow-bot"><span class="crow-prev">'+esc(stText)+'</span></div>'+
      '</div>'+
     '</a>';
@@ -548,7 +559,7 @@ function renderMsgReactionsDom(msgId){
 function startReply(id){
  const m=MESSAGES.find(x=>x.id===id);
  if(!m)return;
- const author=m.mine?'You':(PARTNER_NAME||'Classmate');
+ const author=m.mine?'You':formatDisplayName(PARTNER_NAME||'Classmate');
  REPLY_TARGET={id:m.id,author,body:m.body};
  const d=$('replyDock');
  if(d){
@@ -741,7 +752,7 @@ async function sendMsg(){
  const inp=$('msgInput');
  const txt=btrim(inp?inp.value:'');
  if(!txt)return;
- if(inp){inp.value='';inp.style.height='auto'}
+ resetMsgInput();
  await submitMsg(txt);
 }
 
@@ -750,7 +761,7 @@ async function sendSticker(stk){
  const txt=btrim(inp?inp.value:'');
  const tag='[sticker:'+stk.id+':'+stk.image+':'+stk.name+']';
  const full=txt?(tag+'\n'+txt):tag;
- if(inp){inp.value='';inp.style.height='auto'}
+ resetMsgInput();
  await submitMsg(full);
 }
 
@@ -771,6 +782,45 @@ async function delMsg(id){
 
 function btrim(s){return String(s||'').trim()}
 
+function formatDisplayName(name){
+ if(!name) return '';
+ let s = String(name).trim();
+ if(s.includes(',')){
+  const parts = s.split(',').map(p=>p.trim());
+  if(parts.length >= 2){
+   s = parts.slice(1).join(' ') + ' ' + parts[0];
+  }
+ }
+ if(s === s.toUpperCase()){
+  s = s.toLowerCase().replace(/(?:^|\s|-)\S/g, c => c.toUpperCase());
+ }
+ return s;
+}
+
+function getFirstName(name){
+ const clean = formatDisplayName(name);
+ if(!clean) return '';
+ const first = clean.split(/\s+/)[0];
+ return first || clean;
+}
+
+function resizeMsgInput(){
+ const inp = $('msgInput');
+ if(!inp) return;
+ inp.style.height = 'auto';
+ const nextH = Math.min(120, Math.max(inp.value ? 40 : 0, inp.scrollHeight));
+ inp.style.height = nextH + 'px';
+ inp.style.overflowY = (inp.scrollHeight > 120) ? 'auto' : 'hidden';
+}
+
+function resetMsgInput(){
+ const inp = $('msgInput');
+ if(!inp) return;
+ inp.value = '';
+ inp.style.height = '';
+ inp.style.overflowY = 'hidden';
+}
+
 /* Setup partner details in header */
 async function setupPartnerHeader(){
  document.body.classList.add('in-chat');
@@ -785,10 +835,11 @@ async function setupPartnerHeader(){
  }
 
  if(PARTNER_NAME){
-  $('partnerName').textContent=PARTNER_NAME;
+  $('partnerName').textContent=formatDisplayName(PARTNER_NAME);
+  $('partnerName').title=PARTNER_NAME;
   $('duelBtn').href='duel.html?to='+encodeURIComponent(PARTNER_NAME);
   $('duelBtn').hidden=false;
-  $('msgInput').placeholder='Message '+PARTNER_NAME+'…';
+  $('msgInput').placeholder='Message '+getFirstName(PARTNER_NAME)+'…';
  }
 
  // Fetch class list to get partner's avatar and real live presence / last online
@@ -805,11 +856,12 @@ async function setupPartnerHeader(){
    if(p){
     PARTNER_ID=p.id;
     PARTNER_NAME=p.name;
-    $('partnerName').textContent=p.name;
+    $('partnerName').textContent=formatDisplayName(p.name);
+    $('partnerName').title=p.name;
     $('partnerAv').innerHTML=avHtml(p.name,p.av,p.avatar,36);
     $('duelBtn').href='duel.html?to='+encodeURIComponent(p.name);
     $('duelBtn').hidden=false;
-    $('msgInput').placeholder='Message '+p.name+'…';
+    $('msgInput').placeholder='Message '+getFirstName(p.name)+'…';
 
     const stClass=esc(p.state||'offline');
     let stText='Offline';
@@ -826,10 +878,7 @@ async function setupPartnerHeader(){
 /* Auto-expanding textarea */
 function setupInput(){
  const inp=$('msgInput');
- inp.addEventListener('input',()=>{
-  inp.style.height='auto';
-  inp.style.height=Math.min(120,inp.scrollHeight)+'px';
- });
+ inp.addEventListener('input', resizeMsgInput);
  inp.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
    e.preventDefault();
