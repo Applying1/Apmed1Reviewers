@@ -898,5 +898,13 @@
   "title": "Sendable Stickers in Direct Messages & Discussions",
   "text": "All 35 stickers from Diary of a Stickerholic (Chiikawa in STEM, When in Med, EPIC the Musical, 20th Century Girl, Zooa, and Jam Sesh) are now sendable in Direct Messages and all discussion pages! Tap the sticker button in any chat to open the sticker drawer.",
   "link": "dm.html"
+ },
+ {
+  "id": 109,
+  "date": "2026-11-03",
+  "type": "feature",
+  "title": "Smarter AI study help: One-tap explanations, memory tricks & practice coach",
+  "text": "Right after a wrong answer, one-tap chips let you get a simpler explanation, a memory trick, a side-by-side comparison of your choice vs the answer, or an instant similar question to quiz yourself. Confident mistakes and class-hard questions auto-open cached explanations without using any of your daily AI tries, plus new AI helpers on Notes, Flashcards, and end-of-round summaries.",
+  "link": "index.html"
  }
 ]

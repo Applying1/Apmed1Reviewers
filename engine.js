@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='104',APP_DATE='Oct 31, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='105',APP_DATE='Nov 3, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -204,7 +204,7 @@ const FC_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke=
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true,missTags:true,cards:true,fcFour:false,fcRet:.88,fcNew:40,fcRev:150,fcDeck:null,fcExam:true,fcEasy:-1};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true,missTags:true,ai:true,cards:true,fcFour:false,fcRet:.88,fcNew:40,fcRev:150,fcDeck:null,fcExam:true,fcEasy:-1};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
@@ -470,10 +470,10 @@ function feedbackHTML(q,fb,live,ai){   // ai: the AI box also shows on an earlie
  if(!fb.correct&&!fb.self)out+='<p><b>Answer:</b> '+ansHTML(fb.correctLabel)+'</p>';
  if(q.why)out+='<p>'+esc(q.why)+'</p>';out+=stepsHTML(q.cid&&byId[q.cid]);
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
+ if((live||ai)&&!fb.self)out+=aiHTML(q,fb);
  if(live)out+=missRowHTML(q,fb)+fcMakeHTML(q,fb);
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'<span data-dn="'+esc(discKey(q.cid))+'">'+dnDot(dnUnread(discKey(q.cid)))+'</span></a></p>';
- if((live||ai)&&!fb.self)out+=aiHTML(q,fb);
  const note=fb.correct?(fb.lucky?(fb.sure==='unsure'?'You weren\'t sure, so this '+ITEM+' comes back in a few questions.':'Marked as a lucky guess, so this '+ITEM+' comes back in a few questions.')
   :fb.sure==='sure'?'Counts toward mastering this '+ITEM+'.':fb.hinted?'Right, with a hint. It counts toward mastery once you get it without one.':'Counts toward mastering this '+ITEM+'.'+(live&&state.prefs.lucky?' <button class="link lucky" onclick="luckyGuess()" title="Undo the mastery point for this '+ITEM+'">Lucky guess? Ask me again</button>':''))
   :fb.self&&!fb.lookup?'This '+ITEM+' comes back in a few questions. Look the answer over before moving on.'
@@ -512,25 +512,46 @@ function aiCheck(){if(AI_READY===true||!CONFIG.home||!cloudOn()||!/^https?:$/.te
  fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{headers:{apikey:CLOUD.key},cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{AI_READY=!!j.ok;
   if(AI_READY){try{sessionStorage.setItem('reviewer_ai',JSON.stringify({ok:true,at:Date.now()}))}catch(e){}if(state.feedback)draw()}}).catch(()=>{})}
 const aiFmt=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<i>$1</i>').replace(/^\s*[-•]\s+/gm,'• ').replace(/\n+/g,'<br>');
-function aiHTML(q,fb){aiCheck();if(!q||!q.cid||!fb)return '';const k=aiK(q,fb),sv=AISAVED[k],x=AIX[k]&&!AIX[k].busy&&!AIX[k].err?AIX[k]:sv?{text:sv.text,saved:1}:AIX[k],on=AI_READY&&FILE_IDS.has(String(q.cid));if(!x&&!on)return '';
- let h;
- if(!x)h='<p><button class="link aibtn" onclick="aiExplain(\''+esc(String(q.cid))+'\')">'+SPARK+'Explain it differently</button></p>';
- else if(x.busy)h='<div class="aibox busy"><p class="note">'+SPARK+'Writing a simpler explanation…</p></div>';
- else if(x.err)h='<div class="aibox"><p class="note">'+x.err+'</p></div>';
- else h='<div class="aibox"><div class="aih">'+SPARK+'Explained differently</div><p>'+aiFmt(x.text)+'</p><p class="note">Written by AI from this question, so it can be wrong. Check your transes'+(x.saved?' · saved on this device':x.cached?' · already written, didn\'t use a try':x.left!=null?' · '+x.left+' left today':'')+'.</p></div>';
- return h+(on?aiFollowHTML(k):'')}
+const aiOn=()=>state.prefs.ai!==false;
+const AI_PEEKED={},AITWIN={},AICOACH={},AINOTES={ch:'',open:false,preset:'',draft:'',busy:0,text:'',err:'',left:null,cached:false};
+function cmpLabel(pk,ans){const cl=s=>String(s||'').replace(/@m:\S+/g,'').trim(),a=cl(pk),b=cl(ans);if(!a||!b||a.length>42||b.length>42)return 'Compare choices';const sh=s=>s.length>18?s.slice(0,16)+'…':s;return sh(a)+' vs '+sh(b)}
+function aiPeek(q,fb,k){if(AI_PEEKED[k]||AIX[k]||AISAVED[k])return;AI_PEEKED[k]=1;
+ const u=CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain?course='+encodeURIComponent(courseId())+'&qid='+encodeURIComponent(String(q.cid))+'&picked='+encodeURIComponent(aiPick(q,fb));
+ fetch(u,{headers:{apikey:CLOUD.key},cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{if(j&&j.text&&!AIX[k]){aiSave(k,j.text);AIX[k]={text:j.text,cached:1,auto:1};if(state.feedback)draw()}}).catch(()=>{})}
+function aiHTML(q,fb){if(!aiOn())return '';aiCheck();if(!q||!q.cid||!fb)return '';const k=aiK(q,fb),sv=AISAVED[k],x=AIX[k]&&!AIX[k].busy&&!AIX[k].err?AIX[k]:sv?{text:sv.text,saved:1}:AIX[k],on=AI_READY&&FILE_IDS.has(String(q.cid));if(!x&&!on)return '';
+ const cid=esc(String(q.cid)),pk=aiPick(q,fb),c0=byId[q.cid],ans=c0?String(c0.q?c0.a:c0.term||''):'',curM=(x&&x.mode)||'';
+ const hard=!fb.correct&&!fb.lookup&&(fb.sure==='sure'||(state.concepts[q.cid]&&state.concepts[q.cid].wrong>=2)||(classRate(q.cid)||0)>=40);
+ if(hard&&on&&!x)aiPeek(q,fb,k);
+ let h='';
+ if(on){
+  h+='<div class="aichips'+(hard&&!x?' hot':'')+'">'+(hard&&!x?'<span class="ailab">'+SPARK+(fb.sure==='sure'?'Confident slip:':'Tricky one:')+'</span>':'')+
+   (!x?'<button class="aichip aibtn" onclick="aiExplain(\''+cid+'\')">'+SPARK+(fb.correct?(fb.lucky||fb.sure==='unsure'?'Lock this in':'Explain it differently'):'Explain it differently')+'</button>':curM?'<button class="aichip" onclick="aiExplain(\''+cid+'\')">'+SPARK+'Simpler explanation</button>':'')+
+   '<button class="aichip'+(curM==='trick'?' on':'')+'" onclick="aiExplain(\''+cid+'\',\'trick\')">Memory trick</button>'+
+   (!fb.correct&&pk?'<button class="aichip'+(curM==='compare'?' on':'')+'" onclick="aiExplain(\''+cid+'\',\'compare\')">'+esc(cmpLabel(pk,ans))+'</button>':'')+
+   (!fb.correct||fb.lucky||fb.sure==='unsure'?'<button class="aichip'+(AITWIN[k]?' on':'')+'" onclick="aiTwin(\''+cid+'\')">Quiz me on this</button>':'')+
+   (!x&&!(AIF[k]&&AIF[k].open)?'<button class="aichip" onclick="aiOpenAsk(\''+cid+'\')">Ask a question…</button>':'')+'</div>';
+ }
+ if(x){
+  if(x.busy)h+='<div class="aibox busy"><p class="note">'+SPARK+(x.mode==='trick'?'Finding a memory trick…':x.mode==='compare'?'Comparing your choice with the answer…':'Writing a simpler explanation…')+'</p></div>';
+  else if(x.err)h+='<div class="aibox"><p class="note">'+x.err+'</p></div>';
+  else{const hd=x.mode==='trick'?'Memory trick':x.mode==='compare'?'Side-by-side comparison':x.mode==='deeper'?'Locked in':'Explained differently';
+   h+='<div class="aibox"><div class="aih">'+SPARK+hd+'</div><p>'+aiFmt(x.text)+'</p><p class="note">Written by AI from this question, so it can be wrong. Check your transes'+(x.saved?' · saved on this device':x.auto?' · auto-opened, didn\'t use a try':x.cached?' · already written, didn\'t use a try':x.left!=null?' · '+x.left+' left today':'')+'.</p></div>'}
+ }
+ h+=aiTwinHTML(k);
+ return h+(on&&((x&&!x.busy&&!x.err)||(AIF[k]&&AIF[k].open))?aiFollowHTML(k,q):'')}
 /* v72: follow-up questions. Under the explanation, the student can ask about this question in their own words (up to 3
    per question). Same daily tries as explanations; never cached (each question is the student's own). */
 const AIF={};   // AIF[question id|picked choice] = {turns: [{q, a}], busy, err, draft, left}
-function aiFollowHTML(k){const f=AIF[k]||{turns:[]};
+function aiFollowHTML(k,q){const f=AIF[k]||{turns:[]},cid=q?esc(String(q.cid)):'';
  let h='<div class="aifu">'+f.turns.map(t=>'<p class="aiq"><b>You asked:</b> '+esc(t.q)+'</p><p class="aia">'+aiFmt(t.a)+'</p>').join('');
  if(f.busy)h+='<p class="note aiwait">'+SPARK+'Thinking about your question…</p>';
  if(f.err)h+='<p class="note">'+f.err+'</p>';
- if(f.turns.length>=3)h+='<p class="note">For more, ask your classmates in <b>Discuss this question</b>.</p>';
+ if(f.turns.length>=3)h+='<p class="note">For more, ask your classmates in '+(cid&&discussOn()?'<a class="link" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+cid+'\')"><b>Discuss this question</b></a>':'<b>Discuss this question</b>')+'.</p>';
  else if(!f.busy)h+='<div class="aiask"><input id="aiask" maxlength="300" autocomplete="off" aria-label="Ask a follow-up about this question" placeholder="'+(f.turns.length?'Ask another follow-up…':'Still confused? Ask about this question…')+'" value="'+esc(f.draft||'')+'" oninput="aiDraft(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aiAsk()}"><button class="btn sm" onclick="aiAsk()">Ask</button></div>';
  if(f.turns.length&&f.left!=null&&!f.busy)h+='<p class="note">Written by AI, so it can be wrong · '+f.left+' left today.</p>';
  return h+'</div>'}
 function aiDraft(v){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb);(AIF[k]||(AIF[k]={turns:[]})).draft=v}
+function aiOpenAsk(cid){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);(AIF[k]||(AIF[k]={turns:[]})).open=1;draw();setTimeout(()=>{const i=$('aiask');if(i)i.focus({preventScroll:true})},50)}
 // one request to the explain function, as the signed-in student (an expired sign-in is refreshed once and retried)
 async function aiPost(payload){const tok=typeof Auth!=='undefined'?(Auth.cloud=CLOUD,await Auth.token()):'';if(!tok)return {signin:1};
  const go=t=>fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+t},body:JSON.stringify(payload)});
@@ -544,10 +565,13 @@ function aiErr(o,what){const j=o.j||{},det=s=>' <span class="aidet">('+esc(Strin
   :j.error==='sign in'?'Your sign-in has expired. Sign in again to use AI '+what+'. <a href="./?signin=1">Sign in</a>'+(j.detail?det(j.detail):'')
   :'Couldn\'t get an answer just now. Try again in a bit.'+det(j.detail||j.error||j.message||j.msg||'no reason given')}
 function aiBase(q,fb){const sel=aiCur().sel,ch=!fb.correct&&!q.typed&&sel?q.choices.find(x=>x.letter===sel):null;return {course:courseId(),qid:String(q.cid),picked:ch?ch.label:'',wrong:!fb.correct}}
-async function aiExplain(cid){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);if(AIX[k]&&AIX[k].busy)return;
- AIX[k]={busy:1};draw();
- try{const o=await aiPost(aiBase(q,fb));
-  if(o.r&&o.r.ok&&o.j.text){aiSave(k,o.j.text);AIX[k]={text:o.j.text,left:o.j.left,cached:o.j.cached}}else AIX[k]={err:aiErr(o,'explanations')}}
+async function aiExplain(cid,mode){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);if(AIX[k]&&AIX[k].busy)return;
+ const m=mode||(fb.correct&&(fb.lucky||fb.sure==='unsure')?'deeper':'');
+ if(!m&&AISAVED[k]&&AISAVED[k].text){AIX[k]={text:AISAVED[k].text,saved:1};draw();return}
+ AIX[k]={busy:1,mode:m};draw();
+ const body=aiBase(q,fb);if(m)body.mode=m;
+ try{const o=await aiPost(body);
+  if(o.r&&o.r.ok&&o.j.text){if(!m)aiSave(k,o.j.text);AIX[k]={text:o.j.text,left:o.j.left,cached:o.j.cached,mode:m}}else AIX[k]={err:aiErr(o,'explanations'),mode:m}}
  catch(e){AIX[k]={err:'No connection. Try again when you\'re online.'}}
  if(String((aiCur().q||{}).cid)===String(cid))draw()}
 async function aiAsk(){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb),f=AIF[k]||(AIF[k]={turns:[]});if(f.busy||f.turns.length>=3)return;
@@ -558,6 +582,71 @@ async function aiAsk(){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb),
   if(o.r&&o.r.ok&&o.j.text){f.turns.push({q:text,a:o.j.text});f.draft='';f.left=o.j.left}else f.err=aiErr(o,'follow-ups')}
  catch(e){f.err='No connection. Try again when you\'re online.'}
  f.busy=0;if(String((aiCur().q||{}).cid)===String(q.cid)){draw();setTimeout(()=>{const i=$('aiask');if(i&&f.turns.length<3)i.focus({preventScroll:true})},60)}}
+function aiTwinHTML(k){const t=AITWIN[k];if(!t)return '';
+ if(t.busy)return '<div class="aitwin"><p class="note">'+SPARK+'Making a fresh practice question on this concept…</p></div>';
+ if(t.err)return '<div class="aitwin"><p class="note">'+t.err+'</p></div>';
+ return '<div class="aitwin"><div class="aih">'+SPARK+'Quick check · '+(t.fromBank?'another question from this bank':'AI practice question (doesn\'t change mastery)')+'</div><p class="prompt" style="font-size:15px;margin:4px 0 8px">'+stemHTML(t.stem)+'</p><div class="choices">'+
+  t.choices.map((c,i)=>{const L=LETTERS[i],cls=t.picked?(L===t.ans?'correct':L===t.picked?'wrong':'dim'):'';return '<button class="choice '+cls+'" '+(t.picked?'disabled':'onclick="aiTwinPick(\''+L+'\')"')+'><span class="let">'+L+'</span><span class="lbl">'+ansHTML(c)+'</span></button>'}).join('')+
+  '</div>'+(t.picked?'<p class="note" style="margin-top:8px"><b>'+(t.picked===t.ans?'Spot on!':'Answer: '+t.ans+'.')+'</b> '+aiFmt(t.why||'')+(t.fromBank?' · <button class="link" onclick="aiTwin(\''+esc(String((aiCur().q||{}).cid||''))+'\',true)">Try an AI-written one</button>':'')+'</p>':'')+'</div>'}
+async function aiTwin(cid,forceAI){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);if(AITWIN[k]&&AITWIN[k].busy)return;
+ const c0=byId[q.cid];
+ if(!forceAI&&c0){const words=new Set(String((c0.q||c0.stem||'')+' '+(c0.a||c0.term||'')).toLowerCase().match(/[a-z]{4,}/g)||[]);
+  const cand=BANK.filter(x=>x.id!==c0.id&&!isSelf(x)&&!isWr(x)&&x.section===c0.section);
+  let best=null,bs=0;cand.forEach(x=>{const w=(String((x.q||x.stem||'')+' '+(x.a||x.term||'')).toLowerCase().match(/[a-z]{4,}/g)||[]).filter(z=>words.has(z)).length;if(w>bs){bs=w;best=x}});
+  if(best&&bs>=2){const bq=makeQuestion(best);if(bq&&bq.choices&&bq.choices.length>=2){const cor=bq.choices.find(x=>x.correct)||bq.choices[0];AITWIN[k]={fromBank:1,stem:bq.stem,choices:bq.choices.map(x=>x.label),ans:cor.letter,why:best.why||best.definition||''};draw();return}}}
+ AITWIN[k]={busy:1};draw();
+ try{const o=await aiPost(Object.assign(aiBase(q,fb),{mode:'twin'}));
+  if(o.r&&o.r.ok&&o.j.twin){const tw=o.j.twin;AITWIN[k]={stem:tw.stem,choices:tw.choices,ans:LETTERS[tw.ans]||LETTERS[0],why:tw.why,left:o.j.left,cached:o.j.cached}}
+  else AITWIN[k]={err:aiErr(o,'practice question')}}
+ catch(e){AITWIN[k]={err:'No connection. Try again when you\'re online.'}}
+ if(String((aiCur().q||{}).cid)===String(cid))draw()}
+function aiTwinPick(l){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb);if(AITWIN[k]&&!AITWIN[k].picked){AITWIN[k].picked=l;draw()}}
+function coachMisses(){const s=state.section,P=onPass(s)?state.pass:null;
+ const log=secLog().filter(e=>e&&e.fb&&!e.fb.correct);
+ if(log.length>=2)return log.slice(-8).map(e=>{const c=byId[e.q.cid]||{};return {cid:e.q.cid,sec:c.section||'',stem:e.q.stem,picked:aiPick(e.q,e.fb),ans:String(c.q?c.a:c.term||'')}});
+ if(P&&P.miss&&P.miss.length>=2)return P.miss.slice(0,8).map(id=>{const c=byId[id]||{};return {cid:id,sec:c.section||'',stem:String(c.q||c.def||''),picked:'',ans:String(c.q?c.a:c.term||'')}});
+ return []}
+function aiCoachHTML(){if(!aiOn())return '';aiCheck();if(!AI_READY)return '';const ms=coachMisses();if(ms.length<2)return '';
+ const k=state.section+'|'+ms.map(m=>m.cid).join(','),c=AICOACH[k];
+ if(!c)return '<div class="aicoach"><button class="aichip" onclick="aiCoach()">'+SPARK+'What am I mixing up in these '+ms.length+' misses?</button></div>';
+ if(c.busy)return '<div class="aicoach"><p class="note">'+SPARK+'Looking for patterns across the '+ms.length+' you missed…</p></div>';
+ if(c.err)return '<div class="aicoach"><p class="note">'+c.err+'</p></div>';
+ const chs=[...new Set(ms.map(m=>chOf(m.sec)).filter(Boolean))];
+ return '<div class="aicoach"><div class="aih">'+SPARK+'What tripped you up this round</div><div class="aia">'+aiFmt(c.text)+'</div>'+
+  (chs.length&&pageOn('notes')?'<div class="aichips" style="margin-top:8px">'+chs.map(ch=>'<button class="aichip" onclick="openNotes(\''+esc(ch)+'\')">Open '+esc(UNIT+' '+ch)+' notes →</button>').join('')+'</div>':'')+
+  '<p class="note">Written by AI from this round\'s misses'+(c.left!=null?' · '+c.left+' left today':'')+'.</p></div>'}
+async function aiCoach(){const ms=coachMisses();if(ms.length<2)return;const k=state.section+'|'+ms.map(m=>m.cid).join(',');if(AICOACH[k]&&AICOACH[k].busy)return;
+ AICOACH[k]={busy:1};draw();
+ try{const o=await aiPost({course:courseId(),mode:'coach',misses:ms});
+  AICOACH[k]=o.r&&o.r.ok&&o.j.text?{text:o.j.text,left:o.j.left}:{err:aiErr(o,'round summary')}}
+ catch(e){AICOACH[k]={err:'No connection. Try again when you\'re online.'}}
+ draw()}
+function aiNotesHTML(){if(!aiOn()||!AI_READY||notesQ.trim())return '';
+ const ch=notesCh!=='all'?notesCh:(NOTES_PARSED.find(n=>noteScope(n.ch))||{}).ch;if(!ch)return '';
+ if(AINOTES.ch!==ch)Object.assign(AINOTES,{ch,busy:0,text:'',err:'',preset:''});
+ const label=/^\d/.test(ch)?UNIT+' '+ch:(CH_NAMES[ch]||'these notes');
+ return '<div class="ainbar"><div class="aichips"><span class="ailab">'+SPARK+'AI on '+esc(label)+':</span>'+
+  '<button class="aichip'+(AINOTES.preset==='traps'&&AINOTES.text?' on':'')+'" onclick="aiNotePreset(\'traps\')">Common exam traps</button>'+
+  '<button class="aichip'+(AINOTES.preset==='summary'&&AINOTES.text?' on':'')+'" onclick="aiNotePreset(\'summary\')">5-point summary</button>'+
+  '<button class="aichip'+(AINOTES.open?' on':'')+'" onclick="AINOTES.open=!AINOTES.open;drawNotesBody();setTimeout(()=>{$(\'ainask\')?.focus()},40)">Ask a question…</button></div>'+
+  (AINOTES.open?'<div class="aiask" style="margin-top:8px"><input id="ainask" maxlength="300" autocomplete="off" placeholder="Ask anything about '+esc(label)+'…" value="'+esc(AINOTES.draft||'')+'" oninput="AINOTES.draft=this.value" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aiNoteSend()}"><button class="btn sm" onclick="aiNoteSend()">Ask</button></div>':'')+
+  (AINOTES.busy?'<p class="note" style="margin-top:8px">'+SPARK+'Reading '+esc(label)+' notes…</p>':AINOTES.err?'<p class="note" style="margin-top:8px">'+AINOTES.err+'</p>':AINOTES.text?'<div class="aibox" style="margin-top:8px"><p>'+aiFmt(AINOTES.text)+'</p><p class="note">From your '+esc(label)+' notes'+(AINOTES.cached?' · cached, didn\'t use a try':AINOTES.left!=null?' · '+AINOTES.left+' left today':'')+'.</p></div>':'')+'</div>'}
+function notesTextFor(ch){const n=NOTES_PARSED.find(x=>x.ch===ch);if(!n)return '';
+ return ((CH_NAMES[ch]||'')+'\n'+n.groups.filter(g=>secOn(g.sec)).map(g=>g.title+': '+g.rows.map(([a,b])=>a+' — '+b).join('; ')).join('\n')).slice(0,3500)}
+async function aiNotePreset(p){const ch=AINOTES.ch;if(!ch||AINOTES.busy)return;
+ AINOTES.preset=p;AINOTES.busy=1;AINOTES.err='';drawNotesBody();
+ try{const o=await aiPost({course:courseId(),mode:'notes',ch,preset:p,notes:notesTextFor(ch)});
+  if(o.r&&o.r.ok&&o.j.text)Object.assign(AINOTES,{busy:0,text:o.j.text,left:o.j.left,cached:o.j.cached});
+  else Object.assign(AINOTES,{busy:0,err:aiErr(o,'notes helper')})}
+ catch(e){Object.assign(AINOTES,{busy:0,err:'No connection. Try again when you\'re online.'})}
+ drawNotesBody()}
+async function aiNoteSend(){const ch=AINOTES.ch,el=$('ainask'),ask=((el&&el.value)||AINOTES.draft||'').trim();if(!ch||AINOTES.busy||ask.length<3){if(el)el.focus();return}
+ AINOTES.preset='';AINOTES.busy=1;AINOTES.err='';drawNotesBody();
+ try{const o=await aiPost({course:courseId(),mode:'notes',ch,ask,notes:notesTextFor(ch)});
+  if(o.r&&o.r.ok&&o.j.text)Object.assign(AINOTES,{busy:0,text:o.j.text,draft:'',left:o.j.left,cached:false});
+  else Object.assign(AINOTES,{busy:0,err:aiErr(o,'notes helper')})}
+ catch(e){Object.assign(AINOTES,{busy:0,err:'No connection. Try again when you\'re online.'})}
+ drawNotesBody()}
 function backBtn(){return '<button class="btn back" onclick="goBack()" '+(canBack()?'':'disabled')+' title="Previous answered question (←)">'+LEFT+'Back</button>'}
 
 function cardHTML(){
@@ -575,13 +664,13 @@ function cardHTML(){
  if(state.pmatch)return matchCardHTML(state.pmatch,'p');
  // Practice again finished
  if(!state.active&&onPass(s)&&state.pass.free){const P=state.pass,n=P.done.length,r=Math.min(P.right||0,n);
-  return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">Practice round done</span></div><h2>'+esc(secTitle(s))+'</h2><p><b>'+r+' of '+n+'</b> right ('+(n?Math.round(100*r/n):0)+'%). Your mastery is unchanged.</p>'+(freeOpen?freeBoxHTML():'')+'<div class="row">'+
+  return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">Practice round done</span></div><h2>'+esc(secTitle(s))+'</h2><p><b>'+r+' of '+n+'</b> right ('+(n?Math.round(100*r/n):0)+'%). Your mastery is unchanged.</p>'+aiCoachHTML()+(freeOpen?freeBoxHTML():'')+'<div class="row">'+
    (secLog().length?backBtn():'')+'<button class="btn" onclick="freeToggle()" aria-expanded="'+freeOpen+'">Practice again</button><button class="btn primary" id="go" onclick="endPass()">Done <kbd>Enter</kbd></button></div></div>'}
  // Review pass finished
  if(!state.active&&onPass(s)){const P=state.pass,n=P.done.length,miss=P.miss.length,slip=P.miss.filter(id=>byId[id]&&!isM(byId[id])).length;
   return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">Review pass complete</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+
    (miss?'You went through '+n+' '+ITEMS+': '+(n-miss)+' still solid, '+miss+' missed. '+(slip?'The '+(slip>1?slip+' you missed go':'one you missed goes')+' back into practice until you master '+(slip>1?'them':'it')+' again.':'')
-    :'You went through all '+n+' '+ITEMS+' without a miss. Your mastery is unchanged.')+'</p><div class="row">'+
+    :'You went through all '+n+' '+ITEMS+' without a miss. Your mastery is unchanged.')+'</p>'+aiCoachHTML()+'<div class="row">'+
    (secLog().length?backBtn():'')+'<button class="btn" onclick="extraPractice()">Review again</button><button class="btn primary" id="go" onclick="endPass()">'+(slip?'Practice the '+slip+' you missed':'Done')+' <kbd>Enter</kbd></button></div></div>'}
  // Section finished
  if(!state.active){
@@ -593,7 +682,7 @@ function cardHTML(){
    :s==='MISSED'?(none?'Nothing missed yet. '+Items+' you get wrong, or check in your slides, will collect here.':'Every '+ITEM+' you had missed is now mastered.')
    :'You answered every '+ITEM+' here correctly '+(TIMES[T()]||T()+' times')+'. Move on, <b>practice again</b> with as many questions as you like (nothing changes your mastery), or do a <b>review pass</b>: every '+ITEM+' once, and you keep your mastery unless you miss one.';
   const canFree=!focus&&!none&&s!=='DUE';
-  return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">'+label+'</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+text+'</p>'+(canFree&&freeOpen?freeBoxHTML():'')+'<div class="row">'+
+  return '<div class="done-card"><div class="qhead"><span class="kind" style="color:var(--good)">'+label+'</span></div><h2>'+esc(secTitle(s))+'</h2><p>'+text+'</p>'+aiCoachHTML()+(canFree&&freeOpen?freeBoxHTML():'')+'<div class="row">'+
    (secLog().length?backBtn():'')+(canFree?'<button class="btn" onclick="freeToggle()" aria-expanded="'+freeOpen+'" title="Pick how many questions. Nothing changes your mastery.">Practice again</button>':'')+(none||s==='DUE'?'':'<button class="btn" onclick="extraPractice()"'+(s==='STAR'||s==='CLASS'||s==='CRAM'?'':' title="Every '+ITEM+' once. You keep your mastery unless you miss one."')+'>'+(s==='STAR'||s==='CLASS'||s==='CRAM'?'Go again':'Review pass')+'</button>')+
    (focus?'<button class="btn primary" id="go" onclick="setPage(\'dashboard\')">Back to dashboard <kbd>Enter</kbd></button>'
     :'<button class="btn primary" id="go" onclick="advance()">'+(last?'Finish':'Next '+(isCh(s)?unitW:'section'))+' <kbd>Enter</kbd></button>')+'</div></div>';
@@ -1006,7 +1095,7 @@ const DOCS=(CONFIG.docs||[]).filter(d=>d&&d.file);
 function docView(d,u){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.home||!id||!/^https?:$/.test(location.protocol)||!/^courses\/[\w-]+\/[\w.-]+\.pdf$/i.test(d.file))return u;return (d.kind==='slides'||/^slides?\b/i.test(d.title||'')?'slides.html':'transes.html')+'?f='+encodeURIComponent(d.file)+'&t='+encodeURIComponent(d.title||'Full transes')+'&c='+encodeURIComponent(id)}
 function docURL(d){if(/^https?:/i.test(d.file)||/^https?:$/.test(location.protocol))return d.file;try{return new URL(d.file,CONFIG.shareUrl).href}catch(e){return ''}}
 function drawNotes(){
- $('nChartBtn').hidden=!chartsOn();$('nBlurtBtn').hidden=!state.prefs.blurt||!NOTES_PARSED.some(n=>noteScope(n.ch)&&/^\d/.test(n.ch));
+ aiCheck();$('nChartBtn').hidden=!chartsOn();$('nBlurtBtn').hidden=!state.prefs.blurt||!NOTES_PARSED.some(n=>noteScope(n.ch)&&/^\d/.test(n.ch));
  $('ndocs').innerHTML=DOCS.map(d=>{const u=docURL(d);return u?'<a class="btn sm docbtn" href="'+esc(docView(d,u))+'"'+(docView(d,u)===u?' target="_blank" rel="noopener" title="Opens in a new tab"':'')+'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>'+esc(d.title||'Full transes')+'</a>':''}).join('');
  document.title='Notes · '+CONFIG.title;
  $('nchips').innerHTML=chChips(NOTES_PARSED.filter(n=>noteScope(n.ch)).map(n=>n.ch),notesCh,'setNotesCh');
@@ -1029,7 +1118,7 @@ function drawNotesBody(){
   if(!cards&&!more)return '';
   if(blurtCh===n.ch&&state.prefs.blurt)return blurtHTML(n);
   return '<section class="nsec"><div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+esc(CH_NAMES[n.ch]||'')+'</h2>'+(state.prefs.blurt&&!q?'<button class="bbtn" onclick="startBlurt(\''+esc(n.ch)+'\')" title="Write what you remember, then check it against these notes">'+BLURT_IC+'Blurt this '+esc(unitW)+((state.blurt||{})[n.ch]?' <span class="bscore">'+state.blurt[n.ch].got+'/'+state.blurt[n.ch].total+'</span>':'')+'</button>':'')+(state.prefs.selftest?'<button class="link reveal" onclick="revealSec(this)">Reveal all</button>':'')+(chapters.includes(n.ch)?'<button class="link" onclick="selectSection(\'CH:'+n.ch+'\')">Quiz the entire '+unitW+' →</button>':'')+'</div><div class="ngrid">'+cards+'</div>'+more+'</section>'}).join('');
- body.innerHTML=out||'<p class="empty">No notes match “'+esc(notesQ)+'”.</p>';
+ body.innerHTML=(out?aiNotesHTML()+out:'<p class="empty">No notes match “'+esc(notesQ)+'”.</p>');
 }
 /* v74 Blurt (Personalize, off by default): write everything you remember about a chapter with its notes hidden, then
    check. Each note row's term is a key point; it's ticked when its main words appear in what you wrote (small typos ok),
@@ -1782,6 +1871,7 @@ function drawPrefs(){
   row('Lucky guess button','After a correct answer, undo the mastery point if you were only guessing, so the '+ITEM+' stays in your queue.',sw(state.prefs.lucky,"setPref('lucky',"+!state.prefs.lucky+")",'Lucky guess button'))+
   row('How sure are you?','Answer with <b>Sure</b> or <b>Not sure</b> instead of Check answer. A right guess comes back like a lucky guess; a wrong answer you were sure of comes back sooner and is marked in Needs work. Confident mistakes are the ones you fix best once you see the answer.',sw(state.prefs.sure,"setPref('sure',"+!state.prefs.sure+")",'How sure are you'))+
   row('Why did I miss it?','After a wrong answer, tap why: didn&#39;t know, mixed it up, misread or careless. The dashboard shows what trips you up most and lets you practice your mix-ups.',sw(missOn(),"setPref('missTags',"+!missOn()+")",'Why did I miss it'))+
+  (cloudOn()?row('AI study help','One-tap buttons after an answer: explain it simply, give a memory trick, compare your choice with the answer, or quiz you on a similar question. Also adds an AI helper bar on Notes and Flashcards.',sw(aiOn(),"setPref('ai',"+!aiOn()+")",'AI study help')):'')+
   (NOTES_PARSED.length?row('Blurt','On the Notes page: write everything you remember about a '+unitW+' with the notes hidden, then check it against the notes. Recalling from a blank page is the strongest kind of practice.',sw(state.prefs.blurt,"setPref('blurt',"+!state.prefs.blurt+")",'Blurt')):'')+
   row('Star '+ITEMS,'Flag tricky '+ITEMS+' with the star or the S key, then review them together, even after they are mastered.',sw(state.prefs.stars,"setPref('stars',"+!state.prefs.stars+")",'Star '+ITEMS))+
   row('Missed '+ITEMS+' drill','A sidebar list and a dashboard button that drill only the '+ITEMS+' you got wrong or checked in your slides, until they are mastered.',sw(state.prefs.missed,"setPref('missed',"+!state.prefs.missed+")",'Missed '+ITEMS+' drill'))+
@@ -1829,6 +1919,11 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'105',date:'Nov 3, 2026',title:'Smarter AI study help',items:[
+  'Right after a wrong answer, one-tap buttons let you get a <b>simpler explanation</b>, a <b>memory trick</b>, a <b>side-by-side comparison</b> of your choice vs the answer, or a <b>similar practice question</b> to test yourself right away.',
+  'When you miss a question you were sure of (or one the class misses a lot), a ready explanation opens on its own without using any of your daily AI tries.',
+  'At the end of a practice round with 2+ misses, tap <b>What am I mixing up?</b> to see the pattern across what tripped you up.',
+  'New AI study bar on <b>Notes</b> (Common exam traps, 5-point summary, or ask a question) and one-tap <b>Memory trick</b> on any flipped flashcard. Turn AI study help on or off anytime in Personalize.']},
  {v:'103',date:'Oct 31, 2026',title:'Study together',items:[
   'The dashboard shows how many classmates are studying this course right now (just a number, never names).',
   'On the home page, the new Class card shows how many answers the class has sent before the next test, the next milestone, and who is studying now. Start a 25-minute focus timer there; a small chip shows the time left while you study.',

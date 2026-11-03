@@ -99,7 +99,7 @@ pre.code{margin:10px 0 8px;padding:12px;border-radius:10px;background:var(--rais
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PASS_KEY='reviewer_mod_pass';
-let CLOUD=null,COURSES=[],BYKEY={},DATA={},ME=null,PASS='',ROWS=[],tab='pending',courseF='',kindF='',busy=false,ATT=null,SYNC=null,view='queue',NEWN=0;
+let CLOUD=null,COURSES=[],BYKEY={},DATA={},ME=null,PASS='',ROWS=[],tab='pending',courseF='',kindF='',busy=false,ATT=null,SYNC=null,AIADM=null,view='queue',NEWN=0;
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2600)}
 function rpc(fn,body){const h={'Content-Type':'application/json',apikey:CLOUD.key};if(/^eyJ/.test(CLOUD.key))h.Authorization='Bearer '+CLOUD.key;
  return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body)})
@@ -121,7 +121,7 @@ async function boot(){
  try{COURSES=await fetch('courses.json').then(r=>r.json());BYKEY=Object.fromEntries(COURSES.map(c=>[c.storageKey,c]));
   const first=await fetch('courses/'+COURSES[0].id+'.json').then(r=>r.json());CLOUD=first.config.cloud}catch(e){}
  if(!CLOUD||!CLOUD.url){$('app').innerHTML='<p class="empty">The class cloud is not set up for these reviewers.</p>';return}
- if(location.hash==='#sync')view='sync';else if(location.hash==='#links')view='att';
+ if(location.hash==='#sync')view='sync';else if(location.hash==='#links')view='att';else if(location.hash==='#ai')view='ai';
  try{PASS=sessionStorage.getItem(PASS_KEY)||localStorage.getItem(PASS_KEY)||''}catch(e){}
  if(PASS&&await signIn(PASS,true))return;
  await attLoad();
@@ -155,9 +155,16 @@ setInterval(poll,120000);document.addEventListener('visibilitychange',()=>{if(!d
 /* ---------- Attendance links (supabase_attendance.sql): only when this browser is also signed in with the site owner's
    Google account (att_admin_list refuses everyone else, so other moderators never see this). Students send a request from
    My attendance (roll number + last name, checked against the tracker); approve it here. */
-async function attLoad(){ATT=null;SYNC=null;if(!Auth.ses())return;Auth.cloud=Auth.cloud||CLOUD;
+async function attLoad(){ATT=null;SYNC=null;AIADM=null;if(!Auth.ses())return;Auth.cloud=Auth.cloud||CLOUD;
  try{ATT=await Auth.rpc('att_admin_list',{},true)}catch(e){ATT=null;return}
- try{SYNC=await Auth.rpc('att_sync_info',{},true)}catch(e){SYNC=null}}
+ try{SYNC=await Auth.rpc('att_sync_info',{},true)}catch(e){SYNC=null}
+ try{await aiLoad()}catch(e){}}
+async function aiPostAdmin(body){const tok=await Auth.token();if(!tok)return null;
+ const r=await fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+tok},body:JSON.stringify(Object.assign({admin:true},body||{}))});
+ return r.ok?await r.json().catch(()=>null):null}
+async function aiLoad(){AIADM=await aiPostAdmin({})||{asks:[],stats:{}};
+ const cids=[...new Set((AIADM.asks||[]).map(a=>(COURSES.find(c=>c.id===a.course)||{}).storageKey).filter(Boolean))];
+ await Promise.all(cids.map(k=>course(k).catch(()=>null)))}
 const linkN=()=>ATT?(ATT.requests||[]).filter(r=>r.status==='pending').length:0;
 const back=()=>{view='queue';history.replaceState(null,'',location.pathname);ME?draw():drawLogin()};
 // owner tools (site owner's Google account only): attendance update + links + class day, shown on top of the queue
@@ -166,9 +173,9 @@ function ownerPanel(){if(!ATT)return '';const n=linkN(),s=SYNC||{},bad=s.note&&!
   (s.ready?' · '+(s.auto?'checks the sheet every hour':'hourly check off'):' · not automatic yet')+'</p></div></div>'+
   (bad?'<div class="warn">Last check '+esc(ago(s.sync_at))+': '+esc(s.note)+'</div>':'')+
   '<div class="acts2">'+(s.ready?'<button class="btn primary" id="syncbtn" onclick="attSync(this)"><svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-rotate-cw"/></svg>Update attendance now</button>':'<button class="btn primary" onclick="go(\'sync\')">Set up one-tap update</button>')+
-  '<button class="btn" onclick="go(\'att\')">Link requests'+(n?'<b class="cnt">'+n+'</b>':'')+'</button><a class="btn" href="classday.html">Class day</a><a class="btn" href="takeattendance.html">Take attendance</a><a class="btn" href="jorts.html" style="border-color:#38bdf8;color:#0284c7">🩳 Jorts Battle</a>'+
+  '<button class="btn" onclick="go(\'att\')">Link requests'+(n?'<b class="cnt">'+n+'</b>':'')+'</button><button class="btn" onclick="go(\'ai\')">AI questions'+(AIADM&&(AIADM.asks||[]).length?'<b class="cnt">'+(AIADM.asks||[]).length+'</b>':'')+'</button><a class="btn" href="classday.html">Class day</a><a class="btn" href="takeattendance.html">Take attendance</a><a class="btn" href="jorts.html" style="border-color:#38bdf8;color:#0284c7">🩳 Jorts Battle</a>'+
   (s.ready?'<span class="sp"></span><button class="link" onclick="go(\'sync\')">Update settings</button>':'')+'</div></section>'}
-function go(v){view=v;history.replaceState(null,'',location.pathname+(v==='sync'?'#sync':v==='att'?'#links':''));draw();scrollTo(0,0)}
+function go(v){view=v;history.replaceState(null,'',location.pathname+(v==='sync'?'#sync':v==='att'?'#links':v==='ai'?'#ai':''));draw();scrollTo(0,0)}
 async function attSync(btn){if(btn){btn.disabled=true;btn.lastChild.textContent='Updating…'}let r=null;
  try{const tok=await Auth.token();if(!tok)throw new Error('signin');
   const res=await fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/attsync',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+tok},body:'{}'});
@@ -245,10 +252,26 @@ function drawAtt(){if(!ATT){view='queue';return ME?draw():drawLogin()}document.t
 async function attDecide(u,ok){try{await Auth.rpc('att_admin_decide',{p_user:u,p_ok:ok},true);toast(ok?'Linked. They see their attendance now.':'Rejected.')}catch(e){toast('Could not save: '+e.message)}await attLoad();draw()}
 async function attUnlink(u,name){if(!await ask('They will no longer see attendance on this account.',{title:'Unlink '+name+'?',ok:'Unlink',danger:1}))return;
  try{await Auth.rpc('att_admin_unlink',{p_user:u},true);toast('Unlinked.')}catch(e){toast('Could not unlink: '+e.message)}await attLoad();draw()}
+function drawAI(){if(!ATT){view='queue';return ME?draw():drawLogin()}document.title='AI questions';
+ const asks=(AIADM&&AIADM.asks)||[],st=(AIADM&&AIADM.stats)||{},labs=[['explain','Simpler explanation'],['chip:trick','Memory trick'],['chip:compare','Compare choices'],['chip:deeper','Lock this in'],['twin','Quiz me on this'],['coach','Round coach'],['notes','Notes helper'],['card','Flashcard'],['follow','Typed follow-up'],['auto','Auto-opened'],['cached','Served from cache']];
+ const tot={};Object.values(st).forEach(d=>Object.entries(d||{}).forEach(([k,v])=>{tot[k]=(tot[k]||0)+(+v||0)}));
+ $('app').innerHTML='<div class="top"><div><h1>AI study help</h1><p class="sub">Anonymous 14-day usage and typed follow-up questions (no names or accounts stored), so you can spot confusing questions and improve their explanations.</p></div>'+
+  '<div class="acts"><button class="btn" onclick="aiPrewarm(this)">Pre-warm hard questions</button><button class="btn" onclick="aiLoad().then(draw)">Refresh</button><button class="btn" onclick="back()">Back</button></div></div>'+
+  '<h2 class="ah">Last 14 days by mode</h2><div class="card"><div class="ulist">'+labs.map(([k,l])=>'<b>'+(tot[k]||0)+'</b> '+esc(l)).join(' · ')+'</div></div>'+
+  '<h2 class="ah">Typed follow-up questions ('+asks.length+')</h2>'+
+  (asks.length?asks.map(a=>{const ci=COURSES.find(c=>c.id===a.course),cd=ci&&DATA[ci.storageKey],q=cd&&cd.byId[a.qid];
+   return '<article class="card"><div class="meta"><span class="tag q">'+esc(ci?ci.title:a.course)+'</span><span>·</span><span>'+esc(a.qid)+'</span>'+(a.picked?'<span>· picked: '+esc(a.picked)+'</span>':'')+'<span>·</span><span>'+esc(ago(a.at))+'</span></div>'+
+    (q?'<div class="quote"><small>'+esc((q.section||'')+' · '+a.qid)+'</small>'+esc(q.q||q.term||'')+(q.why?'<small style="margin:6px 0 0">Current explanation: '+esc(q.why)+'</small>':'')+'</div>':'')+
+    '<p class="note"><b>Student asked:</b> “'+esc(a.ask)+'”</p><p style="font-size:14px;color:var(--mute);margin:6px 0 0"><b>AI answered:</b> '+esc(a.ans||'')+'</p>'+
+    '<div class="acts2"><button class="link" onclick="copyAiAsk('+a.id+')">Copy for Claude</button><span class="sp"></span><button class="btn" onclick="aiDelAsk('+a.id+')">Dismiss</button></div></article>'}).join(''):'<p class="empty">No typed follow-up questions in the last 14 days.</p>')}
+async function aiDelAsk(id){await aiPostAdmin({del:id});await aiLoad();draw();toast('Dismissed.')}
+async function aiPrewarm(btn){if(btn){btn.disabled=true;btn.textContent='Warming…'}const r=await aiPostAdmin({prewarm:6});await aiLoad();draw();toast(r&&r.warmed!=null?'Pre-warmed '+r.warmed+' explanations ('+(r.remaining||0)+' left).':'Could not pre-warm.')}
+function copyAiAsk(id){const a=((AIADM&&AIADM.asks)||[]).find(x=>x.id===id);if(!a)return;const ci=COURSES.find(c=>c.id===a.course),cd=ci&&DATA[ci.storageKey],q=cd&&cd.byId[a.qid];
+ copy([ci?ci.title:a.course,'Question '+a.qid+(q?' ('+q.section+'): '+(q.q||q.term):''),a.picked?'Picked: '+a.picked:'',q&&q.why?'Current why: '+q.why:'','Student asked AI: '+a.ask,'AI answered: '+a.ans].filter(Boolean).join('\n'),'Copied for Claude.')}
 const isOpen=r=>r.status==='pending';
 const inTab=r=>tab==='pending'?isOpen(r):tab==='approved'?r.status==='approved':tab==='done'?r.status==='rejected'||r.status==='resolved':true;
 const KINDS=[['question','Questions'],['report','Reports'],['card','Flashcards']];
-function draw(){if(view==='att')return drawAtt();if(view==='sync')return drawSync();if(!ME)return drawLogin();NEWN=0;
+function draw(){if(view==='att')return drawAtt();if(view==='sync')return drawSync();if(view==='ai')return drawAI();if(!ME)return drawLogin();NEWN=0;
  const mine=ROWS.filter(r=>(!courseF||r.course===courseF)&&(!kindF||r.kind===kindF)),n=t=>{const k=tab;tab=t;const c=mine.filter(inTab).length;tab=k;return c};
  const keys=[...new Set(ROWS.map(r=>r.course))],list=mine.filter(inTab),wait=k=>ROWS.filter(r=>isOpen(r)&&r.kind===k&&(!courseF||r.course===courseF)).length;
  const total=ROWS.filter(isOpen).length+linkN();document.title=(total?'('+total+') ':'')+'Moderator';

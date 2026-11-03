@@ -164,19 +164,25 @@ function draw(){const el=$b();if(!el)return;
   el.innerHTML=h;return}
  const c=CUR.c,k=FC.c[c.i]?unpack(FC.c[c.i]):NEWK;
  h+=cardHTML(c,CUR.flip,k);
- if(CUR.flip&&k.lapses>=4)h+=leechHTML(c,k);
+ if(CUR.flip)h+=(k.lapses>=4?leechHTML(c,k):cardAiHTML(c));
  if(!CUR.flip)h+='<div class="fcbtns one"><button class="btn primary" onclick="Cards.flip()">Show answer</button></div>';
  else{const t=now();h+='<div class="fcbtns">'+grades().map(([g,l])=>{const nk=review(k,g,t,opts(false));return '<button class="btn fcg g'+g+'" onclick="Cards.grade('+g+')"><b>'+l+'</b><small>'+when(nk.due-t)+'</small></button>'}).join('')+'</div>'}
  h+='<p class="fckeys">'+(CUR.flip?(state.prefs.fcFour?'1 Again · 2 Hard · 3 Good · 4 Easy':'1 Again · 2 or Space Good')+' · or swipe left / right':'Space or tap the card to flip')+(UNDO?' · <button class="link" onclick="Cards.undo()">Undo</button>':'')+'</p>'+(STATS?statsHTML():'');
  el.innerHTML=h;swipe()}
 // A card missed 4+ times: another angle (AI, built-in cards only), the notes, or set it aside
-function leechHTML(c,k){const ai=AIC[c.i]||{},canAI=cloudOn()&&!c.cls&&!c.mine&&typeof aiPost==='function';
+function leechHTML(c,k){const ai=AIC[c.i]||{},canAI=cloudOn()&&!c.cls&&!c.mine&&typeof aiPost==='function'&&state.prefs.ai!==false,fmt=typeof aiFmt==='function'?aiFmt:esc;
  return '<div class="fcleech"><b>You keep missing this one</b> (missed '+k.lapses+' times). Try a different angle, or set it aside for now.'+
-  '<div class="fclr">'+(canAI&&!ai.text?'<button class="btn sm" onclick="Cards.explain()"'+(ai.busy?' disabled':'')+'>'+(ai.busy?'Thinking…':'Explain it differently')+'</button>':'')+
+  '<div class="fclr">'+(canAI?'<button class="btn sm" onclick="Cards.explain()"'+(ai.busy?' disabled':'')+'>'+(ai.busy&&!ai.mode?'Thinking…':'Explain it differently')+'</button><button class="btn sm" onclick="Cards.explain(\'trick\')"'+(ai.busy?' disabled':'')+'>'+(ai.busy&&ai.mode==='trick'?'Thinking…':'Memory trick')+'</button>':'')+
   (pageOn('notes')&&/^\d/.test(c.c)?'<button class="btn sm" onclick="openNotes(\''+esc(c.c)+'\')">Read the notes</button>':'')+
-  '<button class="btn sm" onclick="Cards.suspend()">Suspend card</button></div>'+(ai.text?'<div class="fcai">'+esc(ai.text)+'</div>':ai.err?'<div class="fcai err">'+ai.err+'</div>':'')+'</div>'}
-async function explain(){if(!CUR)return;const c=CUR.c;if(AIC[c.i]&&AIC[c.i].busy)return;AIC[c.i]={busy:1};draw();
- try{const o=await aiPost({course:courseId(),card:c.i});AIC[c.i]=o.r&&o.r.ok&&o.j.text?{text:o.j.text}:{err:aiErr(o,'explanations')}}catch(e){AIC[c.i]={err:'No connection. Try again when you\'re online.'}}
+  '<button class="btn sm" onclick="Cards.suspend()">Suspend card</button></div>'+(ai.text?'<div class="fcai">'+fmt(ai.text)+'</div>':ai.err?'<div class="fcai err">'+ai.err+'</div>':'')+'</div>'}
+function cardAiHTML(c){if(!cloudOn()||c.cls||c.mine||typeof aiPost!=='function'||state.prefs.ai===false)return '';
+ const ai=AIC[c.i]||{},fmt=typeof aiFmt==='function'?aiFmt:esc;
+ return '<div class="fcai-row"><button class="aichip'+(ai.mode==='trick'&&ai.text?' on':'')+'" onclick="Cards.explain(\'trick\')"'+(ai.busy?' disabled':'')+'>'+(ai.busy&&ai.mode==='trick'?'Thinking…':'Memory trick')+'</button>'+
+  '<button class="aichip'+(!ai.mode&&ai.text?' on':'')+'" onclick="Cards.explain()"'+(ai.busy?' disabled':'')+'>'+(ai.busy&&!ai.mode?'Thinking…':'Explain simply')+'</button></div>'+
+  (ai.text?'<div class="aibox" style="margin:0 0 10px"><p>'+fmt(ai.text)+'</p></div>':ai.err?'<div class="aibox" style="margin:0 0 10px"><p class="note">'+ai.err+'</p></div>':'')}
+async function explain(mode){if(!CUR)return;const c=CUR.c,m=mode||'';if(AIC[c.i]&&AIC[c.i].busy)return;AIC[c.i]={busy:1,mode:m};draw();
+ const body={course:courseId(),card:c.i};if(m)body.mode=m;
+ try{const o=await aiPost(body);AIC[c.i]=o.r&&o.r.ok&&o.j.text?{text:o.j.text,mode:m}:{err:aiErr(o,'explanations'),mode:m}}catch(e){AIC[c.i]={err:'No connection. Try again when you\'re online.',mode:m}}
  if(CUR&&CUR.c.i===c.i)draw()}
 function suspend(){if(!CUR)return;const id=CUR.c.i;(FC.sus||(FC.sus={}))[id]=[1,Date.now()];fcSave();CUR=null;toast('Card suspended. Turn it back on under Stats.');draw()}
 function unsuspendAll(){for(const id in FC.sus||{})FC.sus[id]=[0,Date.now()];fcSave();draw()}
