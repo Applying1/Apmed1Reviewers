@@ -906,5 +906,13 @@
   "title": "Smarter AI study help: One-tap explanations, memory tricks & practice coach",
   "text": "Right after a wrong answer, one-tap chips let you get a simpler explanation, a memory trick, a side-by-side comparison of your choice vs the answer, or an instant similar question to quiz yourself. Confident mistakes and class-hard questions auto-open cached explanations without using any of your daily AI tries, plus new AI helpers on Notes, Flashcards, and end-of-round summaries.",
   "link": "index.html"
+ },
+ {
+  "id": 110,
+  "date": "2026-11-03",
+  "type": "content",
+  "title": "Chem: notes, lecture notes and slides for Aldehydes/Ketones and Carboxylic Acids",
+  "text": "General Chemistry topics 14 (Aldehydes and Ketones) and 15 (Carboxylic Acids and Derivatives) now have their Notes section, plus the video lecture notes and the slide decks in the course documents.",
+  "link": "reviewer.html?course=chem"
  }
 ]
