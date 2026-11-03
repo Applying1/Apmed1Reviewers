@@ -85,8 +85,8 @@ button{cursor:pointer}
 .msg.them .mfoot{justify-content:flex-start;align-self:flex-start}
 .mfoot .read{color:var(--accent);font-weight:600}
 .mfoot .mtime{font-variant-numeric:tabular-nums}
-.mact{position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%) scale(.85);opacity:0;pointer-events:none;transition:opacity .16s ease,transform .16s ease;display:flex;align-items:center;gap:4px;z-index:5}
-.msg.me:hover .mact,.msg.me:focus-within .mact,.msg.me.show-actions .mact{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1)}
+.mact{position:absolute;right:100%;top:0;bottom:0;padding-right:6px;padding-left:8px;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s ease .25s,transform .18s ease .25s;transform:scale(.9);z-index:10}
+.msg.me:hover .mact,.msg.me:focus-within .mact,.msg.me.show-actions .mact,.mact:hover{opacity:1;pointer-events:auto;transform:scale(1);transition-delay:0s}
 .mact-btn{width:28px;height:28px;border-radius:99px;border:1px solid var(--line2);background:var(--surface);color:var(--mute);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08);padding:0;transition:background .15s,color .15s,border-color .15s,transform .12s}
 .mact-btn:hover{background:color-mix(in srgb,var(--bad,#ef4444) 12%,var(--surface));color:var(--bad,#ef4444);border-color:color-mix(in srgb,var(--bad,#ef4444) 35%,transparent);transform:scale(1.08)}
 .mact-btn:active{transform:scale(.92)}
