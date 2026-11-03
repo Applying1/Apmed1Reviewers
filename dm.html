@@ -138,7 +138,7 @@ button{cursor:pointer}
 .sendbtn:hover:not(:disabled){filter:brightness(1.08)}
 .sendbtn:active:not(:disabled){transform:scale(.95)}
 .sendbtn:disabled{opacity:.4;cursor:default}
-.din .stkbtn{flex:none;width:42px;height:42px;border-radius:12px}
+.din .stkbtn, .din .emojibtn{flex:none;width:42px;height:42px;border-radius:12px}
 .msg.is-pure-stk .bubble-stk{background:none!important;border:none!important;box-shadow:none!important;padding:0!important}
 .msg.is-pure-stk.me .mfoot{justify-content:flex-end}
 .msg.is-pure-stk.them .mfoot{justify-content:flex-start}
@@ -181,7 +181,7 @@ button{cursor:pointer}
  .dock{padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
  .din{gap:6px}
  .din textarea{height:40px;min-height:40px;padding:8px 11px;font-size:14px;border-radius:12px;overflow-y:hidden}
- .sendbtn, .din .stkbtn{width:40px;height:40px;border-radius:11px}
+ .sendbtn, .din .stkbtn, .din .emojibtn{width:40px;height:40px;border-radius:11px}
  .mact{top:auto;bottom:calc(100% + 4px);transform:translateY(4px) scale(.92)}
  .msg.me .mact{right:0;left:auto;padding:0}
  .msg.them .mact{left:0;right:auto;padding:0}
@@ -254,6 +254,7 @@ button{cursor:pointer}
     <button class="rdock-cancel" id="replyCancel" type="button" onclick="cancelReply()" aria-label="Cancel reply" title="Cancel reply"><svg class="i" width="14" height="14" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
    </div>
    <div class="din"><button class="stkbtn" id="stkBtn" title="Send sticker" type="button" aria-label="Send sticker"><svg class="i" width="20" height="20" aria-hidden="true"><use href="icons.svg#i-sticker"/></svg></button>
+    <button class="emojibtn" id="emojiBtn" title="Insert emoji" type="button" aria-label="Insert emoji"><svg class="i" width="20" height="20" aria-hidden="true"><use href="icons.svg#i-smile"/></svg></button>
     <textarea id="msgInput" rows="1" placeholder="Message…" maxlength="1000"></textarea>
     <button class="sendbtn" id="sendBtn" title="Send message"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
    </div>
@@ -262,19 +263,10 @@ button{cursor:pointer}
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<div class="rx-picker" id="rxPicker" hidden>
- <button class="rx-pick-btn" type="button" onclick="selectReaction('❤️')" title="Love">❤️</button>
- <button class="rx-pick-btn" type="button" onclick="selectReaction('👍')" title="Thumbs up">👍</button>
- <button class="rx-pick-btn" type="button" onclick="selectReaction('😂')" title="Laugh">😂</button>
- <button class="rx-pick-btn" type="button" onclick="selectReaction('😮')" title="Surprised">😮</button>
- <button class="rx-pick-btn" type="button" onclick="selectReaction('😢')" title="Sad">😢</button>
- <button class="rx-pick-btn" type="button" onclick="selectReaction('🙏')" title="Thanks / Pray">🙏</button>
- <button class="rx-pick-btn" type="button" onclick="selectReaction('🔥')" title="Fire">🔥</button>
-</div>
 
 <script src="auth.js"></script>
 <script src="profile.js"></script>
-<script src="update.js"></script><script src="dialog.js"></script><script src="stickers.js"></script>
+<script src="update.js"></script><script src="dialog.js"></script><script src="stickers.js"></script><script src="emojis.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -328,6 +320,7 @@ function unlinked(msg){
 
 /* -------------------- INBOX / CONVERSATIONS -------------------- */
 async function loadInbox(quiet){
+ if(quiet && window.innerWidth < 720 && document.body.classList.contains('in-chat')) return;
  try{
   const [convs, classList, profs] = await Promise.all([
    Auth.rpc('dm_conversations',{},true).catch(()=>[]),
@@ -481,30 +474,23 @@ function buildReactionsHtml(m){
 
 function openRxPicker(msgId,e){
  if(e){e.stopPropagation();e.preventDefault()}
- const p=$('rxPicker');
- if(!p)return;
- if(ACTIVE_RX_MSG===msgId&&!p.hidden){closeRxPicker();return}
- closeRxPicker();
+ const btn=e?e.currentTarget:null;
+ if(!btn)return;
  ACTIVE_RX_MSG=msgId;
  const msgEl=$('m'+msgId);
  if(msgEl)msgEl.classList.add('show-actions');
- const btn=e?e.currentTarget:null;
- p.hidden=false;
- if(btn){
-  const r=btn.getBoundingClientRect();
-  const pr=p.getBoundingClientRect();
-  let top=r.top-pr.height-8;
-  if(top<50)top=r.bottom+8;
-  let left=r.left+(r.width/2)-(pr.width/2);
-  left=Math.max(10,Math.min(window.innerWidth-pr.width-10,left));
-  p.style.top=top+'px';
-  p.style.left=left+'px';
+ const msg=MESSAGES.find(m=>m.id===msgId);
+ if(window.Emojis){
+  Emojis.openReactionPicker({
+   anchor: btn,
+   currentReactions: msg ? msg.reactions : {},
+   onSelect: (emoji) => toggleReaction(msgId, emoji)
+  });
  }
 }
 
 function closeRxPicker(){
- const p=$('rxPicker');
- if(p)p.hidden=true;
+ if(window.Emojis) Emojis.close();
  if(ACTIVE_RX_MSG){
   const el=$('m'+ACTIVE_RX_MSG);
   if(el)el.classList.remove('show-actions');
@@ -598,6 +584,69 @@ function jumpToMsg(id){
  }
 }
 
+function buildSingleMsgHtml(m, prevDate){
+ let html='';
+ const d=new Date(m.created_at).toLocaleDateString();
+ if(prevDate!==d){
+  const isToday=new Date().toLocaleDateString()===d;
+  const dObj=new Date(m.created_at);
+  const dateLabel=isToday?'Today':dObj.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  html+='<div class="dsep"><span>'+esc(dateLabel)+'</span></div>';
+ }
+ const cls=m.mine?'me':'them';
+
+ let quoteHtml='';
+ let bodyText=m.body||'';
+ const repMatch=String(bodyText).match(/^\[reply:(\d+):([^:]+):([^\]]+)\]\n?([\s\S]*)$/);
+ if(repMatch){
+  const qId=Number(repMatch[1]);
+  const qAuthor=repMatch[2];
+  const qSnip=repMatch[3];
+  bodyText=repMatch[4]||'';
+  quoteHtml='<div class="mquote" onclick="jumpToMsg('+qId+')" role="button" tabindex="0" title="Jump to quoted message">'+
+   '<div class="mquote-author"><svg class="i" width="12" height="12" aria-hidden="true"><use href="icons.svg#i-reply"/></svg>'+esc(qAuthor)+'</div>'+
+   '<div class="mquote-snip">'+esc(qSnip)+'</div>'+
+  '</div>';
+ }
+
+ const stkMatch=window.Stickers?Stickers.parse(bodyText):null;
+ const isPure=stkMatch&&stkMatch.isPure&&!quoteHtml;
+
+ const actHtml=(!m.sending)?(
+  '<div class="mact">'+
+   '<div class="mact-bar">'+
+    '<button class="mact-btn rx-btn" type="button" onclick="openRxPicker('+m.id+',event)" title="React" aria-label="React">'+
+     '<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-smile"/></svg>'+
+    '</button>'+
+    '<button class="mact-btn reply-btn" type="button" onclick="startReply('+m.id+')" title="Reply" aria-label="Reply">'+
+     '<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-reply"/></svg>'+
+    '</button>'+
+    (m.mine?(
+     '<button class="mact-btn del-btn" type="button" onclick="delMsg('+m.id+')" title="Delete message" aria-label="Delete message">'+
+      '<svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-trash"/></svg>'+
+     '</button>'
+    ):'')+
+   '</div>'+
+  '</div>'
+ ):'';
+
+ const rxHtml=buildReactionsHtml(m);
+ const bubbleBody=window.Stickers?Stickers.render(bodyText,linkify):linkify(bodyText);
+
+ html+='<div class="msg '+cls+(m.sending?' sending':'')+(isPure?' is-pure-stk':'')+'" id="m'+m.id+'" data-id="'+m.id+'">'+
+  '<div class="mbody">'+
+   actHtml+
+   '<div class="bubble'+(isPure?' bubble-stk':'')+'">'+quoteHtml+bubbleBody+'</div>'+
+  '</div>'+
+  rxHtml+
+  '<div class="mfoot">'+
+   '<span class="mtime">'+timeClock(m.created_at)+'</span>'+
+   (m.mine?(m.read?'<span class="read" title="Seen">✓✓</span>':'<span title="Delivered">✓</span>'):'')+
+  '</div>'+
+ '</div>';
+ return html;
+}
+
 function renderMessages(){
  const st=$('stream');
  if(!MESSAGES.length){
@@ -607,65 +656,8 @@ function renderMessages(){
  let lastDate='';
  let html='';
  MESSAGES.forEach(m=>{
-  const d=new Date(m.created_at).toLocaleDateString();
-  if(d!==lastDate){
-   const isToday=new Date().toLocaleDateString()===d;
-   const dObj=new Date(m.created_at);
-   const dateLabel=isToday?'Today':dObj.toLocaleDateString(undefined,{month:'short',day:'numeric'});
-   html+='<div class="dsep"><span>'+esc(dateLabel)+'</span></div>';
-   lastDate=d;
-  }
-  const cls=m.mine?'me':'them';
-
-  let quoteHtml='';
-  let bodyText=m.body||'';
-  const repMatch=String(bodyText).match(/^\[reply:(\d+):([^:]+):([^\]]+)\]\n?([\s\S]*)$/);
-  if(repMatch){
-   const qId=Number(repMatch[1]);
-   const qAuthor=repMatch[2];
-   const qSnip=repMatch[3];
-   bodyText=repMatch[4]||'';
-   quoteHtml='<div class="mquote" onclick="jumpToMsg('+qId+')" role="button" tabindex="0" title="Jump to quoted message">'+
-    '<div class="mquote-author"><svg class="i" width="12" height="12" aria-hidden="true"><use href="icons.svg#i-reply"/></svg>'+esc(qAuthor)+'</div>'+
-    '<div class="mquote-snip">'+esc(qSnip)+'</div>'+
-   '</div>';
-  }
-
-  const stkMatch=window.Stickers?Stickers.parse(bodyText):null;
-  const isPure=stkMatch&&stkMatch.isPure&&!quoteHtml;
-
-  const actHtml=(!m.sending)?(
-   '<div class="mact">'+
-    '<div class="mact-bar">'+
-     '<button class="mact-btn rx-btn" type="button" onclick="openRxPicker('+m.id+',event)" title="React" aria-label="React">'+
-      '<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-smile"/></svg>'+
-     '</button>'+
-     '<button class="mact-btn reply-btn" type="button" onclick="startReply('+m.id+')" title="Reply" aria-label="Reply">'+
-      '<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-reply"/></svg>'+
-     '</button>'+
-     (m.mine?(
-      '<button class="mact-btn del-btn" type="button" onclick="delMsg('+m.id+')" title="Delete message" aria-label="Delete message">'+
-       '<svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-trash"/></svg>'+
-      '</button>'
-     ):'')+
-    '</div>'+
-   '</div>'
-  ):'';
-
-  const rxHtml=buildReactionsHtml(m);
-  const bubbleBody=window.Stickers?Stickers.render(bodyText,linkify):linkify(bodyText);
-
-  html+='<div class="msg '+cls+(m.sending?' sending':'')+(isPure?' is-pure-stk':'')+'" id="m'+m.id+'" data-id="'+m.id+'">'+
-   '<div class="mbody">'+
-    actHtml+
-    '<div class="bubble'+(isPure?' bubble-stk':'')+'">'+quoteHtml+bubbleBody+'</div>'+
-   '</div>'+
-   rxHtml+
-   '<div class="mfoot">'+
-    '<span class="mtime">'+timeClock(m.created_at)+'</span>'+
-    (m.mine?(m.read?'<span class="read" title="Seen">✓✓</span>':'<span title="Delivered">✓</span>'):'')+
-   '</div>'+
-  '</div>';
+  html+=buildSingleMsgHtml(m, lastDate);
+  lastDate=new Date(m.created_at).toLocaleDateString();
  });
  st.innerHTML=html;
 }
@@ -677,17 +669,78 @@ function scrollToBottom(smooth){
  else st.scrollTop=st.scrollHeight;
 }
 
+function sortRx(rx){
+ if(!rx||typeof rx!=='object') return '';
+ const k=Object.keys(rx).sort();
+ const o={};
+ for(const x of k){
+  const u=Array.isArray(rx[x])?[...rx[x]].sort():[];
+  if(u.length) o[x]=u;
+ }
+ return JSON.stringify(o);
+}
+
 function isThreadSame(newMsgs, oldMsgs){
  if(newMsgs.length !== oldMsgs.length) return false;
  if(!newMsgs.length) return true;
- if(newMsgs[newMsgs.length-1].id !== oldMsgs[oldMsgs.length-1].id) return false;
  for(let i=0; i<newMsgs.length; i++){
+  if(newMsgs[i].id !== oldMsgs[i].id) return false;
   if(newMsgs[i].read !== oldMsgs[i].read || newMsgs[i].sending !== oldMsgs[i].sending) return false;
-  const nr=JSON.stringify(newMsgs[i].reactions||{});
-  const or=JSON.stringify(oldMsgs[i].reactions||{});
-  if(nr !== or) return false;
+  if(sortRx(newMsgs[i].reactions) !== sortRx(oldMsgs[i].reactions)) return false;
  }
  return true;
+}
+
+function updateMessagesIncrementally(newMsgs){
+ const st=$('stream');
+ if(!st)return;
+ const oldMap = new Map(MESSAGES.map(m=>[m.id, m]));
+ const newMap = new Map(newMsgs.map(m=>[m.id, m]));
+
+ for(const nm of newMsgs){
+  const om = oldMap.get(nm.id);
+  if(om){
+   if(sortRx(nm.reactions) !== sortRx(om.reactions)){
+    om.reactions = nm.reactions;
+    renderMsgReactionsDom(nm.id);
+   }
+   if(nm.read !== om.read && om.mine){
+    om.read = nm.read;
+    const el = $('m' + nm.id);
+    if(el){
+     const mfoot = el.querySelector('.mfoot');
+     if(mfoot){
+      mfoot.innerHTML = '<span class="mtime">'+timeClock(nm.created_at)+'</span>' +
+       (nm.read?'<span class="read" title="Seen">✓✓</span>':'<span title="Delivered">✓</span>');
+     }
+    }
+   }
+  }
+ }
+
+ if(newMsgs.length > MESSAGES.length){
+  const appended = newMsgs.filter(m => !oldMap.has(m.id));
+  if(appended.length){
+   const wasNearBottom = (st.scrollHeight - st.scrollTop - st.clientHeight < 80);
+   let lastDate = MESSAGES.length ? new Date(MESSAGES[MESSAGES.length-1].created_at).toLocaleDateString() : '';
+   let appHtml = '';
+   appended.forEach(m=>{
+    appHtml += buildSingleMsgHtml(m, lastDate);
+    lastDate = new Date(m.created_at).toLocaleDateString();
+   });
+   st.insertAdjacentHTML('beforeend', appHtml);
+   if(wasNearBottom) scrollToBottom(true);
+  }
+ } else if(newMsgs.length < MESSAGES.length){
+  for(const om of MESSAGES){
+   if(!newMap.has(om.id)){
+    const el = $('m' + om.id);
+    if(el) el.remove();
+   }
+  }
+ }
+
+ MESSAGES = newMsgs;
 }
 
 async function loadThread(quiet){
@@ -702,6 +755,11 @@ async function loadThread(quiet){
     m.reactions=(rxMap&&rxMap[m.id])||{};
    });
    if(isThreadSame(msgs, MESSAGES) && quiet) return;
+
+   if(quiet && MESSAGES.length && $('stream') && $('stream').querySelector('.msg')){
+    updateMessagesIncrementally(msgs);
+    return;
+   }
 
    const wasNearBottom=(()=>{
     const st=$('stream');
@@ -737,12 +795,24 @@ async function submitMsg(txt){
  renderMessages();
  scrollToBottom();
 
+ // Optimistic sidebar conversation update
+ if(Array.isArray(CONVERSATIONS)){
+  const activeConvo=CONVERSATIONS.find(c=>c.id===PARTNER_ID);
+  if(activeConvo){
+   activeConvo.last_message=fullText;
+   activeConvo.last_mine=true;
+   activeConvo.last_at=tempMsg.created_at;
+   LAST_CONVS_HASH='';
+   renderSidebarList();
+  }
+ }
+
  try{
   const res=await Auth.rpc('dm_send',{p_to:PARTNER_ID,p_body:fullText},true);
   tempMsg.sending=false;
   if(res&&res.id)tempMsg.id=res.id;
   renderMessages();
-  loadInbox(true);
+  await loadInbox(true);
  }catch(e){
   toast(e.message||'Could not send message');
   MESSAGES=MESSAGES.filter(m=>m.id!==tempId);
@@ -914,6 +984,7 @@ function setupInput(){
  });
  $('sendBtn').onclick=sendMsg;
  if($('stkBtn'))$('stkBtn').onclick=()=>Stickers.togglePicker({anchor:$('stkBtn'),onSelect:sendSticker});
+ if($('emojiBtn'))$('emojiBtn').onclick=()=>Emojis.openInsertPicker({anchor:$('emojiBtn'),inputEl:$('msgInput')});
 
  $('dmSearch').addEventListener('input', e=>{
   LAST_SEARCH = e.target.value;
@@ -1011,17 +1082,27 @@ async function boot(){
   scrollToBottom();
  }
 
- POLL_TIMER=setInterval(()=>{
-  if(document.visibilityState==='visible'&&Auth.ses()){
-   loadInbox(true);
-   if(PARTNER_ID)loadThread(true);
+ let pollBusy = false;
+ async function pollTick(){
+  clearTimeout(POLL_TIMER);
+  if(document.visibilityState==='visible' && Auth.ses() && !pollBusy){
+   pollBusy = true;
+   try{
+    if(PARTNER_ID) await loadThread(true);
+    if(window.innerWidth >= 720 || !document.body.classList.contains('in-chat')){
+     await loadInbox(true);
+    }
+   }catch(_){}
+   pollBusy = false;
   }
- },3500);
+  POLL_TIMER = setTimeout(pollTick, 4000);
+ }
+
+ pollTick();
 
  document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible'&&Auth.ses()){
-   loadInbox(true);
-   if(PARTNER_ID)loadThread(true);
+  if(document.visibilityState==='visible' && Auth.ses()){
+   pollTick();
   }
  });
 }

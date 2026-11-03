@@ -62,7 +62,22 @@ textarea:focus{border-color:var(--accent)}
 .err{color:var(--bad)}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;border-radius:12px;border:1px solid var(--line2);background:#fff;color:#1f1f1f;font-weight:600;cursor:pointer}
 .gbtn:hover{background:#f4f4f4}
-.acts{display:flex;gap:14px;margin-top:4px}.acts button{border:0;background:none;padding:0;color:var(--faint);font:600 12.5px var(--sans);cursor:pointer}.acts button:hover{color:var(--accent)}
+.acts{display:flex;gap:14px;margin-top:4px;align-items:center}.acts button{border:0;background:none;padding:0;color:var(--faint);font:600 12.5px var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:4px}.acts button:hover{color:var(--accent)}
+.p-reactions{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:6px}
+.m-rx-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:99px;border:1px solid var(--line2);background:var(--surface);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:transform .12s,border-color .15s,background .15s;user-select:none;line-height:1}
+.m-rx-pill:hover{transform:scale(1.08);background:var(--raised)}
+.m-rx-pill:active{transform:scale(.92)}
+.m-rx-pill.is-mine{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.m-rx-pill .m-rx-em{font-size:13px;line-height:1}
+.m-rx-pill .m-rx-cnt{font-size:11px;font-variant-numeric:tabular-nums;opacity:.88}
+.rx-add-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:24px;border-radius:99px;border:1px dashed var(--line2);background:var(--surface);color:var(--faint);cursor:pointer;transition:transform .12s,border-color .15s,background .15s,color .15s;line-height:1}
+.rx-add-btn:hover{background:var(--raised);border-color:var(--accent);color:var(--accent);border-style:solid}
+.rx-add-btn:active{transform:scale(.92)}
+.compose .emojibtn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line2);background:var(--surface);display:grid;place-items:center;cursor:pointer;flex:none}
+.compose .emojibtn:hover{background:var(--raised);border-color:var(--accent);color:var(--accent)}
+@media (max-width:480px){
+ .compose .stkbtn, .compose .emojibtn{width:38px;height:38px;border-radius:11px}
+}
 .rq{display:block;width:100%;text-align:left;margin:4px 0 2px;padding:5px 10px;border:0;border-left:3px solid var(--line2);border-radius:6px;background:var(--raised);color:var(--mute);font-size:13px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rq b{color:var(--text);font-weight:600}
 .ment{color:var(--accent);font-weight:600;background:var(--accent-soft);border-radius:5px;padding:0 3px}
 .post.pinged{background:color-mix(in srgb,var(--accent) 7%,transparent);margin:0 -10px;padding:12px 10px;border-radius:12px}
@@ -93,7 +108,7 @@ textarea:focus{border-color:var(--accent)}
 <script src="auth.js"></script>
 <script src="profile.js"></script>
 <script src="dialog.js"></script>
-<script src="live.js"></script><script src="stickers.js"></script>
+<script src="live.js"></script><script src="stickers.js"></script><script src="emojis.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -115,10 +130,92 @@ function linkify(s){return esc(s).replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]
 function body(p){let h=(window.Stickers?Stickers.render(p.body,linkify):linkify(p.body));const ns=(p.mention_names||[]).filter(Boolean).sort((a,b)=>b.length-a.length);ns.forEach((n,i)=>{h=h.split('@'+esc(n)).join('\u0000'+i+'\u0001')});
  return h.replace(/\u0000(\d+)\u0001/g,(m,i)=>'<span class="ment">@'+esc(ns[+i])+'</span>')}
 function quote(p){if(!p.reply_to)return '';const snip=(window.Stickers?Stickers.cleanSnippet(p.reply_body||''):p.reply_body||'');return '<button class="rq" onclick="jump('+p.reply_to+')">↩ <b>'+esc(p.reply_author||'A post')+'</b> '+esc(snip)+'</button>'}
-function postHTML(p){return '<div class="post'+(p.pinged?' pinged':'')+(p.announce?' ann':'')+'" id="p'+p.id+'"><button class="avb" onclick="who('+p.id+')" aria-label="About '+esc(p.author)+'">'+Profile.html({av:p.av,url:p.avatar,name:p.author},36)+'</button>'+
+function getMyUserId(){
+ try{
+  const s=Auth.ses();
+  if(s&&s.user&&s.user.id)return s.user.id;
+  if(s&&s.access&&s.access.includes('.')){
+   const payload=JSON.parse(atob(s.access.split('.')[1]));
+   if(payload&&payload.sub)return payload.sub;
+  }
+ }catch(_){}
+ return '';
+}
+function buildPostRxHtml(p){
+ if(!p)return '';
+ const myUid=getMyUserId();
+ const entries=p.reactions&&typeof p.reactions==='object'?Object.entries(p.reactions):[];
+ let pills='';
+ for(const [em,users] of entries){
+  const list=Array.isArray(users)?users:[];
+  if(!list.length)continue;
+  const isMine=Boolean(myUid&&list.includes(myUid));
+  pills+='<button class="m-rx-pill '+(isMine?'is-mine':'')+'" type="button" onclick="togglePostReaction('+p.id+',\''+esc(em)+'\')" title="'+(isMine?'Remove reaction':'React with '+esc(em))+'">'+
+   '<span class="m-rx-em">'+esc(em)+'</span>'+
+   '<span class="m-rx-cnt">'+list.length+'</span>'+
+  '</button>';
+ }
+ const addBtn=Auth.ses()?'<button class="rx-add-btn" type="button" onclick="openPostRx('+p.id+',event)" title="Add reaction" aria-label="Add reaction"><svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-smile"/></svg></button>':'';
+ if(!pills&&!addBtn)return '';
+ return '<div class="p-reactions">'+pills+addBtn+'</div>';
+}
+function openPostRx(id,e){
+ if(e){e.stopPropagation();e.preventDefault()}
+ const btn=e?e.currentTarget:null;
+ if(!btn)return;
+ const p=posts.find(x=>x.id===id)||PINS.find(x=>x.id===id);
+ if(window.Emojis){
+  Emojis.openReactionPicker({
+   anchor: btn,
+   currentReactions: p ? p.reactions : {},
+   onSelect: (emoji) => togglePostReaction(id, emoji)
+  });
+ }
+}
+async function togglePostReaction(id, emoji){
+ if(!Auth.ses()||!id||!emoji)return;
+ const p=posts.find(x=>x.id===id)||PINS.find(x=>x.id===id);
+ if(!p)return;
+ const myUid=getMyUserId();
+ if(!myUid)return;
+ if(!p.reactions||typeof p.reactions!=='object')p.reactions={};
+ const currentList=Array.isArray(p.reactions[emoji])?[...p.reactions[emoji]]:[];
+ const idx=currentList.indexOf(myUid);
+ if(idx>=0)currentList.splice(idx,1);
+ else currentList.push(myUid);
+ if(!currentList.length)delete p.reactions[emoji];
+ else p.reactions[emoji]=currentList;
+ renderPostRxDom(id);
+ try{
+  const updated=await Auth.rpc('discussion_react',{p_post_id:id,p_emoji:emoji},true);
+  if(updated&&typeof updated==='object'){
+   p.reactions=updated;
+   renderPostRxDom(id);
+   pingOthers();
+  }
+ }catch(err){
+  tell(err.message||'Could not react');
+ }
+}
+function renderPostRxDom(id){
+ const el=$('p'+id);
+ if(!el)return;
+ const p=posts.find(x=>x.id===id)||PINS.find(x=>x.id===id);
+ const existing=el.querySelector('.p-reactions');
+ if(existing)existing.remove();
+ const newHtml=buildPostRxHtml(p);
+ if(newHtml){
+  const acts=el.querySelector('.acts');
+  if(acts)acts.insertAdjacentHTML('beforebegin',newHtml);
+  else el.querySelector('.pb').insertAdjacentHTML('beforeend',newHtml);
+ }
+}
+function postHTML(p){
+ const rxHtml=buildPostRxHtml(p);
+ return '<div class="post'+(p.pinged?' pinged':'')+(p.announce?' ann':'')+'" id="p'+p.id+'"><button class="avb" onclick="who('+p.id+')" aria-label="About '+esc(p.author)+'">'+Profile.html({av:p.av,url:p.avatar,name:p.author},36)+'</button>'+
  '<div class="pb"><div class="ph"><span class="who"><button class="nmb" onclick="who('+p.id+')">'+esc(p.author)+'</button>'+(p.announce?'<span class="tag">Announcement</span>':p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time></span>'+
- (p.can_delete?'<button class="del" onclick="del('+p.id+')">Delete</button>':'')+'</div>'+quote(p)+'<div class="tx">'+body(p)+'</div>'+
- (Auth.ses()&&(!p.mine||CANPIN)?'<div class="acts">'+(p.mine?'':'<button onclick="replyTo('+p.id+')">Reply</button>')+(CANPIN?'<button onclick="pin('+p.id+','+!p.pinned+')">'+(p.pinned?'Unpin':'Pin')+'</button>':'')+'</div>':'')+'</div></div>'}
+ (p.can_delete?'<button class="del" onclick="del('+p.id+')">Delete</button>':'')+'</div>'+quote(p)+'<div class="tx">'+body(p)+'</div>'+rxHtml+
+ (!p.mine||CANPIN?'<div class="acts">'+(!p.mine?'<button onclick="replyTo('+p.id+')">Reply</button>':'')+(CANPIN?'<button onclick="pin('+p.id+','+!p.pinned+')">'+(p.pinned?'Unpin':'Pin')+'</button>':'')+'</div>':'')+'</div></div>'}
 // the class secretary pins or unpins any post (pinned posts sit in the box at the top, for everyone)
 async function pin(id,on){try{await Auth.rpc('discussion_pin',{p_id:id,p_on:on},true);pingOthers();await load();if(on)scrollTo({top:0,behavior:'smooth'})}catch(e){tell(e.message||'Could not change the pin.')}}
 function jump(id){const e=$('p'+id);if(!e){tell('That post is further up. Tap Show earlier posts.');return}e.scrollIntoView({block:'center',behavior:'smooth'});e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash')}
@@ -127,18 +224,21 @@ function drawList(stick){const L=$('list'),atEnd=innerHeight+scrollY>=document.b
  L.innerHTML=shown.length?shown.map(postHTML).join(''):PINS.length?'<p class="empty">No other posts yet.</p>':'<p class="empty">'+(qid?'No posts about this question yet. Ask or explain it here!':'No posts yet. Start the conversation!')+'</p>';
  if(stick||atEnd)scrollTo(0,document.body.scrollHeight)}
 async function load(first){if(busy)return;busy=true;
- try{const [rows,pins]=await Promise.all([Auth.rpc('discussion_list',{p_thread:thread,p_before:null},true),Auth.rpc('discussion_list',{p_thread:thread,p_before:null,p_pins:true},true).catch(()=>[])]);
+ try{const [rows,pins,rxMap]=await Promise.all([Auth.rpc('discussion_list',{p_thread:thread,p_before:null},true),Auth.rpc('discussion_list',{p_thread:thread,p_before:null,p_pins:true},true).catch(()=>[]),Auth.rpc('discussion_thread_reactions',{p_thread:thread},true).catch(()=>({}))]);
+  if(Array.isArray(rows)){rows.forEach(r=>{r.reactions=(rxMap&&rxMap[r.id])||r.reactions||{}})}
   const fresh=rows.slice().reverse(),psig=JSON.stringify((pins||[]).filter(p=>p.pinned).map(p=>[p.id,p.author,p.av])),pinsChanged=psig!==JSON.stringify(PINS.map(p=>[p.id,p.author,p.av]));PINS=(pins||[]).filter(p=>p.pinned);
   // keep earlier pages already loaded
   const ids=new Set(fresh.map(p=>p.id)),older=posts.filter(p=>!ids.has(p.id)&&p.id<(fresh[0]?fresh[0].id:Infinity));
-  const sig=l=>JSON.stringify(l.map(p=>[p.id,p.can_delete,p.author,p.av,p.avatar,p.pinned])),changed=sig(older.concat(fresh))!==sig(posts)||pinsChanged;
+  const sig=l=>JSON.stringify(l.map(p=>[p.id,p.can_delete,p.author,p.av,p.avatar,p.pinned,JSON.stringify(p.reactions||{})])),changed=sig(older.concat(fresh))!==sig(posts)||pinsChanged;
   posts=older.concat(fresh);if(first){oldest=fresh.length?fresh[0].id:null;$('more').hidden=rows.length<100}
   if(first||changed)drawList(first);
   else document.querySelectorAll('.post time').forEach(t=>t.textContent=ago(t.getAttribute('datetime')));
  }catch(e){if(first)$('list').innerHTML='<p class="empty">The discussion could not be loaded. Check your connection and reload.</p>'}
  busy=false}
 async function loadMore(){if(oldest==null)return;$('more').disabled=true;
- try{const rows=await Auth.rpc('discussion_list',{p_thread:thread,p_before:oldest},true),h=document.body.scrollHeight;
+ try{const [rows,rxMap]=await Promise.all([Auth.rpc('discussion_list',{p_thread:thread,p_before:oldest},true),Auth.rpc('discussion_thread_reactions',{p_thread:thread},true).catch(()=>({}))]);
+  if(Array.isArray(rows)){rows.forEach(r=>{r.reactions=(rxMap&&rxMap[r.id])||r.reactions||{}})}
+  const h=document.body.scrollHeight;
   posts=rows.slice().reverse().concat(posts);oldest=rows.length?rows[rows.length-1].id:oldest;$('more').hidden=rows.length<100;
   drawList(false);scrollTo(0,scrollY+document.body.scrollHeight-h)}catch(e){}
  $('more').disabled=false}
@@ -181,7 +281,7 @@ function annHint(){const c=$('annchk'),b=$('sendbtn');if(b)b.textContent=c&&c.ch
 function drawDock(msg){const a=Auth.acc(),d=$('dock');if(!msg&&Auth.ended())msg='Your sign-in ended on this device. Sign in again to post.';
  if(!Auth.ses()||!a){d.innerHTML='<button class="gbtn" onclick="this.disabled=true;startSignIn()">'+G+(a?'Sign in again to post':'Sign in with Google to post')+'</button>'+(msg?'<div class="hint"><span class="err">'+esc(msg)+'</span></div>':'');return}
  d.innerHTML=(GENERAL&&CANPIN?'<label class="annrow"><input type="checkbox" id="annchk" onchange="annHint()"><span id="annhint"><b>Announcement</b>: pinned, on everyone\u2019s home page and pushed to their phones</span></label>':'')+'<div class="rchip" id="rchip" hidden></div><div class="mlist" id="mlist" hidden role="listbox" aria-label="Classmates"></div>'+
-  '<div class="compose"><button class="stkbtn" id="stkbtn" type="button" title="Send sticker" aria-label="Send sticker" onclick="Stickers.togglePicker({anchor:this,onSelect:sendSticker})"><svg class="i" width="20" height="20" aria-hidden="true"><use href="icons.svg#i-sticker"/></svg></button><textarea id="msg" rows="1" maxlength="1000" placeholder="Write a message… (@ to tag someone)" oninput="grow();mentionList()" onclick="mentionList()" onkeydown="if(mentionKey(event))return;if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
+  '<div class="compose"><button class="stkbtn" id="stkbtn" type="button" title="Send sticker" aria-label="Send sticker" onclick="Stickers.togglePicker({anchor:this,onSelect:sendSticker})"><svg class="i" width="20" height="20" aria-hidden="true"><use href="icons.svg#i-sticker"/></svg></button><button class="emojibtn" id="emojibtn" type="button" title="Insert emoji" aria-label="Insert emoji" onclick="Emojis.openInsertPicker({anchor:this,inputEl:$(\'msg\')})"><svg class="i" width="20" height="20" aria-hidden="true"><use href="icons.svg#i-smile"/></svg></button><textarea id="msg" rows="1" maxlength="1000" placeholder="Write a message… (@ to tag someone)" oninput="grow();mentionList()" onclick="mentionList()" onkeydown="if(mentionKey(event))return;if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
   '<button class="btn primary" id="sendbtn" onclick="send()">Post</button></div><div class="hint"><span id="note">Posting as '+esc(Profile.me(a).name)+' · <button class="me" onclick="editMe()">Change</button></span><span id="count"></span></div>';drawChip()}
 (async function(){
  if(!/^[a-z0-9_-]{1,40}$/.test(course)||(qid&&!/^[a-z0-9_.-]{1,60}$/.test(qid))){$('list').innerHTML='<p class="empty">This discussion could not be found.</p>';return}
