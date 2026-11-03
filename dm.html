@@ -76,7 +76,8 @@ button{cursor:pointer}
 .msg.them{align-self:flex-start;align-items:flex-start}
 .mbody{position:relative;display:inline-flex;align-items:center;max-width:100%}
 .msg.me .mbody{justify-content:flex-end}
-.bubble{padding:9px 13px;border-radius:16px;font-size:14.5px;line-height:1.45;word-break:break-word;white-space:pre-wrap;box-shadow:0 1px 2px #0000000a}
+.bubble{padding:9px 13px;border-radius:16px;font-size:14.5px;line-height:1.45;word-break:break-word;white-space:pre-wrap;box-shadow:0 1px 2px #0000000a;user-select:text;-webkit-user-select:text}
+.bubble.bubble-stk{user-select:none;-webkit-user-select:none}
 .msg.me .bubble{background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
 .msg.them .bubble{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
 .bubble a{color:inherit;text-decoration:underline}
@@ -181,6 +182,10 @@ button{cursor:pointer}
  .din{gap:6px}
  .din textarea{height:40px;min-height:40px;padding:8px 11px;font-size:14px;border-radius:12px;overflow-y:hidden}
  .sendbtn, .din .stkbtn{width:40px;height:40px;border-radius:11px}
+ .mact{top:auto;bottom:calc(100% + 4px);transform:translateY(4px) scale(.92)}
+ .msg.me .mact{right:0;left:auto;padding:0}
+ .msg.them .mact{left:0;right:auto;padding:0}
+ .msg:hover .mact,.msg:focus-within .mact,.msg.show-actions .mact,.mact:hover{transform:translateY(0) scale(1)}
 }
 @media (min-width:720px){
  #inboxWrap{display:flex!important}
@@ -908,24 +913,29 @@ function setupInput(){
    const msg=e.target.closest('.msg');
    if(!msg||e.target.closest('.mact-btn')||e.target.closest('a')) return;
    clearTimeout(pressTimer);
-   pressTimer=setTimeout(()=>{
-    document.querySelectorAll('.msg.show-actions').forEach(el=>el.classList.remove('show-actions'));
-    msg.classList.add('show-actions');
-    if(navigator.vibrate) try{ navigator.vibrate(25); }catch(_){}
-   }, 450);
+   // For standalone stickers with no text to select, holding also reveals actions
+   if(msg.classList.contains('is-pure-stk')||e.target.closest('.bubble-stk')){
+    pressTimer=setTimeout(()=>{
+     document.querySelectorAll('.msg.show-actions').forEach(el=>el.classList.remove('show-actions'));
+     msg.classList.add('show-actions');
+     if(navigator.vibrate) try{ navigator.vibrate(25); }catch(_){}
+    }, 450);
+   }
   }, {passive:true});
   st.addEventListener('touchmove', ()=>clearTimeout(pressTimer), {passive:true});
   st.addEventListener('touchend', ()=>clearTimeout(pressTimer), {passive:true});
   st.addEventListener('touchcancel', ()=>clearTimeout(pressTimer), {passive:true});
 
-  st.addEventListener('contextmenu', e=>{
-   const msg=e.target.closest('.msg.me');
-   if(!msg||e.target.closest('a')||e.target.closest('.stk-standalone')) return;
-   const id=msg.dataset.id;
-   if(id){
-    e.preventDefault();
-    delMsg(Number(id));
-   }
+  // Tap a message bubble or sticker to toggle actions (react, reply, delete)
+  st.addEventListener('click', e=>{
+   if(e.target.closest('.mact-btn, .m-rx-pill, .mquote, a')) return;
+   const msg=e.target.closest('.msg');
+   if(!msg) return;
+   const sel=window.getSelection?window.getSelection().toString():'';
+   if(sel&&sel.trim().length) return;
+   const wasOpen=msg.classList.contains('show-actions');
+   document.querySelectorAll('.msg.show-actions').forEach(el=>el.classList.remove('show-actions'));
+   if(!wasOpen) msg.classList.add('show-actions');
   });
 
   document.addEventListener('pointerdown', e=>{
