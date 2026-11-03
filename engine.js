@@ -470,7 +470,7 @@ function feedbackHTML(q,fb,live,ai){   // ai: the AI box also shows on an earlie
  if(!fb.correct&&!fb.self)out+='<p><b>Answer:</b> '+ansHTML(fb.correctLabel)+'</p>';
  if(q.why)out+='<p>'+esc(q.why)+'</p>';out+=stepsHTML(q.cid&&byId[q.cid]);
  if(fb.wrongExplain)out+='<p><b>Why not your choice:</b> '+esc(fb.wrongExplain)+'</p>';
- if((live||ai)&&!fb.self)out+=aiHTML(q,fb);
+ if((live||ai)&&!fb.self)out+='<div id="aipane">'+aiHTML(q,fb)+'</div>';
  if(live)out+=missRowHTML(q,fb)+fcMakeHTML(q,fb);
  {const c=q.cid&&byId[q.cid],ch=c&&chOf(c.section);if(!fb.correct&&ch&&pageOn('notes')&&NOTES_PARSED.some(n=>n.ch===ch))out+='<p><button class="link" onclick="openNotes(\''+ch+'\',\''+esc(q.cid)+'\')">Review the '+esc(unitW)+' '+esc(ch)+' notes →</button></p>'}
  if(q.cid&&discussOn())out+='<p><a class="link qdisc" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+esc(String(q.cid))+'\')">'+CHAT_SM+'Discuss this question'+(DCOUNT[discKey(q.cid)]?'<b>'+DCOUNT[discKey(q.cid)]+'</b>':'')+'<span data-dn="'+esc(discKey(q.cid))+'">'+dnDot(dnUnread(discKey(q.cid)))+'</span></a></p>';
@@ -513,11 +513,12 @@ function aiCheck(){if(AI_READY===true||!CONFIG.home||!cloudOn()||!/^https?:$/.te
   if(AI_READY){try{sessionStorage.setItem('reviewer_ai',JSON.stringify({ok:true,at:Date.now()}))}catch(e){}if(state.feedback)draw()}}).catch(()=>{})}
 const aiFmt=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<i>$1</i>').replace(/^\s*[-•]\s+/gm,'• ').replace(/\n+/g,'<br>');
 const aiOn=()=>state.prefs.ai!==false;
-const AI_PEEKED={},AITWIN={},AICOACH={},AINOTES={ch:'',open:false,preset:'',draft:'',busy:0,text:'',err:'',left:null,cached:false};
+const AI_PEEKED={},AIMODES={},AITWIN={},AICOACH={},AINOTES={ch:'',open:false,preset:'',draft:'',busy:0,text:'',err:'',left:null,cached:false};
 function cmpLabel(pk,ans){const cl=s=>String(s||'').replace(/@m:\S+/g,'').trim(),a=cl(pk),b=cl(ans);if(!a||!b||a.length>42||b.length>42)return 'Compare choices';const sh=s=>s.length>18?s.slice(0,16)+'…':s;return sh(a)+' vs '+sh(b)}
+function aiDraw(){const el=$('aipane');if(el&&page==='study'){const {q,fb}=aiCur();if(q&&fb){el.innerHTML=aiHTML(q,fb);return}}draw()}
 function aiPeek(q,fb,k){if(AI_PEEKED[k]||AIX[k]||AISAVED[k])return;AI_PEEKED[k]=1;
  const u=CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain?course='+encodeURIComponent(courseId())+'&qid='+encodeURIComponent(String(q.cid))+'&picked='+encodeURIComponent(aiPick(q,fb));
- fetch(u,{headers:{apikey:CLOUD.key},cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{if(j&&j.text&&!AIX[k]){aiSave(k,j.text);AIX[k]={text:j.text,cached:1,auto:1};if(state.feedback)draw()}}).catch(()=>{})}
+ fetch(u,{headers:{apikey:CLOUD.key},cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{if(j&&j.text&&!AIX[k]){aiSave(k,j.text);AIX[k]={text:j.text,cached:1,auto:1};(AIMODES[k]||(AIMODES[k]={}))['']={text:j.text,cached:1,auto:1};if(state.feedback)aiDraw()}}).catch(()=>{})}
 function aiHTML(q,fb){if(!aiOn())return '';aiCheck();if(!q||!q.cid||!fb)return '';const k=aiK(q,fb),sv=AISAVED[k],x=AIX[k]&&!AIX[k].busy&&!AIX[k].err?AIX[k]:sv?{text:sv.text,saved:1}:AIX[k],on=AI_READY&&FILE_IDS.has(String(q.cid));if(!x&&!on)return '';
  const cid=esc(String(q.cid)),pk=aiPick(q,fb),c0=byId[q.cid],ans=c0?String(c0.q?c0.a:c0.term||''):'',curM=(x&&x.mode)||'';
  const hard=!fb.correct&&!fb.lookup&&(fb.sure==='sure'||(state.concepts[q.cid]&&state.concepts[q.cid].wrong>=2)||(classRate(q.cid)||0)>=40);
@@ -525,7 +526,8 @@ function aiHTML(q,fb){if(!aiOn())return '';aiCheck();if(!q||!q.cid||!fb)return '
  let h='';
  if(on){
   h+='<div class="aichips'+(hard&&!x?' hot':'')+'">'+(hard&&!x?'<span class="ailab">'+SPARK+(fb.sure==='sure'?'Confident slip:':'Tricky one:')+'</span>':'')+
-   (!x?'<button class="aichip aibtn" onclick="aiExplain(\''+cid+'\')">'+SPARK+(fb.correct?(fb.lucky||fb.sure==='unsure'?'Lock this in':'Explain it differently'):'Explain it differently')+'</button>':curM?'<button class="aichip" onclick="aiExplain(\''+cid+'\')">'+SPARK+'Simpler explanation</button>':'')+
+   (!x?'<button class="aichip aibtn" onclick="aiExplain(\''+cid+'\')">'+SPARK+(fb.correct?(fb.lucky||fb.sure==='unsure'?'Lock this in':'Explain it differently'):'Explain it differently')+'</button>':
+    '<button class="aichip'+(!curM?' on':'')+'" onclick="aiExplain(\''+cid+'\')">'+SPARK+(fb.correct?(fb.lucky||fb.sure==='unsure'?'Lock this in':'Simpler explanation'):'Simpler explanation')+'</button>')+
    '<button class="aichip'+(curM==='trick'?' on':'')+'" onclick="aiExplain(\''+cid+'\',\'trick\')">Memory trick</button>'+
    (!fb.correct&&pk?'<button class="aichip'+(curM==='compare'?' on':'')+'" onclick="aiExplain(\''+cid+'\',\'compare\')">'+esc(cmpLabel(pk,ans))+'</button>':'')+
    (!fb.correct||fb.lucky||fb.sure==='unsure'?'<button class="aichip'+(AITWIN[k]?' on':'')+'" onclick="aiTwin(\''+cid+'\')">Quiz me on this</button>':'')+
@@ -537,8 +539,9 @@ function aiHTML(q,fb){if(!aiOn())return '';aiCheck();if(!q||!q.cid||!fb)return '
   else{const hd=x.mode==='trick'?'Memory trick':x.mode==='compare'?'Side-by-side comparison':x.mode==='deeper'?'Locked in':'Explained differently';
    h+='<div class="aibox"><div class="aih">'+SPARK+hd+'</div><p>'+aiFmt(x.text)+'</p><p class="note">Written by AI from this question, so it can be wrong. Check your transes'+(x.saved?' · saved on this device':x.auto?' · auto-opened, didn\'t use a try':x.cached?' · already written, didn\'t use a try':x.left!=null?' · '+x.left+' left today':'')+'.</p></div>'}
  }
+ if(on&&((x&&!x.busy&&!x.err)||(AIF[k]&&AIF[k].open)))h+=aiFollowHTML(k,q);
  h+=aiTwinHTML(k);
- return h+(on&&((x&&!x.busy&&!x.err)||(AIF[k]&&AIF[k].open))?aiFollowHTML(k,q):'')}
+ return h}
 /* v72: follow-up questions. Under the explanation, the student can ask about this question in their own words (up to 3
    per question). Same daily tries as explanations; never cached (each question is the student's own). */
 const AIF={};   // AIF[question id|picked choice] = {turns: [{q, a}], busy, err, draft, left}
@@ -551,7 +554,7 @@ function aiFollowHTML(k,q){const f=AIF[k]||{turns:[]},cid=q?esc(String(q.cid)):'
  if(f.turns.length&&f.left!=null&&!f.busy)h+='<p class="note">Written by AI, so it can be wrong · '+f.left+' left today.</p>';
  return h+'</div>'}
 function aiDraft(v){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb);(AIF[k]||(AIF[k]={turns:[]})).draft=v}
-function aiOpenAsk(cid){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);(AIF[k]||(AIF[k]={turns:[]})).open=1;draw();setTimeout(()=>{const i=$('aiask');if(i)i.focus({preventScroll:true})},50)}
+function aiOpenAsk(cid){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);const f=(AIF[k]||(AIF[k]={turns:[]}));f.open=!f.open;aiDraw();if(f.open)setTimeout(()=>{const i=$('aiask');if(i)i.focus({preventScroll:true})},50)}
 // one request to the explain function, as the signed-in student (an expired sign-in is refreshed once and retried)
 async function aiPost(payload){const tok=typeof Auth!=='undefined'?(Auth.cloud=CLOUD,await Auth.token()):'';if(!tok)return {signin:1};
  const go=t=>fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+t},body:JSON.stringify(payload)});
@@ -567,21 +570,23 @@ function aiErr(o,what){const j=o.j||{},det=s=>' <span class="aidet">('+esc(Strin
 function aiBase(q,fb){const sel=aiCur().sel,ch=!fb.correct&&!q.typed&&sel?q.choices.find(x=>x.letter===sel):null;return {course:courseId(),qid:String(q.cid),picked:ch?ch.label:'',wrong:!fb.correct}}
 async function aiExplain(cid,mode){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);if(AIX[k]&&AIX[k].busy)return;
  const m=mode||(fb.correct&&(fb.lucky||fb.sure==='unsure')?'deeper':'');
- if(!m&&AISAVED[k]&&AISAVED[k].text){AIX[k]={text:AISAVED[k].text,saved:1};draw();return}
- AIX[k]={busy:1,mode:m};draw();
+ if(AIX[k]&&!AIX[k].busy&&!AIX[k].err&&(AIX[k].mode||'')===m)return;
+ const cd=(AIMODES[k]&&AIMODES[k][m])||(!m&&AISAVED[k]&&AISAVED[k].text?{text:AISAVED[k].text,saved:1}:null);
+ if(cd){AIX[k]=Object.assign({mode:m},cd);aiDraw();return}
+ AIX[k]={busy:1,mode:m};aiDraw();
  const body=aiBase(q,fb);if(m)body.mode=m;
  try{const o=await aiPost(body);
-  if(o.r&&o.r.ok&&o.j.text){if(!m)aiSave(k,o.j.text);AIX[k]={text:o.j.text,left:o.j.left,cached:o.j.cached,mode:m}}else AIX[k]={err:aiErr(o,'explanations'),mode:m}}
+  if(o.r&&o.r.ok&&o.j.text){const rec={text:o.j.text,left:o.j.left,cached:o.j.cached};(AIMODES[k]||(AIMODES[k]={}))[m]=rec;if(!m)aiSave(k,o.j.text);AIX[k]=Object.assign({mode:m},rec)}else AIX[k]={err:aiErr(o,'explanations'),mode:m}}
  catch(e){AIX[k]={err:'No connection. Try again when you\'re online.'}}
- if(String((aiCur().q||{}).cid)===String(cid))draw()}
+ if(String((aiCur().q||{}).cid)===String(cid))aiDraw()}
 async function aiAsk(){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb),f=AIF[k]||(AIF[k]={turns:[]});if(f.busy||f.turns.length>=3)return;
  const el=$('aiask'),text=((el&&el.value)||f.draft||'').trim();if(text.length<3){if(el)el.focus();return}
  const sv=AISAVED[k],ex=(AIX[k]&&AIX[k].text)||(sv&&sv.text)||'';
- f.draft=text;f.busy=1;f.err='';draw();
+ f.draft=text;f.busy=1;f.err='';aiDraw();
  try{const o=await aiPost(Object.assign(aiBase(q,fb),{ask:text,prior:f.turns.slice(-2),explained:ex}));
   if(o.r&&o.r.ok&&o.j.text){f.turns.push({q:text,a:o.j.text});f.draft='';f.left=o.j.left}else f.err=aiErr(o,'follow-ups')}
  catch(e){f.err='No connection. Try again when you\'re online.'}
- f.busy=0;if(String((aiCur().q||{}).cid)===String(q.cid)){draw();setTimeout(()=>{const i=$('aiask');if(i&&f.turns.length<3)i.focus({preventScroll:true})},60)}}
+ f.busy=0;if(String((aiCur().q||{}).cid)===String(q.cid)){aiDraw();setTimeout(()=>{const i=$('aiask');if(i&&f.turns.length<3)i.focus({preventScroll:true})},60)}}
 function aiTwinHTML(k){const t=AITWIN[k];if(!t)return '';
  if(t.busy)return '<div class="aitwin"><p class="note">'+SPARK+'Making a fresh practice question on this concept…</p></div>';
  if(t.err)return '<div class="aitwin"><p class="note">'+t.err+'</p></div>';
@@ -589,18 +594,19 @@ function aiTwinHTML(k){const t=AITWIN[k];if(!t)return '';
   t.choices.map((c,i)=>{const L=LETTERS[i],cls=t.picked?(L===t.ans?'correct':L===t.picked?'wrong':'dim'):'';return '<button class="choice '+cls+'" '+(t.picked?'disabled':'onclick="aiTwinPick(\''+L+'\')"')+'><span class="let">'+L+'</span><span class="lbl">'+ansHTML(c)+'</span></button>'}).join('')+
   '</div>'+(t.picked?'<p class="note" style="margin-top:8px"><b>'+(t.picked===t.ans?'Spot on!':'Answer: '+t.ans+'.')+'</b> '+aiFmt(t.why||'')+(t.fromBank?' · <button class="link" onclick="aiTwin(\''+esc(String((aiCur().q||{}).cid||''))+'\',true)">Try an AI-written one</button>':'')+'</p>':'')+'</div>'}
 async function aiTwin(cid,forceAI){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);if(AITWIN[k]&&AITWIN[k].busy)return;
+ if(AITWIN[k]&&!forceAI){delete AITWIN[k];aiDraw();return}
  const c0=byId[q.cid];
  if(!forceAI&&c0){const words=new Set(String((c0.q||c0.stem||'')+' '+(c0.a||c0.term||'')).toLowerCase().match(/[a-z]{4,}/g)||[]);
   const cand=BANK.filter(x=>x.id!==c0.id&&!isSelf(x)&&!isWr(x)&&x.section===c0.section);
   let best=null,bs=0;cand.forEach(x=>{const w=(String((x.q||x.stem||'')+' '+(x.a||x.term||'')).toLowerCase().match(/[a-z]{4,}/g)||[]).filter(z=>words.has(z)).length;if(w>bs){bs=w;best=x}});
-  if(best&&bs>=2){const bq=makeQuestion(best);if(bq&&bq.choices&&bq.choices.length>=2){const cor=bq.choices.find(x=>x.correct)||bq.choices[0];AITWIN[k]={fromBank:1,stem:bq.stem,choices:bq.choices.map(x=>x.label),ans:cor.letter,why:best.why||best.definition||''};draw();return}}}
- AITWIN[k]={busy:1};draw();
+  if(best&&bs>=2){const bq=makeQuestion(best);if(bq&&bq.choices&&bq.choices.length>=2){const cor=bq.choices.find(x=>x.correct)||bq.choices[0];AITWIN[k]={fromBank:1,stem:bq.stem,choices:bq.choices.map(x=>x.label),ans:cor.letter,why:best.why||best.definition||''};aiDraw();return}}}
+ AITWIN[k]={busy:1};aiDraw();
  try{const o=await aiPost(Object.assign(aiBase(q,fb),{mode:'twin'}));
   if(o.r&&o.r.ok&&o.j.twin){const tw=o.j.twin;AITWIN[k]={stem:tw.stem,choices:tw.choices,ans:LETTERS[tw.ans]||LETTERS[0],why:tw.why,left:o.j.left,cached:o.j.cached}}
   else AITWIN[k]={err:aiErr(o,'practice question')}}
  catch(e){AITWIN[k]={err:'No connection. Try again when you\'re online.'}}
- if(String((aiCur().q||{}).cid)===String(cid))draw()}
-function aiTwinPick(l){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb);if(AITWIN[k]&&!AITWIN[k].picked){AITWIN[k].picked=l;draw()}}
+ if(String((aiCur().q||{}).cid)===String(cid))aiDraw()}
+function aiTwinPick(l){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb);if(AITWIN[k]&&!AITWIN[k].picked){AITWIN[k].picked=l;aiDraw()}}
 function coachMisses(){const s=state.section,P=onPass(s)?state.pass:null;
  const log=secLog().filter(e=>e&&e.fb&&!e.fb.correct);
  if(log.length>=2)return log.slice(-8).map(e=>{const c=byId[e.q.cid]||{};return {cid:e.q.cid,sec:c.section||'',stem:e.q.stem,picked:aiPick(e.q,e.fb),ans:String(c.q?c.a:c.term||'')}});
@@ -758,7 +764,7 @@ function drawStudy(){
  if(!$('dots').hidden){let list=items.map(c=>({c,r:Math.min(state.concepts[c.id].right,T())}));if(rand)list.sort((a,b)=>b.r-a.r);
   $('dots').innerHTML=list.map(({c,r})=>'<i class="'+(r>=T()?'full':r>0?'half':'')+(!rand&&state.active&&state.active.cid===c.id&&view==null?' cur':'')+'"></i>').join('')}
 
- const card=$('card');card.innerHTML=cardHTML();card.classList.toggle('fbnew',!!(state.feedback&&view==null&&Date.now()-(state.feedback.at||0)<900));
+ const card=$('card');setHTML(card,cardHTML());card.classList.toggle('fbnew',!!(state.feedback&&view==null&&Date.now()-(state.feedback.at||0)<900));
  const ck=s+'|'+view+'|'+(state.pmatch?'m'+state.pmatch.i:'')+(state.active?.cid||'done')+'|'+(state.concepts[state.active?.cid]?.seen??'');
  if(ck!==lastCardKey&&!reduceMotion){if(card.animate)card.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});else{card.classList.remove('enter');void card.offsetWidth;card.classList.add('enter')}}   // no forced layout (v70)
  lastCardKey=ck;
@@ -884,6 +890,7 @@ function upPop(items){let b=$('uppop');if(!b){b=document.createElement('div');b.
 function upClose(){const b=$('uppop');if(b){b.classList.remove('in');setTimeout(()=>{b.hidden=true},250)}}
 function discussLink(){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.discussion||!CONFIG.home||!id||!/^https?:$/.test(location.protocol))return '';
  return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'" onclick="return openDiscuss()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion'+dnDot(dnUnread(),dnQuiet())+'</a>'}
+const navDraw=()=>setHTML($('nav'),navHTML());
 function draw(){
  PV++;
  if(!pageOn(page))page='dashboard';
@@ -891,7 +898,7 @@ function draw(){
  for(const [p,v] of Object.entries(VIEWS))$(v).hidden=p!==page;
  $('main').classList.toggle('wide',page==='dashboard'||page==='notes');
  drawPages();
- setHTML($('nav'),navHTML());
+ navDraw();
  drawSetSwitch();
  drawTheme();
  drawNewsDot();

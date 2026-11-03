@@ -167,7 +167,7 @@ h1{font-size:clamp(22px,2.6vw,28px);line-height:1.2;letter-spacing:-.5px;margin:
 .prompt{font-family:var(--serif);font-size:clamp(19px,2.1vw,23px);line-height:1.5;font-weight:500;margin:14px 0 22px;text-wrap:pretty}
 
 .choices{display:grid;gap:8px}
-.choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line2);border-radius:var(--r-md);padding:12px 16px 12px 12px;line-height:1.45;transition:background .15s,border-color .15s}
+.choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line2);border-radius:var(--r-md);padding:12px 16px 12px 12px;line-height:1.45;transition:background .15s,border-color .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .choice:hover:not(:disabled){background:var(--raised);border-color:var(--faint)}
 .choice .key{flex:none;width:28px;height:28px;display:grid;place-items:center;border-radius:8px;background:var(--raised);color:var(--mute);font-size:13px;font-weight:600;transition:background .15s,color .15s}
 .choice .lab{flex:1}
@@ -964,8 +964,9 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
 .aichips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 6px}
 .aichips.hot{padding:8px 10px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent-line)}
 .aichips .ailab{font-size:12px;font-weight:700;color:var(--accent);margin-right:2px;display:inline-flex;align-items:center;gap:4px}
-.aichip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:99px;font-size:13px;font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--line2);cursor:pointer;line-height:1.3}
+.aichip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;min-height:34px;border-radius:99px;font-size:13px;font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--line2);cursor:pointer;line-height:1.3;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;transition:background .12s,border-color .12s,color .12s}
 .aichip:hover,.aichip.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.aichip:active{transform:scale(.97)}
 .aichip svg{color:var(--accent);flex:none}
 .aitwin{margin:10px 0 6px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--accent-line)}
 .aitwin .aih{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
