@@ -1033,10 +1033,10 @@ function setupInput(){
   });
 
   document.addEventListener('pointerdown', e=>{
-   if(!e.target.closest('#rxPicker')&&!e.target.closest('.rx-btn')){
+   if(!e.target.closest('#rxPicker, .em-modal, .rx-btn, .emojibtn, .em-rx-more')){
     closeRxPicker();
    }
-   if(!e.target.closest('.msg')){
+   if(!e.target.closest('.msg, #rxPicker, .em-modal')){
     document.querySelectorAll('.msg.show-actions').forEach(el=>el.classList.remove('show-actions'));
    }
   });

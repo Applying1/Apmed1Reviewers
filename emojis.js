@@ -263,6 +263,7 @@
 
  let activeBarEl = null;
  let activeModalEl = null;
+ let activeModalMode = null;
  let currentCallback = null;
 
  function closeAll() {
@@ -274,11 +275,16 @@
    activeModalEl.remove();
    activeModalEl = null;
   }
+  activeModalMode = null;
   currentCallback = null;
+  document.querySelectorAll('.emojibtn.active').forEach(b => b.classList.remove('active'));
  }
 
  function openReactionPicker(opts) {
   closeAll();
+  if (window.Stickers && typeof window.Stickers.closePicker === 'function') {
+   window.Stickers.closePicker();
+  }
   injectStyles();
   const { anchor, onSelect, placement = 'top' } = opts;
   if (!anchor) return;
@@ -289,6 +295,8 @@
   bar.className = 'rx-picker em-rx-bar';
   bar.setAttribute('role', 'dialog');
   bar.setAttribute('aria-label', 'Pick emoji reaction');
+  bar.addEventListener('pointerdown', e => e.stopPropagation());
+  bar.addEventListener('click', e => e.stopPropagation());
 
   // Quick reactions
   QUICK_REACTIONS.forEach(em => {
@@ -343,14 +351,21 @@
 
  function openFullPicker(opts) {
   closeAll();
+  if (window.Stickers && typeof window.Stickers.closePicker === 'function') {
+   window.Stickers.closePicker();
+  }
   injectStyles();
-  const { anchorRect, onSelect } = opts;
+  const { anchorRect, onSelect, mode = 'react' } = opts;
+  activeModalMode = mode;
   currentCallback = onSelect;
 
   const modal = document.createElement('div');
   modal.className = 'em-modal';
+  modal.id = 'emModal';
   modal.setAttribute('role', 'dialog');
   modal.setAttribute('aria-label', 'Emoji catalog');
+  modal.addEventListener('pointerdown', e => e.stopPropagation());
+  modal.addEventListener('click', e => e.stopPropagation());
 
   modal.innerHTML = `
    <div class="em-modal-head">
@@ -396,8 +411,9 @@
     btn.title = em;
     btn.onclick = (e) => {
      e.stopPropagation();
+     const cb = onSelect;
      closeAll();
-     if (onSelect) onSelect(em);
+     if (cb) cb(em);
     };
     grid.appendChild(btn);
    });
@@ -433,29 +449,38 @@
 
  function openInsertPicker(opts) {
   const { anchor, inputEl, onInsert } = opts;
+  if (activeModalEl && activeModalMode === 'insert') {
+   closeAll();
+   return;
+  }
   const r = anchor ? anchor.getBoundingClientRect() : null;
   openFullPicker({
    anchorRect: r,
+   mode: 'insert',
    onSelect: (emoji) => {
-    if (inputEl) {
-     const start = inputEl.selectionStart != null ? inputEl.selectionStart : inputEl.value.length;
-     const end = inputEl.selectionEnd != null ? inputEl.selectionEnd : inputEl.value.length;
-     const val = inputEl.value;
-     inputEl.value = val.slice(0, start) + emoji + val.slice(end);
+    const el = typeof inputEl === 'function' ? inputEl() : inputEl;
+    if (el) {
+     const start = el.selectionStart != null ? el.selectionStart : el.value.length;
+     const end = el.selectionEnd != null ? el.selectionEnd : el.value.length;
+     const val = el.value;
+     el.value = val.slice(0, start) + emoji + val.slice(end);
      const nextPos = start + emoji.length;
-     inputEl.selectionStart = nextPos;
-     inputEl.selectionEnd = nextPos;
-     inputEl.focus();
-     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+     try {
+      el.selectionStart = nextPos;
+      el.selectionEnd = nextPos;
+     } catch (_) {}
+     el.focus();
+     el.dispatchEvent(new Event('input', { bubbles: true }));
     }
     if (onInsert) onInsert(emoji);
    }
   });
+  if (anchor) anchor.classList.add('active');
  }
 
  // Global dismissal on outside click / escape / scroll
  document.addEventListener('pointerdown', (e) => {
-  if (activeBarEl && !activeBarEl.contains(e.target) && !e.target.closest('.rx-btn, .rx-trigger')) {
+  if (activeBarEl && !activeBarEl.contains(e.target) && !e.target.closest('.rx-btn, .rx-trigger, .rx-add-btn')) {
    if (!activeModalEl || !activeModalEl.contains(e.target)) {
     closeAll();
    }
