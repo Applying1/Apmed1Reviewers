@@ -74,14 +74,23 @@ button{cursor:pointer}
 @keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 .msg.me{align-self:flex-end;align-items:flex-end}
 .msg.them{align-self:flex-start;align-items:flex-start}
+.mbody{position:relative;display:inline-flex;align-items:center;max-width:100%}
+.msg.me .mbody{justify-content:flex-end}
 .bubble{padding:9px 13px;border-radius:16px;font-size:14.5px;line-height:1.45;word-break:break-word;white-space:pre-wrap;box-shadow:0 1px 2px #0000000a}
 .msg.me .bubble{background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
 .msg.them .bubble{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
 .bubble a{color:inherit;text-decoration:underline}
-.mfoot{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--faint);margin-top:3px;padding:0 2px}
+.mfoot{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--faint);margin-top:3px;padding:0 2px;user-select:none;line-height:1}
+.msg.me .mfoot{justify-content:flex-end;align-self:flex-end}
+.msg.them .mfoot{justify-content:flex-start;align-self:flex-start}
 .mfoot .read{color:var(--accent);font-weight:600}
-.msg .mdel{opacity:0;border:0;background:none;padding:2px 4px;color:var(--faint);font-size:11px;cursor:pointer;border-radius:4px;transition:opacity .15s}
-.msg:hover .mdel{opacity:1}
+.mfoot .mtime{font-variant-numeric:tabular-nums}
+.mact{position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%) scale(.85);opacity:0;pointer-events:none;transition:opacity .16s ease,transform .16s ease;display:flex;align-items:center;gap:4px;z-index:5}
+.msg.me:hover .mact,.msg.me:focus-within .mact,.msg.me.show-actions .mact{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1)}
+.mact-btn{width:28px;height:28px;border-radius:99px;border:1px solid var(--line2);background:var(--surface);color:var(--mute);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08);padding:0;transition:background .15s,color .15s,border-color .15s,transform .12s}
+.mact-btn:hover{background:color-mix(in srgb,var(--bad,#ef4444) 12%,var(--surface));color:var(--bad,#ef4444);border-color:color-mix(in srgb,var(--bad,#ef4444) 35%,transparent);transform:scale(1.08)}
+.mact-btn:active{transform:scale(.92)}
+.mact-btn .i{width:13px;height:13px}
 .msg.sending{opacity:.6}
 
 /* In-pane Composer dock */
@@ -379,12 +388,21 @@ function renderMessages(){
   const cls=m.mine?'me':'them';
   const stkMatch=window.Stickers?Stickers.parse(m.body):null;
   const isPure=stkMatch&&stkMatch.isPure;
-  html+='<div class="msg '+cls+(m.sending?' sending':'')+(isPure?' is-pure-stk':'')+'" id="m'+m.id+'">'+
-   '<div class="bubble'+(isPure?' bubble-stk':'')+'">'+(window.Stickers?Stickers.render(m.body,linkify):linkify(m.body))+'</div>'+
+  const actHtml=(m.mine&&!m.sending)?(
+    '<div class="mact">'+
+      '<button class="mact-btn mdel" onclick="delMsg('+m.id+')" title="Delete message" aria-label="Delete message">'+
+        '<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-trash"/></svg>'+
+      '</button>'+
+    '</div>'
+  ):'';
+  html+='<div class="msg '+cls+(m.sending?' sending':'')+(isPure?' is-pure-stk':'')+'" id="m'+m.id+'" data-id="'+m.id+'">'+
+   '<div class="mbody">'+
+    actHtml+
+    '<div class="bubble'+(isPure?' bubble-stk':'')+'">'+(window.Stickers?Stickers.render(m.body,linkify):linkify(m.body))+'</div>'+
+   '</div>'+
    '<div class="mfoot">'+
-    '<span>'+timeClock(m.created_at)+'</span>'+
+    '<span class="mtime">'+timeClock(m.created_at)+'</span>'+
     (m.mine?(m.read?'<span class="read" title="Seen">✓✓</span>':'<span title="Delivered">✓</span>'):'')+
-    (m.mine&&!m.sending?'<button class="mdel" onclick="delMsg('+m.id+')">Delete</button>':'')+
    '</div>'+
   '</div>';
  });
@@ -564,6 +582,40 @@ function setupInput(){
  });
 
  $('backBtn').addEventListener('click', handleBack);
+
+ const st=$('stream');
+ if(st){
+  let pressTimer=null;
+  st.addEventListener('touchstart', e=>{
+   const msg=e.target.closest('.msg.me');
+   if(!msg||e.target.closest('.mact-btn')||e.target.closest('a')) return;
+   clearTimeout(pressTimer);
+   pressTimer=setTimeout(()=>{
+    document.querySelectorAll('.msg.show-actions').forEach(el=>el.classList.remove('show-actions'));
+    msg.classList.add('show-actions');
+    if(navigator.vibrate) try{ navigator.vibrate(25); }catch(_){}
+   }, 450);
+  }, {passive:true});
+  st.addEventListener('touchmove', ()=>clearTimeout(pressTimer), {passive:true});
+  st.addEventListener('touchend', ()=>clearTimeout(pressTimer), {passive:true});
+  st.addEventListener('touchcancel', ()=>clearTimeout(pressTimer), {passive:true});
+
+  st.addEventListener('contextmenu', e=>{
+   const msg=e.target.closest('.msg.me');
+   if(!msg||e.target.closest('a')||e.target.closest('.stk-standalone')) return;
+   const id=msg.dataset.id;
+   if(id){
+    e.preventDefault();
+    delMsg(Number(id));
+   }
+  });
+
+  document.addEventListener('pointerdown', e=>{
+   if(!e.target.closest('.msg.me')){
+    document.querySelectorAll('.msg.show-actions').forEach(el=>el.classList.remove('show-actions'));
+   }
+  });
+ }
 }
 
 /* -------------------- BOOT -------------------- */
