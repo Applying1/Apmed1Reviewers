@@ -202,7 +202,7 @@ button{cursor:pointer}
   <a class="back" id="backBtn" href="classlist.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg><span id="backTxt">Class list</span></a>
  </div>
  <div class="top-chat-cell">
-  <div class="phead" id="partnerHead" hidden>
+  <div class="phead" id="partnerHead" hidden style="cursor:pointer" title="View profile" onclick="openPartnerProfile()">
    <div id="partnerAv"></div>
    <div class="pinfo">
     <span class="pname" id="partnerName"></span>
@@ -283,7 +283,7 @@ function toast(t,ms){const e=$('toast');if(!e)return;e.textContent=t;e.classList
 
 const Q=new URLSearchParams(location.search);
 let PARTNER_ID=Q.get('with')||'',PARTNER_NAME=Q.get('to')||'';
-let COURSES=[],MESSAGES=[],ALL_CLASSMATES=[],CONVERSATIONS=[];
+let COURSES=[],MESSAGES=[],ALL_CLASSMATES=[],CONVERSATIONS=[],PROFILES={};
 let POLL_TIMER=null,IS_SENDING=false,LAST_CONVS_HASH='',LAST_SEARCH='';
 let ACTIVE_RX_MSG=null,REPLY_TARGET=null;
 
@@ -329,11 +329,13 @@ function unlinked(msg){
 /* -------------------- INBOX / CONVERSATIONS -------------------- */
 async function loadInbox(quiet){
  try{
-  const [convs, classList] = await Promise.all([
+  const [convs, classList, profs] = await Promise.all([
    Auth.rpc('dm_conversations',{},true).catch(()=>[]),
-   ALL_CLASSMATES.length ? Promise.resolve(ALL_CLASSMATES) : Auth.rpc('class_list',{},true).catch(()=>[])
+   ALL_CLASSMATES.length ? Promise.resolve(ALL_CLASSMATES) : Auth.rpc('class_list',{},true).catch(()=>[]),
+   Object.keys(PROFILES).length ? Promise.resolve(PROFILES) : Auth.rpc('class_profiles',{},true).catch(()=>({}))
   ]);
   if(Array.isArray(classList)&&classList.length) ALL_CLASSMATES=classList;
+  if(profs&&typeof profs==='object') PROFILES=profs;
 
   const convsArray = Array.isArray(convs) ? convs : [];
   CONVERSATIONS = convsArray;
@@ -824,6 +826,22 @@ function resetMsgInput(){
  inp.value = '';
  inp.style.height = '';
  inp.style.overflowY = 'hidden';
+}
+
+function openPartnerProfile(){
+ if(!PARTNER_ID&&!PARTNER_NAME)return;
+ const p=ALL_CLASSMATES.find(r=>r.id===PARTNER_ID||(PARTNER_NAME&&r.name.toLowerCase()===PARTNER_NAME.toLowerCase()))||CONVERSATIONS.find(c=>c.id===PARTNER_ID)||{id:PARTNER_ID,name:PARTNER_NAME};
+ if(!window.Profile)return;
+ const pr=(p.id&&PROFILES[p.id])||{};
+ Profile.card({
+  author:p.name||PARTNER_NAME||'Classmate',
+  av:p.av||'g',
+  avatar:p.avatar||'',
+  mine:false,
+  is_mod:!!(p.is_mod||pr.is_mod),
+  student_name:p.student_name||pr.student_name||'',
+  real_name:p.real_name||pr.real_name||p.name||PARTNER_NAME||''
+ });
 }
 
 /* Setup partner details in header */

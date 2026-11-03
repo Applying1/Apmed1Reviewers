@@ -58,6 +58,8 @@ h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 4px;text-al
 .list{display:grid;gap:7px}
 .row{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);min-width:0}
 .row .w{flex:1;min-width:0}
+.who{flex:1;min-width:0;display:flex;align-items:center;gap:11px;border:0;background:none;padding:0;text-align:left;cursor:pointer}
+.who:hover b,.who:hover .mename b{text-decoration:underline}
 .row b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .st{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mute);white-space:nowrap;padding:1px 0}
 .row.studying .st{color:var(--good,#22a06b);font-weight:600}
@@ -79,6 +81,8 @@ h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 4px;text-al
  .metop{align-items:flex-start}
  .seg{width:100%;justify-content:stretch}
  .seg button{flex:1;text-align:center}
+ .acts{gap:4px}
+ .act{padding:5px 7px;font-size:12px;gap:3px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
@@ -100,7 +104,7 @@ const ic=n=>'<svg class="i" width="16" height="16" aria-hidden="true"><use href=
 const short=t=>String(t||'').replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,'');
 function toast(t,ms){const e=$('toast');if(!e)return;e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),ms||2400)}
 
-let COURSES=[],ROWS=[],BUSY=false;
+let COURSES=[],ROWS=[],PROFILES={},BUSY=false;
 const courseTitle=id=>{const c=COURSES.find(x=>x.id===id);return c?short(c.title):id};
 function timeAgo(t){
  if(!t)return '';
@@ -153,17 +157,16 @@ function draw(){
   const inv=!!me.invisible;
   html+='<section class="mecard row me '+esc(me.state)+'" id="merow" aria-label="Your status">'+
    '<div class="metop">'+
-    avHtml(me,42)+
+    '<button type="button" class="who" data-prof="me" title="View or edit your profile">'+avHtml(me,42)+
     '<div class="meinfo">'+
      '<div class="mename"><b>'+esc(me.name)+'</b><span class="you">You</span></div>'+
-     '<div class="mestate"><i class="dot '+esc(me.state)+'" aria-hidden="true"></i><span id="mestate">'+esc(stateLabel(me))+(inv?' <em>(only you see this)</em>':'')+'</span></div>'+
-    '</div>'+
+     '<div class="mestate"><i class="dot '+esc(me.state)+'" aria-hidden="true"></i><span id="mestate">'+esc(stateLabel(me))+(inv?' <em>(only you see this)</em>':'')+'</span></div></div></button>'+
     '<div class="seg" role="radiogroup" aria-label="Status visibility">'+
      '<button type="button" class="'+(!inv?'on':'')+'" data-status="active" role="radio" aria-checked="'+(!inv)+'" '+(BUSY?'disabled':'')+'>Active</button>'+
      '<button type="button" class="'+(inv?'on':'')+'" data-status="invisible" role="radio" aria-checked="'+inv+'" '+(BUSY?'disabled':'')+'>Invisible</button>'+
     '</div>'+
    '</div>'+
-   '<div class="menote"><span>'+(inv?'Classmates see you as Offline right now.':'Classmates can see when you\'re studying or on the site.')+' The anonymous Studying now counter is unaffected.</span><a href="privacy.html#classlist">Privacy</a></div>'+
+   '<div class="menote"><span>'+(inv?'Classmates see you as Offline right now.':'Classmates can see when you\'re studying or on the site.')+' The anonymous Studying now counter is unaffected.</span><span><a href="#profile" id="meprof" data-prof="me">Your profile</a> · <a href="privacy.html#classlist">Privacy</a></span></div>'+
   '</section>';
  }
  const groups=[
@@ -174,13 +177,50 @@ function draw(){
  groups.forEach(([key,title,list])=>{
   if(!list.length)return;
   html+='<h2 class="sec"><i class="dot '+key+'" aria-hidden="true"></i>'+esc(title)+' ('+list.length+')</h2><div class="list" data-group="'+key+'">'+
-   list.map(r=>'<div class="row '+esc(r.state)+'">'+avHtml(r,36)+'<div class="w"><b>'+esc(r.name)+'</b><span class="st"><i class="dot '+esc(r.state)+'" aria-hidden="true"></i>'+esc(stateLabel(r))+'</span></div><div class="acts"><a class="act dm" href="dm.html?with='+encodeURIComponent(r.id||'')+'&to='+encodeURIComponent(r.name)+'" title="Message '+esc(r.name)+'">'+ic('message-circle')+'<span>DM</span></a><a class="act duel" href="duel.html?to='+encodeURIComponent(r.name)+'" title="Challenge '+esc(r.name)+' to a duel">'+ic('zap')+'<span>Duel</span></a></div></div>').join('')+
+   list.map(r=>{const idx=rows.indexOf(r);return '<div class="row '+esc(r.state)+'"><button type="button" class="who" data-prof="'+idx+'" title="View profile of '+esc(r.name)+'">'+avHtml(r,36)+'<div class="w"><b>'+esc(r.name)+'</b><span class="st"><i class="dot '+esc(r.state)+'" aria-hidden="true"></i>'+esc(stateLabel(r))+'</span></div></button><div class="acts"><button type="button" class="act prof" data-prof="'+idx+'" title="View profile of '+esc(r.name)+'" aria-label="View profile of '+esc(r.name)+'">'+ic('user')+'<span>Profile</span></button><a class="act dm" href="dm.html?with='+encodeURIComponent(r.id||'')+'&to='+encodeURIComponent(r.name)+'" title="Message '+esc(r.name)+'">'+ic('message-circle')+'<span>DM</span></a><a class="act duel" href="duel.html?to='+encodeURIComponent(r.name)+'" title="Challenge '+esc(r.name)+' to a duel">'+ic('zap')+'<span>Duel</span></a></div></div>'}).join('')+
   '</div>';
  });
  if(!rows.length)html='<p class="empty">No linked classmates found.</p>';
  $('view').innerHTML=html;
  $('view').querySelectorAll('[data-status]').forEach(b=>{
   b.onclick=()=>setStatus(b.dataset.status);
+ });
+ $('view').querySelectorAll('[data-prof]').forEach(b=>{
+  b.onclick=e=>{e.preventDefault();openProfile(b.dataset.prof)};
+ });
+}
+
+function getProf(r){
+ const pr=(r&&r.id&&PROFILES[r.id])||{};
+ return {
+  student_name:r.student_name||pr.student_name||'',
+  real_name:r.real_name||pr.real_name||'',
+  is_mod:!!(r.is_mod||pr.is_mod)
+ };
+}
+
+function openProfile(key){
+ const r=key==='me'?ROWS.find(x=>x.me):ROWS[+key];
+ if(!r||!window.Profile)return;
+ const pf=getProf(r);
+ const inv=!!r.invisible;
+ const st=stateLabel(r)+(r.me&&inv?' (only you see this)':'');
+ const acts=r.me?'':(
+  '<a class="btn primary" href="dm.html?with='+encodeURIComponent(r.id||'')+'&to='+encodeURIComponent(r.name)+'">Message</a>'+
+  '<a class="btn" href="duel.html?to='+encodeURIComponent(r.name)+'">Duel</a>'
+ );
+ Profile.card({
+  author:r.name,
+  av:r.av||'g',
+  avatar:r.avatar||'',
+  mine:!!r.me,
+  is_mod:pf.is_mod,
+  student_name:pf.student_name,
+  real_name:pf.real_name||r.name,
+  sub:(r.me?'This is how classmates see you':'Display name')+' · '+st,
+  actions:acts
+ },()=>{
+  Profile.edit().then(a=>{if(a)load(true)});
  });
 }
 
@@ -204,7 +244,11 @@ async function setStatus(st){
 async function load(quiet){
  if(!Auth.ses()){signedOut();return}
  try{
-  const rows=await Auth.rpc('class_list',{},true);
+  const [rows,profs]=await Promise.all([
+   Auth.rpc('class_list',{},true),
+   Object.keys(PROFILES).length?Promise.resolve(PROFILES):Auth.rpc('class_profiles',{},true).catch(()=>({}))
+  ]);
+  if(profs&&typeof profs==='object')PROFILES=profs;
   ROWS=Array.isArray(rows)?rows:[];
   const me=ROWS.find(r=>r.me);
   if(me){try{localStorage.setItem('reviewer_presence_status',me.invisible?'invisible':'active')}catch(e){}}

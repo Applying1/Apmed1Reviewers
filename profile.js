@@ -30,7 +30,7 @@
     '.pfm .cols{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;justify-items:center}.pfm .cols i{display:block;width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 1px #0002}' +
     '.pfm .pfnote{margin:8px 0 0;padding:0;border:0;background:none;font-size:12.5px;color:var(--faint)}.pfm .err{color:var(--bad);font-size:13.5px;margin:12px 0 0;min-height:1em}' +
     '.pfm .row{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}' +
-    '.pfm .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:11px;padding:8px 14px;font:600 14px var(--sans,system-ui);border:1px solid var(--line2);background:var(--surface);color:var(--text);cursor:pointer}' +
+    '.pfm .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:11px;padding:8px 14px;font:600 14px var(--sans,system-ui);border:1px solid var(--line2);background:var(--surface);color:var(--text);cursor:pointer;text-decoration:none}' +
     '.pfm .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink,#fff)}.pfm .btn:disabled{opacity:.55;cursor:default}' +
     '.pfm .mod{font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent);margin-left:6px;vertical-align:2px}' +
     '.pfm .real{margin:12px 0 0;font-size:14px;color:var(--mute)}.pfm .real b{color:var(--text)}' +
@@ -123,11 +123,13 @@
 
   // A discussion poster's card. p = a discussion_list row.
   function card(p, onEdit) {
-    modal(head(p.mine ? 'You' : 'Classmate') +
-      '<div class="pv">' + html({ av: p.av, url: p.avatar, name: p.author }, 56) + '<div><b>' + esc(p.author) + (p.is_mod ? '<span class="mod">Moderator</span>' : '') + '</b>' +
-      '<span>' + (p.mine ? 'This is how classmates see you' : 'Display name') + '</span></div></div>' +
-      (p.real_name ? '<p class="real">Google account: <b>' + esc(p.real_name) + '</b></p>' : (p.mine ? '' : '<p class="real">Sign in to see the Google account name.</p>')) +
-      '<div class="row">' + (p.mine && onEdit ? '<button class="btn primary" id="pfedit">Edit profile</button>' : '') + '<button class="btn" onclick="Profile.close()">Close</button></div>');
+    const mine = !!(p.mine || p.me), disp = p.author || p.name || 'Classmate', sub = p.sub || (mine ? 'This is how classmates see you' : 'Display name');
+    modal(head(mine ? 'You' : 'Classmate') +
+      '<div class="pv">' + html({ av: p.av, url: p.avatar, name: disp }, 56) + '<div><b>' + esc(disp) + (p.is_mod ? '<span class="mod">Moderator</span>' : '') + '</b>' +
+      '<span>' + esc(sub) + '</span></div></div>' +
+      (p.student_name ? '<p class="real" id="pfstudent">Student: <b>' + esc(p.student_name) + '</b></p>' : '') +
+      (p.real_name ? '<p class="real" id="pfreal">Google account: <b>' + esc(p.real_name) + '</b></p>' : (mine || p.student_name ? '' : '<p class="real">Sign in to see the Google account name.</p>')) +
+      '<div class="row">' + (p.actions || '') + (mine && onEdit ? '<button class="btn primary" id="pfedit">Edit profile</button>' : '') + '<button class="btn" onclick="Profile.close()">Close</button></div>');
     const b = document.getElementById('pfedit'); if (b) b.onclick = () => { close(); onEdit() };
   }
 
