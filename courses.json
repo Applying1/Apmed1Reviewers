@@ -134,14 +134,14 @@
    "img/icons/purcom.svg"
   ],
   "exam": {
-   "name": "Research quiz",
-   "date": ""
+   "name": "Research Quiz",
+   "date": "2026-11-04"
   },
   "activeExam": "research",
   "exams": [
    {
     "id": "research",
-    "name": "Research quiz",
+    "name": "Research Quiz",
     "chapters": [
      "4"
     ]
