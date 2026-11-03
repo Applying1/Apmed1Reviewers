@@ -890,5 +890,13 @@
   "title": "Clean home layout: Consolidated Daily Games & Class Hub",
   "text": "The home page is now cleaner and less crowded! Daily crossword, APMed'le, and Sort It are neatly consolidated into a single 'Daily games' hub tile with live completion status, while Class list and My attendance are unified into a 'Class & attendance' hub tile. Secretary and Moderator controls now sit below your courses by default.",
   "link": "index.html"
+ },
+ {
+  "id": 108,
+  "date": "2026-11-03",
+  "type": "feature",
+  "title": "Sendable Stickers in Direct Messages & Discussions",
+  "text": "All 35 stickers from Diary of a Stickerholic (Chiikawa in STEM, When in Med, EPIC the Musical, 20th Century Girl, Zooa, and Jam Sesh) are now sendable in Direct Messages and all discussion pages! Tap the sticker button in any chat to open the sticker drawer.",
+  "link": "dm.html"
  }
 ]

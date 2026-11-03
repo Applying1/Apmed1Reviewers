@@ -93,7 +93,7 @@ textarea:focus{border-color:var(--accent)}
 <script src="auth.js"></script>
 <script src="profile.js"></script>
 <script src="dialog.js"></script>
-<script src="live.js"></script>
+<script src="live.js"></script><script src="stickers.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -112,9 +112,9 @@ function ago(t){const s=(Date.now()-new Date(t))/1000;if(s<60)return 'just now';
  const d=new Date(t);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+(s>31536000?', '+d.getFullYear():'')}
 function linkify(s){return esc(s).replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]/g,u=>'<a href="'+u+'" target="_blank" rel="noopener nofollow">'+u+'</a>')}
 // the avatar and name open the poster's card (display name, Google account name for signed-in viewers, Moderator)
-function body(p){let h=linkify(p.body);const ns=(p.mention_names||[]).filter(Boolean).sort((a,b)=>b.length-a.length);ns.forEach((n,i)=>{h=h.split('@'+esc(n)).join('\u0000'+i+'\u0001')});
+function body(p){let h=(window.Stickers?Stickers.render(p.body,linkify):linkify(p.body));const ns=(p.mention_names||[]).filter(Boolean).sort((a,b)=>b.length-a.length);ns.forEach((n,i)=>{h=h.split('@'+esc(n)).join('\u0000'+i+'\u0001')});
  return h.replace(/\u0000(\d+)\u0001/g,(m,i)=>'<span class="ment">@'+esc(ns[+i])+'</span>')}
-function quote(p){if(!p.reply_to)return '';return '<button class="rq" onclick="jump('+p.reply_to+')">↩ <b>'+esc(p.reply_author||'A post')+'</b> '+esc(p.reply_body||'')+'</button>'}
+function quote(p){if(!p.reply_to)return '';const snip=(window.Stickers?Stickers.cleanSnippet(p.reply_body||''):p.reply_body||'');return '<button class="rq" onclick="jump('+p.reply_to+')">↩ <b>'+esc(p.reply_author||'A post')+'</b> '+esc(snip)+'</button>'}
 function postHTML(p){return '<div class="post'+(p.pinged?' pinged':'')+(p.announce?' ann':'')+'" id="p'+p.id+'"><button class="avb" onclick="who('+p.id+')" aria-label="About '+esc(p.author)+'">'+Profile.html({av:p.av,url:p.avatar,name:p.author},36)+'</button>'+
  '<div class="pb"><div class="ph"><span class="who"><button class="nmb" onclick="who('+p.id+')">'+esc(p.author)+'</button>'+(p.announce?'<span class="tag">Announcement</span>':p.is_mod?'<span class="mod">Moderator</span>':'')+'<time datetime="'+esc(p.created_at)+'" title="'+esc(new Date(p.created_at).toLocaleString())+'">'+ago(p.created_at)+'</time></span>'+
  (p.can_delete?'<button class="del" onclick="del('+p.id+')">Delete</button>':'')+'</div>'+quote(p)+'<div class="tx">'+body(p)+'</div>'+
@@ -142,16 +142,18 @@ async function loadMore(){if(oldest==null)return;$('more').disabled=true;
   posts=rows.slice().reverse().concat(posts);oldest=rows.length?rows[rows.length-1].id:oldest;$('more').hidden=rows.length<100;
   drawList(false);scrollTo(0,scrollY+document.body.scrollHeight-h)}catch(e){}
  $('more').disabled=false}
-async function send(){const t=$('msg'),b=t.value.trim(),btn=$('sendbtn');if(!b)return;
+async function submitPost(b){const btn=$('sendbtn');if(!b||!btn)return;
  btn.disabled=true;$('note').textContent='';$('note').className='';
  const ments=MENT.filter(m=>b.includes('@'+m.name)).map(m=>m.id);
  const ann=GENERAL&&CANPIN&&$('annchk')&&$('annchk').checked;
  if(ann){btn.disabled=true;const go=await ask('It is pinned at the top of General, shown as a banner on everyone\u2019s home page, and sent as a push notification to every phone that has them on.',{title:'Post this announcement?',ok:'Announce'});btn.disabled=false;if(!go)return;
-  btn.disabled=true;try{await Auth.rpc('discussion_announce',{p_body:b},true);t.value='';$('annchk').checked=false;annHint();grow();pingOthers();await load();scrollTo({top:0,behavior:'smooth'})}catch(e){tell(e.message||'Could not post the announcement.')}btn.disabled=false;return}
- try{await Auth.rpc('discussion_post',Object.assign({p_thread:thread,p_body:b},REPLY?{p_reply_to:REPLY.id}:{},ments.length?{p_mentions:ments}:{}),true);t.value='';MENT=[];REPLY=null;drawChip();grow();pingOthers();await load();drawList(true)}
+  btn.disabled=true;try{await Auth.rpc('discussion_announce',{p_body:b},true);if($('msg'))$('msg').value='';if($('annchk'))$('annchk').checked=false;annHint();grow();pingOthers();await load();scrollTo({top:0,behavior:'smooth'})}catch(e){tell(e.message||'Could not post the announcement.')}btn.disabled=false;return}
+ try{await Auth.rpc('discussion_post',Object.assign({p_thread:thread,p_body:b},REPLY?{p_reply_to:REPLY.id}:{},ments.length?{p_mentions:ments}:{}),true);if($('msg'))$('msg').value='';MENT=[];REPLY=null;drawChip();grow();pingOthers();await load();drawList(true)}
  catch(e){$('note').textContent=/JWT|sign in|401/i.test(e.message)?'Your sign-in expired. Sign in again to post.':e.message;$('note').className='err';
   if(!(await Auth.token())){drawDock()}}
- btn.disabled=false;t.focus()}
+ btn.disabled=false;if($('msg'))$('msg').focus()}
+async function send(){const t=$('msg'),b=t?t.value.trim():'';if(!b)return;await submitPost(b)}
+async function sendSticker(stk){const t=$('msg'),txt=t?t.value.trim():'';const tag='[sticker:'+stk.id+':'+stk.image+':'+stk.name+']';const b=txt?(tag+'\n'+txt):tag;if(t){t.value='';grow()}await submitPost(b)}
 function who(id){const p=posts.find(x=>x.id===id);if(p)Profile.card(p,editMe)}
 function editMe(){Profile.edit().then(a=>{if(a){drawDock();load(true)}})}
 async function del(id){if(!await ask('This cannot be undone.',{title:'Delete this post?',ok:'Delete',danger:1}))return;
@@ -161,7 +163,7 @@ function pingOthers(){if(!window.Live)return;Live.ping('discuss:'+thread);Live.p
 // ---- replies and @mentions: REPLY = the post being answered; MENT = people picked from the @ list (sent only if still in the text)
 let REPLY=null,MENT=[],PEOPLE=null,MQ=null,MSEL=0;
 function replyTo(id){const p=posts.find(x=>x.id===id);if(!p)return;REPLY={id,author:p.author,body:p.body};drawChip();const t=$('msg');if(t)t.focus()}
-function drawChip(){const c=$('rchip');if(!c)return;c.hidden=!REPLY;if(REPLY)c.innerHTML='<span>Replying to <b>'+esc(REPLY.author)+'</b> · '+esc(String(REPLY.body).slice(0,80))+'</span><button onclick="REPLY=null;drawChip()" aria-label="Cancel the reply">×</button>'}
+function drawChip(){const c=$('rchip');if(!c)return;c.hidden=!REPLY;if(REPLY){const snip=(window.Stickers?Stickers.cleanSnippet(REPLY.body||''):REPLY.body||'');c.innerHTML='<span>Replying to <b>'+esc(REPLY.author)+'</b> · '+esc(String(snip).slice(0,80))+'</span><button onclick="REPLY=null;drawChip()" aria-label="Cancel the reply">×</button>'}}
 async function people(){if(PEOPLE)return PEOPLE;try{PEOPLE=await Auth.rpc('discussion_people',{},true)||[]}catch(e){PEOPLE=[]}return PEOPLE}
 function mentionAt(){const t=$('msg');if(!t)return null;const pre=t.value.slice(0,t.selectionStart),m=pre.match(/(^|\s)@([^\s@]{0,24}(?: [^\s@]{0,24})?)$/);return m?{q:m[2],at:pre.length-m[2].length-1}:null}
 async function mentionList(){const box=$('mlist'),m=mentionAt();if(!box)return;if(!m){box.hidden=true;MQ=null;return}
@@ -179,7 +181,7 @@ function annHint(){const c=$('annchk'),b=$('sendbtn');if(b)b.textContent=c&&c.ch
 function drawDock(msg){const a=Auth.acc(),d=$('dock');if(!msg&&Auth.ended())msg='Your sign-in ended on this device. Sign in again to post.';
  if(!Auth.ses()||!a){d.innerHTML='<button class="gbtn" onclick="this.disabled=true;startSignIn()">'+G+(a?'Sign in again to post':'Sign in with Google to post')+'</button>'+(msg?'<div class="hint"><span class="err">'+esc(msg)+'</span></div>':'');return}
  d.innerHTML=(GENERAL&&CANPIN?'<label class="annrow"><input type="checkbox" id="annchk" onchange="annHint()"><span id="annhint"><b>Announcement</b>: pinned, on everyone\u2019s home page and pushed to their phones</span></label>':'')+'<div class="rchip" id="rchip" hidden></div><div class="mlist" id="mlist" hidden role="listbox" aria-label="Classmates"></div>'+
-  '<div class="compose"><textarea id="msg" rows="1" maxlength="1000" placeholder="Write a message… (@ to tag someone)" oninput="grow();mentionList()" onclick="mentionList()" onkeydown="if(mentionKey(event))return;if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
+  '<div class="compose"><button class="stkbtn" id="stkbtn" type="button" title="Send sticker" aria-label="Send sticker" onclick="Stickers.togglePicker({anchor:this,onSelect:sendSticker})"><svg class="i" width="20" height="20" aria-hidden="true"><use href="icons.svg#i-sticker"/></svg></button><textarea id="msg" rows="1" maxlength="1000" placeholder="Write a message… (@ to tag someone)" oninput="grow();mentionList()" onclick="mentionList()" onkeydown="if(mentionKey(event))return;if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();send()}"></textarea>'+
   '<button class="btn primary" id="sendbtn" onclick="send()">Post</button></div><div class="hint"><span id="note">Posting as '+esc(Profile.me(a).name)+' · <button class="me" onclick="editMe()">Change</button></span><span id="count"></span></div>';drawChip()}
 (async function(){
  if(!/^[a-z0-9_-]{1,40}$/.test(course)||(qid&&!/^[a-z0-9_.-]{1,60}$/.test(qid))){$('list').innerHTML='<p class="empty">This discussion could not be found.</p>';return}
