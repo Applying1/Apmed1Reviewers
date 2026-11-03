@@ -107,16 +107,30 @@
   transform: scale(1.08) rotate(1.2deg);
 }
 .stk-caption {
+  position: absolute;
+  bottom: 0px;
+  left: 50%;
+  transform: translate(-50%, 6px);
+  background: color-mix(in srgb, var(--surface, #fff) 92%, var(--text, #000) 8%);
+  color: var(--text, #111);
   font-size: 11px;
   font-weight: 600;
-  color: var(--mute, #888);
-  margin-top: 4px;
-  text-align: center;
-  max-width: 140px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  border: 1px solid var(--line2, rgba(0,0,0,0.12));
+  box-shadow: 0 4px 12px rgba(0,0,0,0.14);
   white-space: nowrap;
+  max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
-  opacity: 0.85;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 10;
+}
+.stk-standalone:hover .stk-caption {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 /* Inline Sticker (Sticker + Text) */
