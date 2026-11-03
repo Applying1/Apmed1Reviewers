@@ -195,6 +195,8 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .tool.locked{cursor:default;opacity:.62;filter:grayscale(.5)}.tool.locked:hover{transform:none;border-color:var(--line)}
 .tool .new,.gitem .new{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:700 10.5px/1.6 var(--sans);letter-spacing:.04em;text-transform:uppercase;vertical-align:2px}
 .tool .done{color:var(--good);font-weight:600}
+.badge-unread{background:var(--bad,#ef4444);color:#fff;font-weight:700;font-size:11px;min-width:19px;height:19px;padding:0 5.5px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(239,68,68,.45);line-height:1;font-variant-numeric:tabular-nums;flex:none;margin-left:auto}
+.badge-unread[hidden]{display:none!important}
 .tool .tic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-size:18px}
 .tool>span:not(.tic):not(.hg){min-width:0}.tool b{display:block;font-size:14.5px}.tool>span:not(.tic):not(.hg)>span{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:520px){.tool>span:not(.tic):not(.hg)>span{white-space:normal}}
@@ -349,7 +351,7 @@ html.introing body{overflow:hidden}
   <a class="tool" id="qztool" href="#quiz" onclick="event.preventDefault();openQuizChallenges()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Quiz challenges</b><span id="qzsub">Live quiz &middot; Duels</span></span></a>
   <a class="tool" id="gamestool" href="#games" onclick="event.preventDefault();openGames()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-gamepad"/></svg></span><span><b>Daily games</b><span id="gamessub">Crossword &middot; APMed&#39;le &middot; Sort It</span></span></a>
   <a class="tool" id="bdtool" href="badges.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crown"/></svg></span><span><b>Badges</b><span id="bdsub">Earn badges for good study habits</span></span></a>
-  <a class="tool" id="classtool" href="#class" onclick="event.preventDefault();openClassModal()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-users"/></svg></span><span><b>Class &amp; attendance</b><span id="classsub">Class list &middot; My attendance</span></span></a>
+  <a class="tool" id="classtool" href="#class" onclick="event.preventDefault();openClassModal()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-users"/></svg></span><span><b>Class &amp; attendance</b><span id="classsub">Class list &middot; My attendance</span></span><span class="badge badge-unread" id="classUnreadBadge" hidden></span></a>
   <a class="tool locked" id="shoptool" aria-disabled="true" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b id="shopname">Coming soon</b><span id="shopsub">Stay tuned</span></span></a>
   <a class="cust" href="settings.html#home" role="button">Customize home</a>
  </nav>
@@ -426,7 +428,7 @@ html.introing body{overflow:hidden}
   <a class="gitem" id="cltool" href="classlist.html">
    <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-users"/></svg></span>
    <div class="gmain">
-    <div class="gtop"><b>Class list</b></div>
+    <div class="gtop"><b>Class list</b><span class="badge badge-unread" id="clModalBadge" hidden></span></div>
     <p id="clsub">See who is studying right now</p>
    </div>
    <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
@@ -434,7 +436,7 @@ html.introing body{overflow:hidden}
   <a class="gitem" id="dmtool" href="dm.html">
    <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg></span>
    <div class="gmain">
-    <div class="gtop"><b>Direct messages</b></div>
+    <div class="gtop"><b>Direct messages</b><span class="badge badge-unread" id="dmModalBadge" hidden></span></div>
     <p id="dmsub">Private 1-on-1 chats with classmates</p>
    </div>
    <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
@@ -837,6 +839,34 @@ function syncClassTile(){
  }else{
   s.textContent='Class list · My attendance';
  }
+ updateDmBadges();
+}
+async function updateDmBadges(){
+ const p=window.Notify?Notify.prefs():{};
+ const on=p.dm_badges!==false;
+ const bClass=$('classUnreadBadge'), bCl=$('clModalBadge'), bDm=$('dmModalBadge');
+ if(!on||typeof Auth==='undefined'||!Auth.ses()){
+  if(bClass)bClass.hidden=true;
+  if(bCl)bCl.hidden=true;
+  if(bDm)bDm.hidden=true;
+  return;
+ }
+ if(!Auth.cloud){
+  try{
+   const all=await (await fetch('courses.json')).json();
+   const cl=all.find(c=>c.cloud&&c.cloud.url);
+   if(cl)Auth.cloud=cl.cloud;
+  }catch(_){}
+ }
+ if(!Auth.cloud)return;
+ try{
+  const cnt=await Auth.rpc('dm_unread_count',{},true);
+  const show=cnt>0;
+  const txt=cnt>99?'99+':String(cnt);
+  if(bClass){bClass.textContent=txt;bClass.hidden=!show;}
+  if(bCl){bCl.textContent=txt;bCl.hidden=!show;}
+  if(bDm){bDm.textContent=txt;bDm.hidden=!show;}
+ }catch(e){}
 }
 // ---- Sign in with Google (Supabase Auth). The account gets one sync code; signing in gives this device that code.
 const ACC_KEY='reviewer_account';
@@ -939,11 +969,11 @@ function drawBackup(){const b=$('bkcard'),list=window.COURSE_LIST||[];const ios=
   '<div class="row"><button class="btn primary" onclick="signIn()">Sign in with Google</button>'+(b.dataset.steps?'':'<button class="btn" onclick="$(\'bkcard\').dataset.steps=1;drawBackup()">Add to Home Screen</button>')+'<button class="btn" onclick="bkNot()">Not now</button></div></div>';
  b.hidden=false}
 function bkNot(){try{localStorage.setItem('reviewer_backup_card','1')}catch(e){}drawBackup();if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!standalone)$('ios').hidden=false}
-function afterCourses(){drawToday();drawBackup();if(CLOUD&&window.Push&&!FEATS)Push.features().then(f=>{FEATS=f||[];drawToday()})}
+function afterCourses(){drawToday();drawBackup();if(CLOUD&&window.Push&&!FEATS)Push.features().then(f=>{FEATS=f||[];drawToday()});if(window.updateDmBadges)updateDmBadges()}
 if(window.COURSE_LIST)afterCourses();
 // back from a course, or back to this tab: fresh numbers (and newer synced progress, at most once a minute)
 let pulledAt=Date.now();
-function refreshHome(){if(!window.COURSE_LIST)return;if(window.drawCourses)drawCourses();drawToday();if(CLOUD&&getCode()&&Date.now()-pulledAt>60000){pulledAt=Date.now();pullSummaries(COURSE_LIST)}}
+function refreshHome(){if(!window.COURSE_LIST)return;if(window.drawCourses)drawCourses();drawToday();if(CLOUD&&getCode()&&Date.now()-pulledAt>60000){pulledAt=Date.now();pullSummaries(COURSE_LIST)}if(window.updateDmBadges)updateDmBadges()}
 addEventListener('pageshow',e=>{if(e.persisted)refreshHome()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshHome()});
 // Ask the browser to keep this site's data (no prompt in Chrome or Safari; Firefox would ask, so it's skipped there)

@@ -71,7 +71,7 @@ h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 4px;text-al
 .act.dm:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .msgbtn{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:13px;font-weight:600;padding:5px 11px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--text);transition:background .15s}
 .msgbtn:hover{background:var(--raised)}
-.badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--bad,#ef4444);color:#fff;font-size:11px;font-weight:700;box-shadow:0 1px 4px rgba(239,68,68,.4);line-height:1;font-variant-numeric:tabular-nums}
 .duel:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -219,9 +219,11 @@ async function load(quiet){
 async function checkUnread(){
  if(!Auth.ses())return;
  try{
+  const p=window.Notify?Notify.prefs():{};
+  if(p.dm_badges===false){const b=$('unreadBadge');if(b)b.hidden=true;return}
   const n=await Auth.rpc('dm_unread_count',{},true);
   const b=$('unreadBadge');
-  if(b){if(n&&n>0){b.textContent=n;b.hidden=false}else b.hidden=true}
+  if(b){if(n&&n>0){b.textContent=n>99?'99+':n;b.hidden=false}else b.hidden=true}
  }catch(e){}
 }
 

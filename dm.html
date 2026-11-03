@@ -85,12 +85,46 @@ button{cursor:pointer}
 .msg.them .mfoot{justify-content:flex-start;align-self:flex-start}
 .mfoot .read{color:var(--accent);font-weight:600}
 .mfoot .mtime{font-variant-numeric:tabular-nums}
-.mact{position:absolute;right:100%;top:0;bottom:0;padding-right:6px;padding-left:8px;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s ease .25s,transform .18s ease .25s;transform:scale(.9);z-index:10}
-.msg.me:hover .mact,.msg.me:focus-within .mact,.msg.me.show-actions .mact,.mact:hover{opacity:1;pointer-events:auto;transform:scale(1);transition-delay:0s}
-.mact-btn{width:28px;height:28px;border-radius:99px;border:1px solid var(--line2);background:var(--surface);color:var(--mute);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08);padding:0;transition:background .15s,color .15s,border-color .15s,transform .12s}
-.mact-btn:hover{background:color-mix(in srgb,var(--bad,#ef4444) 12%,var(--surface));color:var(--bad,#ef4444);border-color:color-mix(in srgb,var(--bad,#ef4444) 35%,transparent);transform:scale(1.08)}
+.mact{position:absolute;top:50%;transform:translateY(-50%) scale(.92);display:flex;align-items:center;opacity:0;pointer-events:none;transition:opacity .18s ease .15s,transform .18s ease .15s;z-index:15}
+.msg.me .mact{right:100%;padding-right:6px;padding-left:10px}
+.msg.them .mact{left:100%;padding-left:6px;padding-right:10px}
+.msg:hover .mact,.msg:focus-within .mact,.msg.show-actions .mact,.mact:hover{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1);transition-delay:0s}
+.mact-bar{display:inline-flex;align-items:center;gap:3px;padding:3px 4px;border-radius:99px;background:var(--surface);border:1px solid var(--line2);box-shadow:0 3px 10px rgba(0,0,0,.12)}
+.mact-btn{width:28px;height:28px;border-radius:99px;border:0;background:transparent;color:var(--mute);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background .12s,color .12s,transform .1s}
+.mact-btn:hover{background:var(--raised);color:var(--text);transform:scale(1.1)}
 .mact-btn:active{transform:scale(.92)}
-.mact-btn .i{width:13px;height:13px}
+.mact-btn.del-btn:hover{background:color-mix(in srgb,var(--bad,#ef4444) 14%,var(--surface));color:var(--bad,#ef4444)}
+.mact-btn .i{width:15px;height:15px}
+.rx-picker{position:fixed;z-index:90;background:var(--surface);border:1px solid var(--line2);border-radius:99px;padding:4px 6px;box-shadow:0 8px 24px rgba(0,0,0,.2),0 2px 6px rgba(0,0,0,.08);display:flex;align-items:center;gap:3px;animation:rxPop .15s ease-out}
+@keyframes rxPop{from{opacity:0;transform:scale(.85) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.rx-pick-btn{font-size:20px;line-height:1;width:34px;height:34px;border-radius:50%;border:0;background:transparent;cursor:pointer;display:grid;place-items:center;padding:0;transition:transform .12s}
+.rx-pick-btn:hover{transform:scale(1.35)}
+.rx-pick-btn:active{transform:scale(.9)}
+.m-reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;z-index:2}
+.msg.me .m-reactions{justify-content:flex-end}
+.msg.them .m-reactions{justify-content:flex-start}
+.m-rx-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:99px;border:1px solid var(--line2);background:var(--surface);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:transform .12s,border-color .15s,background .15s;user-select:none;line-height:1}
+.m-rx-pill:hover{transform:scale(1.08);background:var(--raised)}
+.m-rx-pill:active{transform:scale(.92)}
+.m-rx-pill.is-mine{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.m-rx-pill .m-rx-em{font-size:13px;line-height:1}
+.m-rx-pill .m-rx-cnt{font-size:11px;font-variant-numeric:tabular-nums;opacity:.88}
+.mquote{padding:5px 8px;border-radius:8px;margin-bottom:6px;cursor:pointer;display:flex;flex-direction:column;gap:2px;text-align:left;max-width:100%;overflow:hidden;transition:opacity .15s}
+.mquote:hover{opacity:.88}
+.msg.me .mquote{background:rgba(0,0,0,.15);border-left:3px solid var(--accent-ink);color:var(--accent-ink)}
+.msg.them .mquote{background:var(--raised);border-left:3px solid var(--accent);color:var(--text)}
+.mquote-author{display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700}
+.mquote-snip{font-size:12.5px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@keyframes flashBubble{0%,100%{outline:2px solid transparent}25%,70%{outline:2.5px solid var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}}
+.msg.flashBg .bubble{animation:flashBubble 1.4s ease-out}
+.rdock{max-width:760px;margin:0 auto 8px;background:var(--surface);border:1px solid var(--line2);border-left:3.5px solid var(--accent);border-radius:10px;padding:6px 10px;display:flex;align-items:center;gap:10px;animation:fadeIn .15s ease-out}
+.rdock-content{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.rdock-icon{color:var(--accent);display:flex;flex:none}
+.rdock-txt{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.25}
+.rdock-author{font-size:12px;font-weight:700;color:var(--accent)}
+.rdock-snip{font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rdock-cancel{flex:none;width:24px;height:24px;border-radius:50%;border:0;background:transparent;color:var(--mute);cursor:pointer;display:grid;place-items:center;padding:0;transition:background .15s,color .15s}
+.rdock-cancel:hover{background:var(--raised);color:var(--text)}
 .msg.sending{opacity:.6}
 
 /* In-pane Composer dock */
@@ -193,6 +227,16 @@ button{cursor:pointer}
    </div>
   </div>
   <div class="dock" id="composerDock" hidden>
+   <div class="rdock" id="replyDock" hidden>
+    <div class="rdock-content">
+     <span class="rdock-icon"><svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-reply"/></svg></span>
+     <div class="rdock-txt">
+      <span class="rdock-author" id="replyAuthor"></span>
+      <span class="rdock-snip" id="replySnip"></span>
+     </div>
+    </div>
+    <button class="rdock-cancel" id="replyCancel" type="button" onclick="cancelReply()" aria-label="Cancel reply" title="Cancel reply"><svg class="i" width="14" height="14" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+   </div>
    <div class="din"><button class="stkbtn" id="stkBtn" title="Send sticker" type="button" aria-label="Send sticker"><svg class="i" width="20" height="20" aria-hidden="true"><use href="icons.svg#i-sticker"/></svg></button>
     <textarea id="msgInput" rows="1" placeholder="Message…" maxlength="1000"></textarea>
     <button class="sendbtn" id="sendBtn" title="Send message"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
@@ -202,6 +246,15 @@ button{cursor:pointer}
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="rx-picker" id="rxPicker" hidden>
+ <button class="rx-pick-btn" type="button" onclick="selectReaction('❤️')" title="Love">❤️</button>
+ <button class="rx-pick-btn" type="button" onclick="selectReaction('👍')" title="Thumbs up">👍</button>
+ <button class="rx-pick-btn" type="button" onclick="selectReaction('😂')" title="Laugh">😂</button>
+ <button class="rx-pick-btn" type="button" onclick="selectReaction('😮')" title="Surprised">😮</button>
+ <button class="rx-pick-btn" type="button" onclick="selectReaction('😢')" title="Sad">😢</button>
+ <button class="rx-pick-btn" type="button" onclick="selectReaction('🙏')" title="Thanks / Pray">🙏</button>
+ <button class="rx-pick-btn" type="button" onclick="selectReaction('🔥')" title="Fire">🔥</button>
+</div>
 
 <script src="auth.js"></script>
 <script src="profile.js"></script>
@@ -216,6 +269,7 @@ const Q=new URLSearchParams(location.search);
 let PARTNER_ID=Q.get('with')||'',PARTNER_NAME=Q.get('to')||'';
 let COURSES=[],MESSAGES=[],ALL_CLASSMATES=[],CONVERSATIONS=[];
 let POLL_TIMER=null,IS_SENDING=false,LAST_CONVS_HASH='',LAST_SEARCH='';
+let ACTIVE_RX_MSG=null,REPLY_TARGET=null;
 
 function timeAgo(t){
  if(!t)return '';
@@ -279,6 +333,13 @@ async function loadInbox(quiet){
  }
 }
 
+function cleanMsgPreview(txt){
+ if(!txt)return '';
+ let s=String(txt).replace(/^\[reply:[^\]]+\]\s*/,'');
+ if(window.Stickers)s=Stickers.cleanSnippet(s);
+ return s;
+}
+
 function renderSidebarList(){
  const list=$('convList');
  const q=(LAST_SEARCH||'').trim().toLowerCase();
@@ -298,7 +359,7 @@ function renderSidebarList(){
     '<div class="cw">'+
      '<div class="crow-top"><b>'+esc(c.name)+'</b><time>'+timeAgo(c.last_at)+'</time></div>'+
      '<div class="crow-bot">'+
-      '<span class="crow-prev">'+(c.last_mine?'You: ':'')+esc(window.Stickers?Stickers.cleanSnippet(c.last_message):c.last_message)+'</span>'+
+      '<span class="crow-prev">'+(c.last_mine?'You: ':'')+esc(cleanMsgPreview(c.last_message))+'</span>'+
       (c.unread_count>0?'<span class="badge">'+c.unread_count+'</span>':'')+
      '</div>'+
     '</div>'+
@@ -368,6 +429,157 @@ function handleBack(e){
 }
 
 /* -------------------- CHAT THREAD VIEW -------------------- */
+function getMyUserId(){
+ const meRow=ALL_CLASSMATES.find(c=>c.me);
+ if(meRow&&meRow.id)return meRow.id;
+ try{
+  const s=Auth.ses();
+  if(s&&s.user&&s.user.id)return s.user.id;
+  if(s&&s.access&&s.access.includes('.')){
+   const payload=JSON.parse(atob(s.access.split('.')[1]));
+   if(payload&&payload.sub)return payload.sub;
+  }
+ }catch(_){}
+ return '';
+}
+
+function buildReactionsHtml(m){
+ if(!m||!m.reactions)return '';
+ const myUid=getMyUserId();
+ const entries=Object.entries(m.reactions);
+ if(!entries.length)return '';
+ let pills='';
+ for(const [em,users] of entries){
+  const list=Array.isArray(users)?users:[];
+  if(!list.length)continue;
+  const isMine=Boolean(myUid&&list.includes(myUid));
+  pills+='<button class="m-rx-pill '+(isMine?'is-mine':'')+'" type="button" onclick="toggleReaction('+m.id+',\''+esc(em)+'\')" title="'+(isMine?'Remove reaction':'React with '+esc(em))+'">'+
+   '<span class="m-rx-em">'+esc(em)+'</span>'+
+   '<span class="m-rx-cnt">'+list.length+'</span>'+
+  '</button>';
+ }
+ return pills?'<div class="m-reactions">'+pills+'</div>':'';
+}
+
+function openRxPicker(msgId,e){
+ if(e){e.stopPropagation();e.preventDefault()}
+ const p=$('rxPicker');
+ if(!p)return;
+ if(ACTIVE_RX_MSG===msgId&&!p.hidden){closeRxPicker();return}
+ closeRxPicker();
+ ACTIVE_RX_MSG=msgId;
+ const msgEl=$('m'+msgId);
+ if(msgEl)msgEl.classList.add('show-actions');
+ const btn=e?e.currentTarget:null;
+ p.hidden=false;
+ if(btn){
+  const r=btn.getBoundingClientRect();
+  const pr=p.getBoundingClientRect();
+  let top=r.top-pr.height-8;
+  if(top<50)top=r.bottom+8;
+  let left=r.left+(r.width/2)-(pr.width/2);
+  left=Math.max(10,Math.min(window.innerWidth-pr.width-10,left));
+  p.style.top=top+'px';
+  p.style.left=left+'px';
+ }
+}
+
+function closeRxPicker(){
+ const p=$('rxPicker');
+ if(p)p.hidden=true;
+ if(ACTIVE_RX_MSG){
+  const el=$('m'+ACTIVE_RX_MSG);
+  if(el)el.classList.remove('show-actions');
+  ACTIVE_RX_MSG=null;
+ }
+}
+
+async function selectReaction(emoji){
+ const mid=ACTIVE_RX_MSG;
+ closeRxPicker();
+ if(!mid)return;
+ await toggleReaction(mid,emoji);
+}
+
+async function toggleReaction(msgId,emoji){
+ if(!Auth.ses()||!msgId||!emoji)return;
+ const msg=MESSAGES.find(m=>m.id===msgId);
+ if(!msg)return;
+ const myUid=getMyUserId();
+ if(!myUid)return;
+
+ if(!msg.reactions||typeof msg.reactions!=='object')msg.reactions={};
+ const currentList=Array.isArray(msg.reactions[emoji])?[...msg.reactions[emoji]]:[];
+ const idx=currentList.indexOf(myUid);
+ if(idx>=0)currentList.splice(idx,1);
+ else currentList.push(myUid);
+
+ if(!currentList.length)delete msg.reactions[emoji];
+ else msg.reactions[emoji]=currentList;
+
+ renderMsgReactionsDom(msgId);
+
+ try{
+  const updated=await Auth.rpc('dm_react',{p_msg_id:msgId,p_emoji:emoji},true);
+  if(updated&&typeof updated==='object'){
+   msg.reactions=updated;
+   renderMsgReactionsDom(msgId);
+  }
+ }catch(err){
+  toast(err.message||'Could not react');
+  loadThread(true);
+ }
+}
+
+function renderMsgReactionsDom(msgId){
+ const el=$('m'+msgId);
+ if(!el)return;
+ const msg=MESSAGES.find(m=>m.id===msgId);
+ const existing=el.querySelector('.m-reactions');
+ const newHtml=buildReactionsHtml(msg);
+ if(existing)existing.remove();
+ if(newHtml){
+  const foot=el.querySelector('.mfoot');
+  if(foot)foot.insertAdjacentHTML('beforebegin',newHtml);
+  else el.insertAdjacentHTML('beforeend',newHtml);
+ }
+}
+
+function startReply(id){
+ const m=MESSAGES.find(x=>x.id===id);
+ if(!m)return;
+ const author=m.mine?'You':(PARTNER_NAME||'Classmate');
+ REPLY_TARGET={id:m.id,author,body:m.body};
+ const d=$('replyDock');
+ if(d){
+  $('replyAuthor').textContent='Replying to '+author;
+  let snip=cleanMsgPreview(m.body).trim().replace(/[\r\n\t]+/g,' ').slice(0,80);
+  $('replySnip').textContent=snip||'Message';
+  d.hidden=false;
+ }
+ const inp=$('msgInput');
+ if(inp)inp.focus();
+}
+
+function cancelReply(){
+ REPLY_TARGET=null;
+ const d=$('replyDock');
+ if(d)d.hidden=true;
+}
+
+function jumpToMsg(id){
+ const el=$('m'+id);
+ if(el){
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  el.classList.remove('flashBg');
+  void el.offsetWidth;
+  el.classList.add('flashBg');
+  setTimeout(()=>el.classList.remove('flashBg'),1600);
+ }else{
+  toast('Quoted message not in this view');
+ }
+}
+
 function renderMessages(){
  const st=$('stream');
  if(!MESSAGES.length){
@@ -386,20 +598,51 @@ function renderMessages(){
    lastDate=d;
   }
   const cls=m.mine?'me':'them';
-  const stkMatch=window.Stickers?Stickers.parse(m.body):null;
-  const isPure=stkMatch&&stkMatch.isPure;
-  const actHtml=(m.mine&&!m.sending)?(
-    '<div class="mact">'+
-      '<button class="mact-btn mdel" onclick="delMsg('+m.id+')" title="Delete message" aria-label="Delete message">'+
-        '<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-trash"/></svg>'+
-      '</button>'+
-    '</div>'
+
+  let quoteHtml='';
+  let bodyText=m.body||'';
+  const repMatch=String(bodyText).match(/^\[reply:(\d+):([^:]+):([^\]]+)\]\n?([\s\S]*)$/);
+  if(repMatch){
+   const qId=Number(repMatch[1]);
+   const qAuthor=repMatch[2];
+   const qSnip=repMatch[3];
+   bodyText=repMatch[4]||'';
+   quoteHtml='<div class="mquote" onclick="jumpToMsg('+qId+')" role="button" tabindex="0" title="Jump to quoted message">'+
+    '<div class="mquote-author"><svg class="i" width="12" height="12" aria-hidden="true"><use href="icons.svg#i-reply"/></svg>'+esc(qAuthor)+'</div>'+
+    '<div class="mquote-snip">'+esc(qSnip)+'</div>'+
+   '</div>';
+  }
+
+  const stkMatch=window.Stickers?Stickers.parse(bodyText):null;
+  const isPure=stkMatch&&stkMatch.isPure&&!quoteHtml;
+
+  const actHtml=(!m.sending)?(
+   '<div class="mact">'+
+    '<div class="mact-bar">'+
+     '<button class="mact-btn rx-btn" type="button" onclick="openRxPicker('+m.id+',event)" title="React" aria-label="React">'+
+      '<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-smile"/></svg>'+
+     '</button>'+
+     '<button class="mact-btn reply-btn" type="button" onclick="startReply('+m.id+')" title="Reply" aria-label="Reply">'+
+      '<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-reply"/></svg>'+
+     '</button>'+
+     (m.mine?(
+      '<button class="mact-btn del-btn" type="button" onclick="delMsg('+m.id+')" title="Delete message" aria-label="Delete message">'+
+       '<svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-trash"/></svg>'+
+      '</button>'
+     ):'')+
+    '</div>'+
+   '</div>'
   ):'';
+
+  const rxHtml=buildReactionsHtml(m);
+  const bubbleBody=window.Stickers?Stickers.render(bodyText,linkify):linkify(bodyText);
+
   html+='<div class="msg '+cls+(m.sending?' sending':'')+(isPure?' is-pure-stk':'')+'" id="m'+m.id+'" data-id="'+m.id+'">'+
    '<div class="mbody">'+
     actHtml+
-    '<div class="bubble'+(isPure?' bubble-stk':'')+'">'+(window.Stickers?Stickers.render(m.body,linkify):linkify(m.body))+'</div>'+
+    '<div class="bubble'+(isPure?' bubble-stk':'')+'">'+quoteHtml+bubbleBody+'</div>'+
    '</div>'+
+   rxHtml+
    '<div class="mfoot">'+
     '<span class="mtime">'+timeClock(m.created_at)+'</span>'+
     (m.mine?(m.read?'<span class="read" title="Seen">✓✓</span>':'<span title="Delivered">✓</span>'):'')+
@@ -422,6 +665,9 @@ function isThreadSame(newMsgs, oldMsgs){
  if(newMsgs[newMsgs.length-1].id !== oldMsgs[oldMsgs.length-1].id) return false;
  for(let i=0; i<newMsgs.length; i++){
   if(newMsgs[i].read !== oldMsgs[i].read || newMsgs[i].sending !== oldMsgs[i].sending) return false;
+  const nr=JSON.stringify(newMsgs[i].reactions||{});
+  const or=JSON.stringify(oldMsgs[i].reactions||{});
+  if(nr !== or) return false;
  }
  return true;
 }
@@ -429,8 +675,14 @@ function isThreadSame(newMsgs, oldMsgs){
 async function loadThread(quiet){
  if(!PARTNER_ID)return;
  try{
-  const msgs=await Auth.rpc('dm_thread',{p_with:PARTNER_ID},true);
+  const [msgs, rxMap]=await Promise.all([
+   Auth.rpc('dm_thread',{p_with:PARTNER_ID},true),
+   Auth.rpc('dm_thread_reactions',{p_with:PARTNER_ID},true).catch(()=>({}))
+  ]);
   if(Array.isArray(msgs)){
+   msgs.forEach(m=>{
+    m.reactions=(rxMap&&rxMap[m.id])||{};
+   });
    if(isThreadSame(msgs, MESSAGES) && quiet) return;
 
    const wasNearBottom=(()=>{
@@ -451,15 +703,24 @@ async function submitMsg(txt){
  IS_SENDING=true;
  $('sendBtn').disabled=true;
 
+ let fullText=txt;
+ if(REPLY_TARGET){
+  const author=REPLY_TARGET.author||'Classmate';
+  let cleanSnip=cleanMsgPreview(REPLY_TARGET.body).trim().replace(/[\r\n\t:]+/g,' ').slice(0,70);
+  const tag='[reply:'+REPLY_TARGET.id+':'+author.replace(/:/g,'')+':'+(cleanSnip||'Message')+']';
+  fullText=tag+'\n'+fullText;
+  cancelReply();
+ }
+
  // Optimistic message append
  const tempId=Date.now();
- const tempMsg={id:tempId,body:txt,created_at:new Date().toISOString(),mine:true,read:false,sending:true};
+ const tempMsg={id:tempId,body:fullText,created_at:new Date().toISOString(),mine:true,read:false,sending:true,reactions:{}};
  MESSAGES.push(tempMsg);
  renderMessages();
  scrollToBottom();
 
  try{
-  const res=await Auth.rpc('dm_send',{p_to:PARTNER_ID,p_body:txt},true);
+  const res=await Auth.rpc('dm_send',{p_to:PARTNER_ID,p_body:fullText},true);
   tempMsg.sending=false;
   if(res&&res.id)tempMsg.id=res.id;
   renderMessages();
@@ -494,6 +755,8 @@ async function sendSticker(stk){
 }
 
 async function delMsg(id){
+ closeRxPicker();
+ if(REPLY_TARGET&&REPLY_TARGET.id===id)cancelReply();
  if(!confirm('Delete this message for yourself?'))return;
  try{
   await Auth.rpc('dm_delete',{p_id:id},true);
@@ -568,7 +831,11 @@ function setupInput(){
   inp.style.height=Math.min(120,inp.scrollHeight)+'px';
  });
  inp.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!e.shiftKey){
+  if(e.key==='Escape'){
+   e.preventDefault();
+   cancelReply();
+   closeRxPicker();
+  }else if(e.key==='Enter'&&!e.shiftKey){
    e.preventDefault();
    sendMsg();
   }
@@ -585,9 +852,11 @@ function setupInput(){
 
  const st=$('stream');
  if(st){
+  st.addEventListener('scroll', closeRxPicker, {passive:true});
+
   let pressTimer=null;
   st.addEventListener('touchstart', e=>{
-   const msg=e.target.closest('.msg.me');
+   const msg=e.target.closest('.msg');
    if(!msg||e.target.closest('.mact-btn')||e.target.closest('a')) return;
    clearTimeout(pressTimer);
    pressTimer=setTimeout(()=>{
@@ -611,8 +880,18 @@ function setupInput(){
   });
 
   document.addEventListener('pointerdown', e=>{
-   if(!e.target.closest('.msg.me')){
+   if(!e.target.closest('#rxPicker')&&!e.target.closest('.rx-btn')){
+    closeRxPicker();
+   }
+   if(!e.target.closest('.msg')){
     document.querySelectorAll('.msg.show-actions').forEach(el=>el.classList.remove('show-actions'));
+   }
+  });
+
+  window.addEventListener('keydown', e=>{
+   if(e.key==='Escape'){
+    closeRxPicker();
+    cancelReply();
    }
   });
  }
