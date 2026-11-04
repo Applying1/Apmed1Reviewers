@@ -938,5 +938,21 @@
   "title": "Crossword: Botany, Chem and Pharma",
   "text": "The daily crossword now follows this week's tests: Botany and Chemistry until Friday's Botany evals and Saturday's Chem quiz, then Chemistry and Pharmacology, then Pharmacology and Psychology for next week's evals.",
   "link": "crossword.html"
+ },
+ {
+  "id": 114,
+  "date": "2026-11-04",
+  "type": "feature",
+  "title": "Sticker shop study draw moved to Saturday",
+  "text": "The study draw for the golden and special coupons is now on Saturday, Nov 7, at 12:00 a.m. instead of Thursday night. You have two more days to study: classmates with at least 2 days of 20+ answers since the launch can win, and more answers mean better odds.",
+  "link": "shop.html"
+ },
+ {
+  "id": 115,
+  "date": "2026-11-04",
+  "type": "content",
+  "title": "Pharmacology: flashcards for Lesson 7",
+  "text": "58 new flashcards for Anti-Inflammatory Drugs (fever, NSAIDs, aspirin, COX-2 inhibitors, acetaminophen and more), ready for next week's eval.",
+  "link": "reviewer.html?course=pharma"
  }
 ]

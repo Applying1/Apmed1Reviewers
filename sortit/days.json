@@ -475,6 +475,205 @@
 "w": "Montelukast blocks leukotrienes."
 }
 ]
+},
+{
+"date": "2026-11-07",
+"course": "chem",
+"sec": "12-4",
+"topic": "Topic 12: Aromatic Compounds (Hydrocarbons II) · Directing Effects and Synthesis",
+"title": "Where does the next group go?",
+"bins": [
+"Ortho/para, speeds up",
+"Ortho/para, slows down",
+"Meta director"
+],
+"items": [
+{
+"t": "–OH",
+"b": 0,
+"w": "An electron-donating group: ortho/para director, ring reacts faster than benzene."
+},
+{
+"t": "–NH₂",
+"b": 1,
+"w": "An electron-donating group: ortho/para director, ring reacts faster."
+},
+{
+"t": "–OCH₃",
+"b": 2,
+"w": "–OR is electron-donating: ortho/para director."
+},
+{
+"t": "–CH₃",
+"b": 0,
+"w": "Alkyl groups donate electrons: ortho/para, so toluene is faster than benzene."
+},
+{
+"t": "–Cl",
+"b": 2,
+"w": "Halogens are the exception: electron-withdrawing, yet still ortho/para."
+},
+{
+"t": "–Br",
+"b": 0,
+"w": "Halogens are the exception: electron-withdrawing, yet still ortho/para."
+},
+{
+"t": "–NO₂",
+"b": 2,
+"w": "Electron-withdrawing: directs meta and slows the ring (nitrobenzene is slower)."
+},
+{
+"t": "–COOH",
+"b": 0,
+"w": "A carbonyl group is electron-withdrawing: meta director."
+},
+{
+"t": "–CN",
+"b": 1,
+"w": "Electron-withdrawing: meta director."
+},
+{
+"t": "–CHO",
+"b": 2,
+"w": "A carbonyl group (C=O) is electron-withdrawing: meta director."
+}
+]
+},
+{
+"date": "2026-11-08",
+"course": "psych",
+"sec": "12-2",
+"topic": "Chapter 12: Stress, Health, and Coping · Psychological Moderators of Stress",
+"title": "Whose idea about stress?",
+"bins": [
+"Selye",
+"Taylor",
+"Ellis",
+"Kobasa"
+],
+"items": [
+{
+"t": "Eustress",
+"b": 2,
+"w": "Selye named healthful stress eustress."
+},
+{
+"t": "Diseases of adaptation",
+"b": 1,
+"w": "Selye: illnesses like allergies and heart disease after prolonged stress."
+},
+{
+"t": "General adaptation syndrome",
+"b": 0,
+"w": "Selye's three-stage response of the body to any stressor."
+},
+{
+"t": "Tend-and-befriend",
+"b": 2,
+"w": "Shelley Taylor: under stress, women tend to nurture and seek support."
+},
+{
+"t": "Nurturing and seeking support",
+"b": 0,
+"w": "Taylor's response, mainly in women, in place of fight or flight."
+},
+{
+"t": "Irrational beliefs",
+"b": 2,
+"w": "Albert Ellis: unrealistic beliefs make events stressful."
+},
+{
+"t": "A → B → C approach",
+"b": 0,
+"w": "Ellis: Activating event, Belief, Consequence."
+},
+{
+"t": "Beliefs about the event",
+"b": 1,
+"w": "B in Ellis's A-B-C stands for beliefs about the event."
+},
+{
+"t": "Commitment, challenge, control",
+"b": 1,
+"w": "Kobasa's three characteristics of psychological hardiness."
+},
+{
+"t": "Psychological hardiness",
+"b": 0,
+"w": "Our understanding of hardiness comes mainly from Suzanne Kobasa."
+}
+]
+},
+{
+"date": "2026-11-09",
+"course": "nstp",
+"sec": "3-2",
+"topic": "Topic 3: Health Awareness · Dengue, Malaria, Cholera",
+"title": "Which disease?",
+"bins": [
+"Dengue",
+"Malaria",
+"Cholera",
+"Typhoid"
+],
+"items": [
+{
+"t": "Flavivirus",
+"b": 2,
+"w": "Dengue virus belongs to the genus Flavivirus."
+},
+{
+"t": "Four serotypes",
+"b": 1,
+"w": "Dengue is caused by one of four closely related virus serotypes."
+},
+{
+"t": "Family Flaviviridae",
+"b": 0,
+"w": "The dengue virus belongs to the family Flaviviridae."
+},
+{
+"t": "Female Anopheles",
+"b": 2,
+"w": "Malaria is spread by the female Anopheles mosquito."
+},
+{
+"t": "Plasmodium falciparum",
+"b": 0,
+"w": "The most serious malaria parasite."
+},
+{
+"t": "Symptoms up to a year later",
+"b": 1,
+"w": "Malaria symptoms begin from a week up to a year after infection."
+},
+{
+"t": "Loss of skin elasticity",
+"b": 0,
+"w": "A cholera sign, with low blood pressure, thirst and weight loss."
+},
+{
+"t": "Short incubation (up to 5 days)",
+"b": 0,
+"w": "Cholera incubates from less than one day to five days."
+},
+{
+"t": "Salmonella typhi",
+"b": 1,
+"w": "Typhoid fever is most often caused by Salmonella typhi."
+},
+{
+"t": "White coating on the tongue",
+"b": 0,
+"w": "A typhoid sign, with enlarged liver and spleen."
+},
+{
+"t": "Enlarged liver and spleen",
+"b": 3,
+"w": "Typhoid signs: coated tongue, enlarged liver and spleen, rash."
+}
+]
 }
 ]
 }

@@ -71,6 +71,56 @@
 "x": "WkBFc11NSg==",
 "clue": "Unpleasant tension Freud said the ego fights with defense mechanisms such as repression",
 "card": "Repression is the ego's automatic ejection of anxiety-evoking ideas from awareness. Remember: defense mechanisms exist to cope with anxiety. Good luck on the eval!"
+},
+{
+"date": "2026-11-05",
+"course": "pharma",
+"sec": "7-4",
+"topic": "Lesson 7: Anti-Inflammatory Drugs · Specific NSAIDs",
+"n": 7,
+"x": "Wl1Nc0pQXQ==",
+"clue": "Salicylate that blocks COX irreversibly; low doses protect the heart by stopping platelet thromboxane A2",
+"card": "The only NSAID whose COX block is permanent, so the antiplatelet effect lasts the platelet's 7-10 day life. Loaded in MI after checking for bleeding."
+},
+{
+"date": "2026-11-06",
+"course": "pharma",
+"sec": "7-1",
+"topic": "Lesson 7: Anti-Inflammatory Drugs · Inflammation, Prostanoids, Pain and Fever",
+"n": 8,
+"x": "S1dPdV9cXW0=",
+"clue": "IL-1, IL-6 and TNF-alpha that reach the hypothalamus and raise the body's temperature set point",
+"card": "They make the hypothalamus release PGE2, so the body feels cold and shivers. Elderly and immunocompromised patients may not mount a fever at all."
+},
+{
+"date": "2026-11-07",
+"course": "pharma",
+"sec": "7-2",
+"topic": "Lesson 7: Anti-Inflammatory Drugs · NSAIDs: Mechanism and Uses",
+"n": 9,
+"x": "UkxIakpWVQBt",
+"clue": "Propionic-acid NSAID that is first-line for primary dysmenorrhea, started before the flow begins",
+"card": "Sold as Advil and Medicol, so never take both. The usual dose is 400 mg every 4-6 hours; OTC only at 200 mg or less."
+},
+{
+"date": "2026-11-08",
+"course": "pharma",
+"sec": "7-3",
+"topic": "Lesson 7: Anti-Inflammatory Drugs · NSAID Adverse Effects",
+"n": 5,
+"x": "TkJef0o=",
+"clue": "GI lesion NSAIDs cause by removing COX-1's protective prostaglandins; it can bleed or perforate",
+"card": "Ask about GI bleeding before any NSAID. COX-1 prostaglandins protect the stomach lining, so blocking both COX enzymes leaves it exposed."
+},
+{
+"date": "2026-11-09",
+"course": "pharma",
+"sec": "7-4",
+"topic": "Lesson 7: Anti-Inflammatory Drugs · Specific NSAIDs",
+"n": 9,
+"x": "WEtRf1tWSxph",
+"clue": "COX-2 selective agent chosen when the stomach needs sparing, but never after a heart attack or stroke",
+"card": "Kind to the stomach, careful with the heart: it spares COX-1, so TXA2 stays unopposed. Not a stronger painkiller than other NSAIDs."
 }
 ]
 }
