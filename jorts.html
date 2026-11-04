@@ -2139,13 +2139,18 @@ function isModerator() {
  if (urlParams.get('mod') === '0') return false;
  if (localStorage.getItem('jorts_preview_audience') === 'true') return false;
 
- // If logged in as moderator on this device or testing mode enabled
  const modPass = sessionStorage.getItem('reviewer_mod_pass') || localStorage.getItem('reviewer_mod_pass');
  if (modPass) return true;
+
+ if (typeof Auth !== 'undefined' && Auth.acc()) {
+  const acc = Auth.acc();
+  if (acc && acc.email && (acc.email.toLowerCase().includes('apionabdelsalambuah') || acc.email.toLowerCase().includes('abdel'))) return true;
+ }
+
  const isModFlag = localStorage.getItem('jorts_is_mod');
  if (isModFlag !== null) return (isModFlag === 'true');
 
- return true; // Organizer workstation default
+ return false; // Public audience view (standings hidden)
 }
 
 function toggleAudiencePreview(asAudience) {
@@ -2172,6 +2177,9 @@ function updateModeratorUI() {
 
  const returnBtn = document.getElementById('modReturnBtn');
  if (returnBtn) returnBtn.hidden = !isPreviewingAudience;
+
+ const tabResults = document.getElementById('tabbtn-results');
+ if (tabResults) tabResults.hidden = !mod;
 }
 
 /* -------------------------------------------------------------------------
@@ -2180,6 +2188,10 @@ function updateModeratorUI() {
 let currentTab = 'contestants';
 
 function setTab(tabId) {
+ if (tabId === 'results' && !isModerator()) {
+  toast('Live standings are sealed until the Grand Reveal ceremony!');
+  return;
+ }
  currentTab = tabId;
  document.querySelectorAll('.seg button').forEach(b => {
   b.setAttribute('aria-selected', b.id === 'tabbtn-' + tabId);
@@ -2335,7 +2347,11 @@ async function submitCurrentBallot() {
  saveState();
  Confetti.fire({ count: 85, spread: 80, origin: { x: 0.5, y: 0.6 } });
  toast(`Ballot submitted! Your vote for ${curAward.title} was recorded.`);
- setTab('results');
+ if (isModerator()) {
+  setTab('results');
+ } else {
+  updateBallotBar();
+ }
 
  // Cloud vote submission
  try {
@@ -2364,6 +2380,13 @@ async function submitCurrentBallot() {
 let resultsAwardId = 'top5';
 
 function renderResultsTab() {
+ if (!isModerator()) {
+  const p = document.getElementById('podiumWrap');
+  if (p) p.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 16px;background:var(--surface);border-radius:16px;border:1px solid var(--line2);margin-top:16px;"><div style="font-size:36px;margin-bottom:12px;">🔒</div><h3 style="font-size:18px;margin-bottom:6px;">Official Standings are Sealed</h3><p style="color:var(--mute);font-size:14px;max-width:320px;margin:0 auto;">Live votes are being counted in secret! The winners will be unveiled live during the crowning ceremony.</p></div>';
+  const l = document.getElementById('tallyList');
+  if (l) l.innerHTML = '';
+  return;
+ }
  const curAward = STATE.awards.find(a => a.id === resultsAwardId) || STATE.awards[0];
  resultsAwardId = curAward.id;
  document.getElementById('resultsAwardTitle').textContent = curAward.title + ' Standings';
