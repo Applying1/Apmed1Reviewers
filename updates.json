@@ -930,5 +930,13 @@
   "title": "Jorts Battle wrapped up, lighter messages",
   "text": "Thank you for joining the Jorts Battle! Voting is closed and its page is archived. Reactions now show only how many people reacted, and Messages checks for new messages less often when a chat is quiet, which saves battery and data.",
   "link": "index.html"
+ },
+ {
+  "id": 113,
+  "date": "2026-11-04",
+  "type": "content",
+  "title": "Crossword: Botany, Chem and Pharma",
+  "text": "The daily crossword now follows this week's tests: Botany and Chemistry until Friday's Botany evals and Saturday's Chem quiz, then Chemistry and Pharmacology, then Pharmacology and Psychology for next week's evals.",
+  "link": "crossword.html"
  }
 ]
