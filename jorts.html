@@ -13,6 +13,7 @@
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
  <script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+ <script src="auth.js"></script>
  <link rel="stylesheet" href="ui.css">
  <style>
   :root {
@@ -1983,7 +1984,11 @@
 /* -------------------------------------------------------------------------
    APMed '33 Jorts Battle — Core State & Storage (v2)
    ------------------------------------------------------------------------- */
-const STORAGE_KEY = 'jorts_state_v2';
+const JORTS_CLOUD = {
+ url: "https://olvjhdxmdrtuktfxgjsu.supabase.co",
+ key: "sb_publishable_TIVg-qUIjAmqw2SIF6pysA_p-d7FEeo"
+};
+const STORAGE_KEY = 'jorts_state_v3';
 
 const PRELIM_AWARDS = [
  { id: 'top5', title: 'Top 5 Finalists', desc: 'Pick up to 3 contestants to advance to the Top 5 Final Runway.', maxVotes: 3 },
@@ -2003,11 +2008,11 @@ const DEFAULT_STATE = {
  currentAward: 'top5',
  awards: JSON.parse(JSON.stringify(PRELIM_AWARDS)),
  contestants: [
-  { id: 1, name: "Gabriel Santos", number: 1, photo_url: "", is_top5: true },
-  { id: 2, name: "Maria Rivera", number: 2, photo_url: "", is_top5: true },
-  { id: 3, name: "Kenji Tan", number: 3, photo_url: "", is_top5: true },
-  { id: 4, name: "Sophia Diaz", number: 4, photo_url: "", is_top5: true },
-  { id: 5, name: "Lucas Chen", number: 5, photo_url: "", is_top5: true }
+  { id: 1, name: "Gabriel Paul Pacatang", number: 1, photo_url: "", is_top5: true },
+  { id: 2, name: "Gian Anthony Araral", number: 2, photo_url: "", is_top5: true },
+  { id: 3, name: "Niña Kaye Elena Retuerto", number: 3, photo_url: "", is_top5: true },
+  { id: 4, name: "Yuri Youssef Mañago", number: 4, photo_url: "", is_top5: true },
+  { id: 5, name: "Julienne Bea Arrosas", number: 5, photo_url: "", is_top5: true }
  ],
  myVotes: {}, // awardId: [contestantId, ...]
  scores: {}   // awardId: { contestantId: voteCount, ... }
@@ -2059,6 +2064,58 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
  } catch (e) {}
 }
+
+function getVoterId() {
+ try {
+  if (typeof Auth !== 'undefined' && Auth.acc()) {
+   const acc = Auth.acc();
+   if (acc.email || acc.name) return acc.email || acc.name;
+  }
+  let vid = localStorage.getItem('jorts_voter_id');
+  if (!vid) {
+   vid = 'voter_' + Math.random().toString(36).slice(2, 10);
+   localStorage.setItem('jorts_voter_id', vid);
+  }
+  return vid;
+ } catch (_) {
+  return 'voter_anon';
+ }
+}
+
+async function syncCloudState() {
+ try {
+  if (typeof Auth === 'undefined') return;
+  Auth.cloud = JORTS_CLOUD;
+  const vid = getVoterId();
+  const res = await Auth.rpc('jorts_get_state', { p_voter_id: vid });
+  if (res && Array.isArray(res.contestants) && res.contestants.length) {
+   STATE.contestants = res.contestants.map(c => ({
+    id: c.id,
+    number: c.number,
+    name: c.name,
+    photo_url: c.photo_url || '',
+    is_top5: !!c.is_top5
+   }));
+   if (res.settings && res.settings.phase) {
+    STATE.phase = res.settings.phase;
+   }
+   if (res.tallies) {
+    STATE.scores = res.tallies;
+   }
+   if (res.my_votes && Object.keys(res.my_votes).length) {
+    STATE.myVotes = Object.assign({}, STATE.myVotes, res.my_votes);
+   }
+   saveState();
+   renderContestantsTab();
+   renderResultsTab();
+   updatePhaseBadges();
+   updateBallotBar();
+  }
+ } catch (err) {
+  console.warn('Jorts cloud sync error:', err);
+ }
+}
+
 
 function toast(msg, ms) {
  const t = document.getElementById('toast');
@@ -2262,7 +2319,7 @@ function updateBallotBar() {
  bar.hidden = (myPicks.length === 0);
 }
 
-function submitCurrentBallot() {
+async function submitCurrentBallot() {
  const curAward = STATE.awards.find(a => a.id === STATE.currentAward) || STATE.awards[0];
  const myPicks = STATE.myVotes[curAward.id] || [];
  if (!myPicks.length) {
@@ -2270,7 +2327,7 @@ function submitCurrentBallot() {
   return;
  }
 
- // Accumulate to scores
+ // Local optimistic tally
  if (!STATE.scores[curAward.id]) STATE.scores[curAward.id] = {};
  myPicks.forEach(cid => {
   STATE.scores[curAward.id][cid] = (STATE.scores[curAward.id][cid] || 0) + 1;
@@ -2279,6 +2336,26 @@ function submitCurrentBallot() {
  Confetti.fire({ count: 85, spread: 80, origin: { x: 0.5, y: 0.6 } });
  toast(`Ballot submitted! Your vote for ${curAward.title} was recorded.`);
  setTab('results');
+
+ // Cloud vote submission
+ try {
+  if (typeof Auth !== 'undefined') {
+   Auth.cloud = JORTS_CLOUD;
+   const vid = getVoterId();
+   const res = await Auth.rpc('jorts_vote', {
+    p_voter_id: vid,
+    p_award_id: curAward.id,
+    p_contestant_ids: myPicks
+   }, !!(Auth.ses && Auth.ses()));
+   if (res && res.tallies) {
+    STATE.scores = res.tallies;
+    saveState();
+    renderResultsTab();
+   }
+  }
+ } catch (err) {
+  console.warn('Cloud vote submission error:', err);
+ }
 }
 
 /* -------------------------------------------------------------------------
@@ -2534,25 +2611,60 @@ function closeEditContestant() {
  document.getElementById('editContestantModal').hidden = true;
 }
 
-function saveContestant() {
+async function saveContestant() {
  const idVal = document.getElementById('cId').value;
- const id = idVal ? parseInt(idVal) : Date.now();
+ const id = idVal ? parseInt(idVal) : 0;
  const name = document.getElementById('cName').value.trim();
  const number = parseInt(document.getElementById('cNumber').value) || (STATE.contestants.length + 1);
  const photo_url = document.getElementById('cUrl').value.trim();
  const is_top5 = document.getElementById('cFinalist').checked;
+ if (!name) { toast("Please enter a contestant name."); return; }
 
- const idx = STATE.contestants.findIndex(x => x.id === id);
+ const modPass = sessionStorage.getItem('reviewer_mod_pass') || localStorage.getItem('reviewer_mod_pass') || '';
+
+ // 1. Local update for immediate UI feedback
+ const localId = id || Date.now();
+ const idx = STATE.contestants.findIndex(x => x.id === (id || localId));
  if (idx > -1) {
-  STATE.contestants[idx] = { id, name, number, photo_url, is_top5 };
+  STATE.contestants[idx] = { id: id || localId, name, number, photo_url, is_top5 };
  } else {
-  STATE.contestants.push({ id, name, number, photo_url, is_top5 });
+  STATE.contestants.push({ id: localId, name, number, photo_url, is_top5 });
  }
  saveState();
  closeEditContestant();
  renderManageContestantsList();
  renderContestantsTab();
- toast("Contestant saved.");
+
+ // 2. Cloud update in background
+ try {
+  if (typeof Auth !== 'undefined') {
+   Auth.cloud = JORTS_CLOUD;
+   const res = await Auth.rpc('jorts_admin_save_contestant', {
+    p_id: id || null,
+    p_number: number,
+    p_name: name,
+    p_photo_url: photo_url || null,
+    p_is_top5: is_top5,
+    p_pass: modPass || null
+   }, !!(Auth.ses && Auth.ses()));
+   if (res && Array.isArray(res.contestants)) {
+    STATE.contestants = res.contestants.map(c => ({
+     id: c.id,
+     number: c.number,
+     name: c.name,
+     photo_url: c.photo_url || '',
+     is_top5: !!c.is_top5
+    }));
+    saveState();
+    renderManageContestantsList();
+    renderContestantsTab();
+   }
+  }
+  toast("Contestant saved to class cloud.");
+ } catch (e) {
+  console.warn("Could not save to cloud:", e);
+  toast("Saved locally (offline).");
+ }
 }
 
 function deleteContestant(id) {
@@ -3148,6 +3260,7 @@ document.addEventListener('DOMContentLoaded', () => {
  updatePhaseBadges();
  updateModeratorUI();
  setTab('contestants');
+ syncCloudState();
 });
 </script>
 </body>
