@@ -114,8 +114,14 @@ async function course(key){const c=BYKEY[key];if(!c)return null;if(DATA[key])ret
  const d=await fetch('courses/'+c.id+'.json').then(r=>r.json());
  const all=[d.bank||[]].concat((d.variants||[]).map(v=>v.items||[])).flat(),n={};
  (d.bank||[]).forEach(x=>{const k=(x.d||[]).length;if(k)n[k]=(n[k]||0)+1});
- DATA[key]={title:c.title,cfg:d.config,byId:Object.fromEntries(all.map(x=>[x.id,x])),bank:d.bank||[],nd:Math.min(4,Math.max(2,+Object.keys(n).sort((a,b)=>n[b]-n[a])[0]||3))};
+ DATA[key]={title:c.title,cfg:d.config,byId:Object.fromEntries(all.map(x=>[x.id,x])),bank:d.bank||[],nd:Math.min(4,Math.max(2,+Object.keys(n).sort((a,b)=>n[b]-n[a])[0]||3)),mols:d.mols||{},figs:d.figs||{}};
  return DATA[key]}
+
+function qFigHTML(q,cd){if(!q)return '';const mols=(cd&&cd.mols)||{},figs=(cd&&cd.figs)||{},ks=[].concat(q.fig||[]);
+ let out='';
+ if(ks.length){out+='<div class="qfig-wrap" style="text-align:center;margin:8px 0;background:var(--surface,#fff);padding:8px;border-radius:8px;border:1px solid var(--line2,#e5e7eb);overflow-x:auto">'+ks.map(k=>mols[k]||figs[k]||'').join('')+'</div>'}
+ if(q.pic||q.img){out+='<div style="text-align:center;margin:8px 0"><img src="'+esc(q.pic||q.img)+'" alt="Figure" style="max-height:180px;max-width:100%;border-radius:8px;border:1px solid var(--line2,#e5e7eb)"></div>'}
+ return out}
 
 async function boot(){
  try{COURSES=await fetch('courses.json').then(r=>r.json());BYKEY=Object.fromEntries(COURSES.map(c=>[c.storageKey,c]));
@@ -262,13 +268,13 @@ function drawAI(){if(!ATT){view='queue';return ME?draw():drawLogin()}document.ti
   '<h2 class="ah">Typed follow-up questions ('+asks.length+')</h2>'+
   (asks.length?asks.map(a=>{const ci=COURSES.find(c=>c.id===a.course),cd=ci&&DATA[ci.storageKey],q=cd&&cd.byId[a.qid],ans=a.reply||a.ans||'';
    return '<article class="card"><div class="meta"><span class="tag q">'+esc(ci?ci.title:a.course)+'</span><span>·</span><span>'+esc(a.qid)+'</span>'+(a.picked?'<span>· picked: '+esc(a.picked)+'</span>':'')+'<span>·</span><span>'+esc(ago(a.at))+'</span></div>'+
-    (q?'<div class="quote"><small>'+esc((q.section||'')+' · '+a.qid)+'</small>'+esc(q.q||q.term||'')+(q.why?'<small style="margin:6px 0 0">Current explanation: '+esc(q.why)+'</small>':'')+'</div>':'')+
+    (q?'<div class="quote"><small>'+esc((q.section||'')+' · '+a.qid)+'</small>'+esc(q.q||q.term||'')+qFigHTML(q,cd)+(q.why?'<small style="margin:6px 0 0">Current explanation: '+esc(q.why)+'</small>':'')+'</div>':'')+
     '<p class="note"><b>Student asked:</b> “'+esc(a.ask)+'”</p><p style="font-size:14px;color:var(--mute);margin:6px 0 0"><b>AI answered:</b> '+fmtAi(ans)+'</p>'+
     '<div class="acts2"><button class="link" onclick="copyAiAsk('+a.id+')">Copy for Claude</button><span class="sp"></span><button class="btn" onclick="aiDelAsk('+a.id+')">Dismiss</button></div></article>'}).join(''):'<p class="empty">No typed follow-up questions in the last 14 days.</p>')}
 async function aiDelAsk(id){await aiPostAdmin({del:id});await aiLoad();draw();toast('Dismissed.')}
 async function aiPrewarm(btn){if(btn){btn.disabled=true;btn.textContent='Warming…'}const r=await aiPostAdmin({prewarm:true,batch:6}),w=r&&(r.warm||r);await aiLoad();draw();toast(w&&w.warmed!=null?'Pre-warmed '+w.warmed+' explanations ('+(w.remaining||0)+' left).':'Could not pre-warm.')}
 function copyAiAsk(id){const a=((AIADM&&AIADM.asks)||[]).find(x=>x.id===id);if(!a)return;const ci=COURSES.find(c=>c.id===a.course),cd=ci&&DATA[ci.storageKey],q=cd&&cd.byId[a.qid],ans=a.reply||a.ans||'';
- copy([ci?ci.title:a.course,'Question '+a.qid+(q?' ('+q.section+'): '+(q.q||q.term):''),a.picked?'Picked: '+a.picked:'',q&&q.why?'Current why: '+q.why:'','Student asked AI: '+a.ask,'AI answered: '+ans].filter(Boolean).join('\n'),'Copied for Claude.')}
+ copy([ci?ci.title:a.course,'Question '+a.qid+(q?' ('+q.section+'): '+(q.q||q.term):''),q&&q.fig?'Figure/Structure key: '+[].concat(q.fig).join(', '):'',a.picked?'Picked: '+a.picked:'',q&&q.why?'Current why: '+q.why:'','Student asked AI: '+a.ask,'AI answered: '+ans].filter(Boolean).join('\n'),'Copied for Claude.')}
 const isOpen=r=>r.status==='pending';
 const inTab=r=>tab==='pending'?isOpen(r):tab==='approved'?r.status==='approved':tab==='done'?r.status==='rejected'||r.status==='resolved':true;
 const KINDS=[['question','Questions'],['report','Reports'],['card','Flashcards']];
@@ -329,8 +335,8 @@ function card(r){const c=DATA[r.course],d=r.data||{},it=r.item||{},q=r.kind==='q
  const cur=c&&c.byId[d.qid],choices=cur?[cur.a].concat(cur.d||[]):[];
  return '<article class="card" id="r'+r.id+'">'+head+
   '<p class="note">“'+esc(d.note)+'”</p>'+
-  '<div class="quote"><small>'+esc(d.section+' · '+d.qid)+(cur?'':' · not found in the current version')+'</small>'+esc(cur?cur.q||cur.term:d.q)+
-   (cur&&choices.length>1?'<ul>'+choices.map((x,i)=>'<li'+(i?'':' class="ok"')+'>'+esc(String(x).startsWith('@m:')?'(structure '+x.slice(3)+')':x)+(i?'':' ✓')+'</li>').join('')+'</ul>':d.key?'<br><small style="margin:6px 0 0">Answer key: '+esc(d.key)+'</small>':'')+
+  '<div class="quote"><small>'+esc(d.section+' · '+d.qid)+(cur?'':' · not found in the current version')+'</small>'+esc(cur?cur.q||cur.term:d.q)+qFigHTML(cur,c)+
+   (cur&&choices.length>1?'<ul>'+choices.map((x,i)=>{const isM=String(x).startsWith('@m:');const mSvg=isM&&c&&c.mols?(c.mols[x.slice(3)]||''):'';return '<li'+(i?'':' class="ok"')+'>'+(mSvg?'<span style="display:inline-block;max-width:140px;vertical-align:middle;margin:2px 4px">'+mSvg+'</span>':esc(isM?'(structure '+x.slice(3)+')':x))+(i?'':' ✓')+'</li>'}).join('')+'</ul>':d.key?'<br><small style="margin:6px 0 0">Answer key: '+esc(d.key)+'</small>':'')+
    (cur&&cur.why?'<small style="margin:8px 0 0">Explanation: '+esc(cur.why)+'</small>':'')+'</div>'+
   noteField(r)+'<div class="acts2">'+
   (/^cc_\d+$/.test(d.qid)?'<button class="link" onclick="openClass(\''+esc(d.qid)+'\')">Edit that class question</button>':'<button class="link" onclick="copyReports('+r.id+')">Copy for Claude</button>')+'<span class="sp"></span>'+
