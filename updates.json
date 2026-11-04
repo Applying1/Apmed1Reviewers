@@ -962,5 +962,13 @@
   "title": "Fairer questions in 5 courses",
   "text": "About 350 questions in Pharmacology, Chemistry, Botany, Psychology and IML got stronger wrong choices, so the longest choice is no longer a hint for the right answer. Chemistry topics 12-13 now explain every wrong choice. Your progress and the right answers are unchanged.",
   "link": "index.html"
+ },
+ {
+  "id": 117,
+  "date": "2026-11-04",
+  "type": "content",
+  "title": "Chemistry: every wrong choice explained",
+  "text": "Chemistry topics 1-11 now show a short \"why not\" line when you pick a wrong choice, about 2,900 new explanations, including the solving questions and Bea's practice items. Together with topics 12-13, the whole course now explains its wrong answers.",
+  "link": "reviewer.html?course=chem"
  }
 ]
