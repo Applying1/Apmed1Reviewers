@@ -922,5 +922,13 @@
   "title": "Fixes: sounds on phones, faster message alerts",
   "text": "Sounds now play on phones (they could fail after the site was saved for offline use). Messages, duels and shop updates now notify you right away instead of a few minutes later. The AI practice question under \"Quiz me on this\" works again, and the home page tiles show their full names on small screens.",
   "link": "index.html"
+ },
+ {
+  "id": 112,
+  "date": "2026-11-04",
+  "type": "feature",
+  "title": "Jorts Battle wrapped up, lighter messages",
+  "text": "Thank you for joining the Jorts Battle! Voting is closed and its page is archived. Reactions now show only how many people reacted, and Messages checks for new messages less often when a chat is quiet, which saves battery and data.",
+  "link": "index.html"
  }
 ]

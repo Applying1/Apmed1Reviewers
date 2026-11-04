@@ -141,18 +141,20 @@ function getMyUserId(){
  }catch(_){}
  return '';
 }
+// Reactions arrive as {emoji: {n, me}} (counts only, Nov 4); older replies were {emoji: [account ids]}.
+function rxOf(v,myUid){return Array.isArray(v)?{n:v.length,me:!!(myUid&&v.includes(myUid))}:{n:+(v&&v.n)||0,me:!!(v&&v.me)}}
 function buildPostRxHtml(p){
  if(!p)return '';
  const myUid=getMyUserId();
  const entries=p.reactions&&typeof p.reactions==='object'?Object.entries(p.reactions):[];
  let pills='';
- for(const [em,users] of entries){
-  const list=Array.isArray(users)?users:[];
-  if(!list.length)continue;
-  const isMine=Boolean(myUid&&list.includes(myUid));
+ for(const [em,v] of entries){
+  const rx=rxOf(v,myUid);
+  if(!rx.n)continue;
+  const isMine=rx.me;
   pills+='<button class="m-rx-pill '+(isMine?'is-mine':'')+'" type="button" onclick="togglePostReaction('+p.id+','+esc(JSON.stringify(em))+')" title="'+(isMine?'Remove reaction':'React with '+esc(em))+'">'+
    '<span class="m-rx-em">'+esc(em)+'</span>'+
-   '<span class="m-rx-cnt">'+list.length+'</span>'+
+   '<span class="m-rx-cnt">'+rx.n+'</span>'+
   '</button>';
  }
  const addBtn=Auth.ses()?'<button class="rx-add-btn" type="button" onclick="openPostRx('+p.id+',event)" title="Add reaction" aria-label="Add reaction"><svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-smile"/></svg></button>':'';
@@ -179,12 +181,9 @@ async function togglePostReaction(id, emoji){
  const myUid=getMyUserId();
  if(!myUid)return;
  if(!p.reactions||typeof p.reactions!=='object')p.reactions={};
- const currentList=Array.isArray(p.reactions[emoji])?[...p.reactions[emoji]]:[];
- const idx=currentList.indexOf(myUid);
- if(idx>=0)currentList.splice(idx,1);
- else currentList.push(myUid);
- if(!currentList.length)delete p.reactions[emoji];
- else p.reactions[emoji]=currentList;
+ const cur=rxOf(p.reactions[emoji],myUid),nx=cur.me?{n:cur.n-1,me:false}:{n:cur.n+1,me:true};
+ if(nx.n<=0)delete p.reactions[emoji];
+ else p.reactions[emoji]=nx;
  renderPostRxDom(id);
  try{
   const updated=await Auth.rpc('discussion_react',{p_post_id:id,p_emoji:emoji},true);

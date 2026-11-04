@@ -454,19 +454,21 @@ function getMyUserId(){
  return '';
 }
 
+// Reactions arrive as {emoji: {n, me}} (counts only, Nov 4); older replies were {emoji: [account ids]}.
+function rxOf(v,myUid){return Array.isArray(v)?{n:v.length,me:!!(myUid&&v.includes(myUid))}:{n:+(v&&v.n)||0,me:!!(v&&v.me)}}
 function buildReactionsHtml(m){
  if(!m||!m.reactions)return '';
  const myUid=getMyUserId();
  const entries=Object.entries(m.reactions);
  if(!entries.length)return '';
  let pills='';
- for(const [em,users] of entries){
-  const list=Array.isArray(users)?users:[];
-  if(!list.length)continue;
-  const isMine=Boolean(myUid&&list.includes(myUid));
+ for(const [em,v] of entries){
+  const rx=rxOf(v,myUid);
+  if(!rx.n)continue;
+  const isMine=rx.me;
   pills+='<button class="m-rx-pill '+(isMine?'is-mine':'')+'" type="button" onclick="toggleReaction('+m.id+','+esc(JSON.stringify(em))+')" title="'+(isMine?'Remove reaction':'React with '+esc(em))+'">'+
    '<span class="m-rx-em">'+esc(em)+'</span>'+
-   '<span class="m-rx-cnt">'+list.length+'</span>'+
+   '<span class="m-rx-cnt">'+rx.n+'</span>'+
   '</button>';
  }
  return pills?'<div class="m-reactions">'+pills+'</div>':'';
@@ -513,13 +515,9 @@ async function toggleReaction(msgId,emoji){
  if(!myUid)return;
 
  if(!msg.reactions||typeof msg.reactions!=='object')msg.reactions={};
- const currentList=Array.isArray(msg.reactions[emoji])?[...msg.reactions[emoji]]:[];
- const idx=currentList.indexOf(myUid);
- if(idx>=0)currentList.splice(idx,1);
- else currentList.push(myUid);
-
- if(!currentList.length)delete msg.reactions[emoji];
- else msg.reactions[emoji]=currentList;
+ const cur=rxOf(msg.reactions[emoji],myUid),nx=cur.me?{n:cur.n-1,me:false}:{n:cur.n+1,me:true};
+ if(nx.n<=0)delete msg.reactions[emoji];
+ else msg.reactions[emoji]=nx;
 
  renderMsgReactionsDom(msgId);
 
@@ -822,6 +820,7 @@ async function submitMsg(txt){
   $('sendBtn').disabled=false;
   const inp=$('msgInput');
   if(inp)inp.focus();
+  if(window.pollSoon)setTimeout(window.pollSoon,1500);   // a reply often comes right after
  }
 }
 
@@ -1082,7 +1081,12 @@ async function boot(){
   scrollToBottom();
  }
 
- let pollBusy = false;
+ // New messages: checked every 4 s while something happens, then every 8, 15 and 30 s while the chat is quiet (each check
+ // is 2-3 calls). Typing, sending, opening a chat or coming back to the tab makes it quick again (pollSoon).
+ let pollBusy = false, POLL_DELAY = 4000, POLL_SIG = '';
+ const pollSig = () => MESSAGES.map(m => m.id + (m.read ? 'r' : '') + JSON.stringify(m.reactions || {})).join(',') + '|' + (PARTNER_ID || '') + '|' + LAST_CONVS_HASH;
+ window.pollSoon = () => { POLL_DELAY = 0; pollTick(); };   // 0: the next wait is 4 s even if nothing changed
+ window.pollNow = () => pollTick(); window.pollDelay = () => POLL_DELAY;   // for tests/test_dm_poll.py
  async function pollTick(){
   clearTimeout(POLL_TIMER);
   if(document.visibilityState==='visible' && Auth.ses() && !pollBusy){
@@ -1094,15 +1098,20 @@ async function boot(){
     }
    }catch(_){}
    pollBusy = false;
+   const sig = pollSig();
+   POLL_DELAY = sig !== POLL_SIG || !POLL_DELAY ? 4000 : POLL_DELAY < 8000 ? 8000 : POLL_DELAY < 15000 ? 15000 : 30000;
+   POLL_SIG = sig;
   }
-  POLL_TIMER = setTimeout(pollTick, 4000);
+  POLL_TIMER = setTimeout(pollTick, POLL_DELAY);
  }
+ const mi = $('msgInput');
+ if (mi) mi.addEventListener('input', () => { if (POLL_DELAY > 4000) pollSoon(); });
 
  pollTick();
 
  document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible' && Auth.ses()){
-   pollTick();
+   pollSoon();
   }
  });
 }
