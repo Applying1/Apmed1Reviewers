@@ -954,5 +954,13 @@
   "title": "Pharmacology: flashcards for Lesson 7",
   "text": "58 new flashcards for Anti-Inflammatory Drugs (fever, NSAIDs, aspirin, COX-2 inhibitors, acetaminophen and more), ready for next week's eval.",
   "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 116,
+  "date": "2026-11-04",
+  "type": "content",
+  "title": "Fairer questions in 5 courses",
+  "text": "About 350 questions in Pharmacology, Chemistry, Botany, Psychology and IML got stronger wrong choices, so the longest choice is no longer a hint for the right answer. Chemistry topics 12-13 now explain every wrong choice. Your progress and the right answers are unchanged.",
+  "link": "index.html"
  }
 ]
