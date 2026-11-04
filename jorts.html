@@ -2124,6 +2124,15 @@ async function syncCloudState() {
      STATE.show_live_tally = !!res.settings.show_live_tally;
     }
    }
+   if (res.awards && Array.isArray(res.awards) && res.awards.length) {
+    STATE.awards = res.awards.map(a => ({
+     id: a.id,
+     title: a.title,
+     badge: a.badge || '🩳',
+     desc: a.description || '',
+     maxVotes: a.votes_per_voter || 1
+    }));
+   }
    if (res.tallies) {
     STATE.scores = res.tallies;
    }
@@ -2131,6 +2140,7 @@ async function syncCloudState() {
     STATE.myVotes = Object.assign({}, STATE.myVotes, res.my_votes);
    }
    saveState();
+   updateModeratorUI();
    renderContestantsTab();
    renderResultsTab();
    updatePhaseBadges();
@@ -2503,7 +2513,7 @@ function renderResultsTab() {
  const scores = STATE.scores[curAward.id] || {};
  const sorted = [...STATE.contestants].map(c => ({
   ...c,
-  votes: scores[c.id] || 0
+  votes: scores[c.id] || scores[String(c.id)] || 0
  })).sort((a, b) => b.votes - a.votes);
 
  // Render Top 3 Podium
@@ -3403,6 +3413,12 @@ document.addEventListener('DOMContentLoaded', () => {
  updateModeratorUI();
  setTab('contestants');
  syncCloudState();
+ // Auto-poll live cloud votes every 4 seconds across all devices
+ setInterval(() => {
+  if (!document.hidden) {
+   syncCloudState();
+  }
+ }, 4000);
 });
 </script>
 </body>
