@@ -2587,7 +2587,9 @@ async function togglePublicStandings() {
  try {
   if (typeof Auth !== 'undefined') {
    Auth.cloud = JORTS_CLOUD;
-   await Auth.rpc('jorts_set_public_standings', { p_open: nextState });
+   let pass = null;
+   try { pass = localStorage.getItem('reviewer_mod_pass') || null; } catch (_) {}
+   await Auth.rpc('jorts_set_public_standings', { p_open: nextState, p_pass: pass });
   }
   STATE.show_live_tally = nextState;
   saveState();

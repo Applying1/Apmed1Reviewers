@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='105',APP_DATE='Nov 3, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='106',APP_DATE='Nov 4, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -587,7 +587,7 @@ async function aiAsk(){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb),
   if(o.r&&o.r.ok&&o.j.text){f.turns.push({q:text,a:o.j.text});f.draft='';f.left=o.j.left}else f.err=aiErr(o,'follow-ups')}
  catch(e){f.err='No connection. Try again when you\'re online.'}
  f.busy=0;if(String((aiCur().q||{}).cid)===String(q.cid)){aiDraw();setTimeout(()=>{const i=$('aiask');if(i&&f.turns.length<3)i.focus({preventScroll:true})},60)}}
-function aiTwinHTML(k){const t=AITWIN[k];if(!t)return '';
+function aiTwinHTML(k){const t=AITWIN[k];if(!t)return '';if(!t.busy&&!t.err&&!(Array.isArray(t.choices)&&t.choices.length))return '';
  if(t.busy)return '<div class="aitwin"><p class="note">'+SPARK+'Making a fresh practice question on this concept…</p></div>';
  if(t.err)return '<div class="aitwin"><p class="note">'+t.err+'</p></div>';
  return '<div class="aitwin"><div class="aih">'+SPARK+'Quick check · '+(t.fromBank?'another question from this bank':'AI practice question (doesn\'t change mastery)')+'</div><p class="prompt" style="font-size:15px;margin:4px 0 8px">'+stemHTML(t.stem)+'</p><div class="choices">'+
@@ -602,7 +602,7 @@ async function aiTwin(cid,forceAI){const {q,fb}=aiCur();if(!q||!fb||String(q.cid
   if(best&&bs>=2){const bq=makeQuestion(best);if(bq&&bq.choices&&bq.choices.length>=2){const cor=bq.choices.find(x=>x.correct)||bq.choices[0];AITWIN[k]={fromBank:1,stem:bq.stem,choices:bq.choices.map(x=>x.label),ans:cor.letter,why:best.why||best.definition||''};aiDraw();return}}}
  AITWIN[k]={busy:1};aiDraw();
  try{const o=await aiPost(Object.assign(aiBase(q,fb),{mode:'twin'}));
-  if(o.r&&o.r.ok&&o.j.twin){const tw=o.j.twin;AITWIN[k]={stem:tw.stem,choices:tw.choices,ans:LETTERS[tw.ans]||LETTERS[0],why:tw.why,left:o.j.left,cached:o.j.cached}}
+  if(o.r&&o.r.ok&&o.j.twin&&(o.j.twin.a||o.j.twin.choices)){const tw=o.j.twin,right=tw.a!=null?String(tw.a):String((tw.choices||[])[tw.ans|0]||''),opts=shuffle(tw.a!=null?[right].concat(tw.d||[]):tw.choices,(Date.now()%2147483646)+1);AITWIN[k]={stem:tw.q||tw.stem||'',choices:opts,ans:LETTERS[Math.max(0,opts.indexOf(right))],why:tw.why,left:o.j.left,cached:o.j.cached}}
   else AITWIN[k]={err:aiErr(o,'practice question')}}
  catch(e){AITWIN[k]={err:'No connection. Try again when you\'re online.'}}
  if(String((aiCur().q||{}).cid)===String(cid))aiDraw()}
@@ -1926,6 +1926,8 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'106',date:'Nov 4, 2026',title:'Fixes',items:[
+  'The AI-written practice question under <b>Quiz me on this</b> now shows its choices instead of failing.']},
  {v:'105',date:'Nov 3, 2026',title:'Smarter AI study help',items:[
   'Right after a wrong answer, one-tap buttons let you get a <b>simpler explanation</b>, a <b>memory trick</b>, a <b>side-by-side comparison</b> of your choice vs the answer, or a <b>similar practice question</b> to test yourself right away.',
   'When you miss a question you were sure of (or one the class misses a lot), a ready explanation opens on its own without using any of your daily AI tries.',

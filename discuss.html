@@ -150,7 +150,7 @@ function buildPostRxHtml(p){
   const list=Array.isArray(users)?users:[];
   if(!list.length)continue;
   const isMine=Boolean(myUid&&list.includes(myUid));
-  pills+='<button class="m-rx-pill '+(isMine?'is-mine':'')+'" type="button" onclick="togglePostReaction('+p.id+',\''+esc(em)+'\')" title="'+(isMine?'Remove reaction':'React with '+esc(em))+'">'+
+  pills+='<button class="m-rx-pill '+(isMine?'is-mine':'')+'" type="button" onclick="togglePostReaction('+p.id+','+esc(JSON.stringify(em))+')" title="'+(isMine?'Remove reaction':'React with '+esc(em))+'">'+
    '<span class="m-rx-em">'+esc(em)+'</span>'+
    '<span class="m-rx-cnt">'+list.length+'</span>'+
   '</button>';

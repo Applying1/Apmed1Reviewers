@@ -914,5 +914,13 @@
   "title": "Chem: consolidated lecture notes (topics 12–14), slide decks & in-app notes",
   "text": "Consolidated pink-template Finals lecture notes for Topics 12–14 (Aromatic Compounds, Alcohols/Amines/Ethers/Thiols, and Aldehydes/Ketones) with chapter tabs and summary tables, plus the slide decks for all three lecture-quiz topics and in-app Notes, flashcards, and drills.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 111,
+  "date": "2026-11-04",
+  "type": "feature",
+  "title": "Fixes: sounds on phones, faster message alerts",
+  "text": "Sounds now play on phones (they could fail after the site was saved for offline use). Messages, duels and shop updates now notify you right away instead of a few minutes later. The AI practice question under \"Quiz me on this\" works again, and the home page tiles show their full names on small screens.",
+  "link": "index.html"
  }
 ]

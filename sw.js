@@ -4,7 +4,7 @@
 // saved copy waits up to 1.5 s for the network first, so someone coming back after a while gets the newest version when
 // the connection allows. Without a connection, the saved copy is used. Pictures show the saved copy first and refresh in
 // the background. Fonts are cached after first use; transes PDFs only once opened.
-const CACHE = 'reviewers-v77';
+const CACHE = 'reviewers-v78';
 const FRESH = 6 * 3600e3, WAIT = 1500;
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'profile.js', 'dialog.js', 'live.js', 'ui.css', 'icons.svg', 'reminders-core.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html', 'update.js',
@@ -91,6 +91,9 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  // Audio and video: the browser asks for byte ranges, and the cache can't store those partial (206) answers, so
+  // answering them here made the Jorts sounds fail on phones. The browser's own HTTP cache handles them.
+  if (req.headers.has('range') || /\.(mp3|m4a|aac|wav|ogg|oga|mp4|webm)$/i.test(url.pathname)) return;
   if (url.origin === location.origin) {
     const nav = req.mode === 'navigate';
     // Facebook/Messenger add tracking tags (?fbclid=…). Send the page to the clean address first.
@@ -101,7 +104,7 @@ self.addEventListener('fetch', e => {
     }
     // Jorts live event: ALWAYS network-first with no-store so live votes and contestant updates are immediate across all devices
     if (url.pathname.includes('jorts.html')) {
-      e.respondWith(fetch(req, { cache: 'no-store' }).catch(() => caches.match(req)));
+      e.respondWith(fetch(req, { cache: 'no-store' }).catch(async () => (await caches.match(keyFor(req.url, true))) || Response.error()));
       return;
     }
     // The daily crossword and APMed'dle files gain new days: ask the network first (up to 4 s), else the saved copy.
