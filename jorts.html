@@ -1604,12 +1604,15 @@
    <p>Audience vote tallies for the current round</p>
   </div>
 
-  <div id="standingsOrganizerBar" style="display:flex;align-items:center;justify-content:space-between;background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:12px 0;font-size:13px;">
+  <div id="standingsOrganizerBar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:12px 0;font-size:13px;">
    <span style="display:flex;align-items:center;gap:6px;font-weight:600;">
-    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;"></span>
-    Cloud Live Sync Active
+    <span id="standingsSyncDot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;"></span>
+    <span id="standingsStatusText">Cloud Live Sync Active</span>
    </span>
-   <button class="btn sm" onclick="syncCloudState().then(() => toast('Standings refreshed from cloud!'))">🔄 Refresh Votes</button>
+   <div style="display:flex;align-items:center;gap:6px;">
+    <button class="btn sm" id="quickToggleStandingsBtn" onclick="togglePublicStandings()">🔓 Open for Everyone</button>
+    <button class="btn sm" onclick="syncCloudState().then(() => toast('Standings refreshed from cloud!'))">🔄 Refresh</button>
+   </div>
   </div>
 
   <div class="chips" id="resultsChips"></div>
@@ -1809,6 +1812,16 @@
      ↺ Revert to Preliminaries &amp; Auditions
     </button>
    </div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--raised);border-radius:12px;border:1px solid var(--line);margin-bottom:14px;">
+   <div>
+    <b style="font-size:13.5px;display:block;">Audience Standings Visibility</b>
+    <span id="manageStandingsDesc" style="font-size:12px;color:var(--mute);">Currently sealed from audience</span>
+   </div>
+   <button class="btn sm primary" id="manageStandingsBtn" onclick="togglePublicStandings()">
+    🔓 Open for Everyone
+   </button>
   </div>
 
   <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--raised);border-radius:12px;border:1px solid var(--line);margin-bottom:14px;">
@@ -2014,6 +2027,7 @@ const FINAL_AWARDS = [
 const DEFAULT_STATE = {
  phase: 'prelim', // 'prelim' | 'final'
  currentAward: 'top5',
+ show_live_tally: false,
  awards: JSON.parse(JSON.stringify(PRELIM_AWARDS)),
  contestants: [
   { id: 1, name: "Gabriel Paul Pacatang", number: 1, photo_url: "", is_top5: true },
@@ -2104,8 +2118,11 @@ async function syncCloudState() {
     photo_url: c.photo_url || '',
     is_top5: !!c.is_top5
    }));
-   if (res.settings && res.settings.phase) {
-    STATE.phase = res.settings.phase;
+   if (res.settings) {
+    if (res.settings.phase) STATE.phase = res.settings.phase;
+    if (typeof res.settings.show_live_tally !== 'undefined') {
+     STATE.show_live_tally = !!res.settings.show_live_tally;
+    }
    }
    if (res.tallies) {
     STATE.scores = res.tallies;
@@ -2240,8 +2257,29 @@ function updateModeratorUI() {
  const returnBtn = document.getElementById('modReturnBtn');
  if (returnBtn) returnBtn.hidden = !isPreviewingAudience;
 
+ const canSeeStandings = mod || !!STATE.show_live_tally || (STATE.phase === 'results');
  const tabResults = document.getElementById('tabbtn-results');
- if (tabResults) tabResults.hidden = !mod;
+ if (tabResults) tabResults.hidden = !canSeeStandings;
+
+ const quickToggle = document.getElementById('quickToggleStandingsBtn');
+ if (quickToggle) {
+  quickToggle.hidden = !mod;
+  quickToggle.textContent = STATE.show_live_tally ? '🔒 Seal Standings' : '🔓 Open for Everyone';
+  quickToggle.className = STATE.show_live_tally ? 'btn sm' : 'btn sm primary';
+ }
+ const statusText = document.getElementById('standingsStatusText');
+ if (statusText) {
+  statusText.textContent = STATE.show_live_tally ? 'Public Live Standings (Open)' : (mod ? 'Organizer View (Sealed from audience)' : 'Live Standings');
+ }
+ const manageBtnToggle = document.getElementById('manageStandingsBtn');
+ if (manageBtnToggle) {
+  manageBtnToggle.textContent = STATE.show_live_tally ? '🔒 Seal from Audience' : '🔓 Open for Everyone';
+  manageBtnToggle.className = STATE.show_live_tally ? 'btn sm' : 'btn sm primary';
+ }
+ const manageDesc = document.getElementById('manageStandingsDesc');
+ if (manageDesc) {
+  manageDesc.textContent = STATE.show_live_tally ? 'Classmates can see live vote counts and podium' : 'Currently sealed from classmates (organizer only)';
+ }
 }
 
 /* -------------------------------------------------------------------------
@@ -2250,7 +2288,8 @@ function updateModeratorUI() {
 let currentTab = 'contestants';
 
 function setTab(tabId) {
- if (tabId === 'results' && !isModerator()) {
+ const canSeeStandings = isModerator() || !!STATE.show_live_tally || (STATE.phase === 'results');
+ if (tabId === 'results' && !canSeeStandings) {
   toast('Live standings are sealed until the Grand Reveal ceremony!');
   return;
  }
@@ -2442,7 +2481,8 @@ async function submitCurrentBallot() {
 let resultsAwardId = 'top5';
 
 function renderResultsTab() {
- if (!isModerator()) {
+ const canSeeStandings = isModerator() || !!STATE.show_live_tally || (STATE.phase === 'results');
+ if (!canSeeStandings) {
   const p = document.getElementById('podiumWrap');
   if (p) p.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 16px;background:var(--surface);border-radius:16px;border:1px solid var(--line2);margin-top:16px;"><div style="font-size:36px;margin-bottom:12px;">🔒</div><h3 style="font-size:18px;margin-bottom:6px;">Official Standings are Sealed</h3><p style="color:var(--mute);font-size:14px;max-width:320px;margin:0 auto;">Live votes are being counted in secret! The winners will be unveiled live during the crowning ceremony.</p><div style="margin-top:16px;"><button class="btn sm" onclick="promptOrganizerUnlock()">Organizer Unlock</button></div></div>';
   const l = document.getElementById('tallyList');
@@ -2532,6 +2572,23 @@ function renderResultsTab() {
 /* -------------------------------------------------------------------------
    Organizer Studio Management
    ------------------------------------------------------------------------- */
+async function togglePublicStandings() {
+ const nextState = !STATE.show_live_tally;
+ try {
+  if (typeof Auth !== 'undefined') {
+   Auth.cloud = JORTS_CLOUD;
+   await Auth.rpc('jorts_set_public_standings', { p_open: nextState });
+  }
+  STATE.show_live_tally = nextState;
+  saveState();
+  updateModeratorUI();
+  renderResultsTab();
+  toast(nextState ? '🔓 Live Standings are now OPEN for all classmates!' : '🔒 Live Standings are now SEALED (Organizer Only).');
+ } catch (e) {
+  toast('Could not update standings visibility: ' + e.message);
+ }
+}
+
 function openManageSheet() {
  document.getElementById('phaseSelect').value = STATE.phase || 'prelim';
  document.getElementById('manageCount').textContent = STATE.contestants.length;
