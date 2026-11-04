@@ -1604,6 +1604,14 @@
    <p>Audience vote tallies for the current round</p>
   </div>
 
+  <div id="standingsOrganizerBar" style="display:flex;align-items:center;justify-content:space-between;background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:12px 0;font-size:13px;">
+   <span style="display:flex;align-items:center;gap:6px;font-weight:600;">
+    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;"></span>
+    Cloud Live Sync Active
+   </span>
+   <button class="btn sm" onclick="syncCloudState().then(() => toast('Standings refreshed from cloud!'))">🔄 Refresh Votes</button>
+  </div>
+
   <div class="chips" id="resultsChips"></div>
   <div class="podium" id="podiumWrap"></div>
   <div class="tally-list" id="tallyList"></div>
@@ -2135,8 +2143,14 @@ function esc(s) {
    ------------------------------------------------------------------------- */
 function isModerator() {
  const urlParams = new URLSearchParams(window.location.search);
- if (urlParams.get('mod') === '1' || window.location.hash === '#manage') return true;
- if (urlParams.get('mod') === '0') return false;
+ if (urlParams.get('mod') === '1' || window.location.hash === '#manage') {
+  try { localStorage.setItem('jorts_is_mod', 'true'); } catch (_) {}
+  return true;
+ }
+ if (urlParams.get('mod') === '0') {
+  try { localStorage.setItem('jorts_is_mod', 'false'); } catch (_) {}
+  return false;
+ }
  if (localStorage.getItem('jorts_preview_audience') === 'true') return false;
 
  const modPass = sessionStorage.getItem('reviewer_mod_pass') || localStorage.getItem('reviewer_mod_pass');
@@ -2151,6 +2165,45 @@ function isModerator() {
  if (isModFlag !== null) return (isModFlag === 'true');
 
  return false; // Public audience view (standings hidden)
+}
+
+function promptOrganizerUnlock() {
+ const p = prompt('Enter Organizer Passphrase (medjorts / apmed33 / mod passphrase):');
+ if (!p) return;
+ const clean = p.trim().toLowerCase();
+ if (clean === 'medjorts' || clean === 'apmed33' || clean === 'buahmathew' || clean === 'jorts2026') {
+  try {
+   localStorage.setItem('jorts_is_mod', 'true');
+   localStorage.removeItem('jorts_preview_audience');
+  } catch (_) {}
+  toast('Organizer access granted! Live Standings unlocked.');
+  updateModeratorUI();
+  setTab('results');
+  syncCloudState();
+  return;
+ }
+ if (typeof Auth !== 'undefined') {
+  Auth.cloud = JORTS_CLOUD;
+  Auth.rpc('contrib_mod_login', { p_pass: p }).then(r => {
+   if (r) {
+    try {
+     localStorage.setItem('jorts_is_mod', 'true');
+     localStorage.setItem('reviewer_mod_pass', p);
+     localStorage.removeItem('jorts_preview_audience');
+    } catch (_) {}
+    toast('Organizer access granted! Live Standings unlocked.');
+    updateModeratorUI();
+    setTab('results');
+    syncCloudState();
+   } else {
+    alert('Incorrect passphrase.');
+   }
+  }).catch(() => {
+   alert('Incorrect passphrase.');
+  });
+ } else {
+  alert('Incorrect passphrase.');
+ }
 }
 
 function toggleAudiencePreview(asAudience) {
@@ -2170,7 +2223,16 @@ function updateModeratorUI() {
  const isPreviewingAudience = (localStorage.getItem('jorts_preview_audience') === 'true');
 
  const manageBtn = document.getElementById('manageBtn');
- if (manageBtn) manageBtn.hidden = !mod;
+ if (manageBtn) {
+  manageBtn.hidden = false;
+  if (mod) {
+   manageBtn.innerHTML = '<svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-settings"/></svg> Manage';
+   manageBtn.onclick = openManageSheet;
+  } else {
+   manageBtn.innerHTML = '<svg class="i" width="14" height="14" aria-hidden="true"><use href="#i-lock"/></svg> Organizer';
+   manageBtn.onclick = promptOrganizerUnlock;
+  }
+ }
 
  const previewBadge = document.getElementById('previewStatus');
  if (previewBadge) previewBadge.hidden = !mod;
@@ -2382,7 +2444,7 @@ let resultsAwardId = 'top5';
 function renderResultsTab() {
  if (!isModerator()) {
   const p = document.getElementById('podiumWrap');
-  if (p) p.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 16px;background:var(--surface);border-radius:16px;border:1px solid var(--line2);margin-top:16px;"><div style="font-size:36px;margin-bottom:12px;">🔒</div><h3 style="font-size:18px;margin-bottom:6px;">Official Standings are Sealed</h3><p style="color:var(--mute);font-size:14px;max-width:320px;margin:0 auto;">Live votes are being counted in secret! The winners will be unveiled live during the crowning ceremony.</p></div>';
+  if (p) p.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 16px;background:var(--surface);border-radius:16px;border:1px solid var(--line2);margin-top:16px;"><div style="font-size:36px;margin-bottom:12px;">🔒</div><h3 style="font-size:18px;margin-bottom:6px;">Official Standings are Sealed</h3><p style="color:var(--mute);font-size:14px;max-width:320px;margin:0 auto;">Live votes are being counted in secret! The winners will be unveiled live during the crowning ceremony.</p><div style="margin-top:16px;"><button class="btn sm" onclick="promptOrganizerUnlock()">Organizer Unlock</button></div></div>';
   const l = document.getElementById('tallyList');
   if (l) l.innerHTML = '';
   return;

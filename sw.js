@@ -4,7 +4,7 @@
 // saved copy waits up to 1.5 s for the network first, so someone coming back after a while gets the newest version when
 // the connection allows. Without a connection, the saved copy is used. Pictures show the saved copy first and refresh in
 // the background. Fonts are cached after first use; transes PDFs only once opened.
-const CACHE = 'reviewers-v73';
+const CACHE = 'reviewers-v74';
 const FRESH = 6 * 3600e3, WAIT = 1500;
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
   'schedule.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'profile.js', 'dialog.js', 'live.js', 'ui.css', 'icons.svg', 'reminders-core.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html', 'update.js',
