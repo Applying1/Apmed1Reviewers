@@ -128,20 +128,22 @@
       bar.appendChild(btn);
       state.btn = btn;
 
-      var pill = document.createElement('button');
-      pill.type = 'button';
-      pill.className = 'btn aih-pill';
-      pill.textContent = 'Explain';
-      pill.setAttribute('aria-label', 'Explain the selected text');
-      pill.hidden = true;
-      pill.addEventListener('mousedown', function (e) { e.preventDefault(); });
-      pill.addEventListener('click', function () {
-        var sel = state.pendingSel;
-        hidePill();
-        openPanel(sel);
-      });
-      document.body.appendChild(pill);
-      state.pill = pill;
+      if (state.opts.root) {
+        var pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'btn aih-pill';
+        pill.textContent = 'Explain';
+        pill.setAttribute('aria-label', 'Explain the selected text');
+        pill.hidden = true;
+        pill.addEventListener('mousedown', function (e) { e.preventDefault(); });
+        pill.addEventListener('click', function () {
+          var sel = state.pendingSel;
+          hidePill();
+          openPanel(sel);
+        });
+        document.body.appendChild(pill);
+        state.pill = pill;
+      }
 
       var panel = document.createElement('div');
       panel.className = 'aih-panel';
@@ -189,7 +191,7 @@
         sendChat(ask);
       });
 
-      setupSelection();
+      if (state.opts.root) setupSelection();
     }
 
     function closePanel() {

@@ -65,6 +65,8 @@ body.fs #notes{display:none}
 <div id="notes" hidden aria-live="polite"><h2>Lecture notes</h2><div id="ntxt"></div></div>
 <div id="thumbs" hidden aria-label="All slides"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="auth.js"></script>
+<script src="aihelp.js"></script>
 <script>
 // A slide deck viewer: one slide at a time, fitted to the screen. Swipe or arrow keys to move, pinch or double-tap to zoom,
 // T for the slide strip, F for full screen. Remembers the slide you were on (on this device).
@@ -177,6 +179,7 @@ addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(
  N=pdf.numPages;let start=1;const h=parseInt(location.hash.slice(1),10);
  if(h>=1&&h<=N)start=h;else{try{const s=+localStorage.getItem(KEY);if(s>=1&&s<=N)start=s}catch(e){}}
  $('tbtn').hidden=false;await show(start);loadSecs();loadNotes();
+ if(window.AIHelp)AIHelp.init({course,doc:file.split('/').pop().replace(/\.pdf$/i,''),getPage:()=>n,getText:async n=>{const tc=await(await pdf.getPage(n)).getTextContent();let t=tc.items.map(x=>x.str||'').join(' ');const note=notes&&notes[String(n)];if(note)t+='\nLecture notes: '+note;return t},root:null});
  let open=false;try{open=!!localStorage.getItem('slides_thumbs')}catch(e){}if(open)toggleThumbs(true);
  const hp=$('help');hp.classList.add('on');setTimeout(()=>hp.classList.remove('on'),3500);
 })();

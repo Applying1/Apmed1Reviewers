@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='108',APP_DATE='Nov 5, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='109',APP_DATE='Nov 5, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -209,6 +209,8 @@ function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
 ALL_ITEMS.forEach(c=>{if(!state.concepts[c.id])state.concepts[c.id]=blank()});
+try{const r=+localStorage.getItem(KEY+'_rst')||0;if(r>(state.resetAt||0))state.resetAt=r}catch(e){}   // v109: when this course was last started over
+if(!state.chReset||typeof state.chReset!=='object')state.chReset={};
 trimState(state,false);
 state.prefs=Object.assign({},DEFAULT_PREFS,state.prefs);if(!state.prefs.blurtV75){state.prefs.blurt=true;state.prefs.blurtV75=1}   // v75: Blurt on by default (v74 saved it off for everyone)
 if(!GOALS.includes(state.prefs.target))state.prefs.target=DEFAULT_PREFS.target;
@@ -1793,11 +1795,26 @@ function prefSig(){return JSON.stringify([state.prefs,state.exSetup||null])}
 function syncPayload(){const c={};for(const id in state.concepts){const k=state.concepts[id];if(k.seen||k.star||k.lookups||k.srs)c[id]=[k.seen||0,k.right||0,k.wrong||0,k.lookups||0,k.hints||0,k.star?1:0,k.srs?k.srs.lvl:0,k.srs?k.srs.due:0,k.lucky||0]}
  let sum=null;try{sum=summaryObj()}catch(e){}
  return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},miss:state.missLog||[],name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,fc:FC.c,fcd:FC.day,fch:FC.h||{},fcs:FC.sus||{},mc:MYC.c,
-  prefs:state.prefs,exSetup:state.exSetup||null,prefsAt:state.prefsAt||0,
+  prefs:state.prefs,exSetup:state.exSetup||null,prefsAt:state.prefsAt||0,rst:state.resetAt||0,chr:state.chReset||{},
   cur:state.pmatch?null:{at:state.curAt||0,section:state.section,active:state.active,feedback:state.feedback,selected:state.selected,pass:state.pass||null,starDone:state.starDone||[],dueDone:state.dueDone||[],classDone:state.classDone||[]}}}
 function unpack(r){const c={};for(const id in r.c||{}){const x=r.c[id];c[id]={seen:x[0],right:x[1],wrong:x[2],lookups:x[3],hints:x[4],star:!!x[5],srs:x[7]?{lvl:x[6],due:x[7]}:null,lucky:x[8]||0,history:[]}}return Object.assign({},r,{concepts:c})}
-function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r);if(!r||!r.concepts)return {changed,reload};const t=r.tot||{},remoteMore=(t.correct||0)+(t.wrong||0)>state.correct+state.wrong;
+// v109 resets: "Start over" saves its time (state.resetAt, also in <KEY>_rst so it outlives the erase) and a chapter reset saves
+// state.chReset[ch]. Both travel with the sync copy (rst, chr). A copy from before a reset never brings the old answers back;
+// a newer reset from another device erases the answers here too. Settings, own flashcards and card memory are never reset.
+function wipeProgress(t){const keep={prefs:state.prefs,prefsAt:state.prefsAt||0,exSetup:state.exSetup,name:state.name,renamed:state.renamed};
+ state=Object.assign(fresh(),keep,{resetAt:t,chReset:{}});ALL_ITEMS.forEach(c=>{state.concepts[c.id]=blank()});
+ try{localStorage.setItem(KEY+'_rst',String(t))}catch(e){}view=null}
+function wipeChapter(ch,t){ALL_ITEMS.forEach(c=>{if(chOf(c.section)===ch)state.concepts[c.id]=blank()});
+ (state.chReset||(state.chReset={}))[ch]=t;state.complete=(state.complete||[]).filter(s=>isX(s)||secCh(s)!==ch)}
+function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r);if(!r||!r.concepts)return {changed,reload};
+ const rRst=+r.rst||0;if(rRst>(state.resetAt||0)){wipeProgress(rRst);changed=true}
+ else if((state.resetAt||0)>rRst)r=Object.assign({},r,{concepts:{},tot:{},history:[],match:null,exams:[],chalLog:{},miss:[],cur:null,chr:{}});   // the cloud copy is from before our reset
+ const lc=state.chReset||(state.chReset={}),rc=r.chr&&typeof r.chr==='object'?r.chr:{};
+ for(const ch in rc){const rt=+rc[ch]||0;if(rt>(+lc[ch]||0)){wipeChapter(ch,rt);changed=true}}
+ const skipCh=new Set(Object.keys(lc).filter(ch=>(+lc[ch]||0)>(+rc[ch]||0)));   // chapters reset here after the cloud copy was made
+ const t=r.tot||{},remoteMore=(t.correct||0)+(t.wrong||0)>state.correct+state.wrong;
  for(const id in r.concepts){const a=state.concepts[id],b=r.concepts[id];if(!b)continue;
+  if(skipCh.size&&byId[id]&&skipCh.has(chOf(byId[id].section)))continue;
   if(!a){state.concepts[id]=b;changed=true;continue}
   if((b.seen||0)>(a.seen||0)||(b.seen||0)===(a.seen||0)&&(b.right||0)>(a.right||0)){state.concepts[id]=Object.assign({},b,{history:(a.history||[]).length>(b.history||[]).length?a.history:b.history||[]});changed=true}
   else if(b.star&&!a.star&&(b.seen||0)===(a.seen||0)){a.star=true;changed=true}}
@@ -1915,7 +1932,8 @@ function drawPrefs(){
   (()=>{const u=storageUse();return row('Storage on this device','This course uses '+mbs(u.mine)+'; all courses together '+mbs(u.all)+' of about 5 MB.'+(STORE_FULL?' <b>Full: new answers aren\'t being saved.</b>':''),'<button class="btn sm" onclick="freeUp()">Free up space</button>')})()+
   row('Export progress','Download a backup of your answers as a JSON file.','<button class="btn sm" onclick="exportProgress()">Export</button>')+
   row('Import progress','Load a file you exported, for example to move your answers from the file version to the website or to another browser. It replaces the progress saved here.','<button class="btn sm" onclick="importProgress()">Import</button>')+
-  row('Reset progress','Erase every saved answer in this browser. This can\'t be undone.','<button class="btn sm danger" onclick="resetAll()">Reset</button>')+'</section>';
+  (ALL_CHAPTERS.length>1?row('Reset one chapter','Erase your answers in one chapter only, for example to redo it before an exam.','<select id="rstch" aria-label="Chapter to reset">'+ALL_CHAPTERS.map(c=>'<option value="'+esc(c)+'">'+esc((chLabel(c)+(typeof CH_NAMES[c]==='string'?': '+CH_NAMES[c]:'')).slice(0,48))+'</option>').join('')+'</select> <button class="btn sm danger" onclick="resetChapter($(\'rstch\').value)">Reset</button>'):'')+
+  row('Reset progress','Erase every saved answer in this course'+(syncCode&&cloudOn()?', on every synced device':'')+'. Your settings stay. This can\'t be undone.','<button class="btn sm danger" onclick="resetAll()">Reset</button>')+'</section>';
  // Tabs: All, or one section at a time (remembered on this device).
  const parts=h.split('<section class="panel">').filter(Boolean).map(x=>'<section class="panel">'+x),names=parts.map(x=>(x.match(/<h2>(.*?)<\/h2>/)||[])[1]||'');
  let tab='all';try{tab=localStorage.getItem('reviewer_prefs_tab')||'all'}catch(e){}if(!names.includes(tab))tab='all';
@@ -1926,6 +1944,9 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'109',date:'Nov 5, 2026',title:'Start over, or redo one chapter',items:[
+  'Reset progress now sticks when you sync: it erases the course on every synced device instead of coming back, and keeps your settings.',
+  'New in Personalize: Reset one chapter, to redo a lesson before an exam without losing the rest.']},
  {v:'108',date:'Nov 5, 2026',title:'AI answers say who wrote them',items:[
   'AI answers now say which AI model wrote them.']},
  {v:'107',date:'Nov 5, 2026',title:'Never miss a message or a duel',items:[
@@ -2505,7 +2526,12 @@ addEventListener('popstate',e=>{if(NAV.skip){NAV.skip=false;return}const st=e.st
  try{if(NAV.ov.length){NAV.ov.pop().close();return}if(st.rv&&st.pg&&st.pg!==page&&pageOn(st.pg))setPage(st.pg)}finally{NAV.pop=false}});
 function toggleNav(open){const was=$('app').classList.contains('nav-open');$('app').classList.toggle('nav-open',open);if(open&&!was&&innerWidth<=920)ovOpen('nav',()=>toggleNav(false));else if(!open&&was)ovClosed('nav')}
 function closeDialog(){$('dialog').hidden=true;ovClosed('dialog')}
-function resetAll(sure){if(sure!==true){ask('This erases all saved answers in this browser.',{title:'Start over?',ok:'Erase and start over',danger:1}).then(y=>{if(y)resetAll(true)});return}try{localStorage.removeItem(KEY)}catch(e){}location.reload()}
+// Start over: erases this course's answers (settings stay) and, when synced, on the other devices too. The sync runs right away
+// (at most 5 s) so the reset reaches the cloud before the page reloads.
+function resetAll(sure){if(sure!==true){ask('This erases all saved answers in this course'+(syncCode&&cloudOn()?', on every synced device':'')+'. Your settings stay.',{title:'Start over?',ok:'Erase and start over',danger:1}).then(y=>{if(y)resetAll(true)});return}
+ wipeProgress(Date.now());save();Promise.race([Promise.resolve().then(()=>syncNow()),new Promise(r=>setTimeout(r,5000))]).catch(()=>{}).then(()=>location.reload())}
+function resetChapter(ch,sure){if(!ch||!CH_NAMES[ch])return;if(sure!==true){ask('This erases your answers in '+chLabel(ch)+(typeof CH_NAMES[ch]==='string'?' ('+CH_NAMES[ch]+')':'')+' only. Other chapters and your settings stay.',{title:'Reset this chapter?',ok:'Reset chapter',danger:1}).then(y=>{if(y)resetChapter(ch,true)});return}
+ wipeChapter(ch,Date.now());save();refreshBank();draw();toast('Chapter reset. Its questions start fresh.')}
 function importProgress(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';
  i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(t=>{let d;try{d=JSON.parse(t)}catch(e){tell('That file is not a progress export.');return}
   const st=d&&d.state?d.state:d;if(!st||!st.concepts){tell('That file is not a progress export from a reviewer.');return}

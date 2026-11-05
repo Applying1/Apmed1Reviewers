@@ -1010,5 +1010,21 @@
   "title": "AI answers name their model",
   "text": "Every AI answer now says which AI wrote it: Claude Haiku for the question buttons, DeepSeek (via Command Code) for the transes reader helper. AI can be wrong, so check your transes.",
   "link": "index.html"
+ },
+ {
+  "id": 123,
+  "date": "2026-11-05",
+  "type": "feature",
+  "title": "AI helper in the slide viewer",
+  "text": "The single-slide viewer now has the AI button too: explain the slide you're on (using the teacher's lecture notes when the deck has them) or ask about it.",
+  "link": "index.html"
+ },
+ {
+  "id": 124,
+  "date": "2026-11-05",
+  "type": "feature",
+  "title": "Start over, or redo one chapter",
+  "text": "Reset progress (Personalize, at the bottom) now really starts the course over, even when you sync across devices, and keeps your settings. New: Reset one chapter, to redo a lesson before an exam.",
+  "link": "index.html"
  }
 ]
