@@ -638,7 +638,7 @@ function syncQuizTile(turn,done,total){
  if(!seen)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
  if(!Auth.ses()){sub.textContent='Sign in to challenge a classmate';syncQuizTile();return}
  Auth.cloud=Auth.cloud||cl;const list=await Auth.rpc('duel_mine',{},true)||[];
- const turn=list.filter(d=>d.me&&!d[d.me].done).length,done=list.filter(d=>d.me&&d.a.res!=null&&d.b&&d.b.res!=null&&d.a.done&&d.b.done).length;
+ const turn=list.filter(d=>d.me&&!d[d.me].done&&!d.declined).length,done=list.filter(d=>d.me&&d.a.res!=null&&d.b&&d.b.res!=null&&d.a.done&&d.b.done).length;
  if(turn){sub.textContent=turn+(turn>1?' duels are':' duel is')+' waiting for you';t.classList.add('due')}
  else if(list.length)sub.textContent=done+' finished · start a new one';
  syncQuizTile(turn,done,list.length);

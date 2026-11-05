@@ -134,6 +134,7 @@ const link=code=>new URL('duel.html?d='+code,location.href).href;
 function result(d){if(!d.b||!d.a.done||!d.b.done||d.a.res==null||d.b.res==null)return null;
  const sa=score(d.a.res),sb=score(d.b.res);let w=sa>sb?'a':sb>sa?'b':(d.a.secs<d.b.secs?'a':d.b.secs<d.a.secs?'b':'');return {sa,sb,w,byTime:sa===sb&&!!w}}
 function status(d){const me=d.me,other=me==='a'?'b':'a',r=result(d);
+ if(d.declined)return ['Declined',''];
  if(r)return r.w===''?['Draw','']:r.w===me?['You won '+(me==='a'?r.sa+'–'+r.sb:r.sb+'–'+r.sa),'win']:['You lost '+(me==='a'?r.sa+'–'+r.sb:r.sb+'–'+r.sa),'lose'];
  if(!d[me].done)return ['Your turn','turn'];
  if(!d.b)return d.open?['Waiting for a classmate','']:['Nobody took it',''];
@@ -216,13 +217,19 @@ function showDuel(){
   const seen=p.res!=null,won=r&&r.w===k;
   return '<div class="p'+(won?' won':'')+'">'+who(p,56)+'<b>'+esc(p.name)+(me===k?' (you)':'')+'</b><span class="sc">'+(seen?score(p.res)+'<small style="font-size:.5em;color:var(--mute)">/'+d.qids.length+'</small>':p.done?'✓':'–')+'</span><span class="t">'+(seen&&p.secs?fmtT(p.secs):p.done?'played':'not yet')+'</span></div>'};
  let h='<div class="card"><div class="vs">'+side('a')+'<span class="x">VS</span>'+side('b')+'</div>';
- if(r){const mine=me==='a'?r.sa:r.sb,theirs=me==='a'?r.sb:r.sa;
+ if(d.declined){const other=me==='a'?'b':'a',p=d[other];
+   h+='<p class="banner">Declined</p>';
+   if(me&&me!=='a')h+='<p class="what">You declined this duel.</p>';
+   else if(me==='a')h+='<p class="what"><b>'+esc(p&&p.name||'They')+'</b> can\'t duel right now. Challenge someone else?</p><div class="acts"><button class="btn primary" onclick="home()">'+ic('zap')+'Start a new duel</button></div>';
+   else h+='<p class="what">This duel was declined.</p>'}
+ else if(r){const mine=me==='a'?r.sa:r.sb,theirs=me==='a'?r.sb:r.sa;
   h+='<p class="banner">'+(r.w===''?'It\'s a draw!':me&&r.w===me?'You win'+(r.byTime?' on time':'')+'! 🎉':me?d[r.w].name+' wins'+(r.byTime?' on time':''):d[r.w].name+' wins')+'</p>';
   h+=gridHTML(d)}
  else if(!me){h+=d.open?'<p class="what"><b>'+esc(d.a.name)+'</b> challenges you to '+d.qids.length+' questions. You\'ll see their score after you play.</p><div class="acts"><button class="btn primary" onclick="accept()">'+ic('zap')+'Accept and play</button></div>'
    :'<p class="what">This duel already has two players.</p><div class="acts"><button class="btn primary" onclick="home()">Start your own duel</button></div>'}
  else if(!d[me].done){h+=(me==='b'?'<p class="what"><b>'+esc(d.a.name)+'</b> challenged you to '+d.qids.length+' questions. You\'ll see their score after you play.</p>':'')+
-   '<div class="acts"><button class="btn primary" onclick="play(DUEL)">'+ic('play')+(local(d.code).p?'Keep playing':'Play now')+'</button></div>'}
+   '<div class="acts"><button class="btn primary" onclick="play(DUEL)">'+ic('play')+(local(d.code).p?'Keep playing':'Play now')+'</button>'+
+   (me==='b'?'<button class="btn" onclick="decline()">Decline</button>':'')+'</div>'}
  else{h+='<p class="what">'+(d.b?'Waiting for <b>'+esc(d[me==='a'?'b':'a'].name)+'</b> to play. They\'ve been notified and it\'s in their duels list — or send them the link below.':'Now send the link to a classmate. The first to open it plays the same questions.')+'</p>'+
    (d.open||(me==='a'&&d.b&&!d.b.done)?'<div class="acts"><button class="btn primary" onclick="shareLink()">'+ic('share')+'Send the link</button><button class="btn" onclick="copyLink()">'+ic('copy')+'Copy link</button></div>':'')}
  h+='</div>';
@@ -245,6 +252,7 @@ async function review(){
  catch(e){box.innerHTML='<p class="empty">'+esc(e.message)+'</p>'}
 }
 async function accept(){try{DUEL=await rpc('duel_join',{p_code:DUEL.code});if(DUEL.me)play(DUEL);else showDuel()}catch(e){toast(e.message)}}
+async function decline(){try{DUEL=await rpc('duel_decline',{p_code:DUEL.code});showDuel()}catch(e){toast(e.message)}}
 function shareLink(){const u=link(DUEL.code),t=DUEL.a.name+' challenges you to a '+short(course(DUEL.course).title)+' duel ('+DUEL.qids.length+' questions). Beat my score: ';
  if(navigator.share)navigator.share({text:t,url:u}).catch(()=>{});else copyLink()}
 function copyLink(){const u=link(DUEL.code);(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Link copied. Paste it in the group chat.'),()=>window.ask?ask('Copy this link:',{title:'Duel link',alert:true,copy:u,ok:'Done'}):toast(u,6000))}

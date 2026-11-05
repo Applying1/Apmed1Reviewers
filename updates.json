@@ -978,5 +978,13 @@
   "title": "IML and Chemistry: fairer wrong choices",
   "text": "Every wrong choice in Intro to Medical Life now has a short \"why not\" line, and about 100 Chemistry questions in topics 3, 5, 6, 10 and 11 got stronger wrong choices, so the longest choice is no longer a hint. Your progress and the right answers are unchanged.",
   "link": "index.html"
+ },
+ {
+  "id": 119,
+  "date": "2026-11-05",
+  "type": "feature",
+  "title": "Never miss a message or a duel",
+  "text": "New messages, replies and duel challenges now pop up on any page of the site. Duels have Accept, Decline and Later, and show up in your DMs too. Change them in Notifications.",
+  "link": "notifications.html#alerts"
  }
 ]

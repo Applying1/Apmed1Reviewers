@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='106',APP_DATE='Nov 4, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='107',APP_DATE='Nov 5, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1926,6 +1926,11 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'107',date:'Nov 5, 2026',title:'Never miss a message or a duel',items:[
+  'When a classmate <b>messages you</b>, replies to you or @mentions you, a small card pops up on whatever page you are on (not on the page where you already see it). Tap it to open, or close it.',
+  '<b>Duel challenges</b> get their own pop-up with <b>Accept</b>, <b>Decline</b> and <b>Later</b>, and they also show up as a card in your DMs with that classmate.',
+  'The tab title shows how many messages are unread. Choose which pop-ups you get and where they appear in Notifications → <b>Pop-ups on the site</b>.',
+  'A short one-time guide helps you turn on notifications on this device (it only asks a couple of times, and only while they are off).']},
  {v:'106',date:'Nov 4, 2026',title:'Fixes',items:[
   'The AI-written practice question under <b>Quiz me on this</b> now shows its choices instead of failing.']},
  {v:'105',date:'Nov 3, 2026',title:'Smarter AI study help',items:[

@@ -142,6 +142,22 @@ button{cursor:pointer}
 .msg.is-pure-stk .bubble-stk{background:none!important;border:none!important;box-shadow:none!important;padding:0!important}
 .msg.is-pure-stk.me .mfoot{justify-content:flex-end}
 .msg.is-pure-stk.them .mfoot{justify-content:flex-start}
+/* Duel challenge cards in the thread */
+.bubble.bubble-duel{background:none!important;border:none!important;box-shadow:none!important;padding:0!important;color:var(--text)}
+.duel-card{display:flex;flex-direction:column;gap:8px;min-width:238px;max-width:320px;padding:13px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line2);box-shadow:0 2px 8px #00000012}
+.duel-head{display:flex;align-items:center;gap:9px}
+.duel-ic{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line)}
+.duel-title{font-size:14.5px;font-weight:800;letter-spacing:-.15px}
+.duel-meta{font-size:12.5px;color:var(--mute);line-height:1.4}
+.duel-state{font-size:13px;font-weight:700;color:var(--accent)}
+.duel-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:2px}
+.duel-btn{display:inline-flex;align-items:center;justify-content:center;padding:6px 11px;border-radius:9px;border:1px solid var(--line2);background:var(--raised);color:var(--text);font-size:12.5px;font-weight:700;text-decoration:none;cursor:pointer;line-height:1.2}
+.duel-btn:hover{background:var(--surface);border-color:var(--accent-line)}
+.duel-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.duel-btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
+.duel-btn.ghost{background:transparent;color:var(--mute)}
+.duel-link{font-size:12.5px;font-weight:700;color:var(--accent);text-decoration:none}
+.duel-link:hover{text-decoration:underline}
 
 /* Conversation Row Cards */
 .crow{flex:none;min-height:56px;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid transparent;text-decoration:none;transition:background .15s,border-color .15s;cursor:pointer}
@@ -278,6 +294,123 @@ let PARTNER_ID=Q.get('with')||'',PARTNER_NAME=Q.get('to')||'';
 let COURSES=[],MESSAGES=[],ALL_CLASSMATES=[],CONVERSATIONS=[],PROFILES={};
 let POLL_TIMER=null,IS_SENDING=false,LAST_CONVS_HASH='',LAST_SEARCH='';
 let ACTIVE_RX_MSG=null,REPLY_TARGET=null;
+const DUELS={},LATER_CODES=new Set(),DUEL_REFRESH_MS=30000;
+const DUEL_RE=/^\[duel:([A-Z2-9]{8})\]$/,DUEL_ANY=/\[duel:[A-Z2-9]{8}\]/g;
+const SWORDS='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg>';
+
+function duelCode(body){const m=String(body==null?'':body).trim().match(DUEL_RE);return m?m[1]:''}
+function duelScore(res){return res?String(res).split('').filter(x=>x==='1').length:0}
+function duelResult(d){
+ if(!d||!d.a||!d.b||!d.a.done||!d.b.done||d.a.res==null||d.b.res==null)return null;
+ const sa=duelScore(d.a.res),sb=duelScore(d.b.res);
+ let w=sa>sb?'a':sb>sa?'b':'';
+ if(!w&&d.a.secs!=null&&d.b.secs!=null)w=d.a.secs<d.b.secs?'a':d.b.secs<d.a.secs?'b':'';
+ return {sa,sb,w};
+}
+function duelMeta(d){
+ if(!d)return 'Loading…';
+ const c=COURSES.find(x=>x.id===d.course),title=c?c.title:(d.course||'Duel');
+ return title+(d.scope?' · '+d.scope:'')+(Array.isArray(d.qids)?' · '+d.qids.length+' questions':'');
+}
+function duelStateText(d,mine){
+ if(!d)return 'Loading…';
+ if(d.declined)return 'Declined';
+ const r=duelResult(d);
+ if(r){
+  if(d.me==='a'||d.me==='b'){
+   const my=d.me==='a'?r.sa:r.sb,other=d.me==='a'?r.sb:r.sa;
+   if(r.w===''||my===other)return 'Draw '+my+'–'+other;
+   return (r.w===d.me?'You won ':'You lost ')+my+'–'+other;
+  }
+  return r.sa+'–'+r.sb;
+ }
+ if(mine){
+  const p=d[d.me==='a'?'b':'a'];
+  return p?'Waiting for '+p.name:'Waiting for a classmate';
+ }
+ if(d.me){
+  if(d[d.me]&&!d[d.me].done)return 'Your turn';
+  const p=d[d.me==='a'?'b':'a'];
+  if(p)return 'Waiting for '+p.name;
+ }
+ if(!d.me&&d.open)return 'Open challenge';
+ return '';
+}
+function duelActionsHtml(d,code,mine){
+ if(!d||d.declined||duelResult(d))return '';
+ const href='duel.html?d='+encodeURIComponent(code),c=esc(code);
+ if(!mine&&d.me&&d[d.me]&&!d[d.me].done){
+  if(LATER_CODES.has(code))return '<div class="duel-actions"><a class="duel-link" href="'+href+'">Play later</a></div>';
+  return '<div class="duel-actions">'+
+   '<a class="duel-btn primary" href="'+href+'">Accept</a>'+
+   '<button class="duel-btn" type="button" data-duel-act="decline" data-duel-code="'+c+'">Decline</button>'+
+   '<button class="duel-btn ghost" type="button" data-duel-act="later" data-duel-code="'+c+'">Later</button>'+
+  '</div>';
+ }
+ if(!mine&&!d.me&&d.open){
+  return '<div class="duel-actions"><a class="duel-btn primary" href="'+href+'">Accept</a>'+
+   '<button class="duel-btn ghost" type="button" data-duel-act="later" data-duel-code="'+c+'">Later</button></div>';
+ }
+ return '';
+}
+function duelCardInner(code,mine){
+ const d=DUELS[code]&&DUELS[code].view;
+ return '<div class="duel-head"><span class="duel-ic">'+SWORDS+'</span><span class="duel-title">Duel challenge</span></div>'+
+  '<div class="duel-meta">'+esc(duelMeta(d))+'</div>'+
+  (duelStateText(d,mine)?'<div class="duel-state">'+esc(duelStateText(d,mine))+'</div>':'')+
+  duelActionsHtml(d,code,mine);
+}
+function duelCardHtml(m,code){
+ const mine=!!m.mine;
+ return '<div class="duel-card" data-duel-card="'+esc(code)+'" data-duel-mine="'+(mine?'1':'0')+'">'+duelCardInner(code,mine)+'</div>';
+}
+function updateDuelCards(code){
+ document.querySelectorAll('.duel-card[data-duel-card="'+code+'"]').forEach(el=>{
+  el.innerHTML=duelCardInner(code,el.getAttribute('data-duel-mine')==='1');
+ });
+}
+function updateAllDuelCards(){
+ document.querySelectorAll('.duel-card[data-duel-card]').forEach(el=>{
+  const code=el.getAttribute('data-duel-card');
+  el.innerHTML=duelCardInner(code,el.getAttribute('data-duel-mine')==='1');
+ });
+}
+async function refreshDuelStates(msgs){
+ const now=Date.now(),codes=[...new Set((msgs||[]).map(m=>duelCode(m.body)).filter(Boolean))];
+ let changed=false;
+ await Promise.all(codes.map(async code=>{
+  const c=DUELS[code];
+  if(c&&(c.pending||(c.view&&now-c.at<DUEL_REFRESH_MS)))return;
+  DUELS[code]={view:c?c.view:null,at:c?c.at:0,pending:true};
+  try{
+   const d=await Auth.rpc('duel_get',{p_code:code},true);
+   if(d&&typeof d==='object'){
+    if(!c||JSON.stringify(c.view)!==JSON.stringify(d))changed=true;
+    DUELS[code]={view:d,at:Date.now()};
+   }else DUELS[code]={view:c?c.view:null,at:now};
+  }catch(e){DUELS[code]={view:c?c.view:null,at:now,error:e.message||'Could not load the duel.'}}
+ }));
+ return changed;
+}
+async function duelDecline(code){
+ if(!code)return;
+ document.querySelectorAll('.duel-card[data-duel-card="'+code+'"] [data-duel-act="decline"]').forEach(b=>{b.disabled=true});
+ try{
+  const d=await Auth.rpc('duel_decline',{p_code:code},true);
+  const prev=DUELS[code]&&DUELS[code].view;
+  DUELS[code]={view:(d&&typeof d==='object')?d:Object.assign({},prev||{},{declined:true}),at:Date.now()};
+  updateDuelCards(code);
+  toast('Duel declined');
+ }catch(e){
+  document.querySelectorAll('.duel-card[data-duel-card="'+code+'"] [data-duel-act="decline"]').forEach(b=>{b.disabled=false});
+  toast(e.message||'Could not decline. Try again.');
+ }
+}
+function duelLater(code){
+ if(!code)return;
+ LATER_CODES.add(code);
+ updateDuelCards(code);
+}
 
 function timeAgo(t){
  if(!t)return '';
@@ -348,7 +481,7 @@ function cleanMsgPreview(txt){
  if(!txt)return '';
  let s=String(txt).replace(/^\[reply:[^\]]+\]\s*/,'');
  if(window.Stickers)s=Stickers.cleanSnippet(s);
- return s;
+ return s.replace(DUEL_ANY,'⚔️ Duel challenge');
 }
 
 function renderSidebarList(){
@@ -599,7 +732,7 @@ function buildSingleMsgHtml(m, prevDate){
  if(repMatch){
   const qId=Number(repMatch[1]);
   const qAuthor=repMatch[2];
-  const qSnip=repMatch[3];
+  const qSnip=String(repMatch[3]).replace(DUEL_ANY,'⚔️ Duel challenge');
   bodyText=repMatch[4]||'';
   quoteHtml='<div class="mquote" onclick="jumpToMsg('+qId+')" role="button" tabindex="0" title="Jump to quoted message">'+
    '<div class="mquote-author"><svg class="i" width="12" height="12" aria-hidden="true"><use href="icons.svg#i-reply"/></svg>'+esc(qAuthor)+'</div>'+
@@ -607,8 +740,10 @@ function buildSingleMsgHtml(m, prevDate){
   '</div>';
  }
 
+ const dcode=duelCode(bodyText);
+ const isDuel=!!dcode&&!quoteHtml;
  const stkMatch=window.Stickers?Stickers.parse(bodyText):null;
- const isPure=stkMatch&&stkMatch.isPure&&!quoteHtml;
+ const isPure=(stkMatch&&stkMatch.isPure&&!quoteHtml&&!isDuel);
 
  const actHtml=(!m.sending)?(
   '<div class="mact">'+
@@ -629,12 +764,12 @@ function buildSingleMsgHtml(m, prevDate){
  ):'';
 
  const rxHtml=buildReactionsHtml(m);
- const bubbleBody=window.Stickers?Stickers.render(bodyText,linkify):linkify(bodyText);
+ const bubbleBody=isDuel?duelCardHtml(m,dcode):(window.Stickers?Stickers.render(bodyText,linkify):linkify(bodyText));
 
  html+='<div class="msg '+cls+(m.sending?' sending':'')+(isPure?' is-pure-stk':'')+'" id="m'+m.id+'" data-id="'+m.id+'">'+
   '<div class="mbody">'+
    actHtml+
-   '<div class="bubble'+(isPure?' bubble-stk':'')+'">'+quoteHtml+bubbleBody+'</div>'+
+   '<div class="bubble'+(isPure?' bubble-stk':'')+(isDuel?' bubble-duel':'')+'">'+quoteHtml+bubbleBody+'</div>'+
   '</div>'+
   rxHtml+
   '<div class="mfoot">'+
@@ -752,10 +887,15 @@ async function loadThread(quiet){
    msgs.forEach(m=>{
     m.reactions=(rxMap&&rxMap[m.id])||{};
    });
-   if(isThreadSame(msgs, MESSAGES) && quiet) return;
+   const duelChanged=await refreshDuelStates(msgs);
+   if(isThreadSame(msgs, MESSAGES) && quiet){
+    if(duelChanged)updateAllDuelCards();
+    return;
+   }
 
    if(quiet && MESSAGES.length && $('stream') && $('stream').querySelector('.msg')){
     updateMessagesIncrementally(msgs);
+    if(duelChanged)updateAllDuelCards();
     return;
    }
 
@@ -1019,9 +1159,18 @@ function setupInput(){
   st.addEventListener('touchend', ()=>clearTimeout(pressTimer), {passive:true});
   st.addEventListener('touchcancel', ()=>clearTimeout(pressTimer), {passive:true});
 
+  // Duel card actions (built with data attributes, never user text in a handler)
+  st.addEventListener('click', e=>{
+   const b=e.target.closest('[data-duel-act]');
+   if(!b)return;
+   const code=b.getAttribute('data-duel-code')||'',act=b.getAttribute('data-duel-act');
+   if(act==='decline')duelDecline(code);
+   else if(act==='later')duelLater(code);
+  });
+
   // Tap a message bubble or sticker to toggle actions (react, reply, delete)
   st.addEventListener('click', e=>{
-   if(e.target.closest('.mact-btn, .m-rx-pill, .mquote, a')) return;
+   if(e.target.closest('.mact-btn, .m-rx-pill, .mquote, a, .duel-card')) return;
    const msg=e.target.closest('.msg');
    if(!msg) return;
    const sel=window.getSelection?window.getSelection().toString():'';

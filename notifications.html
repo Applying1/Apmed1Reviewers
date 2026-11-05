@@ -70,7 +70,7 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
 const $=id=>document.getElementById(id),esc=Notify.esc;
 const ic=(n,c)=>'<svg class="i'+(c?' '+c:'')+'" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
 const ICON={course:ic('book-open'),content:ic('pencil'),transes:ic('file-text'),schedule:ic('calendar-days'),feature:ic('sparkles')};
-let COURSES={},READ0=0;
+let COURSES={},READ0=0,ALERTS_JUMP=location.hash==='#alerts';
 function tab(t){const s=t==='settings';$('feed').hidden=s;$('settings').hidden=!s;$('t-feed').setAttribute('aria-selected',!s);$('t-set').setAttribute('aria-selected',s);
  history.replaceState(null,'',s?'#settings':location.pathname+location.search);if(s)drawSettings();else drawFeed()}
 function drawFeed(){Notify.load().then(f=>{const items=Notify.shown(f),hidden=f.length-items.length;
@@ -82,6 +82,19 @@ function drawFeed(){Notify.load().then(f=>{const items=Notify.shown(f),hidden=f.
 const sw=(on,fn,label,dis)=>'<button class="sw" role="switch" aria-checked="'+!!on+'" aria-label="'+esc(label)+'" onclick="'+fn+'"'+(dis?' disabled':'')+'></button>';
 const row=(t,d,ctl)=>'<div class="row"><div class="t"><b>'+t+'</b><span>'+d+'</span></div>'+ctl+'</div>';
 function flip(path){const p=Notify.prefs(),cur=path.startsWith('types.')?p.types[path.slice(6)]!==false:p[path]!==false;Notify.setPref(path,!cur);drawSettings()}
+// Site-wide pop-ups (alerts.js). Settings ride in the synced 'reviewer_notify' object; a missing value means on, corner.
+function livePrefs(){let o={};try{o=JSON.parse(localStorage.getItem('reviewer_notify'))||{}}catch(e){}const l=o&&typeof o==='object'&&o.live&&typeof o.live==='object'?o.live:{};return {on:l.on!==false,dm:l.dm!==false,disc:l.disc!==false,duel:l.duel!==false,title:l.title!==false,pos:l.pos==='top'?'top':'corner'}}
+function saveLive(k,v){let o={};try{o=JSON.parse(localStorage.getItem('reviewer_notify'))||{}}catch(e){}if(!o||typeof o!=='object')o={};const l=o.live&&typeof o.live==='object'?o.live:{};l[k]=v;o.live=l;try{localStorage.setItem('reviewer_notify',JSON.stringify(o))}catch(e){}try{Notify.pushSync&&Notify.pushSync()}catch(e){}}
+function liveSet(k){saveLive(k,!(livePrefs()[k]!==false));drawSettings()}
+function livePos(v){saveLive('pos',v==='top'?'top':'corner');drawSettings()}
+function alertsSection(){const l=livePrefs();
+ return '<div class="sec" id="alerts"><h2>Pop-ups on the site</h2><p class="d">Little cards that tell you when a classmate messages you, replies to you, or challenges you to a duel while you browse. They stay off the page where that conversation already is.</p>'+
+  row('Show pop-ups','Turn all site-wide pop-ups on or off.',sw(l.on,"liveSet('on')",'Show pop-ups'))+
+  row('Messages','When a classmate sends you a direct message.',sw(l.dm,"liveSet('dm')",'Messages'))+
+  row('Replies and mentions','When someone replies to you or @mentions you in the discussion.',sw(l.disc,"liveSet('disc')",'Replies and mentions'))+
+  row('Duel challenges','When a classmate challenges you to a duel. Duel pop-ups wait until you accept, decline, or choose later.',sw(l.duel,"liveSet('duel')",'Duel challenges'))+
+  row('Unread count in the tab title','The number of unread messages in the browser tab.',sw(l.title,"liveSet('title')",'Unread count in the tab title'))+
+  '<div class="opt"><b>Position</b><div class="chips">'+chip(l.pos!=='top',"livePos('corner')",'Corner')+chip(l.pos==='top',"livePos('top')",'Top')+'</div><span>Corner keeps pop-ups at the bottom right, above the tab bar on phones. Top puts them at the top center.</span></div></div>'}
 function drawSettings(){const p=Notify.prefs();
  $('settings').innerHTML=
   '<div class="sec"><h2>What you hear about</h2><p class="d">Turned-off types are hidden from Updates, the red dots and push notifications.</p>'+
@@ -93,8 +106,10 @@ function drawSettings(){const p=Notify.prefs();
   row('Reply and mention pop-ups','A pop-up in the course you have open when someone replies to you, @mentions you, or a moderator posts (never during a mock exam).',sw(p.dpop!==false,"flip('dpop')",'New comment pop-ups'))+
   row('Unread dots','Red dots for replies to you, @mentions, moderator posts and new updates; a small gray dot for other new comments.',sw(p.ddot!==false,"flip('ddot')",'Unread dots'))+
   row('Direct message badges','Red badges with message count on Class & attendance and Direct messages when classmates message you.',sw(p.dm_badges!==false,"flip('dm_badges')",'Direct message badges'))+'</div>'+
-  '<div class="sec" id="pushsec"><h2>On this device</h2><p class="d">Push notifications reach you even when the site is closed.</p><div id="pushbody"><p class="pstat">Checking…</p></div><div id="persbody"></div></div>';
- drawDaily();drawRem();Push.draw($('pushbody'));drawPersonal()}
+  '<div class="sec" id="pushsec"><h2>On this device</h2><p class="d">Push notifications reach you even when the site is closed.</p><div id="pushbody"><p class="pstat">Checking…</p></div><div id="persbody"></div></div>'+
+  alertsSection();
+ drawDaily();drawRem();Push.draw($('pushbody'));drawPersonal();
+ if(ALERTS_JUMP){ALERTS_JUMP=false;const el=$('alerts');if(el)try{el.scrollIntoView({block:'start'})}catch(e){}}}
 // Personal alerts (supabase_attendance2.sql + supabase_discussion_replies.sql + supabase_duels2.sql): this device gets pushes meant for your account only:
 // replies and @mentions in the discussion, duel challenges and results, and attendance (the summary of a day you missed, replies from the class secretary).
 async function drawPersonal(){const el=$('persbody');if(!el)return;if(!Push.supported())return el.innerHTML='';
@@ -153,7 +168,7 @@ function backLink(){const el=document.querySelector('.back');let r=null;
 (async()=>{let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
  try{await Sched.load()}catch(e){}
  list.forEach(c=>COURSES[c.id]=c);backLink();const cl=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;Push.init(cl);if(cl)Auth.cloud=cl;Push.attRefresh();Push.heal().then(()=>{if(!$('settings').hidden)drawSettings()});
- READ0=Notify.readUpTo();tab(location.hash==='#settings'?'settings':'feed')})();
+ READ0=Notify.readUpTo();tab(/^#(settings|alerts)$/.test(location.hash)?'settings':'feed')})();
 </script>
 <script src="update.js" defer></script>
 </body></html>
