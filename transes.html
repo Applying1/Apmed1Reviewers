@@ -104,6 +104,8 @@ button,a{font:inherit;color:inherit}
 <div id="pages"><p class="msg">Loading the transes…</p></div>
 <div id="chend" hidden></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="auth.js"></script>
+<script src="aihelp.js"></script>
 <script>
 // Reads the PDF inside the page (no download, works in the installed app and offline once opened).
 const q=new URLSearchParams(location.search),file=q.get('f')||'',title=q.get('t')||'Transes',course=q.get('c')||'';
@@ -234,7 +236,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape')toggleToc(false)});
 let texts=[],hits=[],hitAt=-1,ptW=612;
 async function pageText(n){if(texts[n])return texts[n];const tc=await (await pdf.getPage(n)).getTextContent();let str='';const items=[];
  for(const it of tc.items){if(!it.str)continue;if(str&&!/\s$/.test(str))str+=' ';items.push({s:str.length,str:it.str,t:it.transform,w:it.width,h:it.height||Math.hypot(it.transform[2],it.transform[3])});str+=it.str}
- return texts[n]={str:str.toLowerCase(),items}}
+ return texts[n]={str:str.toLowerCase(),raw:str,items}}
 // Search scope: the whole PDF, or only the open chapter tab (remembered)
 let scopeTab=false;try{scopeTab=localStorage.getItem('transes_search_tab')==='1'}catch(e){}
 const scopeOn=()=>scopeTab&&tab>=0;
@@ -284,6 +286,7 @@ addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===
  let at=0;try{at=+localStorage.getItem('transes_at_'+file)||0}catch(e){}
  if(at>1&&at<=pages.length)jump(at,null);
  track();
+ if(window.AIHelp)AIHelp.init({course,doc:file.split('/').pop().replace(/\.pdf$/i,''),getPage:()=>curPage()+1,getText:async n=>(await pageText(n)).raw,root:box});
  buildToc();
 })();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');

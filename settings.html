@@ -59,6 +59,7 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
  <section class="sec" id="mod" hidden></section>
  <section class="sec" id="stats" hidden></section>
  <section class="sec" id="snd"></section>
+ <section class="sec" id="ai"></section>
  <section class="sec" id="store"></section>
  <p class="note">Each course's study settings (recall goal, flashcards, question order and more) are in that course's <b>Personalize</b> page. <a href="privacy.html">Privacy &amp; terms</a></p>
 </main>
@@ -119,6 +120,9 @@ function setGoal(n){Daily.setGoal(n);drawGoal()}
 // sounds: the live quiz's music and effects (same switch as in the quiz)
 function drawSnd(){const on=get('reviewer_quiz_mute')!=='1';
  $('snd').innerHTML='<h2>Sounds</h2><div class="row"><div class="t"><b>Live quiz music and sound effects</b><span>On this device. A phone on silent stays quiet.</span></div>'+sw(on,"set('reviewer_quiz_mute',"+(on?"'1'":'null')+");drawSnd()",'Live quiz sounds')+'</div>'}
+// AI helper in the notes reader (same switch the reader reads)
+function drawAI(){const on=get('reviewer_aihelp')!=='0';
+ $('ai').innerHTML='<h2>Notes reader</h2><div class="row"><div class="t"><b>AI helper in the notes reader</b><span>Explain a page or a highlighted part, and ask about it (sign-in needed)</span></div>'+sw(on,"set('reviewer_aihelp',"+(on?"'0'":'null')+");drawAI()",'AI helper in the notes reader')+'</div>'}
 // storage used on this device, per course
 async function drawStore(){let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
  const size=pre=>{let n=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(pre==null||k===pre||k.startsWith(pre+'_'))n+=2*(k.length+(localStorage.getItem(k)||'').length)}}catch(e){}return n};
@@ -138,9 +142,9 @@ async function drawStats(){const b=$('stats');try{const cl=(await (await fetch('
  const s=await Auth.rpc('site_stats',{},!!Auth.ses());
  b.innerHTML='<h2>Site stats</h2><p class="d">'+(s.owner?(s.public?'Everyone can see these numbers.':'Only you can see these numbers.')+' Change it on the stats page.':'How many classmates use the site.')+'</p>'+
   '<div class="row"><div class="t"><b>'+s.today+' devices today · '+s.week+' this week</b><span>'+s.studying+' studying now · '+s.accounts+' accounts</span></div><a class="btn" href="stats.html">Open</a></div>';b.hidden=false}catch(e){b.hidden=true}}
-drawAcc();drawLook();drawHome();drawGoal();drawSnd();drawStore();drawMod();drawStats();
+drawAcc();drawLook();drawHome();drawGoal();drawSnd();drawAI();drawStore();drawMod();drawStats();
 if(location.hash==='#home')setTimeout(()=>$('home').scrollIntoView({block:'start'}),50);
-addEventListener('storage',()=>{drawAcc();drawLook();drawHome();drawGoal();drawSnd()});
+addEventListener('storage',()=>{drawAcc();drawLook();drawHome();drawGoal();drawSnd();drawAI()});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 <script src="update.js" defer></script>

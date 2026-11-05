@@ -994,5 +994,13 @@
   "title": "Lecture notes in the slide viewer",
   "text": "Slide decks that come with the teacher's lecture notes now have a Notes button (or press N) that shows the notes for the slide you are on. Botany Plant Kingdom has them first.",
   "link": "index.html"
+ },
+ {
+  "id": 121,
+  "date": "2026-11-05",
+  "type": "feature",
+  "title": "AI helper in the transes reader",
+  "text": "In the transes reader, tap the new AI button to get a page explained simply with an example and a check question, highlight any part to have just that explained, or ask about the page in a short chat. Sign-in needed; you can turn it off in Settings.",
+  "link": "index.html"
  }
 ]

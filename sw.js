@@ -4,10 +4,10 @@
 // saved copy waits up to 1.5 s for the network first, so someone coming back after a while gets the newest version when
 // the connection allows. Without a connection, the saved copy is used. Pictures show the saved copy first and refresh in
 // the background. Fonts are cached after first use; transes PDFs only once opened.
-const CACHE = 'reviewers-v81';
+const CACHE = 'reviewers-v82';
 const FRESH = 6 * 3600e3, WAIT = 1500;
 const SHELL = ['./', 'index.html', 'reviewer.html', 'engine.js', 'courses.json', 'manifest.webmanifest',
-  'schedule.html', 'schedule-edit.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'profile.js', 'dialog.js', 'live.js', 'ui.css', 'icons.svg', 'reminders-core.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html', 'update.js',
+  'schedule.html', 'schedule-edit.html', 'schedule-core.js', 'schedule.json', 'transes.html', 'discuss.html', 'auth.js', 'aihelp.js', 'profile.js', 'dialog.js', 'live.js', 'ui.css', 'icons.svg', 'reminders-core.js', 'notifications.html', 'notify-core.js', 'push-client.js', 'privacy.html', 'update.js',
   'daily.js', 'move.js', 'homeedit.js', 'classnow.js', 'badges.js', 'badges.html', 'classlist.html', 'dm.html', 'stickers.js', 'emojis.js', 'here.js', 'alerts.js', 'pushnudge.js','stats.html', 'quiz.html', 'sfx.js', 'slides.html', 'crossword.html', 'crossword/puzzles.json', 'apmeddle.html', 'apmeddle/days.json', 'sortit.html', 'sortit/days.json', 'duel.html', 'attendance.html', 'classday.html', 'classnotes.js', 'shop.html', 'cards.js', 'settings.html',
   'icons/icon-192.png', 'icons/icon-512.png'];
 
