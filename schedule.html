@@ -132,6 +132,7 @@ dd.none{color:var(--faint);font-style:italic}
  body.wkview .wk{display:grid;width:900px;zoom:var(--z,1)}body.wkview .mob{display:none}}
 @media (max-width:520px){main{padding:20px 16px 48px}.now .go{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+#editBtn{width:max-content;margin:2px 0 14px}#editBtn[hidden]{display:none}
 </style></head><body>
 <main>
  <div class="top">
@@ -139,6 +140,7 @@ dd.none{color:var(--faint);font-style:italic}
  </div>
  <h1>Timetable</h1>
  <p class="term" id="term">&nbsp;</p>
+ <a class="btn" id="editBtn" href="./schedule-edit.html" hidden>Edit timetable</a>
  <a class="now sw" id="now" hidden></a>
  <div class="wbar">
   <button class="btn icon" id="prev" aria-label="Previous week" onclick="go(week-1)"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg></button>
@@ -152,6 +154,7 @@ dd.none{color:var(--faint);font-style:italic}
  <p class="foot">This is the standard timetable. Topics, make-up classes and cancellations are added week by week as they're announced.</p>
 </main>
 <div class="modal" id="dlg" hidden onclick="if(event.target===this)closeDlg()"><div class="box sw" id="dbox" role="dialog" aria-modal="true" aria-labelledby="dtitle"></div></div>
+<script src="auth.js"></script>
 <script src="schedule-core.js"></script>
 <script>
 const ic=(n,c)=>'<svg class="i'+(c?' '+c:'')+'" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
@@ -254,6 +257,24 @@ function drawNow(){
  setInterval(()=>{drawNow();if(week===Sched.weekNo(new Date()))draw()},60000);
 })();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+<script>
+/* Show "Edit timetable" only to the class owner; signed out stays hidden and silent. */
+(async function(){
+ try{
+  if(typeof Auth==='undefined')return;
+  const list=await (await fetch('courses.json')).json();
+  const c=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;
+  if(c&&c.key)Auth.cloud=c;
+  if(!Auth.cloud)return;
+  try{await Auth.finish()}catch(e){}
+  if(!Auth.ses())return;
+  try{await Auth.token()}catch(e){}
+  if(!Auth.ses())return;
+  const a=await Auth.rpc('att_mine',{},true);
+  if(a&&a.owner)document.getElementById('editBtn').hidden=false;
+ }catch(e){}
+})();
 </script>
 <script src="update.js" defer></script>
 </body></html>

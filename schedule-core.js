@@ -4,12 +4,66 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+function clone(v) { return v == null ? v : JSON.parse(JSON.stringify(v)); }
+
 const Sched = {
   data: null,
+  base: null,
+  override: {},
+  updatedAt: null,
   _p: null,
+  _cloud: null,
+  _cloudP: null,
+  cloud() {
+    if (this._cloud) return Promise.resolve(this._cloud);
+    if (!this._cloudP) this._cloudP = fetch('courses.json').then(r => r.json()).then(l => {
+      const c = (l.find(x => x.cloud && x.cloud.url) || {}).cloud;
+      if (!c || !c.key) return null;
+      return this._cloud = c;
+    }).catch(() => null);
+    return this._cloudP;
+  },
+  // The saved override ({data, updated_at}) from sched_get, or null when unavailable.
+  overrideGet() {
+    return this.cloud().then(c => {
+      if (!c) return null;
+      const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timer = ctrl ? setTimeout(() => ctrl.abort(), 4000) : null;
+      const h = { 'Content-Type': 'application/json', apikey: c.key };
+      if (/^eyJ/.test(c.key)) h.Authorization = 'Bearer ' + c.key;
+      return fetch(c.url.replace(/\/+$/, '') + '/rest/v1/rpc/sched_get', { method: 'POST', headers: h, body: '{}', signal: ctrl && ctrl.signal })
+        .then(r => r.ok ? r.json().catch(() => null) : null)
+        .catch(() => null)
+        .then(x => { if (timer) clearTimeout(timer); return x; });
+    }).catch(() => null);
+  },
+  // Deep copy of base with the saved override applied: each saved week replaces that week,
+  // and saved holidays replace the base holidays when present.
+  merge(base, ov) {
+    const out = clone(base);
+    if (!ov || typeof ov !== 'object') return out;
+    if (ov.weeks && typeof ov.weeks === 'object') {
+      out.weeks = out.weeks || {};
+      for (const k of Object.keys(ov.weeks)) out.weeks[k] = clone(ov.weeks[k]);
+    }
+    if (Object.prototype.hasOwnProperty.call(ov, 'holidays')) out.holidays = clone(ov.holidays);
+    return out;
+  },
   load() {
     if (this.data) return Promise.resolve(this.data);
-    if (!this._p) this._p = fetch('schedule.json').then(r => r.json()).then(d => { this.data = d; return d; }).catch(e => { this._p = null; throw e; });
+    if (!this._p) this._p = fetch('schedule.json').then(r => r.json()).then(base => {
+      this.base = base;
+      return this.overrideGet().then(res => {
+        const data = res && res.data;
+        this.override = (data && typeof data === 'object' && !Array.isArray(data)) ? data : {};
+        this.updatedAt = (res && res.updated_at) || null;
+        this.data = this.merge(base, this.override);
+        return this.data;
+      }).catch(() => {
+        this.override = {}; this.updatedAt = null; this.data = this.merge(base, {});
+        return this.data;
+      });
+    }).catch(e => { this._p = null; throw e; });
     return this._p;
   },
   dayStart(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; },

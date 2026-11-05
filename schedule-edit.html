@@ -1,0 +1,490 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Edit timetable · APMed '33</title>
+<meta name="description" content="Edit the class timetable (class owner only).">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:760px;width:100%;margin:0 auto;padding:22px 16px 120px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+h1{font:600 clamp(26px,3.4vw,32px)/1.15 var(--serif);letter-spacing:-.3px;margin:16px 0 6px}
+.sub{margin:0;color:var(--mute);font-size:14.5px;overflow-wrap:anywhere}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);margin-top:16px}
+.card p{margin:0;overflow-wrap:anywhere}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;padding:10px 16px;font-weight:600;font-size:14.5px;border:1px solid var(--line2);background:var(--surface);text-decoration:none}
+.btn:hover{background:var(--raised)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.icon{width:42px;padding:9px 0;flex:none}
+.weekbar{display:flex;align-items:center;gap:10px;margin:12px 0 16px}
+.wb{flex:1;min-width:0;text-align:center}
+.wb b{display:block;font:600 20px/1.2 var(--serif);white-space:nowrap}
+.wb span{display:block;color:var(--mute);font-size:13.5px;margin-top:2px}
+.clist{display:flex;flex-direction:column;gap:10px}
+.ccard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);min-width:0}
+.ccard.off{opacity:.72}
+.chead{display:flex;align-items:baseline;gap:8px 10px;flex-wrap:wrap}
+.cday{font-size:12.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--mute)}
+.ctime{font-size:13.5px;font-weight:600;color:var(--faint)}
+.csubj{font:600 18px/1.25 var(--serif);margin-top:3px;overflow-wrap:anywhere}
+.ctopic{font-size:14px;color:var(--mute);margin-top:2px;overflow-wrap:anywhere}
+.ctopic.mute{font-style:italic;color:var(--faint)}
+.tag{display:inline-block;font:700 11px/1.6 var(--sans);letter-spacing:.03em;text-transform:uppercase;padding:1px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.ccancel{font-size:13px;font-weight:600;color:var(--bad);margin-top:4px}
+.editArea{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+.erow{display:flex;align-items:flex-end;gap:8px;margin-top:8px;flex-wrap:wrap}
+.erow>*{min-width:0}
+.efield{display:block;flex:1 1 140px;min-width:0;font-size:12px;font-weight:700;color:var(--mute);letter-spacing:.02em}
+.efield>span{display:block;margin-bottom:4px;text-transform:uppercase}
+.efield input{display:block;width:100%;min-width:0;padding:8px 10px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);font-size:14.5px}
+.etimes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}
+.echk{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--mute);padding:6px 0}
+.echk input{width:18px;height:18px;accent-color:var(--bad)}
+.erow .btn{padding:8px 12px;flex:none}
+.wtools{margin:0 0 12px}
+.wtools:empty{display:none}
+.empty{color:var(--mute);text-align:center;padding:28px 10px}
+.tools{display:flex;flex-direction:column;gap:16px;margin-top:20px}
+.tool{padding:16px}
+.tool h2{font:600 19px/1.25 var(--serif);margin:0 0 4px}
+.hint{margin:0 0 8px;color:var(--mute);font-size:13px;overflow-wrap:anywhere}
+.hint.err{color:var(--bad);font-weight:600;margin:8px 0 0}
+.efield select{display:block;width:100%;min-width:0;padding:8px 10px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);font-size:14.5px}
+.lines{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.lines li{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-size:14px;min-width:0}
+.lines .lt{flex:1;min-width:0;overflow-wrap:anywhere}
+.lines .ld{flex:none;font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums}
+.lines .btn{padding:5px 10px;font-size:13px;flex:none;border-radius:9px}
+.lines li.empty{border:0;background:none;color:var(--mute);padding:4px 2px}
+.tool .erow{margin-top:10px}
+.tool .erow .btn{flex:none}
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.savebar .in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.savebar .sbmsg{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.savebar .btn{padding:9px 14px;flex:none}
+.savebar .btn.primary{white-space:nowrap}
+.toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center;overflow-wrap:anywhere}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;z-index:40;background:#0008;display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:640px){.modal{align-items:center}}
+.sheet{background:var(--surface);width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));color:var(--text)}
+@media (min-width:640px){.sheet{border-radius:20px}}
+.modal.dlgwrap{align-items:center;padding:20px;z-index:60}
+.sheet.dlg{max-width:380px;border-radius:24px;text-align:center;padding:24px 22px 20px;box-shadow:0 20px 50px #0004}
+.sheet.dlg h3{display:block;font:600 22px/1.2 var(--sans);color:var(--text);margin:0 0 8px}
+.sheet.dlg p{margin:0 0 18px;color:var(--mute);font-size:15px;overflow-wrap:anywhere}
+.dbtns{display:flex;gap:10px}.dbtns .btn{flex:1;padding:12px 10px;border-radius:99px}
+.dbtns .btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+@media (max-width:420px){main{padding-left:14px;padding-right:14px}.weekbar{gap:6px}.btn.icon{width:38px}}
+</style></head><body>
+<main>
+ <a class="back" href="./schedule.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>Timetable</a>
+ <h1>Edit timetable</h1>
+ <p class="sub" id="status">Checking who you are…</p>
+ <div id="gate" class="card" hidden><p>Only the class owner can edit the timetable.</p></div>
+ <section id="app" hidden>
+  <div class="weekbar">
+   <button class="btn icon" id="prev" type="button" aria-label="Previous week"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg></button>
+   <div class="wb" aria-live="polite"><b id="wname">Week</b><span id="wdates"></span></div>
+   <button class="btn icon" id="next" type="button" aria-label="Next week"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></button>
+  </div>
+  <div class="wtools" id="weekTools"></div>
+  <div class="clist" id="clist"></div>
+  <div class="tools">
+   <section class="card tool" id="addClassSec">
+    <h2>Add a make-up or extra class</h2>
+    <p class="hint">Adds a class to Week <span id="addWeekNo">1</span>.</p>
+    <div class="erow">
+     <label class="efield"><span>Day</span><select id="exDay"><option value="Mon">Mon</option><option value="Tue">Tue</option><option value="Wed">Wed</option><option value="Thu">Thu</option><option value="Fri">Fri</option><option value="Sat">Sat</option><option value="Sun">Sun</option></select></label>
+     <label class="efield"><span>Start</span><input type="time" id="exStart"></label>
+     <label class="efield"><span>End</span><input type="time" id="exEnd"></label>
+    </div>
+    <div class="erow">
+     <label class="efield"><span>Subject</span><select id="exSubj"></select></label>
+     <label class="efield"><span>Kind</span><select id="exKind"><option>Make-up</option><option>Moved</option><option>Extra</option></select></label>
+    </div>
+    <div class="erow">
+     <label class="efield"><span>Topic</span><input type="text" id="exTopic" placeholder="Optional" autocomplete="off"></label>
+    </div>
+    <div class="erow">
+     <label class="efield"><span>Teacher</span><input type="text" id="exTeacher" placeholder="Optional" autocomplete="off"></label>
+     <button class="btn primary" id="exAdd" type="button">Add class</button>
+    </div>
+    <p class="hint err" id="exErr" hidden></p>
+   </section>
+   <section class="card tool">
+    <h2>Notes for this week</h2>
+    <ul class="lines" id="notesList"></ul>
+    <div class="erow">
+     <label class="efield"><span>New note</span><input type="text" id="noteText" placeholder="e.g. Quiz moved to Friday" autocomplete="off"></label>
+     <button class="btn" id="noteAdd" type="button">Add</button>
+    </div>
+    <p class="hint err" id="noteErr" hidden></p>
+   </section>
+   <section class="card tool">
+    <h2>Holidays</h2>
+    <p class="hint">Whole term. Classes on these dates are cancelled.</p>
+    <ul class="lines" id="holList"></ul>
+    <div class="erow">
+     <label class="efield"><span>Date</span><input type="date" id="holDate"></label>
+     <label class="efield"><span>Name</span><input type="text" id="holName" placeholder="e.g. All Saints' Day" autocomplete="off"></label>
+    </div>
+    <div class="erow"><button class="btn" id="holAdd" type="button">Add holiday</button></div>
+    <p class="hint err" id="holErr" hidden></p>
+   </section>
+  </div>
+ </section>
+</main>
+<div id="saveBar" class="savebar" hidden><div class="in"><span class="sbmsg">Unsaved changes</span><button class="btn" type="button" data-act="discard">Discard</button><button class="btn primary" id="saveBtn" type="button" data-act="save">Save changes</button></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="auth.js"></script>
+<script src="schedule-core.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const deep=v=>v==null?v:JSON.parse(JSON.stringify(v));
+
+/* The in-memory override this page edits. It starts as a copy of the saved one so the
+   next step can change weeks/holidays without touching Sched.data until a render. */
+let OV={weeks:{},holidays:{}};
+let WEEK=1;
+let dirty=false;
+
+/* the owner's popup (same in-page dialog as the shop; no browser alert/confirm) */
+function ask(title,msg,o){o=o||{};return new Promise(res=>{
+ const m=document.createElement('div');m.className='modal dlgwrap';
+ m.innerHTML='<div class="sheet dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgt"><h3 id="dlgt">'+esc(title)+'</h3><p>'+esc(msg||'')+'</p><div class="dbtns">'+(o.cancel===null?'':'<button class="btn" data-v="0">'+esc(o.cancel||'Keep it')+'</button>')+'<button class="btn primary'+(o.danger===false?'':' danger')+'" data-v="1">'+esc(o.ok||'OK')+'</button></div></div>';
+ const done=v=>{document.removeEventListener('keydown',key);m.remove();res(v)},key=e=>{if(e.key==='Escape')done(false)};
+ m.onclick=e=>{if(e.target===m)done(false);const b=e.target.closest('button[data-v]');if(b)done(b.dataset.v==='1')};
+ document.addEventListener('keydown',key);document.body.appendChild(m);(m.querySelector('[data-v="0"]')||m.querySelector('[data-v="1"]')).focus()})}
+
+function showGate(){
+ $('status').hidden=true;
+ $('gate').hidden=false;
+ $('app').hidden=true;
+}
+
+/* The server stores a whole week object, so the first edit to a week copies the merged
+   week (base + saved override) into OV.weeks[n]; later edits build on that complete copy. */
+function wk(n){
+ const k=String(n);
+ let w=OV.weeks[k];
+ if(!w||typeof w!=='object'||Array.isArray(w)){
+  const merged=(Sched.data&&Sched.data.weeks&&Sched.data.weeks[k])||{};
+  w=deep(merged);
+  if(!w||typeof w!=='object'||Array.isArray(w))w={};
+  OV.weeks[k]=w;
+ }
+ return w;
+}
+function normalClass(id){return ((Sched.base&&Sched.base.classes)||[]).find(x=>x.id===id)||{}}
+/* Re-merge for display. OV.holidays is always the full holiday list (base + edits). */
+function applyOV(){
+ if(!Sched.base)return;
+ Sched.data=Sched.merge(Sched.base,{weeks:OV.weeks,holidays:OV.holidays||{}});
+}
+function updateSaveBar(){$('saveBar').hidden=!dirty}
+function markDirty(){dirty=true;updateSaveBar()}
+function showErr(id,msg){const el=$(id);if(!el)return;el.textContent=msg||'';el.hidden=!msg}
+function toast(t,ms){const e=$('toast');if(!e)return;e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),ms||2400)}
+
+/* OV is always the full override: weeks plus the complete holiday list (base + edits). */
+function ovFromSched(){
+ const o=(Sched.override&&typeof Sched.override==='object'&&!Array.isArray(Sched.override))?Sched.override:{};
+ const oh=(o.holidays&&typeof o.holidays==='object'&&!Array.isArray(o.holidays))?o.holidays:null;
+ return {
+  weeks:deep(o.weeks&&typeof o.weeks==='object'&&!Array.isArray(o.weeks)?o.weeks:{}),
+  holidays:deep(oh||(Sched.base&&Sched.base.holidays)||{})
+ };
+}
+
+/* The body sent to sched_save: no empty weeks, and no holidays key when the list is empty. */
+function sendableOV(){
+ const out={weeks:{}};
+ const weeks=(OV.weeks&&typeof OV.weeks==='object')?OV.weeks:{};
+ for(const k of Object.keys(weeks)){
+  const w=weeks[k];
+  if(w&&typeof w==='object'&&!Array.isArray(w)&&Object.keys(w).length)out.weeks[k]=deep(w);
+ }
+ const hol=(OV.holidays&&typeof OV.holidays==='object'&&!Array.isArray(OV.holidays))?OV.holidays:{};
+ if(Object.keys(hol).length)out.holidays=deep(hol);
+ return out;
+}
+
+function applySaved(data){
+ const d=(data&&typeof data==='object'&&!Array.isArray(data))?data:null;
+ if(!d)return;
+ const oh=(d.holidays&&typeof d.holidays==='object'&&!Array.isArray(d.holidays))?d.holidays:null;
+ OV={
+  weeks:deep(d.weeks&&typeof d.weeks==='object'&&!Array.isArray(d.weeks)?d.weeks:{}),
+  holidays:deep(oh||(Sched.base&&Sched.base.holidays)||{})
+ };
+ Sched.override=deep(OV);
+}
+
+/* Reload schedule.json + the saved override from the server and start from it. */
+async function reloadData(){
+ Sched.data=null;Sched._p=null;Sched._cloudP=null;
+ try{await Sched.load()}catch(e){}
+ OV=ovFromSched();
+ dirty=false;updateSaveBar();render();
+}
+
+let saving=false;
+async function saveChanges(){
+ if(saving)return;
+ const btn=$('saveBtn');
+ saving=true;
+ if(btn)btn.disabled=true;
+ try{
+  const r=await Auth.rpc('sched_save',{p_data:sendableOV(),p_expect:Sched.updatedAt},true);
+  if(r&&r.updated_at)Sched.updatedAt=r.updated_at;
+  applySaved(r&&r.data);
+  dirty=false;updateSaveBar();render();toast('Saved');
+ }catch(e){
+  const m=(e&&e.message)||'Could not save.';
+  if(/changed elsewhere/i.test(m)){
+   const go=await ask('Changed elsewhere','Someone else saved the timetable first. Reload the latest version?',{ok:'Reload',cancel:'Not now',danger:false});
+   if(go)await reloadData();
+  }else{
+   toast(m);
+  }
+ }finally{
+  saving=false;
+  if(btn)btn.disabled=false;
+ }
+}
+
+async function discardChanges(){
+ if(!await ask('Discard changes?','Your unsaved edits will be thrown away.',{ok:'Discard',cancel:'Keep editing'}))return;
+ OV=ovFromSched();
+ dirty=false;updateSaveBar();render();
+}
+
+function fillSubjects(){
+ const subs=(Sched.base&&Sched.base.subjects)||{};
+ const sel=$('exSubj');
+ if(!sel)return;
+ sel.innerHTML='<option value="">Choose subject…</option>'+Object.keys(subs).map(k=>{const s=subs[k]||{};return '<option value="'+esc(k)+'">'+esc(s.name||k)+'</option>'}).join('');
+}
+
+function renderTools(){
+ const w=(Sched.data&&Sched.data.weeks&&Sched.data.weeks[String(WEEK)])||{};
+ const notes=Array.isArray(w.notes)?w.notes:[];
+ $('notesList').innerHTML=notes.length?notes.map((t,i)=>'<li><span class="lt">'+esc(t)+'</span><button class="btn danger" type="button" data-note="'+i+'">Remove</button></li>').join(''):'<li class="empty">No notes for this week.</li>';
+ const hol=(Sched.data&&Sched.data.holidays)||{};
+ const keys=Object.keys(hol).sort();
+ $('holList').innerHTML=keys.length?keys.map(k=>'<li><span class="ld">'+esc(k)+'</span><span class="lt">'+esc(hol[k])+'</span><button class="btn danger" type="button" data-hol="'+esc(k)+'">Remove</button></li>').join(''):'<li class="empty">No holidays.</li>';
+ $('addWeekNo').textContent=String(WEEK);
+}
+
+function render(){
+ applyOV();
+ const start=Sched.weekStart(WEEK),end=new Date(start);end.setDate(end.getDate()+5);
+ $('wname').textContent='Week '+WEEK;
+ $('wdates').textContent=Sched.date(start)+' – '+Sched.date(end);
+ $('prev').disabled=WEEK<=1;
+ $('weekTools').innerHTML=OV.weeks[String(WEEK)]?'<button class="btn" type="button" data-act="reset">Reset this week to the original</button>':'';
+ const list=Sched.classes(WEEK);
+ $('clist').innerHTML=list.length?list.map(card).join(''):'<p class="empty">No classes this week.</p>';
+ renderTools();
+}
+
+function card(c){
+ const name=(c.subj&&c.subj.name)||c.subject||'';
+ const topic=c.topic||'';
+ const day=(typeof DAY_NAMES!=='undefined'&&DAY_NAMES[c.di])||c.day||'';
+ const isExtra=!!c.extra;
+ const extraIndex=isExtra?String(c.id).replace(/^extra-/,''):'';
+ const w=(Sched.data&&Sched.data.weeks&&Sched.data.weeks[String(WEEK)])||{};
+ const cancelled=(w.cancel||[]).includes(c.id);
+ let controls;
+ if(isExtra){
+  controls='<div class="erow"><label class="efield"><span>Topic</span><input type="text" data-act="topic" value="'+esc(topic)+'" placeholder="Topic" autocomplete="off"></label><button class="btn danger" type="button" data-act="remove">Remove</button></div>';
+ }else{
+  controls='<div class="erow"><label class="echk"><input type="checkbox" data-act="cancel"'+(cancelled?' checked':'')+'> Cancel this class</label></div>'+
+   '<div class="erow"><label class="efield"><span>Topic</span><input type="text" data-act="topic" value="'+esc(topic)+'" placeholder="Topic not posted yet" autocomplete="off"></label></div>'+
+   '<div class="etimes"><label class="efield"><span>Start</span><input type="time" data-act="start" value="'+esc(c.start||'')+'"></label><label class="efield"><span>End</span><input type="time" data-act="end" value="'+esc(c.end||'')+'"></label></div>';
+ }
+ return '<article class="ccard'+(c.cancelled?' off':'')+'" data-id="'+esc(c.id)+'"'+(isExtra?' data-extra="'+esc(extraIndex)+'"':'')+'>'+
+  '<div class="chead"><span class="cday">'+esc(day)+', '+esc(Sched.date(c.date))+'</span><span class="ctime">'+esc(Sched.span(c))+'</span>'+(c.extra?'<span class="tag">'+esc(c.kind||'Extra')+'</span>':'')+'</div>'+
+  '<div class="csubj">'+esc(name)+'</div>'+
+  '<div class="ctopic'+(topic?'':' mute')+'">'+esc(topic||'Topic not posted yet')+'</div>'+
+  (c.cancelled?'<div class="ccancel">'+esc(c.holiday?'Holiday: '+c.holiday:'Cancelled')+'</div>':'')+
+  '<div class="editArea" id="editArea-'+esc(c.id)+'" data-class="'+esc(c.id)+'">'+controls+'</div>'+
+  '</article>';
+}
+
+async function boot(){
+ try{
+  const list=await (await fetch('courses.json')).json();
+  const c=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;
+  if(c&&c.key)Auth.cloud=c;
+ }catch(e){}
+ if(typeof Auth==='undefined'||!Auth.cloud)return showGate();
+ try{await Auth.finish()}catch(e){}
+ if(!Auth.ses())return showGate();
+ try{await Auth.token()}catch(e){}
+ if(!Auth.ses())return showGate();
+ let owner=false;
+ try{const a=await Auth.rpc('att_mine',{},true);owner=!!(a&&a.owner)}catch(e){owner=false}
+ if(!owner)return showGate();
+ try{await Sched.load()}catch(e){return showGate()}
+ OV=ovFromSched();
+ WEEK=Sched.defaultWeek();
+ fillSubjects();
+ $('gate').hidden=true;$('status').hidden=true;$('app').hidden=false;
+ render();
+}
+
+/* Text edits update the model on input but never re-render, so typing keeps focus. */
+$('clist').addEventListener('input',e=>{
+ const el=e.target;
+ if(!el||el.dataset.act!=='topic')return;
+ const card=el.closest('.ccard');
+ if(!card)return;
+ const w=wk(WEEK),v=el.value.trim();
+ if(card.hasAttribute('data-extra')){
+  const i=Number(card.dataset.extra);
+  if(!Array.isArray(w.extra)||!w.extra[i])return;
+  if(v)w.extra[i].topic=el.value; else delete w.extra[i].topic;
+ }else{
+  const id=card.dataset.id;
+  w.topics=w.topics||{};
+  if(v)w.topics[id]=el.value; else delete w.topics[id];
+ }
+ markDirty();
+});
+
+$('clist').addEventListener('change',e=>{
+ const el=e.target;
+ if(!el||!el.dataset.act)return;
+ const card=el.closest('.ccard');
+ if(!card)return;
+ if(el.dataset.act==='cancel'){
+  const id=card.dataset.id,w=wk(WEEK);
+  w.cancel=Array.isArray(w.cancel)?w.cancel:[];
+  const i=w.cancel.indexOf(id);
+  if(el.checked){if(i<0)w.cancel.push(id)}else if(i>=0)w.cancel.splice(i,1);
+  markDirty();render();return;
+ }
+ if(el.dataset.act==='start'||el.dataset.act==='end'){
+  const id=card.dataset.id,w=wk(WEEK);
+  const start=card.querySelector('[data-act="start"]').value;
+  const end=card.querySelector('[data-act="end"]').value;
+  w.times=(w.times&&typeof w.times==='object'&&!Array.isArray(w.times))?w.times:{};
+  const normal=normalClass(id);
+  if(start&&end&&start===normal.start&&end===normal.end)delete w.times[id];
+  else if(start&&end)w.times[id]={start,end};
+  else delete w.times[id];
+  markDirty();render();
+ }
+});
+
+$('clist').addEventListener('click',e=>{
+ const b=e.target.closest('[data-act="remove"]');
+ if(!b)return;
+ const card=b.closest('.ccard');
+ if(!card||!card.hasAttribute('data-extra'))return;
+ const i=Number(card.dataset.extra),w=wk(WEEK);
+ if(Array.isArray(w.extra)&&i>=0&&i<w.extra.length)w.extra.splice(i,1);
+ markDirty();render();
+});
+
+$('weekTools').addEventListener('click',async e=>{
+ const b=e.target.closest('[data-act="reset"]');
+ if(!b)return;
+ if(!await ask('Reset this week?','This removes every edit for Week '+WEEK+' and shows the original timetable again.',{ok:'Reset this week'}))return;
+ delete OV.weeks[String(WEEK)];
+ markDirty();render();
+});
+
+$('prev').addEventListener('click',()=>{if(WEEK>1){WEEK--;render()}});
+$('next').addEventListener('click',()=>{WEEK++;render()});
+
+/* Add a make-up / extra class to this week. */
+$('exAdd').addEventListener('click',()=>{
+ const day=$('exDay').value,start=$('exStart').value,end=$('exEnd').value,subject=$('exSubj').value;
+ if(!day||!start||!end)return showErr('exErr','Pick a day, a start time and an end time.');
+ if(Sched.mins(start)>=Sched.mins(end))return showErr('exErr','The end time must be after the start time.');
+ if(!subject)return showErr('exErr','Pick a subject.');
+ const c={day,start,end,subject};
+ const kind=$('exKind').value,topic=$('exTopic').value.trim(),teacher=$('exTeacher').value.trim();
+ if(kind)c.kind=kind;
+ if(topic)c.topic=topic;
+ if(teacher)c.teacher=teacher;
+ const w=wk(WEEK);
+ w.extra=Array.isArray(w.extra)?w.extra:[];
+ w.extra.push(c);
+ showErr('exErr');
+ $('exStart').value='';$('exEnd').value='';$('exTopic').value='';$('exTeacher').value='';
+ markDirty();render();
+});
+
+/* Notes for this week. */
+$('noteAdd').addEventListener('click',()=>{
+ const v=$('noteText').value.trim();
+ if(!v)return showErr('noteErr','Type a note first.');
+ const w=wk(WEEK);
+ w.notes=Array.isArray(w.notes)?w.notes:[];
+ w.notes.push(v);
+ $('noteText').value='';
+ showErr('noteErr');
+ markDirty();render();
+});
+$('notesList').addEventListener('click',e=>{
+ const b=e.target.closest('[data-note]');
+ if(!b)return;
+ const i=Number(b.dataset.note),w=wk(WEEK);
+ if(Array.isArray(w.notes)&&i>=0&&i<w.notes.length)w.notes.splice(i,1);
+ markDirty();render();
+});
+
+/* Holidays apply to the whole term. */
+$('holAdd').addEventListener('click',()=>{
+ const d=$('holDate').value,name=$('holName').value.trim();
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return showErr('holErr','Pick a date.');
+ if(!name)return showErr('holErr','Give the holiday a name.');
+ OV.holidays=OV.holidays||{};
+ OV.holidays[d]=name;
+ $('holDate').value='';$('holName').value='';
+ showErr('holErr');
+ markDirty();render();
+});
+$('holList').addEventListener('click',e=>{
+ const b=e.target.closest('[data-hol]');
+ if(!b)return;
+ if(OV.holidays)delete OV.holidays[b.dataset.hol];
+ markDirty();render();
+});
+
+$('saveBar').addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');
+ if(!b)return;
+ if(b.dataset.act==='save')return saveChanges();
+ if(b.dataset.act==='discard')return discardChanges();
+});
+
+window.addEventListener('beforeunload',e=>{
+ if(!dirty)return;
+ e.preventDefault();
+ e.returnValue='';
+});
+
+boot();
+</script>
+<script src="update.js" defer></script>
+</body></html>

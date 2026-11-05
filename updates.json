@@ -970,5 +970,13 @@
   "title": "Chemistry: every wrong choice explained",
   "text": "Chemistry topics 1-11 now show a short \"why not\" line when you pick a wrong choice, about 2,900 new explanations, including the solving questions and Bea's practice items. Together with topics 12-13, the whole course now explains its wrong answers.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 118,
+  "date": "2026-11-05",
+  "type": "content",
+  "title": "IML and Chemistry: fairer wrong choices",
+  "text": "Every wrong choice in Intro to Medical Life now has a short \"why not\" line, and about 100 Chemistry questions in topics 3, 5, 6, 10 and 11 got stronger wrong choices, so the longest choice is no longer a hint. Your progress and the right answers are unchanged.",
+  "link": "index.html"
  }
 ]
