@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='109',APP_DATE='Nov 5, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='110',APP_DATE='Nov 6, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -193,6 +193,7 @@ const blank=()=>({right:0,wrong:0,hints:0,lookups:0,seen:0,history:[]});
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const CHEV='<svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
 const LEFT='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+const SHARE_IC='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>';
 const LAYERS_SM='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>';
 const XSVG='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 const STAR_PATH='<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/>';
@@ -701,7 +702,7 @@ function cardHTML(){
   caseHTML(q.cid)+casePrev(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+(isSelf(byId[q.cid])?selfHTML(q,fb):q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
   (q.usedHint&&!fb?'<div class="hint"><b>Hint</b>'+esc(q.hint)+'</div>':'')+
   (fb?feedbackHTML(q,fb,true):'')+
-  '<div class="actions">'+backBtn()+'<span class="aux">'+(fb?'':(q.usedHint||!q.hint?'':'<button class="link" onclick="hint()">Show hint</button>')+'<button class="link" onclick="looked()" title="Counts as a review, not a correct recall">I checked my slides</button>')+'</span>'+
+  '<div class="actions">'+backBtn()+'<span class="aux">'+(fb?(FILE_IDS.has(String(q.cid))&&cloudOn()?'<button class="link" onclick="shareQuestion()" aria-label="Send this question to a classmate">'+SHARE_IC+'Share</button>':''):(q.usedHint||!q.hint?'':'<button class="link" onclick="hint()">Show hint</button>')+'<button class="link" onclick="looked()" title="Counts as a review, not a correct recall">I checked my slides</button>')+'</span>'+
   (fb?'<button class="btn primary" id="go" onclick="next()">'+(nextPart(q.cid)?'Next part':'Next question')+' <kbd>Enter</kbd></button>'
      :isSelf(byId[q.cid])?(q.shown?'<button class="btn" id="go2" onclick="selfMark(false)">Missed it</button><button class="btn primary" id="go" onclick="selfMark(true)">Got it <kbd>Enter</kbd></button>':'<button class="btn primary" id="go" onclick="selfShow()">Show answer <kbd>Enter</kbd></button>')
      :sureOn(q)?'<button class="btn" id="go2" onclick="submit(\'unsure\')" '+(state.selected?'':'disabled')+'>Not sure</button><button class="btn primary" id="go" onclick="submit(\'sure\')" '+(state.selected?'':'disabled')+'>Sure <kbd>Enter</kbd></button>'
@@ -892,6 +893,21 @@ function upPop(items){let b=$('uppop');if(!b){b=document.createElement('div');b.
 function upClose(){const b=$('uppop');if(b){b.classList.remove('in');setTimeout(()=>{b.hidden=true},250)}}
 function discussLink(){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.discussion||!CONFIG.home||!id||!/^https?:$/.test(location.protocol))return '';
  return '<a class="page" style="text-decoration:none" href="discuss.html?c='+encodeURIComponent(id)+'" onclick="return openDiscuss()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 14h4.5"/></svg>Discussion'+dnDot(dnUnread(),dnQuiet())+'</a>'}
+// Send a built-in question to a classmate's DMs. sharechat.js sits next to reviewer.html and is loaded once.
+let SHARECHAT_LOAD=null;
+function loadShareChat(){
+ if(typeof window!=='undefined'&&window.ShareChat)return Promise.resolve(window.ShareChat);
+ if(SHARECHAT_LOAD)return SHARECHAT_LOAD;
+ SHARECHAT_LOAD=new Promise((res,rej)=>{const s=document.createElement('script');s.src='sharechat.js';s.async=true;
+  s.onload=()=>{SHARECHAT_LOAD=null;window.ShareChat?res(window.ShareChat):rej(new Error('ShareChat missing'))};
+  s.onerror=()=>{SHARECHAT_LOAD=null;rej(new Error('Could not load sharechat.js'))};
+  document.head.appendChild(s)});
+ return SHARECHAT_LOAD}
+function shareQuestion(){
+ const q=state.active;if(!q||!state.feedback||!FILE_IDS.has(String(q.cid))||!cloudOn())return;
+ const c=byId[q.cid]||{},raw=String(q.stem||c.q||c.definition||c.term||'');
+ const preview=raw.replace(/@m:\S+/g,'(structure drawing)').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().slice(0,120);
+ loadShareChat().then(S=>{if(S&&typeof S.open==='function')S.open({body:'[q:'+courseId()+':'+q.cid+']',label:(CONFIG.title||'Question')+' question',preview})}).catch(()=>{})}
 const navDraw=()=>setHTML($('nav'),navHTML());
 function draw(){
  PV++;
@@ -1944,6 +1960,9 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'110',date:'Nov 6, 2026',title:'Share questions and game results',items:[
+  'After answering, tap Share to send the question to a classmate\'s DMs. They can answer it right in the chat.',
+  'Game results (crossword, APMed\'le, Sort It, duels) can be sent to a classmate too.']},
  {v:'109',date:'Nov 5, 2026',title:'Start over, or redo one chapter',items:[
   'Reset progress now sticks when you sync: it erases the course on every synced device instead of coming back, and keeps your settings.',
   'New in Personalize: Reset one chapter, to redo a lesson before an exam without losing the rest.']},

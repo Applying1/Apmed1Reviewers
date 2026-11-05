@@ -1034,5 +1034,13 @@
   "title": "Typing in the AI chat works on slides",
   "text": "In the slide viewer, Space and Backspace now type in the AI chat box instead of changing slides.",
   "link": "index.html"
+ },
+ {
+  "id": 126,
+  "date": "2026-11-06",
+  "type": "feature",
+  "title": "Send questions and game results to a classmate",
+  "text": "After answering a question, tap Share to send it to a classmate's DMs: they can answer it right in the chat and see the explanation. Crossword, APMed'le, Sort It and duel results have a Send to a classmate button too, to compare or flex.",
+  "link": "dm.html"
  }
 ]

@@ -152,12 +152,34 @@ button{cursor:pointer}
 .duel-state{font-size:13px;font-weight:700;color:var(--accent)}
 .duel-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:2px}
 .duel-btn{display:inline-flex;align-items:center;justify-content:center;padding:6px 11px;border-radius:9px;border:1px solid var(--line2);background:var(--raised);color:var(--text);font-size:12.5px;font-weight:700;text-decoration:none;cursor:pointer;line-height:1.2}
+.bubble a.duel-btn{text-decoration:none}
+.bubble a.duel-link{text-decoration:none}
+.bubble a.duel-link:hover{text-decoration:underline}
 .duel-btn:hover{background:var(--surface);border-color:var(--accent-line)}
 .duel-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .duel-btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
 .duel-btn.ghost{background:transparent;color:var(--mute)}
 .duel-link{font-size:12.5px;font-weight:700;color:var(--accent);text-decoration:none}
 .duel-link:hover{text-decoration:underline}
+
+/* Shared question and game-result cards */
+.bubble.bubble-shared{white-space:normal}
+.s-card{width:100%;max-width:320px;min-width:0;overflow-wrap:anywhere}
+.s-course{font:700 11px/1.3 var(--sans);letter-spacing:.4px;text-transform:uppercase;color:var(--faint)}
+.s-stem{font-size:14px;line-height:1.45;font-weight:600;overflow-wrap:anywhere}
+.s-choices{display:flex;flex-direction:column;gap:6px}
+.s-choice{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:9px;border:1px solid var(--line2);background:var(--raised);color:var(--text);font-size:13px;line-height:1.35;cursor:pointer;overflow-wrap:anywhere;transition:background .12s,border-color .12s,transform .1s}
+.s-choice:hover:not(:disabled){background:var(--surface);border-color:var(--accent-line);transform:translateY(-1px)}
+.s-choice:disabled{cursor:default;opacity:1}
+.s-choice.correct{background:var(--good-bg,#e7f7ee);border-color:var(--good,#22a06b);color:var(--good,#22a06b);font-weight:700}
+.s-choice.wrong{background:var(--bad-bg,#fde8e8);border-color:var(--bad,#c0392b);color:var(--bad,#c0392b);font-weight:700}
+.s-answer{font-size:13px;font-weight:700;color:var(--good,#22a06b);line-height:1.4;overflow-wrap:anywhere}
+.s-why,.s-why-not{font-size:12.5px;line-height:1.45;color:var(--mute);overflow-wrap:anywhere}
+.s-why-not{color:var(--bad,#c0392b)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--good-bg:color-mix(in srgb,var(--good,#4fd3a1) 16%,var(--surface,#181b25));--bad-bg:color-mix(in srgb,var(--bad,#fb923c) 18%,var(--surface,#181b25))}}
+:root[data-theme="dark"]{--good-bg:color-mix(in srgb,var(--good,#4fd3a1) 16%,var(--surface,#181b25));--bad-bg:color-mix(in srgb,var(--bad,#fb923c) 18%,var(--surface,#181b25))}
+.game-grid{margin:0;padding:9px 10px;border-radius:9px;background:var(--raised);border:1px solid var(--line);font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text}
+.shared-text{margin-top:2px;padding:9px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line2);font-size:14px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text}
 
 /* Conversation Row Cards */
 .crow{flex:none;min-height:56px;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid transparent;text-decoration:none;transition:background .15s,border-color .15s;cursor:pointer}
@@ -364,6 +386,104 @@ function duelCardHtml(m,code){
  const mine=!!m.mine;
  return '<div class="duel-card" data-duel-card="'+esc(code)+'" data-duel-mine="'+(mine?'1':'0')+'">'+duelCardInner(code,mine)+'</div>';
 }
+
+/* Shared questions and game results in the thread */
+const QTAG_RE=/^\[q:([a-z0-9_-]{1,24}):([\w.:-]{1,60})\]$/;
+const GAME_TAG_RE=/^\[game:(crossword|apmeddle|sortit|duel):([\w-]{1,40})\]$/;
+const GAME_META={crossword:{name:'Crossword',icon:'🧩'},apmeddle:{name:"APMed'le",icon:'🔤'},sortit:{name:'Sort It',icon:'🗂️'},duel:{name:'Duel',icon:'⚔️'}};
+const COURSE_JSON={},Q_CARDS={};
+function splitTagBody(txt){
+ const s=String(txt==null?'':txt),nl=s.indexOf('\n');
+ return {first:nl<0?s:s.slice(0,nl),rest:nl<0?'':s.slice(nl+1)};
+}
+function qTagInfo(txt){const p=splitTagBody(txt),m=p.first.match(QTAG_RE);return m?{course:m[1],qid:m[2],rest:p.rest}:null}
+function gameTagInfo(txt){const p=splitTagBody(txt),m=p.first.match(GAME_TAG_RE);return m?{game:m[1],code:m[2],rest:p.rest}:null}
+function gameLabel(g){return GAME_META[g]?GAME_META[g].name:g}
+function plainTextHtml(s){return esc(String(s==null?'':s).replace(/@m:\S+/g,'(structure drawing)'))}
+function seedFrom(v){const s=String(v==null?'':v);let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function seededShuffle(a,seed){const out=a.slice();let s=seed>>>0;for(let i=out.length-1;i>0;i--){s=(Math.imul(s,1664525)+1013904223)>>>0;const j=s%(i+1);const x=out[i];out[i]=out[j];out[j]=x}return out}
+function courseData(course){
+ if(!COURSE_JSON[course]) COURSE_JSON[course]=fetch('courses/'+encodeURIComponent(course)+'.json').then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).catch(()=>null);
+ return COURSE_JSON[course];
+}
+function findCourseItem(data,qid){
+ if(!data)return null;
+ const list=(Array.isArray(data.bank)?data.bank:[]).concat(...(Array.isArray(data.variants)?data.variants:[]).map(v=>(v&&v.items)||[]));
+ return list.find(x=>x&&String(x.id)===String(qid))||null;
+}
+function questionCardHtml(m,info){
+ return '<div class="duel-card s-card q-card" data-mid="'+esc(m.id)+'" data-course="'+esc(info.course)+'" data-qid="'+esc(info.qid)+'">'+
+  '<div class="s-loading duel-meta">Loading question…</div></div>';
+}
+function gameCardHtml(info){
+ const meta=GAME_META[info.game]||{name:info.game,icon:'🏆'};
+ const lines=String(info.rest||'').replace(/\r\n?/g,'\n').replace(/\n+$/,'');
+ const action=info.game==='duel'?'Open duels':"Play today's";
+ return '<div class="duel-card s-card game-card" data-game="'+esc(info.game)+'">'+
+  '<div class="duel-head"><span class="duel-ic s-ic">'+meta.icon+'</span><div style="min-width:0"><div class="duel-title">'+esc(meta.name)+' result</div><div class="duel-meta">'+esc(info.code)+'</div></div></div>'+
+  (lines?'<pre class="game-grid">'+esc(lines)+'</pre>':'')+
+  '<div class="duel-actions"><a class="duel-btn primary" href="'+esc(info.game)+'.html">'+esc(action)+'</a></div>'+
+ '</div>';
+}
+function questionCardInner(mid,data,item,choices){
+ const st=Q_CARDS[mid]||{};
+ const cfg=(data&&data.config)||{};
+ const title=cfg.title||item.course||'Reviewer';
+ const topic=(cfg.sections&&cfg.sections[item.section])||item.section||'';
+ const stem=item.q?String(item.q):(item.definition?'Which term fits: '+item.definition:'');
+ const correct=String(item.a||'');
+ const choiceHtml=choices.map((c,i)=>{
+  let cls='s-choice';
+  if(st.answered){if(c===correct)cls+=' correct';else if(c===st.picked)cls+=' wrong'}
+  return '<button type="button" class="'+cls+'" data-mid="'+esc(mid)+'" data-idx="'+i+'" onclick="pickQCard(this)"'+(st.answered?' disabled':'')+'>'+plainTextHtml(c)+'</button>';
+ }).join('');
+ let feedback='';
+ if(st.answered){
+  const right=st.picked===correct;
+  feedback='<div class="s-answer">Correct answer: <b>'+plainTextHtml(correct)+'</b></div>'+
+   (item.why?'<div class="s-why">'+plainTextHtml(item.why)+'</div>':'')+
+   (!right&&item.dw&&item.dw[st.picked]?'<div class="s-why-not"><b>Why not your choice:</b> '+plainTextHtml(item.dw[st.picked])+'</div>':'');
+ }
+ return '<div class="s-course">'+esc(title)+(topic?' · '+esc(topic):'')+'</div>'+
+  '<div class="s-stem">'+plainTextHtml(stem)+'</div>'+
+  '<div class="s-choices">'+choiceHtml+'</div>'+feedback+
+  '<div class="duel-actions"><a class="duel-link" href="reviewer.html?course='+encodeURIComponent(st.course||'')+'">Open '+esc(title)+'</a></div>';
+}
+function pickQCard(btn){
+ const mid=btn&&btn.getAttribute('data-mid'),st=mid&&Q_CARDS[mid];
+ if(!st||st.answered)return;
+ const idx=Number(btn.getAttribute('data-idx'));
+ if(!(idx>=0&&idx<st.choices.length))return;
+ st.picked=st.choices[idx];st.answered=true;
+ const el=btn.closest('.q-card');
+ if(el)el.innerHTML=questionCardInner(mid,st.data,st.item,st.choices);
+}
+function hydrateQuestionCards(root){
+ const scope=root&&root.querySelectorAll?root:document;
+ scope.querySelectorAll('.q-card[data-mid]').forEach(el=>{
+  const mid=el.getAttribute('data-mid');
+  if(!mid)return;
+  const st=Q_CARDS[mid];
+  if(st&&st.data){el.innerHTML=questionCardInner(mid,st.data,st.item,st.choices);return}
+  if(el.getAttribute('data-loading')==='1'||el.getAttribute('data-hydrated')==='1')return;
+  el.setAttribute('data-loading','1');
+  const course=el.getAttribute('data-course')||'',qid=el.getAttribute('data-qid')||'';
+  courseData(course).then(data=>{
+   el.removeAttribute('data-loading');
+   el.setAttribute('data-hydrated','1');
+   const item=findCourseItem(data,qid);
+   if(!item){
+    const title=data&&data.config&&data.config.title;
+    el.innerHTML='<div class="duel-meta">This question is no longer in the reviewer.</div>'+
+     (title?'<div class="duel-actions"><a class="duel-link" href="reviewer.html?course='+encodeURIComponent(course)+'">Open '+esc(title)+'</a></div>':'');
+    return;
+   }
+   const choices=seededShuffle([String(item.a)].concat((item.d||[]).map(String)),seedFrom(mid));
+   Q_CARDS[mid]={course:course,qid:qid,item:item,choices:choices,data:data,answered:false,picked:''};
+   el.innerHTML=questionCardInner(mid,data,item,choices);
+  });
+ });
+}
 function updateDuelCards(code){
  document.querySelectorAll('.duel-card[data-duel-card="'+code+'"]').forEach(el=>{
   el.innerHTML=duelCardInner(code,el.getAttribute('data-duel-mine')==='1');
@@ -481,6 +601,10 @@ function cleanMsgPreview(txt){
  if(!txt)return '';
  let s=String(txt).replace(/^\[reply:[^\]]+\]\s*/,'');
  if(window.Stickers)s=Stickers.cleanSnippet(s);
+ const g=gameTagInfo(s);
+ if(g)return '🏆 Shared a '+gameLabel(g.game)+' result';
+ const q=qTagInfo(s);
+ if(q){const rest=q.rest.trim().replace(/[\r\n\t]+/g,' ');return '❓ Shared a question'+(rest?' '+rest:'')}
  return s.replace(DUEL_ANY,'⚔️ Duel challenge');
 }
 
@@ -741,9 +865,11 @@ function buildSingleMsgHtml(m, prevDate){
  }
 
  const dcode=duelCode(bodyText);
- const isDuel=!!dcode&&!quoteHtml;
+ const qInfo=qTagInfo(bodyText),gInfo=gameTagInfo(bodyText);
+ const isQCard=!!qInfo&&!quoteHtml,isGameCard=!!gInfo&&!quoteHtml;
+ const isDuel=!!dcode&&!quoteHtml&&!isQCard&&!isGameCard;
  const stkMatch=window.Stickers?Stickers.parse(bodyText):null;
- const isPure=(stkMatch&&stkMatch.isPure&&!quoteHtml&&!isDuel);
+ const isPure=(stkMatch&&stkMatch.isPure&&!quoteHtml&&!isDuel&&!isQCard&&!isGameCard);
 
  const actHtml=(!m.sending)?(
   '<div class="mact">'+
@@ -764,12 +890,20 @@ function buildSingleMsgHtml(m, prevDate){
  ):'';
 
  const rxHtml=buildReactionsHtml(m);
- const bubbleBody=isDuel?duelCardHtml(m,dcode):(window.Stickers?Stickers.render(bodyText,linkify):linkify(bodyText));
+ let bubbleBody;
+ if(isQCard){
+  const extra=String(qInfo.rest||'').replace(/^\n+/,'');
+  bubbleBody=questionCardHtml(m,qInfo)+(extra.trim()?'<div class="shared-text">'+(window.Stickers?Stickers.render(extra,linkify):linkify(extra))+'</div>':'');
+ }else if(isGameCard){
+  bubbleBody=gameCardHtml(gInfo);
+ }else{
+  bubbleBody=isDuel?duelCardHtml(m,dcode):(window.Stickers?Stickers.render(bodyText,linkify):linkify(bodyText));
+ }
 
  html+='<div class="msg '+cls+(m.sending?' sending':'')+(isPure?' is-pure-stk':'')+'" id="m'+m.id+'" data-id="'+m.id+'">'+
   '<div class="mbody">'+
    actHtml+
-   '<div class="bubble'+(isPure?' bubble-stk':'')+(isDuel?' bubble-duel':'')+'">'+quoteHtml+bubbleBody+'</div>'+
+   '<div class="bubble'+(isPure?' bubble-stk':'')+((isDuel||isQCard||isGameCard)?' bubble-duel':'')+((isQCard||isGameCard)?' bubble-shared':'')+'">'+quoteHtml+bubbleBody+'</div>'+
   '</div>'+
   rxHtml+
   '<div class="mfoot">'+
@@ -793,6 +927,7 @@ function renderMessages(){
   lastDate=new Date(m.created_at).toLocaleDateString();
  });
  st.innerHTML=html;
+ hydrateQuestionCards(st);
 }
 
 function scrollToBottom(smooth){
@@ -862,6 +997,7 @@ function updateMessagesIncrementally(newMsgs){
     lastDate = new Date(m.created_at).toLocaleDateString();
    });
    st.insertAdjacentHTML('beforeend', appHtml);
+   hydrateQuestionCards(st);
    if(wasNearBottom) scrollToBottom(true);
   }
  } else if(newMsgs.length < MESSAGES.length){

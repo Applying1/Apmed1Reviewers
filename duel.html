@@ -222,9 +222,10 @@ function showDuel(){
    if(me&&me!=='a')h+='<p class="what">You declined this duel.</p>';
    else if(me==='a')h+='<p class="what"><b>'+esc(p&&p.name||'They')+'</b> can\'t duel right now. Challenge someone else?</p><div class="acts"><button class="btn primary" onclick="home()">'+ic('zap')+'Start a new duel</button></div>';
    else h+='<p class="what">This duel was declined.</p>'}
- else if(r){const mine=me==='a'?r.sa:r.sb,theirs=me==='a'?r.sb:r.sa;
-  h+='<p class="banner">'+(r.w===''?'It\'s a draw!':me&&r.w===me?'You win'+(r.byTime?' on time':'')+'! 🎉':me?d[r.w].name+' wins'+(r.byTime?' on time':''):d[r.w].name+' wins')+'</p>';
-  h+=gridHTML(d)}
+  else if(r){const mine=me==='a'?r.sa:r.sb,theirs=me==='a'?r.sb:r.sa;
+   h+='<p class="banner">'+(r.w===''?'It\'s a draw!':me&&r.w===me?'You win'+(r.byTime?' on time':'')+'! 🎉':me?d[r.w].name+' wins'+(r.byTime?' on time':''):d[r.w].name+' wins')+'</p>';
+   h+=gridHTML(d);
+   if(me)h+='<div class="acts"><button class="btn" onclick="shareResult()">'+ic('message-circle')+'Send to a classmate</button></div>'}
  else if(!me){h+=d.open?'<p class="what"><b>'+esc(d.a.name)+'</b> challenges you to '+d.qids.length+' questions. You\'ll see their score after you play.</p><div class="acts"><button class="btn primary" onclick="accept()">'+ic('zap')+'Accept and play</button></div>'
    :'<p class="what">This duel already has two players.</p><div class="acts"><button class="btn primary" onclick="home()">Start your own duel</button></div>'}
  else if(!d[me].done){h+=(me==='b'?'<p class="what"><b>'+esc(d.a.name)+'</b> challenged you to '+d.qids.length+' questions. You\'ll see their score after you play.</p>':'')+
@@ -237,6 +238,29 @@ function showDuel(){
  h+='<div class="acts"><button class="btn" onclick="home()">'+ic('list')+'Your duels</button>'+(r&&me?'<button class="btn" onclick="rematch()">'+ic('rotate-cw')+'Rematch</button>':'')+'</div>';
  $('view').innerHTML=h;
  if(me&&d[me].done)review();
+}
+function resultText(){
+ const d=DUEL,me=d.me,other=me==='a'?'b':'a',r=result(d);
+ if(!me||!r)return '';
+ const c=course(d.course),ms=s=>Math.floor((s||0)/60)+':'+String(Math.max(0,(s||0))%60).padStart(2,'0');
+ const mine=me==='a'?r.sa:r.sb,theirs=me==='a'?r.sb:r.sa;
+ return 'Duel · '+short(c.title)+(d.scope?' · '+d.scope:'')+'\n'+(d[me].name||'You')+' '+mine+' ('+ms(d[me].secs)+') vs '+(d[other].name||'Them')+' '+theirs+' ('+ms(d[other].secs)+')';
+}
+let shareChatP=null;
+function loadShareChat(){
+ if(window.ShareChat)return Promise.resolve();
+ if(shareChatP)return shareChatP;
+ const add=src=>new Promise((resolve,reject)=>{
+  const s=document.createElement('script');s.src=src;s.async=true;
+  s.onload=()=>resolve();s.onerror=()=>reject(new Error('Could not load '+src));
+  document.head.appendChild(s);
+ });
+ shareChatP=(typeof Auth==='undefined'?add('auth.js'):Promise.resolve()).then(()=>add('sharechat.js')).then(()=>{shareChatP=null},e=>{shareChatP=null;throw e});
+ return shareChatP;
+}
+function shareResult(){
+ const result=resultText(),body='[game:duel:'+DUEL.code+']\n'+result;
+ loadShareChat().then(()=>ShareChat.open({body:body,label:'Duel result',preview:result.split('\n')[0]})).catch(()=>{});
 }
 const fmtT=s=>s>=60?Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s':s+'s';
 function gridHTML(d){const n=d.qids.length,cell=x=>'<i class="'+(x==='1'?'y':x==='0'?'n':'q')+'">'+(x==='1'?'✓':x==='0'?'✗':'·')+'</i>';

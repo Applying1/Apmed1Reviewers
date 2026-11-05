@@ -261,17 +261,37 @@ function drawEnd(){
   '<p class="def">'+esc(D.clue)+'</p>'+(D.card?'<p class="tip">'+esc(D.card)+'</p>':'')+
   (n?'<div class="streak">'+ic('flame')+n+'-day streak</div>':'')+
   '<div class="row2"><button class="btn primary" onclick="share()">'+ic('share')+'Share</button>'+
+  '<button class="btn" onclick="shareToClassmate()">'+ic('message-circle')+'Send to a classmate</button>'+
   '<a class="btn" href="reviewer.html?course='+encodeURIComponent(D.course)+'#preview='+encodeURIComponent(D.sec)+'">Practice 5 questions</a>'+
   '<a class="btn" href="discuss.html?c='+encodeURIComponent(D.course)+'">'+ic('message-circle')+'Discuss</a></div><p class="next" id="next"></p>';
  b.hidden=false;$('kb').hidden=true;tickNext();
 }
 function tickNext(){const e=$('next');if(!e)return;const now=new Date(),mid=new Date(shift(TODAY,1)+'T00:00:00+08:00'),s=Math.max(0,Math.round((mid-now)/1000));
  if(!s){location.reload();return}e.textContent='Next word in '+Math.floor(s/3600)+'h '+String(Math.floor(s%3600/60)).padStart(2,'0')+'m';clearTimeout(tickNext.t);tickNext.t=setTimeout(tickNext,30000)}
-function share(){
+function shareText(){
  const E={h:'🟪',n:'🟧',m:'⬜'},grid=G.r.map(g=>score(g,ANS).map(x=>E[x]).join('')).join('\n');
- const t='APMed\'dle · '+niceDate(TODAY)+' · '+short(course(D.course).title)+'\n'+(G.w===1?G.r.length:'X')+'/'+TRIES+(G.c?' 💡':'')+(streak()>1?' · '+streak()+'-day streak':'')+'\n'+grid+'\n'+location.origin+location.pathname;
+ return 'APMed\'dle · '+niceDate(TODAY)+' · '+short(course(D.course).title)+'\n'+(G.w===1?G.r.length:'X')+'/'+TRIES+(G.c?' 💡':'')+(streak()>1?' · '+streak()+'-day streak':'')+'\n'+grid;
+}
+function share(){
+ const t=shareText()+'\n'+location.origin+location.pathname;
  if(navigator.share)navigator.share({text:t}).catch(()=>{});
  else (navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied. Paste it in the group chat.'),()=>toast('Could not copy here.'));
+}
+let shareChatP=null;
+function loadShareChat(){
+ if(window.ShareChat)return Promise.resolve();
+ if(shareChatP)return shareChatP;
+ const add=src=>new Promise((resolve,reject)=>{
+  const s=document.createElement('script');s.src=src;s.async=true;
+  s.onload=()=>resolve();s.onerror=()=>reject(new Error('Could not load '+src));
+  document.head.appendChild(s);
+ });
+ shareChatP=(typeof Auth==='undefined'?add('auth.js'):Promise.resolve()).then(()=>add('sharechat.js')).then(()=>{shareChatP=null},e=>{shareChatP=null;throw e});
+ return shareChatP;
+}
+function shareToClassmate(){
+ const result=shareText(),body='[game:apmeddle:'+D.date+']\n'+result;
+ loadShareChat().then(()=>ShareChat.open({body:body,label:'APMed\'le result',preview:result.split('\n')[0]})).catch(()=>{});
 }
 function openStats(){
  const days=Object.keys(S.g).filter(d=>isDone(S.g[d])),won=days.filter(d=>S.g[d].w===1),dist=[0,0,0,0,0,0];

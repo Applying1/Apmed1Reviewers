@@ -419,16 +419,37 @@ function drawDone(){
  const other=dayPuzzles(P.date).find(x=>x!==P&&!solved(x));
  b.innerHTML='<h2>'+(G.gave?'Puzzle revealed':'Solved!')+'</h2><p class="meta">'+esc(P.title||label(P))+' · '+clock(s)+' · '+help+'</p>'+
   (n?'<div class="streak">'+ic('flame')+n+'-day streak</div>':'')+
-  '<div class="row">'+(G.gave?'':'<button class="btn primary" onclick="share()">'+ic('share')+'Share result</button>')+
-  (other?'<button class="btn" onclick="go(\''+other.id+'\')">Next: '+esc(label(other))+' puzzle</button>':'')+
+   '<div class="row">'+(G.gave?'':'<button class="btn primary" onclick="share()">'+ic('share')+'Share result</button>')+
+   '<button class="btn" onclick="shareToClassmate()">'+ic('message-circle')+'Send to a classmate</button>'+
+   (other?'<button class="btn" onclick="go(\''+other.id+'\')">Next: '+esc(label(other))+' puzzle</button>':'')+
   P.courses.map(c=>'<a class="btn" href="reviewer.html?course='+encodeURIComponent(c)+'">Practice '+esc(short(c))+'</a>').join('')+'</div>'+
   '<section class="lb" id="lb" aria-label="Class board"></section><details class="review"><summary>The words</summary><ul>'+order.map(w=>'<li><b>'+w.a+'</b>'+(P.courses.length>1&&w.k?'<span class="tg">'+esc(short(w.k))+'</span>':'')+esc(w.q)+'</li>').join('')+'</ul></details>';
  b.hidden=false;drawBoard();
 }
+function shareText(){
+ const s=Math.round(G.t);
+ return 'APMed \'33 Daily Crossword · '+niceDate(P.date)+'\n'+P.courses.map(c=>NAMES[c]||c).join(' + ')+(P.title?': '+P.title:'')+'\nSolved in '+clock(s)+(G.h?' with '+G.h+(G.h===1?' hint':' hints'):', no hints')+(streak()>1?' · '+streak()+'-day streak':'');
+}
 function share(){
- const s=Math.round(G.t),t='APMed \'33 Daily Crossword · '+niceDate(P.date)+'\n'+P.courses.map(c=>NAMES[c]||c).join(' + ')+(P.title?': '+P.title:'')+'\nSolved in '+clock(s)+(G.h?' with '+G.h+(G.h===1?' hint':' hints'):', no hints')+(streak()>1?' · '+streak()+'-day streak':'')+'\n'+location.origin+location.pathname;
+ const t=shareText()+'\n'+location.origin+location.pathname;
  if(navigator.share)navigator.share({text:t}).catch(()=>{});
  else (navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied. Paste it in the group chat.'),()=>toast('Could not copy here.'));
+}
+let shareChatP=null;
+function loadShareChat(){
+ if(window.ShareChat)return Promise.resolve();
+ if(shareChatP)return shareChatP;
+ const add=src=>new Promise((resolve,reject)=>{
+  const s=document.createElement('script');s.src=src;s.async=true;
+  s.onload=()=>resolve();s.onerror=()=>reject(new Error('Could not load '+src));
+  document.head.appendChild(s);
+ });
+ shareChatP=(typeof Auth==='undefined'?add('auth.js'):Promise.resolve()).then(()=>add('sharechat.js')).then(()=>{shareChatP=null},e=>{shareChatP=null;throw e});
+ return shareChatP;
+}
+function shareToClassmate(){
+ const result=shareText(),body='[game:crossword:'+(P.date||P.id)+']\n'+result;
+ loadShareChat().then(()=>ShareChat.open({body:body,label:'Crossword result',preview:result.split('\n')[0]})).catch(()=>{});
 }
 function drawPast(){
  const list=ALL.filter(p=>p.date!==P.date).sort((a,b)=>b.id.localeCompare(a.id)).slice(0,10),b=$('past');

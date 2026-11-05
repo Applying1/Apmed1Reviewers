@@ -59,9 +59,17 @@
       .catch(() => { }).finally(() => { busy = false });
   }
   const isDuelMsg = b => /^\s*\[duel:[A-Z2-9]{8}\]\s*$/.test(String(b || ''));
+  const Q_TAG = /^\[q:[a-z0-9_-]{1,24}:[\w.:-]{1,60}\]$/;
+  const GAME_TAG = /^\[game:(crossword|apmeddle|sortit|duel):[\w-]{1,40}\]$/;
+  const GAME_NAME = { crossword: 'Crossword', apmeddle: "APMed'le", sortit: 'Sort It', duel: 'Duel' };
   function preview(b) {
     b = String(b || '').replace(/^\[reply:[^\]]*\]\n?/, '');
     if (isDuelMsg(b)) return '⚔️ Duel challenge';
+    const nl = b.indexOf('\n'), first = nl < 0 ? b : b.slice(0, nl), rest = nl < 0 ? '' : b.slice(nl + 1);
+    const gm = first.match(GAME_TAG);
+    if (gm) return '🏆 Shared a ' + GAME_NAME[gm[1]] + ' result';
+    const qm = first.match(Q_TAG);
+    if (qm) b = '❓ Shared a question' + (rest.trim() ? ' ' + rest : '');
     b = b.replace(/\[sticker:[^\]]*\]/g, '🎨 Sticker').replace(/\s+/g, ' ').trim();
     return b.length > 90 ? b.slice(0, 88).trim() + '…' : b;
   }
