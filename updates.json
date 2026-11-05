@@ -1042,5 +1042,13 @@
   "title": "Send questions and game results to a classmate",
   "text": "After answering a question, tap Share to send it to a classmate's DMs: they can answer it right in the chat and see the explanation. Crossword, APMed'le, Sort It and duel results have a Send to a classmate button too, to compare or flex.",
   "link": "dm.html"
+ },
+ {
+  "id": 127,
+  "date": "2026-11-06",
+  "type": "feature",
+  "title": "Shared cards readable on your side",
+  "text": "Questions you share in DMs now show their text clearly on your own side of the chat too.",
+  "link": "dm.html"
  }
 ]
