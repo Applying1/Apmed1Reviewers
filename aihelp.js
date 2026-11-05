@@ -147,6 +147,7 @@
 
       var panel = document.createElement('div');
       panel.className = 'aih-panel';
+      panel.addEventListener('keydown', function (e) { e.stopPropagation(); });
       panel.hidden = true;
       panel.setAttribute('role', 'dialog');
       panel.setAttribute('aria-label', 'AI helper');

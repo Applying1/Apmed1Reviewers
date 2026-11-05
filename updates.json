@@ -1026,5 +1026,13 @@
   "title": "Start over, or redo one chapter",
   "text": "Reset progress (Personalize, at the bottom) now really starts the course over, even when you sync across devices, and keeps your settings. New: Reset one chapter, to redo a lesson before an exam.",
   "link": "index.html"
+ },
+ {
+  "id": 125,
+  "date": "2026-11-05",
+  "type": "feature",
+  "title": "Typing in the AI chat works on slides",
+  "text": "In the slide viewer, Space and Backspace now type in the AI chat box instead of changing slides.",
+  "link": "index.html"
  }
 ]

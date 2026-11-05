@@ -230,7 +230,7 @@ function track(){if(!pages.length)return;const pg=curPage()+1;let ci=-1;for(let 
  if(ci!==lastCh){lastCh=ci;document.querySelectorAll('.ch').forEach(e=>{const on=+e.dataset.i===ci;e.classList.toggle('cur',on);if(on)e.classList.add('exp')})}
  try{localStorage.setItem('transes_at_'+file,String(pg))}catch(e){}}
 addEventListener('scroll',()=>{if(!window.__tk)window.__tk=requestAnimationFrame(()=>{window.__tk=0;track()})},{passive:true});
-addEventListener('keydown',e=>{if(e.key==='Escape')toggleToc(false)});
+addEventListener('keydown',e=>{const t=e.target;if(t&&t.closest&&t.closest('.aih-panel'))return;if(e.key==='Escape')toggleToc(false)});
 
 // ---- Search: page text from pdf.js; a match can span text pieces; highlights are placed in page units so they follow zoom
 let texts=[],hits=[],hitAt=-1,ptW=612;
@@ -269,7 +269,7 @@ function hitBoxes(h){const t=texts[h.n];if(!t)return [];const out=[],H=ptH,W=ptW
 function paintHits(p){if(!p||!p.el)return;p.el.querySelectorAll('.hl').forEach(e=>e.remove());if(!hits.length)return;
  hits.forEach((h,i)=>{if(h.n!==p.n)return;for(const b of hitBoxes(h)){const d=document.createElement('div');d.className='hl'+(i===hitAt?' cur':'');
   d.style.cssText='left:'+b.left+'%;top:'+b.top+'%;width:'+b.width+'%;height:'+b.height+'%';p.el.appendChild(d)}})}
-addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'&&pdf){e.preventDefault();openSearch()}});
+addEventListener('keydown',e=>{const t=e.target;if(t&&(/^(TEXTAREA|SELECT)$/.test(t.tagName)||(t.tagName==='INPUT'&&t.id!=='sq')||t.isContentEditable||(t.closest&&t.closest('.aih-panel'))))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'&&pdf){e.preventDefault();openSearch()}});
 
 (async function(){
  if(!ok||!window.pdfjsLib){box.innerHTML='<p class="msg">'+(ok?'The PDF reader could not load. Check your connection and try again.':'This file could not be found.')+'</p>';sub.textContent='';return}
