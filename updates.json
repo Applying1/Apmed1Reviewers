@@ -1002,5 +1002,13 @@
   "title": "AI helper in the transes reader",
   "text": "In the transes reader, tap the new AI button to get a page explained simply with an example and a check question, highlight any part to have just that explained, or ask about the page in a short chat. Sign-in needed; you can turn it off in Settings.",
   "link": "index.html"
+ },
+ {
+  "id": 122,
+  "date": "2026-11-05",
+  "type": "feature",
+  "title": "AI answers name their model",
+  "text": "Every AI answer now says which AI wrote it: Claude Haiku for the question buttons, DeepSeek (via Command Code) for the transes reader helper. AI can be wrong, so check your transes.",
+  "link": "index.html"
  }
 ]

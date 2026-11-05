@@ -61,6 +61,7 @@
     '.aih-list{margin:5px 0;padding-left:20px}' +
     '.aih-list li{margin:2px 0}' +
     '.aih-thinking{color:var(--mute,#666);font-size:14px}' +
+    '.aih-model{margin-top:6px;color:var(--mute,#666);font-size:12px}' +
     '.aih-err{padding:9px 11px;border-radius:10px;background:var(--raised,#f1f1f1);font-size:14px}' +
     '.aih-chatlog:empty{display:none}' +
     '.aih-turn{margin-top:10px;padding:9px 11px;border-radius:12px;font-size:14.5px}' +
@@ -279,8 +280,12 @@
     function thinking(target) {
       target.innerHTML = '<div class="aih-thinking">Thinking…</div>';
     }
-    function showText(target, text) {
+    function showText(target, text, model) {
       target.innerHTML = render(text);
+      var note = document.createElement('div');
+      note.className = 'aih-model';
+      note.textContent = (model ? 'Answered by ' + model + ' · ' : '') + 'AI can be wrong, check your transes';
+      target.appendChild(note);
     }
     function showError(target, message) {
       target.innerHTML = '';
@@ -356,7 +361,7 @@
         var data = await readJson(res);
         if (res.status === 401) { showSignIn(); return; }
         if (res.ok && data && typeof data.text === 'string') {
-          showText(state.answer, data.text);
+          showText(state.answer, data.text, data.model);
           setLeft(data.left);
         } else {
           failed(res, data, state.answer);
@@ -402,7 +407,7 @@
         var data = await readJson(res);
         if (res.status === 401) { showSignIn(); return; }
         if (res.ok && data && typeof data.text === 'string') {
-          showText(a, data.text);
+          showText(a, data.text, data.model);
           setLeft(data.left);
           state.prior.push({ q: ask, a: data.text });
           if (state.prior.length > 4) state.prior = state.prior.slice(-4);

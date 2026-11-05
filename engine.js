@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='107',APP_DATE='Nov 5, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='108',APP_DATE='Nov 5, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -502,7 +502,7 @@ const AI_SAVE=KEY+'_ai';let AISAVED={};try{AISAVED=JSON.parse(localStorage.getIt
 function aiCur(){if(view!=null){const e=secLog()[view];return e?{q:e.q,fb:e.fb,sel:e.sel}:{}}return {q:state.active,fb:state.feedback,sel:state.selected}}
 function aiPick(q,fb){const sel=aiCur().sel,ch=!fb.correct&&!q.typed&&sel?q.choices.find(x=>x.letter===sel):null;return ch?ch.label:''}
 function aiK(q,fb){return String(q.cid)+'|'+(fb.correct?'':aiPick(q,fb))}
-function aiSave(k,text){AISAVED[k]={text,at:Date.now()};const ks=Object.keys(AISAVED);if(ks.length>300)ks.sort((a,b)=>AISAVED[a].at-AISAVED[b].at).slice(0,ks.length-300).forEach(x=>delete AISAVED[x]);try{localStorage.setItem(AI_SAVE,JSON.stringify(AISAVED))}catch(e){}}
+function aiSave(k,text,model){AISAVED[k]={text,model,at:Date.now()};const ks=Object.keys(AISAVED);if(ks.length>300)ks.sort((a,b)=>AISAVED[a].at-AISAVED[b].at).slice(0,ks.length-300).forEach(x=>delete AISAVED[x]);try{localStorage.setItem(AI_SAVE,JSON.stringify(AISAVED))}catch(e){}}
 const SPARK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4l1.8 4.7L17.5 10.5l-4.7 1.8L11 17l-1.8-4.7L4.5 10.5l4.7-1.8z"/><path d="M19 3v4M21 5h-4M18 17v3M19.5 18.5h-3"/></svg>';
 // Only a "ready" answer is remembered (10 min); "not ready" or no connection is asked again a minute later.
 let aiNext=0;
@@ -518,8 +518,8 @@ function cmpLabel(pk,ans){const cl=s=>String(s||'').replace(/@m:\S+/g,'').trim()
 function aiDraw(){const el=$('aipane');if(el&&page==='study'){const {q,fb}=aiCur();if(q&&fb){el.innerHTML=aiHTML(q,fb);return}}draw()}
 function aiPeek(q,fb,k){if(AI_PEEKED[k]||AIX[k]||AISAVED[k])return;AI_PEEKED[k]=1;
  const u=CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain?course='+encodeURIComponent(courseId())+'&qid='+encodeURIComponent(String(q.cid))+'&picked='+encodeURIComponent(aiPick(q,fb));
- fetch(u,{headers:{apikey:CLOUD.key},cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{if(j&&j.text&&!AIX[k]){aiSave(k,j.text);AIX[k]={text:j.text,cached:1,auto:1};(AIMODES[k]||(AIMODES[k]={}))['']={text:j.text,cached:1,auto:1};if(state.feedback)aiDraw()}}).catch(()=>{})}
-function aiHTML(q,fb){if(!aiOn())return '';aiCheck();if(!q||!q.cid||!fb)return '';const k=aiK(q,fb),sv=AISAVED[k],x=AIX[k]&&!AIX[k].busy&&!AIX[k].err?AIX[k]:sv?{text:sv.text,saved:1}:AIX[k],on=AI_READY&&FILE_IDS.has(String(q.cid));if(!x&&!on)return '';
+ fetch(u,{headers:{apikey:CLOUD.key},cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{if(j&&j.text&&!AIX[k]){aiSave(k,j.text,j.model);AIX[k]={text:j.text,model:j.model,cached:1,auto:1};(AIMODES[k]||(AIMODES[k]={}))['']={text:j.text,model:j.model,cached:1,auto:1};if(state.feedback)aiDraw()}}).catch(()=>{})}
+function aiHTML(q,fb){if(!aiOn())return '';aiCheck();if(!q||!q.cid||!fb)return '';const k=aiK(q,fb),sv=AISAVED[k],x=AIX[k]&&!AIX[k].busy&&!AIX[k].err?AIX[k]:sv?{text:sv.text,model:sv.model,saved:1}:AIX[k],on=AI_READY&&FILE_IDS.has(String(q.cid));if(!x&&!on)return '';
  const cid=esc(String(q.cid)),pk=aiPick(q,fb),c0=byId[q.cid],ans=c0?String(c0.q?c0.a:c0.term||''):'',curM=(x&&x.mode)||'';
  const hard=!fb.correct&&!fb.lookup&&(fb.sure==='sure'||(state.concepts[q.cid]&&state.concepts[q.cid].wrong>=2)||(classRate(q.cid)||0)>=40);
  if(hard&&on&&!x)aiPeek(q,fb,k);
@@ -537,7 +537,7 @@ function aiHTML(q,fb){if(!aiOn())return '';aiCheck();if(!q||!q.cid||!fb)return '
   if(x.busy)h+='<div class="aibox busy"><p class="note">'+SPARK+(x.mode==='trick'?'Finding a memory trick…':x.mode==='compare'?'Comparing your choice with the answer…':'Writing a simpler explanation…')+'</p></div>';
   else if(x.err)h+='<div class="aibox"><p class="note">'+x.err+'</p></div>';
   else{const hd=x.mode==='trick'?'Memory trick':x.mode==='compare'?'Side-by-side comparison':x.mode==='deeper'?'Locked in':'Explained differently';
-   h+='<div class="aibox"><div class="aih">'+SPARK+hd+'</div><p>'+aiFmt(x.text)+'</p><p class="note">Written by AI from this question, so it can be wrong. Check your transes'+(x.saved?' · saved on this device':x.auto?' · auto-opened, didn\'t use a try':x.cached?' · already written, didn\'t use a try':x.left!=null?' · '+x.left+' left today':'')+'.</p></div>'}
+   h+='<div class="aibox"><div class="aih">'+SPARK+hd+'</div><p>'+aiFmt(x.text)+'</p><p class="note">Written by '+(x.model?esc(x.model):'AI')+' from this question, so it can be wrong. Check your transes'+(x.saved?' · saved on this device':x.auto?' · auto-opened, didn\'t use a try':x.cached?' · already written, didn\'t use a try':x.left!=null?' · '+x.left+' left today':'')+'.</p></div>'}
  }
  if(on&&((x&&!x.busy&&!x.err)||(AIF[k]&&AIF[k].open)))h+=aiFollowHTML(k,q);
  h+=aiTwinHTML(k);
@@ -551,7 +551,7 @@ function aiFollowHTML(k,q){const f=AIF[k]||{turns:[]},cid=q?esc(String(q.cid)):'
  if(f.err)h+='<p class="note">'+f.err+'</p>';
  if(f.turns.length>=3)h+='<p class="note">For more, ask your classmates in '+(cid&&discussOn()?'<a class="link" href="'+discussQ(q.cid)+'" onclick="return openDiscuss(\''+cid+'\')"><b>Discuss this question</b></a>':'<b>Discuss this question</b>')+'.</p>';
  else if(!f.busy)h+='<div class="aiask"><input id="aiask" maxlength="300" autocomplete="off" aria-label="Ask a follow-up about this question" placeholder="'+(f.turns.length?'Ask another follow-up…':'Still confused? Ask about this question…')+'" value="'+esc(f.draft||'')+'" oninput="aiDraft(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aiAsk()}"><button class="btn sm" onclick="aiAsk()">Ask</button></div>';
- if(f.turns.length&&f.left!=null&&!f.busy)h+='<p class="note">Written by AI, so it can be wrong · '+f.left+' left today.</p>';
+ if(f.turns.length&&!f.busy){const lm=f.turns.slice().reverse().find(t=>t.model);if(lm||f.left!=null)h+='<p class="note">Written by '+(lm?esc(lm.model):'AI')+', so it can be wrong'+(f.left!=null?' · '+f.left+' left today':'')+'.</p>';}
  return h+'</div>'}
 function aiDraft(v){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb);(AIF[k]||(AIF[k]={turns:[]})).draft=v}
 function aiOpenAsk(cid){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);const f=(AIF[k]||(AIF[k]={turns:[]}));f.open=!f.open;aiDraw();if(f.open)setTimeout(()=>{const i=$('aiask');if(i)i.focus({preventScroll:true})},50)}
@@ -571,12 +571,12 @@ function aiBase(q,fb){const sel=aiCur().sel,ch=!fb.correct&&!q.typed&&sel?q.choi
 async function aiExplain(cid,mode){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);if(AIX[k]&&AIX[k].busy)return;
  const m=mode||(fb.correct&&(fb.lucky||fb.sure==='unsure')?'deeper':'');
  if(AIX[k]&&!AIX[k].busy&&!AIX[k].err&&(AIX[k].mode||'')===m)return;
- const cd=(AIMODES[k]&&AIMODES[k][m])||(!m&&AISAVED[k]&&AISAVED[k].text?{text:AISAVED[k].text,saved:1}:null);
+ const cd=(AIMODES[k]&&AIMODES[k][m])||(!m&&AISAVED[k]&&AISAVED[k].text?{text:AISAVED[k].text,model:AISAVED[k].model,saved:1}:null);
  if(cd){AIX[k]=Object.assign({mode:m},cd);aiDraw();return}
  AIX[k]={busy:1,mode:m};aiDraw();
  const body=aiBase(q,fb);if(m)body.mode=m;
  try{const o=await aiPost(body);
-  if(o.r&&o.r.ok&&o.j.text){const rec={text:o.j.text,left:o.j.left,cached:o.j.cached};(AIMODES[k]||(AIMODES[k]={}))[m]=rec;if(!m)aiSave(k,o.j.text);AIX[k]=Object.assign({mode:m},rec)}else AIX[k]={err:aiErr(o,'explanations'),mode:m}}
+   if(o.r&&o.r.ok&&o.j.text){const rec={text:o.j.text,left:o.j.left,cached:o.j.cached,model:o.j.model};(AIMODES[k]||(AIMODES[k]={}))[m]=rec;if(!m)aiSave(k,o.j.text,o.j.model);AIX[k]=Object.assign({mode:m},rec)}else AIX[k]={err:aiErr(o,'explanations'),mode:m}}
  catch(e){AIX[k]={err:'No connection. Try again when you\'re online.'}}
  if(String((aiCur().q||{}).cid)===String(cid))aiDraw()}
 async function aiAsk(){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb),f=AIF[k]||(AIF[k]={turns:[]});if(f.busy||f.turns.length>=3)return;
@@ -584,13 +584,13 @@ async function aiAsk(){const {q,fb}=aiCur();if(!q||!fb)return;const k=aiK(q,fb),
  const sv=AISAVED[k],ex=(AIX[k]&&AIX[k].text)||(sv&&sv.text)||'';
  f.draft=text;f.busy=1;f.err='';aiDraw();
  try{const o=await aiPost(Object.assign(aiBase(q,fb),{ask:text,prior:f.turns.slice(-2),explained:ex}));
-  if(o.r&&o.r.ok&&o.j.text){f.turns.push({q:text,a:o.j.text});f.draft='';f.left=o.j.left}else f.err=aiErr(o,'follow-ups')}
+   if(o.r&&o.r.ok&&o.j.text){f.turns.push({q:text,a:o.j.text,model:o.j.model});f.draft='';f.left=o.j.left}else f.err=aiErr(o,'follow-ups')}
  catch(e){f.err='No connection. Try again when you\'re online.'}
  f.busy=0;if(String((aiCur().q||{}).cid)===String(q.cid)){aiDraw();setTimeout(()=>{const i=$('aiask');if(i&&f.turns.length<3)i.focus({preventScroll:true})},60)}}
 function aiTwinHTML(k){const t=AITWIN[k];if(!t)return '';if(!t.busy&&!t.err&&!(Array.isArray(t.choices)&&t.choices.length))return '';
  if(t.busy)return '<div class="aitwin"><p class="note">'+SPARK+'Making a fresh practice question on this concept…</p></div>';
  if(t.err)return '<div class="aitwin"><p class="note">'+t.err+'</p></div>';
- return '<div class="aitwin"><div class="aih">'+SPARK+'Quick check · '+(t.fromBank?'another question from this bank':'AI practice question (doesn\'t change mastery)')+'</div><p class="prompt" style="font-size:15px;margin:4px 0 8px">'+stemHTML(t.stem)+'</p><div class="choices">'+
+ return '<div class="aitwin"><div class="aih">'+SPARK+'Quick check · '+(t.fromBank?'another question from this bank':'AI practice question'+(t.model?' by '+esc(t.model):'')+' (doesn\'t change mastery)')+'</div><p class="prompt" style="font-size:15px;margin:4px 0 8px">'+stemHTML(t.stem)+'</p><div class="choices">'+
   t.choices.map((c,i)=>{const L=LETTERS[i],cls=t.picked?(L===t.ans?'correct':L===t.picked?'wrong':'dim'):'';return '<button class="choice '+cls+'" '+(t.picked?'disabled':'onclick="aiTwinPick(\''+L+'\')"')+'><span class="let">'+L+'</span><span class="lbl">'+ansHTML(c)+'</span></button>'}).join('')+
   '</div>'+(t.picked?'<p class="note" style="margin-top:8px"><b>'+(t.picked===t.ans?'Spot on!':'Answer: '+t.ans+'.')+'</b> '+aiFmt(t.why||'')+(t.fromBank?' · <button class="link" onclick="aiTwin(\''+esc(String((aiCur().q||{}).cid||''))+'\',true)">Try an AI-written one</button>':'')+'</p>':'')+'</div>'}
 async function aiTwin(cid,forceAI){const {q,fb}=aiCur();if(!q||!fb||String(q.cid)!==String(cid))return;const k=aiK(q,fb);if(AITWIN[k]&&AITWIN[k].busy)return;
@@ -602,7 +602,7 @@ async function aiTwin(cid,forceAI){const {q,fb}=aiCur();if(!q||!fb||String(q.cid
   if(best&&bs>=2){const bq=makeQuestion(best);if(bq&&bq.choices&&bq.choices.length>=2){const cor=bq.choices.find(x=>x.correct)||bq.choices[0];AITWIN[k]={fromBank:1,stem:bq.stem,choices:bq.choices.map(x=>x.label),ans:cor.letter,why:best.why||best.definition||''};aiDraw();return}}}
  AITWIN[k]={busy:1};aiDraw();
  try{const o=await aiPost(Object.assign(aiBase(q,fb),{mode:'twin'}));
-  if(o.r&&o.r.ok&&o.j.twin&&(o.j.twin.a||o.j.twin.choices)){const tw=o.j.twin,right=tw.a!=null?String(tw.a):String((tw.choices||[])[tw.ans|0]||''),opts=shuffle(tw.a!=null?[right].concat(tw.d||[]):tw.choices,(Date.now()%2147483646)+1);AITWIN[k]={stem:tw.q||tw.stem||'',choices:opts,ans:LETTERS[Math.max(0,opts.indexOf(right))],why:tw.why,left:o.j.left,cached:o.j.cached}}
+   if(o.r&&o.r.ok&&o.j.twin&&(o.j.twin.a||o.j.twin.choices)){const tw=o.j.twin,right=tw.a!=null?String(tw.a):String((tw.choices||[])[tw.ans|0]||''),opts=shuffle(tw.a!=null?[right].concat(tw.d||[]):tw.choices,(Date.now()%2147483646)+1);AITWIN[k]={stem:tw.q||tw.stem||'',choices:opts,ans:LETTERS[Math.max(0,opts.indexOf(right))],why:tw.why,left:o.j.left,cached:o.j.cached,model:o.j.model}}
   else AITWIN[k]={err:aiErr(o,'practice question')}}
  catch(e){AITWIN[k]={err:'No connection. Try again when you\'re online.'}}
  if(String((aiCur().q||{}).cid)===String(cid))aiDraw()}
@@ -620,11 +620,11 @@ function aiCoachHTML(){if(!aiOn())return '';aiCheck();if(!AI_READY)return '';con
  const chs=[...new Set(ms.map(m=>chOf(m.sec)).filter(Boolean))];
  return '<div class="aicoach"><div class="aih">'+SPARK+'What tripped you up this round</div><div class="aia">'+aiFmt(c.text)+'</div>'+
   (chs.length&&pageOn('notes')?'<div class="aichips" style="margin-top:8px">'+chs.map(ch=>'<button class="aichip" onclick="openNotes(\''+esc(ch)+'\')">Open '+esc(UNIT+' '+ch)+' notes →</button>').join('')+'</div>':'')+
-  '<p class="note">Written by AI from this round\'s misses'+(c.left!=null?' · '+c.left+' left today':'')+'.</p></div>'}
+   '<p class="note">Written by '+(c.model?esc(c.model):'AI')+' from this round\'s misses'+(c.left!=null?' · '+c.left+' left today':'')+'.</p></div>'}
 async function aiCoach(){const ms=coachMisses();if(ms.length<2)return;const k=state.section+'|'+ms.map(m=>m.cid).join(',');if(AICOACH[k]&&AICOACH[k].busy)return;
  AICOACH[k]={busy:1};draw();
  try{const o=await aiPost({course:courseId(),mode:'coach',misses:ms});
-  AICOACH[k]=o.r&&o.r.ok&&o.j.text?{text:o.j.text,left:o.j.left}:{err:aiErr(o,'round summary')}}
+   AICOACH[k]=o.r&&o.r.ok&&o.j.text?{text:o.j.text,left:o.j.left,model:o.j.model}:{err:aiErr(o,'round summary')}}
  catch(e){AICOACH[k]={err:'No connection. Try again when you\'re online.'}}
  draw()}
 function aiNotesHTML(){if(!aiOn()||!AI_READY||notesQ.trim())return '';
@@ -636,21 +636,21 @@ function aiNotesHTML(){if(!aiOn()||!AI_READY||notesQ.trim())return '';
   '<button class="aichip'+(AINOTES.preset==='summary'&&AINOTES.text?' on':'')+'" onclick="aiNotePreset(\'summary\')">5-point summary</button>'+
   '<button class="aichip'+(AINOTES.open?' on':'')+'" onclick="AINOTES.open=!AINOTES.open;drawNotesBody();setTimeout(()=>{$(\'ainask\')?.focus()},40)">Ask a question…</button></div>'+
   (AINOTES.open?'<div class="aiask" style="margin-top:8px"><input id="ainask" maxlength="300" autocomplete="off" placeholder="Ask anything about '+esc(label)+'…" value="'+esc(AINOTES.draft||'')+'" oninput="AINOTES.draft=this.value" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aiNoteSend()}"><button class="btn sm" onclick="aiNoteSend()">Ask</button></div>':'')+
-  (AINOTES.busy?'<p class="note" style="margin-top:8px">'+SPARK+'Reading '+esc(label)+' notes…</p>':AINOTES.err?'<p class="note" style="margin-top:8px">'+AINOTES.err+'</p>':AINOTES.text?'<div class="aibox" style="margin-top:8px"><p>'+aiFmt(AINOTES.text)+'</p><p class="note">From your '+esc(label)+' notes'+(AINOTES.cached?' · cached, didn\'t use a try':AINOTES.left!=null?' · '+AINOTES.left+' left today':'')+'.</p></div>':'')+'</div>'}
+   (AINOTES.busy?'<p class="note" style="margin-top:8px">'+SPARK+'Reading '+esc(label)+' notes…</p>':AINOTES.err?'<p class="note" style="margin-top:8px">'+AINOTES.err+'</p>':AINOTES.text?'<div class="aibox" style="margin-top:8px"><p>'+aiFmt(AINOTES.text)+'</p><p class="note">'+(AINOTES.model?'Written by '+esc(AINOTES.model)+' from your '+esc(label)+' notes':'From your '+esc(label)+' notes')+(AINOTES.cached?' · cached, didn\'t use a try':AINOTES.left!=null?' · '+AINOTES.left+' left today':'')+'.</p></div>':'')+'</div>'}
 function notesTextFor(ch){const n=NOTES_PARSED.find(x=>x.ch===ch);if(!n)return '';
  return ((CH_NAMES[ch]||'')+'\n'+n.groups.filter(g=>secOn(g.sec)).map(g=>g.title+': '+g.rows.map(([a,b])=>a+' — '+b).join('; ')).join('\n')).slice(0,3500)}
 async function aiNotePreset(p){const ch=AINOTES.ch;if(!ch||AINOTES.busy)return;
  AINOTES.preset=p;AINOTES.busy=1;AINOTES.err='';drawNotesBody();
  try{const o=await aiPost({course:courseId(),mode:'notes',ch,preset:p,notes:notesTextFor(ch)});
-  if(o.r&&o.r.ok&&o.j.text)Object.assign(AINOTES,{busy:0,text:o.j.text,left:o.j.left,cached:o.j.cached});
+  if(o.r&&o.r.ok&&o.j.text)Object.assign(AINOTES,{busy:0,text:o.j.text,left:o.j.left,cached:o.j.cached,model:o.j.model});
   else Object.assign(AINOTES,{busy:0,err:aiErr(o,'notes helper')})}
  catch(e){Object.assign(AINOTES,{busy:0,err:'No connection. Try again when you\'re online.'})}
  drawNotesBody()}
 async function aiNoteSend(){const ch=AINOTES.ch,el=$('ainask'),ask=((el&&el.value)||AINOTES.draft||'').trim();if(!ch||AINOTES.busy||ask.length<3){if(el)el.focus();return}
  AINOTES.preset='';AINOTES.busy=1;AINOTES.err='';drawNotesBody();
  try{const o=await aiPost({course:courseId(),mode:'notes',ch,ask,notes:notesTextFor(ch)});
-  if(o.r&&o.r.ok&&o.j.text)Object.assign(AINOTES,{busy:0,text:o.j.text,draft:'',left:o.j.left,cached:false});
-  else Object.assign(AINOTES,{busy:0,err:aiErr(o,'notes helper')})}
+   if(o.r&&o.r.ok&&o.j.text)Object.assign(AINOTES,{busy:0,text:o.j.text,draft:'',left:o.j.left,cached:false,model:o.j.model});
+   else Object.assign(AINOTES,{busy:0,err:aiErr(o,'notes helper')})}
  catch(e){Object.assign(AINOTES,{busy:0,err:'No connection. Try again when you\'re online.'})}
  drawNotesBody()}
 function backBtn(){return '<button class="btn back" onclick="goBack()" '+(canBack()?'':'disabled')+' title="Previous answered question (←)">'+LEFT+'Back</button>'}
@@ -1926,6 +1926,8 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'108',date:'Nov 5, 2026',title:'AI answers say who wrote them',items:[
+  'AI answers now say which AI model wrote them.']},
  {v:'107',date:'Nov 5, 2026',title:'Never miss a message or a duel',items:[
   'When a classmate <b>messages you</b>, replies to you or @mentions you, a small card pops up on whatever page you are on (not on the page where you already see it). Tap it to open, or close it.',
   '<b>Duel challenges</b> get their own pop-up with <b>Accept</b>, <b>Decline</b> and <b>Later</b>, and they also show up as a card in your DMs with that classmate.',
