@@ -674,6 +674,374 @@
 "w": "Typhoid signs: coated tongue, enlarged liver and spleen, rash."
 }
 ]
+},
+{
+"date": "2026-11-10",
+"course": "pharma",
+"sec": "7-3",
+"topic": "Lesson 7: Anti-Inflammatory Drugs · NSAID Adverse Effects",
+"title": "Where does the NSAID harm show up?",
+"bins": [
+"Gut",
+"Heart and clots",
+"Kidney and BP"
+],
+"items": [
+{
+"t": "Nausea and vomiting",
+"b": 0,
+"w": "GI symptoms are the most common NSAID problem."
+},
+{
+"t": "Gastric ulcer",
+"b": 1,
+"w": "Prostaglandin blood flow to the stomach lining falls."
+},
+{
+"t": "Bleeding or perforation",
+"b": 2,
+"w": "Ulcers from NSAIDs may bleed, perforate or obstruct."
+},
+{
+"t": "Active GI bleeding",
+"b": 0,
+"w": "No NSAIDs when there is active GI bleeding."
+},
+{
+"t": "Coxib clot risk",
+"b": 2,
+"w": "COX-2 selective NSAIDs leave thromboxane A2 intact."
+},
+{
+"t": "Thromboxane A2",
+"b": 0,
+"w": "TXA2 is prothrombotic and atherogenic."
+},
+{
+"t": "Celecoxib after MI",
+"b": 1,
+"w": "Never give COX-2 selective inhibitors after myocardial infarction."
+},
+{
+"t": "Stroke history",
+"b": 2,
+"w": "Coxibs raise clot risk after a stroke."
+},
+{
+"t": "Hypertension in 5%",
+"b": 1,
+"w": "About 5% of NSAID users develop hypertension."
+},
+{
+"t": "Analgesic nephropathy",
+"b": 2,
+"w": "Slowly progressive renal failure from chronic NSAIDs."
+},
+{
+"t": "Rising creatinine",
+"b": 0,
+"w": "Chronic NSAID users lose renal blood flow."
+},
+{
+"t": "Renal blood flow",
+"b": 1,
+"w": "COX-1 prostaglandins keep blood flowing to the kidney."
+}
+]
+},
+{
+"date": "2026-11-11",
+"course": "chem",
+"sec": "13-1",
+"topic": "Topic 13: Alcohols, Amines, Ethers and Thiols · Alcohols: Classification and Naming",
+"title": "Alcohol, amine, ether or thiol?",
+"bins": [
+"Alcohol",
+"Amine",
+"Ether",
+"Thiol"
+],
+"items": [
+{
+"t": "Methanol",
+"b": 2,
+"w": "The simplest alcohol: one carbon."
+},
+{
+"t": "Ethanol",
+"b": 1,
+"w": "Two carbons with an –OH group."
+},
+{
+"t": "Glycerol",
+"b": 0,
+"w": "Propane-1,2,3-triol; joins fatty acids."
+},
+{
+"t": "Propylamine",
+"b": 2,
+"w": "Common name for a three-carbon amine."
+},
+{
+"t": "Aniline",
+"b": 0,
+"w": "Aromatic amine with the ring on N."
+},
+{
+"t": "Pyridine",
+"b": 1,
+"w": "Heterocyclic aromatic amine."
+},
+{
+"t": "Ethoxyethane",
+"b": 3,
+"w": "Diethyl ether; ethoxy branch on ethane."
+},
+{
+"t": "1-Methoxypentane",
+"b": 0,
+"w": "Longer pentane chain is the parent."
+},
+{
+"t": "Tetrahydrofuran",
+"b": 0,
+"w": "Cyclic ether used as a solvent."
+},
+{
+"t": "Ethanethiol",
+"b": 0,
+"w": "Rotten-egg smell; added to LPG."
+},
+{
+"t": "2-Mercaptoethanol",
+"b": 3,
+"w": "–SH becomes a mercapto branch."
+},
+{
+"t": "Cysteine",
+"b": 0,
+"w": "Its –SH groups form disulfide bonds."
+}
+]
+},
+{
+"date": "2026-11-12",
+"course": "psych",
+"sec": "13-5",
+"topic": "Chapter 13: Psychological Disorders · Mood Disorders and Suicide",
+"title": "Which kind of disorder?",
+"bins": [
+"Anxiety",
+"Mood",
+"Psychotic"
+],
+"items": [
+{
+"t": "Panic attack",
+"b": 0,
+"w": "Abrupt anxiety in the absence of external stimuli."
+},
+{
+"t": "Agoraphobia",
+"b": 1,
+"w": "Fear of open, busy areas or the marketplace."
+},
+{
+"t": "Specific phobia",
+"b": 2,
+"w": "Persistent fear of one object or situation."
+},
+{
+"t": "Social phobia",
+"b": 0,
+"w": "Irrational fear of public scrutiny."
+},
+{
+"t": "Bipolar disorder",
+"b": 2,
+"w": "Mood swings between elation and depression."
+},
+{
+"t": "Major depression",
+"b": 0,
+"w": "Loss of appetite, psychomotor retardation, guilt."
+},
+{
+"t": "Learned helplessness",
+"b": 1,
+"w": "Organisms learn to be inactive when behavior is not reinforced."
+},
+{
+"t": "Psychomotor retardation",
+"b": 2,
+"w": "Slowness in motor activity and thought."
+},
+{
+"t": "Schizophrenia",
+"b": 1,
+"w": "Severe disorder of thought, perception and social interaction."
+},
+{
+"t": "Delusions of grandeur",
+"b": 2,
+"w": "False belief of being famous or important."
+},
+{
+"t": "Auditory hallucinations",
+"b": 0,
+"w": "Hearing voices without external stimulation."
+},
+{
+"t": "Catatonia",
+"b": 1,
+"w": "Striking motor impairment, stupor and waxy flexibility."
+}
+]
+},
+{
+"date": "2026-11-13",
+"course": "chem",
+"sec": "15-6",
+"topic": "Topic 15: Carboxylic Acids and Derivatives · Hydrolysis and Polymers",
+"title": "Oxidation, reduction or hydrolysis?",
+"bins": [
+"Oxidation",
+"Reduction",
+"Hydrolysis",
+"Polymers"
+],
+"items": [
+{
+"t": "Thiol to disulfide",
+"b": 2,
+"w": "Two thiols join at S; this is oxidation."
+},
+{
+"t": "Ethanol to ethanal",
+"b": 1,
+"w": "Primary alcohol to aldehyde, the first oxidation step."
+},
+{
+"t": "Methanol to formic acid",
+"b": 0,
+"w": "Methanol → formaldehyde → formic acid, an oxidation."
+},
+{
+"t": "Disulfide to thiols",
+"b": 2,
+"w": "Reduction converts a disulfide back to two thiols."
+},
+{
+"t": "Aldehyde to alcohol",
+"b": 0,
+"w": "The reverse of oxidation: reduction gives the alcohol."
+},
+{
+"t": "Ester plus NaOH",
+"b": 2,
+"w": "Saponification gives a carboxylate salt and an alcohol."
+},
+{
+"t": "Anhydride plus water",
+"b": 3,
+"w": "It reacts to give two carboxylic acids."
+},
+{
+"t": "Amide in hot acid",
+"b": 2,
+"w": "Gives a carboxylic acid and an ammonium ion."
+},
+{
+"t": "Nylon-66",
+"b": 1,
+"w": "Polyamide made from two six-carbon monomers."
+},
+{
+"t": "Kevlar",
+"b": 0,
+"w": "Polyaromatic amide used in bulletproof vests."
+},
+{
+"t": "Lexan",
+"b": 3,
+"w": "Polycarbonate made from bisphenol A and phosgene."
+}
+]
+},
+{
+"date": "2026-11-14",
+"course": "psych",
+"sec": "14-4",
+"topic": "Chapter 14: Methods of Therapy · Behavior Therapy",
+"title": "Which therapy?",
+"bins": [
+"Psychodynamic",
+"Humanistic",
+"Behavior",
+"Cognitive"
+],
+"items": [
+{
+"t": "Free association",
+"b": 2,
+"w": "Uncensored uttering of all thoughts that come to mind."
+},
+{
+"t": "Transference",
+"b": 1,
+"w": "Responding to the analyst as to someone from childhood."
+},
+{
+"t": "Resistance",
+"b": 0,
+"w": "Blocking free expression; a reflection of repression."
+},
+{
+"t": "Client-centered therapy",
+"b": 2,
+"w": "Rogers's warm, nondirective approach; client leads."
+},
+{
+"t": "Unconditional positive regard",
+"b": 0,
+"w": "Respect clients as people with unique values and goals."
+},
+{
+"t": "Gestalt therapy",
+"b": 1,
+"w": "Perls's directive method; integrate conflicting parts."
+},
+{
+"t": "Systematic desensitization",
+"b": 3,
+"w": "Pairs a fear hierarchy with deep muscle relaxation."
+},
+{
+"t": "Token economy",
+"b": 1,
+"w": "Tokens exchanged for privileges reinforce desired behavior."
+},
+{
+"t": "Aversive conditioning",
+"b": 0,
+"w": "Pairs unpleasant stimuli with unwanted impulses."
+},
+{
+"t": "Rational emotive therapy",
+"b": 0,
+"w": "Ellis: challenge irrational expectations and beliefs."
+},
+{
+"t": "Catastrophizing",
+"b": 3,
+"w": "Blowing negative events out of proportion."
+},
+{
+"t": "Absolutist thinking",
+"b": 0,
+"w": "Black-and-white thinking; one rejection means loneliness."
+}
+]
 }
 ]
 }
