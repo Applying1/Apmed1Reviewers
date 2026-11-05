@@ -986,5 +986,13 @@
   "title": "Never miss a message or a duel",
   "text": "New messages, replies and duel challenges now pop up on any page of the site. Duels have Accept, Decline and Later, and show up in your DMs too. Change them in Notifications.",
   "link": "notifications.html#alerts"
+ },
+ {
+  "id": 120,
+  "date": "2026-11-05",
+  "type": "feature",
+  "title": "Lecture notes in the slide viewer",
+  "text": "Slide decks that come with the teacher's lecture notes now have a Notes button (or press N) that shows the notes for the slide you are on. Botany Plant Kingdom has them first.",
+  "link": "index.html"
  }
 ]
