@@ -1074,5 +1074,13 @@
   "title": "Chem: quiz sections are optional",
   "text": "The Nov 7 quiz sections (her reactions, boiling point and solubility drills, modified true or false) are hidden in Chem practice by default. Switch them on in Personalize; the Nov 7 mock quiz always uses them.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 131,
+  "date": "2026-11-06",
+  "type": "content",
+  "title": "Chem: tidier quiz sections",
+  "text": "Chem's tricky true or false and the Nov 7 quiz sets (modified true or false, her reactions) are hidden in practice by default, with one switch each in Personalize; the mock quizzes always use them. Naming, drawing, answer-briefly and the boiling point and solubility drills stay in practice.",
+  "link": "reviewer.html?course=chem"
  }
 ]

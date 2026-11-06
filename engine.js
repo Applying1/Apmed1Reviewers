@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='111',APP_DATE='Nov 6, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='112',APP_DATE='Nov 6, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -239,7 +239,8 @@ let BANK=[],sectionKeys=[],chapters=[],AUTHORED=true,NCHOICE=4;
 const bankObj=()=>BANKS.find(b=>b.id===state.bank)||BANKS[0];
 // Optional topics (CONFIG.optionalSections), e.g. ones not in the current exam: off unless switched on in Personalize.
 const OPT=CONFIG.optionalSections||{};
-const optOn=k=>state.prefs.opt&&k in state.prefs.opt?!!state.prefs.opt[k]:!!(OPT[k]&&OPT[k].on);
+const optKey=k=>(OPT[k]&&OPT[k].group)||k;
+const optOn=k=>state.prefs.opt&&optKey(k) in state.prefs.opt?!!state.prefs.opt[optKey(k)]:!!(OPT[k]&&OPT[k].on);
 const secOn=k=>!k||!OPT[k]||optOn(k);
 // exam:true (v84): hidden from practice unless switched on, but the mock exam and class challenges always use it (Pharma's Eval Cases)
 const optExam=k=>!!(OPT[k]&&OPT[k].exam);
@@ -947,7 +948,7 @@ const fcPref=k=>v=>setPref(k,v);   // Personalize → Flashcards buttons
 function setOrder(v){setPref('order',v)}
 function setTypeMode(v){setPref('typeMode',v)}
 function setMix(v){setPref('mix',v)}
-function setOpt(k){state.prefs.opt=Object.assign({},state.prefs.opt,{[k]:!optOn(k)});refreshBank();MX=null;
+function setOpt(k){state.prefs.opt=Object.assign({},state.prefs.opt,{[optKey(k)]:!optOn(k)});refreshBank();MX=null;
  state.active=null;state.feedback=null;state.selected=null;state.pmatch=null;if(!validSection(state.section))state.section=sectionKeys[0];view=null;save();draw()}
 const fmtDay=d=>new Date(d+'T00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
 function examWhen(e){if(!e||!e.date)return '';const t=new Date();t.setHours(0,0,0,0);const n=Math.round((new Date(e.date+'T00:00')-t)/864e5);
@@ -1904,7 +1905,9 @@ function drawPrefs(){
   row('Question order',rand?'Random: '+ITEMS+' come in a new order every pass and the answer letters are reshuffled each time, so you can\'t memorize positions.':'In order: '+ITEMS+' follow the lecture order and keep their answer letters. Easier to follow, but easier to memorize.',segHTML('setOrder',[['random','Random'],['fixed','In order']],state.prefs.order,'Question order'))+
   row('Answer mode',state.prefs.typeMode?'Type the answer: short recall '+ITEMS+' hide the choices and you type the term. Small typos are accepted, and you can count a typed answer as right if the checker missed it.':'Choices: pick the answer from the list. Switch to typing for identification-style practice.',segHTML('setTypeMode',[[false,'Choices'],[true,'Type the answer']],state.prefs.typeMode,'Answer mode'))+
   (MSETS.length?row('Mix matching into practice',state.prefs.mix?'After every '+state.prefs.mix+' '+ITEMS+', the next card is a matching set from the '+unitW+' you are practicing. It counts toward your matching scores, not '+ITEM+' mastery.':'Matching sets stay on their own page. Turn this on to get one now and then while you practice.',segHTML('setMix',[[0,'Off'],[10,'Every 10'],[5,'Every 5']],state.prefs.mix,'Mix matching into practice')):'')+
-  Object.keys(OPT).map(k=>row('Include '+esc(OPT[k].name||SECTION_NAMES[k]||k),esc(OPT[k].note||'An optional '+unitW+' section that is not part of the current exam.')+' ('+FULL_BANK.filter(c=>c.section===k).length+' '+ITEMS+')',sw(optOn(k),"setOpt('"+k+"')",'Include '+(OPT[k].name||k)))).join('')+
+  Object.keys(OPT).filter((k,i,a)=>a.findIndex(j=>optKey(j)===optKey(k))===i).map(k=>{const key=optKey(k),g=OPT[k].group;
+    if(!g)return row('Include '+esc(OPT[k].name||SECTION_NAMES[k]||k),esc(OPT[k].note||'An optional '+unitW+' section that is not part of the current exam.')+' ('+FULL_BANK.filter(c=>c.section===k).length+' '+ITEMS+')',sw(optOn(k),"setOpt('"+k+"')",'Include '+(OPT[k].name||k)));
+    return row('Include '+esc(OPT[k].groupName||OPT[k].name||SECTION_NAMES[k]||k),esc(OPT[k].groupNote||OPT[k].note||'An optional '+unitW+' section that is not part of the current exam.')+' ('+FULL_BANK.filter(c=>optKey(c.section)===key).length+' '+ITEMS+')',sw(optOn(k),"setOpt('"+k+"')",'Include '+(OPT[k].name||k)))}).join('')+
   (ex?row('Include detail '+ITEMS,ex+' '+ITEMS+' in this bank are marked as extra detail. Turn this off to drill only the core.',sw(state.prefs.extras,"setPref('extras',"+!state.prefs.extras+")",'Include detail '+ITEMS)):'')+
   '</section>';
  h+='<section class="panel"><h2>Study tools</h2>'+
