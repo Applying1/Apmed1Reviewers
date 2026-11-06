@@ -1066,5 +1066,13 @@
   "title": "Chem mock updated with her hints for tomorrow",
   "text": "The Nov 7 mock quiz now follows her hints: 15 modified true or false (what each family is, plus solubility), 7 naming (mixed groups; systematic names like hydroxybenzene count), 7 reactions (oxidizing vs reducing agents, dehydration major/minor, hemiacetal/acetal, one benzene reaction and one two-step synthesis) and ranking the boiling points of five compounds. New practice sections for her reactions in topics 12-14.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 130,
+  "date": "2026-11-06",
+  "type": "content",
+  "title": "Chem: quiz sections are optional",
+  "text": "The Nov 7 quiz sections (her reactions, boiling point and solubility drills, modified true or false) are hidden in Chem practice by default. Switch them on in Personalize; the Nov 7 mock quiz always uses them.",
+  "link": "reviewer.html?course=chem"
  }
 ]
