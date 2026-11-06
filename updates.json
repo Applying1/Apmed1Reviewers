@@ -1082,5 +1082,13 @@
   "title": "Chem: tidier quiz sections",
   "text": "Chem's tricky true or false and the Nov 7 quiz sets (modified true or false, her reactions) are hidden in practice by default, with one switch each in Personalize; the mock quizzes always use them. Naming, drawing, answer-briefly and the boiling point and solubility drills stay in practice.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 132,
+  "date": "2026-11-06",
+  "type": "schedule",
+  "title": "Chem quiz tomorrow at 7:30 AM sharp",
+  "text": "The Chem Lecture quiz on Saturday, Nov 7 starts at 7:30 AM sharp (back to the usual time).",
+  "link": "schedule.html"
  }
 ]
