@@ -1050,5 +1050,13 @@
   "title": "Shared cards readable on your side",
   "text": "Questions you share in DMs now show their text clearly on your own side of the chat too.",
   "link": "dm.html"
+ },
+ {
+  "id": 128,
+  "date": "2026-11-06",
+  "type": "content",
+  "title": "Chem: mock quiz in tomorrow's format + transes",
+  "text": "Mock exam → Mock quiz (Nov 7 format): modified true or false, naming, predicting products, then arranging boiling points and predicting solubility. New Boiling point and solubility drills (topics 13-14), rule summaries in Notes, and a short transes with diagrams for topics 12-14 (Notes tab, top buttons).",
+  "link": "reviewer.html?course=chem"
  }
 ]

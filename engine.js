@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='110',APP_DATE='Nov 6, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='111',APP_DATE='Nov 6, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1316,7 +1316,8 @@ const PER_ITEM=CONFIG.examMinutesPerItem||1;
 const exMinutes=(st,n)=>typeof st.timer==='number'?st.timer:st.timer?Math.round(n*PER_ITEM):0;
 const EX_PRESETS=CONFIG.examPresets||[{label:'Paperless · 30 items, split per '+unitW,count:30,split:true,format:'paperless',vsa:0}];
 function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters.slice(),timer:true});if(st.vsa==null)st.vsa=0;st.chs=st.chs.filter(c=>chapters.includes(c));if(!st.chs.length)st.chs=chapters.slice();return st}
-function exPoolOf(items,st){const qs=st.quota&&st.quota.flatMap(q=>q[0]);return items.filter(c=>st.chs.includes(chOf(c.section))&&(!st.secs||st.secs.includes(c.section))&&(!qs||qs.includes(c.section)))}
+function qMatch(entry,c){const i=String(entry).indexOf(':');if(i<0)return c.section===entry;const sec=entry.slice(0,i),tag=entry.slice(i+1);return c.section===sec&&(c.kind===tag||c.type===tag)}
+function exPoolOf(items,st){const qs=st.quota&&st.quota.flatMap(q=>q[0]);return items.filter(c=>st.chs.includes(chOf(c.section))&&(!st.secs||st.secs.includes(c.section))&&(!qs||qs.some(e=>qMatch(e,c))))}
 function exItems(){const b=bankObj();if(b.user)return BANK;const have=new Set(BANK.map(c=>c.id));
  return BANK.concat(b.items.filter(c=>!have.has(c.id)&&!c.retired&&!c.xo&&optExam(c.section)&&inScope(c.section)&&(state.prefs.extras||!c.extra)))}
 function exPool(){return exPoolOf(exItems(),exSetup())}
@@ -1401,7 +1402,7 @@ function exPick(st,pool,n,xo){
  let picked=st.split&&st.chs.length>1?exSplit(nm).flatMap(([ch,k])=>shuffle(pool.filter(c=>chOf(c.section)===ch),rnd()).slice(0,k)):shuffle(pool,rnd()).slice(0,nm);
  if(st.cases){const used=new Set();picked=st.cases.flatMap(([ss,k])=>{const ids=shuffle([...new Set(pool.filter(c=>c.case&&ss.includes(c.section)).map(c=>c.case))],rnd()).filter(id=>!used.has(id)).slice(0,k);ids.forEach(i=>used.add(i));
   return ids.flatMap(id=>pool.filter(c=>c.case===id).sort((a,b)=>(a.part||0)-(b.part||0)))})}
- else if(st.quota)picked=st.quota.flatMap(([ss,k])=>shuffle(pool.filter(c=>ss.includes(c.section)),rnd()).slice(0,k)).slice(0,nm);
+ else if(st.quota)picked=st.quota.flatMap(([ss,k])=>shuffle(pool.filter(c=>ss.some(e=>qMatch(e,c))),rnd()).slice(0,k)).slice(0,nm);
  picked=capPick(picked,pool);
  if(own){const want=Math.min(st.vsa||0,ids.length,nm),vs=shuffle(ids,rnd()).slice(0,want);return {mq,picked:picked.slice(0,nm-vs.length),vs}}
  // VSA: take them from across the picked units and move them to the end, like the real test
