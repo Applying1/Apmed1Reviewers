@@ -1090,5 +1090,13 @@
   "title": "Chem quiz tomorrow at 7:30 AM sharp",
   "text": "The Chem Lecture quiz on Saturday, Nov 7 starts at 7:30 AM sharp (back to the usual time).",
   "link": "schedule.html"
+ },
+ {
+  "id": 133,
+  "date": "2026-11-07",
+  "type": "content",
+  "title": "Chem: practice matches her real quiz",
+  "text": "New Chem items copied from her real Quiz 1 (Set A): amine reactions, name-or-draw structures, more boiling point sets, and more true or false on each family. Switch on Nov 7 quiz sets in Personalize to practice them; the mock quiz now follows her order.",
+  "link": "reviewer.html?course=chem"
  }
 ]
