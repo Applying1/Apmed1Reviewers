@@ -1098,5 +1098,13 @@
   "title": "Chem: practice matches her real quiz",
   "text": "New Chem items copied from her real Quiz 1 (Set A): amine reactions, name-or-draw structures, more boiling point sets, and more true or false on each family. Switch on Nov 7 quiz sets in Personalize to practice them; the mock quiz now follows her order.",
   "link": "reviewer.html?course=chem"
+ },
+  {
+   "id": 134,
+   "date": "2026-11-08",
+   "type": "content",
+   "title": "Pharma: harder Eval 2 mock cases",
+   "text": "The Eval 2 mock exam cases are harder now: each one hides the drug or class behind a side effect or use, so you have to work out the step before the answer. Practice is unchanged.",
+   "link": "reviewer.html?course=pharma"
  }
 ]
