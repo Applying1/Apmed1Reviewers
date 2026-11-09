@@ -1138,5 +1138,13 @@
   "title": "Psych: 17 more book review questions",
   "text": "The Psych Book chapter review sections for chapters 11, 12 and 13 now have all 60 review questions from the end of each book chapter, 20 per chapter. Practice them before the Evals on Wednesday.",
   "link": "reviewer.html?course=psych"
+ },
+ {
+  "id": 139,
+  "date": "2026-11-09",
+  "type": "content",
+  "title": "Chem: Biochemistry and Proteins for the Nov 14 eval",
+  "text": "General Chemistry has two new topics for the lecture eval on Saturday, Nov 14: Introduction to Biochemistry and Proteins (with Optical Isomerism), 351 questions from the slides and the class discussion, a written mock eval, new transes for topics 15 to 17 and lecture notes under Notes. Units XVII and XVIII will be added when the slides are in.",
+  "link": "reviewer.html?course=chem"
  }
 ]

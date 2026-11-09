@@ -167,7 +167,7 @@
   "scope": "Finals: lecture quiz and finals exam",
   "unit": "Topic",
   "itemWord": "question",
-  "count": 2229,
+  "count": 2580,
   "storageKey": "study_reviewer_chem_midterm_2026_v1",
   "image": "img/icons/chem.svg",
   "extras": [
@@ -193,14 +193,23 @@
    "img/icons/chem.svg"
   ],
   "exam": {
-   "name": "Lecture quiz",
-   "date": "2026-11-07"
+   "name": "Lecture eval (Nov 14)",
+   "date": "2026-11-14"
   },
-  "activeExam": "lecquiz",
+  "activeExam": "eval2",
   "exams": [
    {
+    "id": "eval2",
+    "name": "Lecture eval (Nov 14)",
+    "chapters": [
+     "15",
+     "16",
+     "17"
+    ]
+   },
+   {
     "id": "lecquiz",
-    "name": "Lecture quiz",
+    "name": "Lecture quiz (Nov 7)",
     "chapters": [
      "12",
      "13",
@@ -214,7 +223,9 @@
      "12",
      "13",
      "14",
-     "15"
+     "15",
+     "16",
+     "17"
     ]
    },
    {
