@@ -45,6 +45,21 @@ button,a{font:inherit;color:inherit}
 #tabs button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 #tabs button b{font-variant-numeric:tabular-nums}
 .pg[hidden]{display:none}
+/* Resume strip: the last reading spot and the starred pages, quiet chips under the chapter tabs */
+#rstrip{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;max-width:900px;margin:0 auto;padding:8px 16px}
+#rstrip[hidden]{display:none}
+#rstrip .rstc{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:5px 11px;border-radius:99px;border:1px solid var(--line2);background:transparent;font-size:13.5px;font-weight:600;color:var(--mute);cursor:pointer}
+#rstrip .rstc:hover{background:var(--raised);color:var(--text)}
+#rstrip .rstc.res{color:var(--accent);border-color:var(--accent-line)}
+#rstrip .rstx{flex:none;width:26px;height:26px;padding:0;border-radius:50%;border:1px solid transparent;background:transparent;color:var(--faint);font-size:16px;line-height:1;cursor:pointer}
+#rstrip .rstx:hover{background:var(--raised);color:var(--text)}
+/* Star a page */
+.star{position:absolute;top:8px;right:8px;z-index:3;width:32px;height:32px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line2);background:color-mix(in srgb,var(--surface) 85%,transparent);color:var(--faint);cursor:pointer}
+.star:hover{color:var(--text);background:var(--surface)}
+.star svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.star.on{color:var(--accent);border-color:var(--accent-line)}
+.star.on svg{fill:currentColor}
+@media (max-width:520px){#rstrip{padding:8px 10px}}
 #chend{display:flex;flex-direction:column;align-items:center;gap:10px;margin:6px auto 0;padding:18px 20px;max-width:520px;text-align:center;color:var(--mute);font-size:14px}
 #chend[hidden]{display:none}#chend b{color:var(--text)}
 @media (min-width:1000px){body.side #tabs{padding-left:326px}}
@@ -92,6 +107,7 @@ button,a{font:inherit;color:inherit}
  <a class="btn" id="dl" download><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-download"/></svg><span class="lbl">Download</span></a>
 </div>
 <div id="tabs" hidden role="tablist" aria-label="Chapters"></div>
+<div id="rstrip" hidden></div>
 <div id="sbar" hidden role="search"><input id="sq" type="search" placeholder="Search the transes…" autocomplete="off" aria-label="Search the transes"
  oninput="clearTimeout(window.__sq);window.__sq=setTimeout(runSearch,250)" onkeydown="if(event.key==='Enter'){event.preventDefault();stepHit(event.shiftKey?-1:1)}else if(event.key==='Escape')closeSearch()">
  <button class="btn" id="sscope" onclick="toggleScope()" aria-pressed="false" title="Search only the chapter you're reading" hidden>This chapter</button>
@@ -105,16 +121,19 @@ button,a{font:inherit;color:inherit}
 <div id="chend" hidden></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="auth.js"></script>
+<script src="marks.js"></script>
 <script src="aihelp.js"></script>
 <script>
 // Reads the PDF inside the page (no download, works in the installed app and offline once opened).
 const q=new URLSearchParams(location.search),file=q.get('f')||'',title=q.get('t')||'Transes',course=q.get('c')||'';
+try{history.scrollRestoration='manual'}catch(e){}
 const ok=/^courses\/[a-z0-9_-]+\/[a-z0-9_.-]+\.pdf$/i.test(file);
 document.title=title+' · APMed \'33';
 document.getElementById('ttl').firstChild.textContent=title;
 const dl=document.getElementById('dl');if(ok)dl.href=file;else dl.hidden=true;
 function goBack(){if(history.length>1)history.back();else location.href=course?'reviewer.html?course='+encodeURIComponent(course):'./'}
 let pdf=null,scale=1,pages=[],obs=null;
+let y0=0,ySet=false,moved=false,resumeHidden=false,hideStrip=false,lastP=-1;
 const sub=document.getElementById('sub'),box=document.getElementById('pages');
 function fitWidth(){return Math.min(900,box.clientWidth-20)}
 function layout(){
@@ -129,7 +148,7 @@ async function draw(p){
   const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
   await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
   const tv=page.getViewport({scale:w/vp0.width}),tl=document.createElement('div');tl.className='textLayer';tl.style.setProperty('--scale-factor',tv.scale);
-  p.el.replaceChildren(c,tl);paintHits(p);p.done=key;
+  p.el.replaceChildren(c,tl);p.el.appendChild(starBtn(p));paintStar(p);paintHits(p);p.done=key;
   try{await pdfjsLib.renderTextLayer({textContentSource:joinLines(await page.getTextContent()),container:tl,viewport:tv,textDivs:[]}).promise;
    const eoc=document.createElement('div');eoc.className='endOfContent';tl.appendChild(eoc);
    tl.addEventListener('mousedown',()=>tl.classList.add('selecting'))}catch(e){}}catch(e){}
@@ -155,6 +174,44 @@ function curPage(){if(!pages.length)return 0;if(scrollY>0&&innerHeight+scrollY>=
 let toc=[],ptH=792;
 const wide=()=>matchMedia('(min-width:1000px)').matches;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// ---- Marks: the last spot and the starred pages (marks.js)
+function markMoved(){moved=true}
+function labelAt(n){if(!toc.length)return '';let name='';for(const c of toc){if(c.page>n)continue;name=c.name;for(const k of c.kids||[])if(k.page<=n)name=k.name}return name}
+const chipLab=p=>{const l=labelAt(p);return l?' · '+esc(l):''};
+function starBtn(p){const b=document.createElement('button');b.type='button';b.className='star';b.setAttribute('aria-label','Star this page');b.innerHTML='<svg aria-hidden="true"><use href="icons.svg#i-star"/></svg>';b.addEventListener('click',e=>{e.stopPropagation();toggleStar(p.n)});return b}
+function paintStar(p){const b=p.el&&p.el.querySelector('.star');if(!b)return;const on=!!(window.Marks&&Marks.isStar(file,p.n));b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false')}
+function paintStars(){for(const p of pages)paintStar(p)}
+function toggleStar(n){if(!window.Marks)return;const on=!Marks.isStar(file,n);markMoved();Marks.star(file,n,on);paintStars();renderStrip();drawTocStars()}
+function gotoStar(n){markMoved();jump(n,null);setTimeout(track,60)}
+function resumeTo(at){if(!at)return;markMoved();jump(at.p,null);const el=pages[at.p-1]&&pages[at.p-1].el;if(el&&at.o)scrollTo(0,scrollY+at.o*el.offsetHeight);resumeHidden=true;renderStrip();setTimeout(track,60)}
+function renderStrip(){const rs=document.getElementById('rstrip');if(!rs)return;
+ if(hideStrip||!window.Marks||!pages.length){rs.hidden=true;rs.innerHTML='';return}
+ const st=Marks.get(file),at=st.at,cur=curPage()+1;
+ const resume=!!at&&at.p<=pages.length&&(at.p>1||at.o>0.05)&&!resumeHidden&&(at.p>1?cur<at.p:!moved);
+ const stars=(st.stars||[]).filter(p=>p<=pages.length);
+ if(!resume&&!stars.length){rs.hidden=true;rs.innerHTML='';return}
+ let h='';
+ if(resume)h+='<button type="button" class="rstc res" data-res="1">Resume p. '+at.p+chipLab(at.p)+'</button>';
+ for(const p of stars)h+='<button type="button" class="rstc" data-p="'+p+'">★ p. '+p+chipLab(p)+'</button>';
+ h+='<button type="button" class="rstx" aria-label="Hide the resume strip" title="Hide">×</button>';
+ rs.innerHTML=h;rs.hidden=false;
+ const rb=rs.querySelector('[data-res]');if(rb)rb.addEventListener('click',()=>resumeTo(at));
+ rs.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>gotoStar(+b.dataset.p)));
+ const xb=rs.querySelector('.rstx');if(xb)xb.addEventListener('click',()=>{hideStrip=true;renderStrip()});
+}
+function drawTocStars(){const t=document.getElementById('toc');if(!t)return;t.querySelectorAll('.starsec').forEach(e=>e.remove());if(!window.Marks||!toc.length)return;
+ const stars=Marks.get(file).stars.filter(p=>p<=pages.length);if(!stars.length)return;
+ const d=document.createElement('div');d.className='starsec';
+ d.innerHTML='<div class="th">Starred</div>'+stars.map(p=>'<div class="ch"><button class="row" onclick="starFromToc('+p+')"><span class="ct">★ p. '+p+chipLab(p)+'</span></button></div>').join('');
+ t.insertBefore(d,t.firstChild);
+}
+function starFromToc(p){gotoStar(p);if(!wide())toggleToc(false)}
+// Opening a file never jumps on its own: offer the saved spot as a chip instead.
+async function loaded(){y0=scrollY;ySet=true;
+ if(!window.Marks){renderStrip();return}
+ await Promise.race([Marks.ready(),new Promise(r=>setTimeout(r,1500))]);
+ paintStars();renderStrip();drawTocStars();
+}
 function toggleToc(force){const t=document.getElementById('toc'),open=force??!t.classList.contains('open');
  keepSpot(()=>{t.classList.toggle('open',open);document.body.classList.toggle('side',open&&wide());layout()});
  const b=document.getElementById('tocbtn');b.classList.toggle('on',open);b.setAttribute('aria-expanded',open);
@@ -194,15 +251,16 @@ async function buildToc(){
   (c.kids.length?'<button class="tw" onclick="event.stopPropagation();this.closest(\'.ch\').classList.toggle(\'exp\')" aria-label="Show sections"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></button>':'')+
   '</div>'+(c.kids.length?'<div class="secs">'+c.kids.map((k,j)=>'<button onclick="go('+i+','+j+')"><span>'+esc(k.name)+'</span><span class="pgn">'+k.page+'</span></button>').join('')+'</div>':'')+'</div>').join('');
  document.getElementById('tocbtn').hidden=false;
+ drawTocStars();
  drawTabs();let want=-1;try{const v=localStorage.getItem('transes_tab_'+file);if(v!=null)want=+v}catch(e){}
  if(want>=0&&want<toc.length){const pg=curPage()+1,r=tabRange(want);setTab(want,pg>=r[0]&&pg<=r[1]?pg:null)}
  let wantOpen=false;try{wantOpen=!!localStorage.getItem('transes_toc')}catch(e){}
  if(wantOpen&&wide())toggleToc(true);
- lastCh=-2;track();
+ lastCh=-2;track();renderStrip();
 }
 function jump(page,y){const el=pages[page-1]&&pages[page-1].el;if(!el)return;if(el.hidden){setTab(chapterOf(page),page,y);return}
  const off=y==null?0:Math.max(0,Math.min(.95,1-y/ptH))*el.offsetHeight;scrollTo(0,Math.max(0,el.offsetTop+off-barH()-10))}
-function go(i,j){const c=toc[i],k=j==null?c:c.kids[j];if(tab>=0&&tab!==i){setTab(i,k.page,k.y);if(!wide())toggleToc(false);return}jump(k.page,k.y);if(!wide())toggleToc(false);setTimeout(track,60)}
+function go(i,j){markMoved();const c=toc[i],k=j==null?c:c.kids[j];if(tab>=0&&tab!==i){setTab(i,k.page,k.y);if(!wide())toggleToc(false);return}jump(k.page,k.y);if(!wide())toggleToc(false);setTimeout(track,60)}
 // ---- Chapter tabs
 let tab=-1;
 const chapterOf=pg=>{let ci=0;for(let i=0;i<toc.length;i++)if(toc[i].page<=pg)ci=i;return ci};
@@ -228,7 +286,9 @@ function track(){if(!pages.length)return;const pg=curPage()+1;let ci=-1;for(let 
  const c=toc[ci];let where='p. '+pg+' of '+pages.length;if(tab>=0){const r=tabRange(tab);where='p. '+(pg-r[0]+1)+' of '+(r[1]-r[0]+1)+' in this chapter'}
  sub.textContent=(c?(c.num?'Ch '+c.num+' · ':'')+c.name+' · ':'')+where;
  if(ci!==lastCh){lastCh=ci;document.querySelectorAll('.ch').forEach(e=>{const on=+e.dataset.i===ci;e.classList.toggle('cur',on);if(on)e.classList.add('exp')})}
- try{localStorage.setItem('transes_at_'+file,String(pg))}catch(e){}}
+ if(ySet&&Math.abs(scrollY-y0)>300)markMoved();
+ if(moved&&window.Marks){const el=pages[pg-1]&&pages[pg-1].el;if(el){const o=Math.max(0,Math.min(1,(scrollY+barH()-el.offsetTop)/el.offsetHeight));Marks.setAt(file,pg,o)}}
+ if(pg!==lastP){lastP=pg;renderStrip()}}
 addEventListener('scroll',()=>{if(!window.__tk)window.__tk=requestAnimationFrame(()=>{window.__tk=0;track()})},{passive:true});
 addEventListener('keydown',e=>{const t=e.target;if(t&&t.closest&&t.closest('.aih-panel'))return;if(e.key==='Escape')toggleToc(false)});
 
@@ -280,12 +340,10 @@ addEventListener('keydown',e=>{const t=e.target;if(t&&(/^(TEXTAREA|SELECT)$/.tes
  document.documentElement.style.setProperty('--barh',barH()+'px');
  const first=await pdf.getPage(1),v=first.getViewport({scale:1}),ratio=v.height/v.width;ptH=v.height;ptW=v.width;document.getElementById('sbtn').hidden=false;
  obs=new IntersectionObserver(es=>{for(const e of es){const p=pages[+e.target.dataset.i];p.visible=e.isIntersecting;if(p.visible)draw(p)}},{rootMargin:'800px 0px'});
- for(let i=0;i<pdf.numPages;i++){const el=document.createElement('div');el.className='pg';el.dataset.i=i;box.appendChild(el);pages.push({n:i+1,el,ratio,done:0});obs.observe(el)}
+ for(let i=0;i<pdf.numPages;i++){const el=document.createElement('div');el.className='pg';el.dataset.i=i;el.appendChild(starBtn({n:i+1,el}));box.appendChild(el);pages.push({n:i+1,el,ratio,done:0});obs.observe(el)}
  layout();
- // pick up where you left off
- let at=0;try{at=+localStorage.getItem('transes_at_'+file)||0}catch(e){}
- if(at>1&&at<=pages.length)jump(at,null);
- track();
+ loaded();track();
+ if(window.Marks)Marks.onChange(()=>{paintStars();renderStrip();drawTocStars()});
  if(window.AIHelp)AIHelp.init({course,doc:file.split('/').pop().replace(/\.pdf$/i,''),getPage:()=>curPage()+1,getText:async n=>(await pageText(n)).raw,root:box});
  buildToc();
 })();

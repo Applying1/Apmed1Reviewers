@@ -1178,5 +1178,13 @@
   "title": "Pharma Eval 2 mock: fairer choices",
   "text": "In eight Pharmacology cases, the wrong choices had extra dosing details that made the short right answer stand out. Every choice is now just the drug or condition name; the details moved to the why-not lines.",
   "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 144,
+  "date": "2026-11-10",
+  "type": "feature",
+  "title": "Transes remember your place",
+  "text": "Reopen a transes file and a Resume chip at the top takes you back to the page and spot where you stopped. Tap the star on any page (like a summary table) to keep it one tap away, at the top and in Contents. Signed in, your place and stars follow you to every device.",
+  "link": "reviewer.html?course=chem"
  }
 ]
