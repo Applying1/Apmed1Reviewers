@@ -257,7 +257,7 @@
     "Holidays: All Saints' Day (Sun, Nov 1), All Souls' Day (Mon, Nov 2) and Institutional Family Day (Tue, Nov 3). No Pharmacology class on Tuesday.",
     "Event: Jorts battle on Wednesday, Nov 4, 1:30–4:00 PM.",
     "Math in the Modern World moved to Thursday, Nov 5, 1:00–4:00 PM.",
-    "Botany (class and Evals) moves to Friday, Nov 6 at 10:00 AM. NSTP moves temporarily to Thursday, Nov 5, 4:00-7:00 PM. Psychology Evals (Ch. 11–12) moved to Wednesday, Nov 11.",
+    "Botany (class and Evals) moves to Friday, Nov 6 at 10:00 AM. NSTP moves temporarily to Thursday, Nov 5, 4:00-7:00 PM. Psychology Evals (Ch. 11–13) moved to Wednesday, Nov 11.",
     "Purposive Communication quiz (Nature of Research) moved from last week to Wednesday, Nov 4 (4:00–7:00 PM).",
     "Chem Lecture quiz on Saturday, Nov 7 starts at 7:30 AM sharp.",
     "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
@@ -313,7 +313,7 @@
   "16": {
    "topics": {
     "pharma": "Evals: Anti-inflammatory drugs · then GI Drugs 1 and 2",
-    "psych": "Evals (Ch. 11–12) · Chapter 14: Therapies",
+    "psych": "Evals (Ch. 11–13) · Chapter 14: Therapies",
     "botany-lec": "Reporting on Common Medicinal Plants",
     "purcom": "Communication for academic purposes",
     "iml": "Technology and the Future of Medicine",
@@ -325,14 +325,14 @@
     "chem-lab": "Activity 12: RNA Vaccine"
    },
    "notes": [
-    "Psychology Evals (Ch. 11–12) on Wednesday, Nov 11 at 10:00 AM.",
+    "Psychology Evals (Ch. 11–13) on Wednesday, Nov 11 at 10:00 AM.",
     "Topics are placeholders from the class matrix and may shift (some classes run ahead of it)."
    ]
   },
   "17": {
    "topics": {
     "pharma": "Rational Drug Use, Prescription Writing",
-    "psych": "Evals (Ch. 13–14) · Chapter 15: Social Psychology",
+    "psych": "Evals (Ch. 14) · Chapter 15: Social Psychology",
     "botany-lec": "\"I Grew My Own Plant\" Project Presentation",
     "purcom": "Communication for academic purposes",
     "iml": "History of Philippine Medicine",

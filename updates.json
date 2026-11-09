@@ -1106,5 +1106,13 @@
    "title": "Pharma: harder Eval 2 mock cases",
    "text": "The Eval 2 mock exam cases are harder now: each one hides the drug or class behind a side effect or use, so you have to work out the step before the answer. Practice is unchanged.",
    "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 135,
+  "date": "2026-11-09",
+  "type": "schedule",
+  "title": "Psych Evals now cover chapters 11 to 13",
+  "text": "The Psychology Evals on Wednesday, Nov 11 at 10:00 AM now cover chapters 11, 12 and 13 (Personality, Stress and Health, Psychological Disorders). The Evals mock exam uses all three.",
+  "link": "reviewer.html?course=psych"
  }
 ]
