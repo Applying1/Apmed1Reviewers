@@ -1122,5 +1122,13 @@
   "title": "Math quiz this Friday: Simplex Method",
   "text": "Math in the Modern World has a quiz this Friday, Nov 13 on Linear Programming, the Simplex Method. The slides are not posted yet.",
   "link": "schedule.html"
+ },
+ {
+  "id": 137,
+  "date": "2026-11-09",
+  "type": "content",
+  "title": "Psych: book chapter review questions",
+  "text": "43 new Psych questions for chapters 11, 12 and 13, taken from the review questions at the end of each book chapter (the fill-ins are now multiple choice). Find them in each chapter under Book chapter review. Good practice for the Evals this Wednesday.",
+  "link": "reviewer.html?course=psych"
  }
 ]
