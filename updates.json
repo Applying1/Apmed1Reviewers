@@ -1114,5 +1114,13 @@
   "title": "Psych Evals now cover chapters 11 to 13",
   "text": "The Psychology Evals on Wednesday, Nov 11 at 10:00 AM now cover chapters 11, 12 and 13 (Personality, Stress and Health, Psychological Disorders). The Evals mock exam uses all three.",
   "link": "reviewer.html?course=psych"
+ },
+ {
+  "id": 136,
+  "date": "2026-11-09",
+  "type": "schedule",
+  "title": "Math quiz this Friday: Simplex Method",
+  "text": "Math in the Modern World has a quiz this Friday, Nov 13 on Linear Programming, the Simplex Method. The slides are not posted yet.",
+  "link": "schedule.html"
  }
 ]
