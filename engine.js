@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='113',APP_DATE='Nov 9, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='114',APP_DATE='Nov 10, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1167,13 +1167,13 @@ const BLURT_IC='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 function blurtFromBar(){const ok=ch=>NOTES_PARSED.some(n=>n.ch===ch&&noteScope(n.ch)),cur=isX(state.section)?null:secCh(state.section);
  const ch=notesCh!=='all'&&ok(notesCh)?notesCh:cur&&ok(cur)?cur:(NOTES_PARSED.find(n=>noteScope(n.ch)&&/^\d/.test(n.ch))||{}).ch;if(!ch)return;
  if(notesCh!=='all')notesCh=ch;drawNotes();startBlurt(ch)}
-let blurtCh=null,blurtText='',blurtRes=null,blurtTopic='all';
+let blurtCh=null,blurtText='',blurtRes=null,blurtTopic='all',blurtAI=null,blurtBusy=false;
 // The notes cards of a chapter that are switched on; Blurt can cover all of them or one card (a big lesson has 100+ points).
 const BTIP=/^\s*(mnemonics?|memory tip|tip)\s*$/i;   // study tips in the notes are not key points to recall
 const blurtGroups=ch=>{const n=NOTES_PARSED.find(x=>x.ch===ch);return n?n.groups.filter(g=>secOn(g.sec)&&g.rows.some(([a])=>String(a).trim())):[]};
-function startBlurt(ch,keep){if(!keep||blurtCh!==ch)blurtTopic=blurtGroups(ch).length>4?'0':'all';blurtCh=ch;blurtText='';blurtRes=null;drawNotesBody();const n=document.querySelector('.blurt');if(n)n.scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'});setTimeout(()=>{const t=$('blurtin');if(t)t.focus()},60)}
+function startBlurt(ch,keep){if(!keep||blurtCh!==ch)blurtTopic=blurtGroups(ch).length>4?'0':'all';blurtCh=ch;blurtText='';blurtRes=null;blurtAI=null;blurtBusy=false;drawNotesBody();const n=document.querySelector('.blurt');if(n)n.scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'});setTimeout(()=>{const t=$('blurtin');if(t)t.focus()},60)}
 function setBlurtTopic(v){const t=$('blurtin');if(t)blurtText=t.value;blurtTopic=v;drawNotesBody()}
-function endBlurt(){if(blurtRes&&blurtCh){const gs=blurtGroups(blurtCh);state.blurt=state.blurt||{};state.blurt[blurtCh]={at:Date.now(),got:blurtRes.filter(x=>x.ok).length,total:blurtRes.length,topic:blurtTopic==='all'?'':(gs[+blurtTopic]||{}).title||''};save()}blurtCh=null;blurtRes=null;blurtText='';drawNotesBody()}
+function endBlurt(){if(blurtRes&&blurtCh){const gs=blurtGroups(blurtCh);state.blurt=state.blurt||{};state.blurt[blurtCh]={at:Date.now(),got:blurtRes.filter(x=>x.ok).length,total:blurtRes.length,topic:blurtTopic==='all'?'':(gs[+blurtTopic]||{}).title||''};save()}blurtCh=null;blurtRes=null;blurtAI=null;blurtBusy=false;blurtText='';drawNotesBody()}
 const BSTOP=new Set('the and for are was but its not has had can may via per with from that this they their than then into also only each have been were when what which whom whose your about between other these those such more most less very used uses using called after before over under like same both either'.split(' '));
 function blurtWords(t){return String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\$[^$]*\$/g,' ').replace(/\(.*?\)/g,' ').split(/[^a-z0-9]+/).filter(Boolean)}
 function blurtLev(a,b){const p=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let prev=p[0];p[0]=i;for(let j=1;j<=b.length;j++){const t=p[j];p[j]=Math.min(p[j]+1,p[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=t}}return p[b.length]}
@@ -1183,13 +1183,25 @@ function blurtLev(a,b){const p=[...Array(b.length+1).keys()];for(let i=1;i<=a.le
 function blurtHit(term,def,said){const pick=t=>[...new Set(blurtWords(t).filter(w=>w.length>=3&&!BSTOP.has(w)&&!/^\d+$/.test(w)))];let key=pick(def||'');if(!key.length)key=pick(term);if(!key.length)return false;
  const has=w=>said.has(w)||[...said].some(x=>(w.length>=5&&x.length>=5&&(x.startsWith(w.slice(0,Math.max(5,w.length-2)))||w.startsWith(x.slice(0,Math.max(5,x.length-2)))))||(w.length>=6&&Math.abs(x.length-w.length)<=1&&x[0]===w[0]&&blurtLev(x,w)<=1));
  const n=key.filter(has).length;return key.length<=4?n>=Math.ceil(key.length/2):n>=Math.max(2,Math.ceil(key.length*.35))}
-function checkBlurt(){const t=$('blurtin');blurtText=t?t.value:blurtText;if(blurtText.trim().length<3){if(t)t.focus();return}
- const said=new Set(blurtWords(blurtText)),gs=blurtGroups(blurtCh);if(!gs.length)return;
- blurtRes=[];gs.filter((g,i)=>blurtTopic==='all'||String(i)===blurtTopic).forEach(g=>g.rows.forEach(([a,b])=>{if(String(a).trim()&&!BTIP.test(a))blurtRes.push({g:g.title,a,b,ok:blurtHit(a,b,said)})}));
- drawNotesBody();const el=document.querySelector('.blurt');if(el)el.scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
-function blurtTick(i){if(!blurtRes||!blurtRes[i])return;blurtRes[i].ok=!blurtRes[i].ok;const open=!!document.querySelector('.blurt .bgot[open]');drawNotesBody();const d=document.querySelector('.blurt .bgot');if(d&&open)d.open=true}
+// v114: when AI is available, the explain function reads what was written against the key points (10 Haiku checks a
+// day, then 50 DeepSeek; first 160 points). Past the limit, offline, signed out or on any error: the keyword checker.
+async function checkBlurt(){if(blurtBusy)return;const t=$('blurtin');blurtText=t?t.value:blurtText;if(blurtText.trim().length<3){if(t)t.focus();return}
+ const said=new Set(blurtWords(blurtText)),gs=blurtGroups(blurtCh),ch=blurtCh,text=blurtText;if(!gs.length)return;
+ const res=[];gs.filter((g,i)=>blurtTopic==='all'||String(i)===blurtTopic).forEach(g=>g.rows.forEach(([a,b])=>{if(String(a).trim()&&!BTIP.test(a))res.push({g:g.title,a,b,ok:blurtHit(a,b,said)})}));
+ blurtAI=null;
+ if(res.length&&aiOn()&&AI_READY===true&&cloudOn()){blurtBusy=true;drawNotesBody();
+  const pl=s=>String(s||'').replace(/@m:\S+/g,'(structure)').replace(/\*\*/g,'').replace(/\s+/g,' ').trim(),topic=blurtTopic==='all'?'':(gs[+blurtTopic]||{}).title||'';
+  let o=null;try{o=await aiPost({course:courseId(),mode:'blurt',said:text.slice(0,6000),topic:pl(topic).slice(0,120),points:res.slice(0,160).map(x=>({a:pl(x.a).slice(0,200)||'?',b:pl(x.b).slice(0,400)}))})}catch(e){o=null}
+  blurtBusy=false;if(blurtCh!==ch||blurtText!==text){drawNotesBody();return}   // they left or changed the text meanwhile
+  const j=o&&o.j||{};
+  if(o&&o.r&&o.r.ok&&Array.isArray(j.hit)){const h=new Set(j.hit),pt=new Set(j.part||[]);res.forEach((x,i)=>{if(i<160){x.ok=h.has(i);x.part=!x.ok&&pt.has(i)}});
+   blurtAI={model:j.model||'AI',left:j.left,kind:j.kind,more:j.more||0,wrong:Array.isArray(j.wrong)?j.wrong:[],tip:j.tip||'',cut:res.length>160}}
+  else blurtAI={off:j.error==='limit'?'limit':o&&o.signin?'signin':'err'}}
+ blurtRes=res;drawNotesBody();const el=document.querySelector('.blurt');if(el)el.scrollIntoView({block:'start',behavior:reduceMotion?'auto':'smooth'})}
+function blurtTick(i){if(!blurtRes||!blurtRes[i])return;blurtRes[i].ok=!blurtRes[i].ok;blurtRes[i].part=false;const open=!!document.querySelector('.blurt .bgot[open]');drawNotesBody();const d=document.querySelector('.blurt .bgot');if(d&&open)d.open=true}
 function blurtHTML(n){const gs=blurtGroups(n.ch),topic=blurtTopic==='all'?'':(gs[+blurtTopic]||{}).title||'';
  const head='<div class="nhead"><h2>'+(/^\d/.test(n.ch)?'<span class="pill">'+esc(UNIT)+' '+esc(n.ch)+'</span>':'')+'Blurt</h2></div>';
+ if(blurtBusy&&!blurtRes)return '<section class="nsec blurt">'+head+'<p class="bsum bbusy">'+SPARK+'Reading what you wrote…</p></section>';
  if(!blurtRes){const npts=g=>g.rows.filter(([a])=>String(a).trim()&&!BTIP.test(a)).length,tot=gs.reduce((s,g)=>s+npts(g),0);
   return '<section class="nsec blurt">'+head+
   (state.blurt&&state.blurt[n.ch]?'':'<p class="bintro">'+BLURT_IC+'<span><b>How it works:</b> without looking at your notes, write all you can remember. The reviewer then shows which key points you missed.</span></p>')+
@@ -1200,14 +1212,22 @@ function blurtHTML(n){const gs=blurtGroups(n.ch),topic=blurtTopic==='all'?'':(gs
   '<div class="bact"><button class="btn" onclick="endBlurt()">Cancel</button><button class="btn primary" onclick="checkBlurt()">Check what I remembered</button></div></section>'}
  const got=blurtRes.filter(x=>x.ok).length,tot=blurtRes.length,pct=tot?Math.round(100*got/tot):0;
  const all=blurtRes.map((x,i)=>Object.assign({i},x)),miss=all.filter(x=>!x.ok),hit=all.filter(x=>x.ok);
- const li=x=>'<li class="'+(x.ok?'ok':'no')+'"><button class="bt" onclick="blurtTick('+x.i+')" aria-pressed="'+x.ok+'" aria-label="'+(x.ok?'Untick ':'I did write ')+esc(x.a)+'">'+(x.ok?'✓':'')+'</button><div><b>'+esc(x.a)+'</b>'+(x.ok||!x.b?'':'<span>'+esc(x.b)+'</span>')+'</div></li>';
+ const li=x=>'<li class="'+(x.ok?'ok':'no')+'"><button class="bt" onclick="blurtTick('+x.i+')" aria-pressed="'+x.ok+'" aria-label="'+(x.ok?'Untick ':'I did write ')+esc(x.a)+'">'+(x.ok?'✓':'')+'</button><div><b>'+esc(x.a)+(x.part&&!x.ok?' <em class="bpart">Partly</em>':'')+'</b>'+(x.ok||!x.b?'':'<span>'+esc(x.b)+'</span>')+'</div></li>';
  // missed points grouped under their notes card (the card name once, not on every row)
  const byG=[];miss.forEach(x=>{let g=byG.find(y=>y.t===x.g);if(!g)byG.push(g={t:x.g,xs:[]});g.xs.push(x)});
- return '<section class="nsec blurt">'+head+(topic?'<p class="btopic">'+esc(topic)+'</p>':'')+'<p class="bsum"><b class="num">'+got+' of '+tot+'</b> key points ('+pct+'%). '+(pct>=80?'Excellent recall.':pct>=50?'A solid start: read the ones you missed, then blurt again tomorrow.':'Read the missed ones below, then try again later. Each try makes them stick.')+' Tap a box to tick one the checker missed.</p>'+
+ return '<section class="nsec blurt">'+head+(topic?'<p class="btopic">'+esc(topic)+'</p>':'')+'<p class="bsum"><b class="num">'+got+' of '+tot+'</b> key points ('+pct+'%). '+(pct>=80?'Excellent recall.':pct>=50?'A solid start: read the ones you missed, then blurt again tomorrow.':'Read the missed ones below, then try again later. Each try makes them stick.')+' Tap a box to tick one the checker missed.</p>'+blurtAIHTML()+
   (miss.length?'<h3 class="bh">Missed ('+miss.length+')</h3>'+byG.map(g=>(byG.length>1||!topic?'<h4 class="bg">'+esc(g.t)+'</h4>':'')+'<ul class="blist">'+g.xs.map(li).join('')+'</ul>').join(''):'')+
   (hit.length?'<details class="bgot"><summary>Remembered ('+hit.length+')</summary><ul class="blist">'+hit.map(li).join('')+'</ul></details>':'')+
   '<details class="bmine"><summary>What you wrote</summary><p>'+esc(blurtText)+'</p></details>'+
   '<div class="bact"><button class="btn" onclick="startBlurt(\''+esc(n.ch)+'\',true)">Try again</button><button class="btn primary" onclick="endBlurt()">Done</button></div></section>'}
+// the AI's part of the result: what it says was wrong, one tip, and who checked it (or why the keyword checker did)
+function blurtAIHTML(){const a=blurtAI;if(!a)return '';
+ if(a.off)return '<p class="note bnote">'+(a.off==='limit'?'Today\'s AI checks are used up, so the keyword checker did this one. More AI checks tomorrow.':a.off==='signin'?'Checked by keyword match. Sign in to have AI check your blurts.':'The AI check didn\'t work just now, so the keyword checker did this one.')+'</p>';
+ let h='';
+ if(a.wrong.length)h+='<div class="bfix"><h3 class="bh">Check these</h3><ul>'+a.wrong.map(w=>'<li><span>You wrote “'+esc(w.said)+'”</span><b>'+esc(w.fix)+'</b></li>').join('')+'</ul></div>';
+ if(a.tip)h+='<p class="btipai">'+SPARK+esc(a.tip)+'</p>';
+ const left=a.left!=null?(a.kind==='h'?(a.left+a.more)+' AI checks left today':a.left+' AI check'+(a.left===1?'':'s')+' left today'):'';
+ return h+'<p class="note bnote">Checked by '+esc(a.model)+', so it can be wrong'+(a.cut?' (the first 160 points; the rest by keyword match)':'')+(left?' · '+left:'')+'.</p>'}
 function toggleSelfTest(){state.prefs.selftest=!state.prefs.selftest;save();drawNotes()}
 function revealSec(btn){const rows=[...btn.closest('.nsec').querySelectorAll('.nrow')],all=rows.every(r=>r.classList.contains('show'));rows.forEach(r=>r.classList.toggle('show',!all));syncReveal()}
 function syncReveal(){document.querySelectorAll('#nbody .nsec').forEach(sec=>{const b=sec.querySelector('.reveal');if(b)b.textContent=[...sec.querySelectorAll('.nrow')].every(r=>r.classList.contains('show'))?'Hide all':'Reveal all'})}
@@ -1977,6 +1997,9 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'114',date:'Nov 10, 2026',title:'Blurt checked by AI',items:[
+  'Blurt now has AI read what you wrote: it gives credit for ideas in your own words or in Taglish, marks points you only partly got, and points out anything you wrote that the notes say is wrong.',
+  'Up to 60 AI checks a day (10 with Claude Haiku, then 50 with DeepSeek). After that, the keyword checker takes over as before.']},
  {v:'113',date:'Nov 9, 2026',title:'Tidier Notes page',items:[
   'Transes, lecture notes and slides now sit behind one Documents button on the Notes page, grouped by kind.',
   'Documents for the test you are studying for come first; older ones are folded under Earlier documents.']},

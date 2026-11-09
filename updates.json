@@ -1186,5 +1186,13 @@
   "title": "Transes remember your place",
   "text": "Reopen a transes file and a Resume chip at the top takes you back to the page and spot where you stopped. Tap the star on any page (like a summary table) to keep it one tap away, at the top and in Contents. Signed in, your place and stars follow you to every device.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 145,
+  "date": "2026-11-10",
+  "type": "feature",
+  "title": "Blurt checked by AI",
+  "text": "Blurt on the Notes page now has AI read what you wrote: it counts ideas in your own words or Taglish, marks points you only partly got, and flags anything the notes say is wrong. 60 AI checks a day (10 Claude Haiku, then 50 DeepSeek); after that the keyword checker takes over.",
+  "link": "reviewer.html?course=chem"
  }
 ]
