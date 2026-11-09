@@ -1170,5 +1170,13 @@
   "title": "Tidier Notes page",
   "text": "On the Notes page, transes, lecture notes and slides now open from one Documents button, grouped by kind. The current test's documents come first; older ones are under Earlier documents.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 143,
+  "date": "2026-11-09",
+  "type": "content",
+  "title": "Pharma Eval 2 mock: fairer choices",
+  "text": "In eight Pharmacology cases, the wrong choices had extra dosing details that made the short right answer stand out. Every choice is now just the drug or condition name; the details moved to the why-not lines.",
+  "link": "reviewer.html?course=pharma"
  }
 ]
