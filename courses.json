@@ -167,7 +167,7 @@
   "scope": "Finals: lecture quiz and finals exam",
   "unit": "Topic",
   "itemWord": "question",
-  "count": 2771,
+  "count": 2915,
   "storageKey": "study_reviewer_chem_midterm_2026_v1",
   "image": "img/icons/chem.svg",
   "extras": [
@@ -205,7 +205,8 @@
      "15",
      "16",
      "17",
-     "18"
+     "18",
+     "19"
     ]
    },
    {
@@ -227,7 +228,8 @@
      "15",
      "16",
      "17",
-     "18"
+     "18",
+     "19"
     ]
    },
    {

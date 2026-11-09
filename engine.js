@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='112',APP_DATE='Nov 6, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='113',APP_DATE='Nov 9, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -1120,9 +1120,22 @@ const DOCS=(CONFIG.docs||[]).filter(d=>d&&d.file);
 // On the website, PDFs open in the site's own reader (transes.html); the single-file version links the PDF directly.
 function docView(d,u){const id=new URLSearchParams(location.search).get('course');if(!CONFIG.home||!id||!/^https?:$/.test(location.protocol)||!/^courses\/[\w-]+\/[\w.-]+\.pdf$/i.test(d.file))return u;return (d.kind==='slides'||/^slides?\b/i.test(d.title||'')?'slides.html':'transes.html')+'?f='+encodeURIComponent(d.file)+'&t='+encodeURIComponent(d.title||'Full transes')+'&c='+encodeURIComponent(id)}
 function docURL(d){if(/^https?:/i.test(d.file)||/^https?:$/.test(location.protocol))return d.file;try{return new URL(d.file,CONFIG.shareUrl).href}catch(e){return ''}}
+const DOC_SVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>';
+// d.kind ('transes'|'notes'|'slides') or the title decides the group; d.ch (chapter list) decides whether it belongs to the current test.
+function docKind(d){const t=String(d.title||'');return d.kind==='slides'||/^slides?\b/i.test(t)?'Slides':d.kind==='notes'||/\bnotes\b/i.test(t)?'Lecture notes':d.kind==='transes'||/\btranses\b/i.test(t)?'Transes':'Other'}
+function docRel(d){if(!d.ch)return true;return [].concat(d.ch).map(String).some(c=>inScopeCh(c))}
+function docLink(d,short){const u=docURL(d);if(!u)return '';const v=docView(d,u);let t=String(d.title||'Full transes');if(short)t=t.replace(/^(slides?|lecture notes|transes)\s*:\s*/i,'');
+ return '<a class="btn sm docbtn" href="'+esc(v)+'"'+(v===u?' target="_blank" rel="noopener" title="Opens in a new tab"':'')+'>'+DOC_SVG+esc(t)+'</a>'}
+function drawDocs(){const KS=['Transes','Lecture notes','Slides','Other'];
+ const grp=list=>KS.map(k=>{const l=list.filter(d=>docKind(d)===k);return l.length?'<div class="docgrp"><h3>'+k+'</h3><div class="doclist">'+l.map(d=>docLink(d,k!=='Other')).join('')+'</div></div>':''}).join('');
+ const rel=DOCS.filter(docRel),old=DOCS.filter(d=>!docRel(d));
+ $('docbody').innerHTML=(rel.length?grp(rel):'<p>No documents for this test yet.</p>')+(old.length?'<details class="docold"><summary>Earlier documents ('+old.length+')</summary>'+grp(old)+'</details>':'')}
+function openDocs(){drawDocs();$('docs').hidden=false;ovOpen('docs',closeDocs);$('docs').querySelector('.close').focus({preventScroll:true})}
+function closeDocs(){$('docs').hidden=true;ovClosed('docs')}
 function drawNotes(){
  aiCheck();$('nChartBtn').hidden=!chartsOn();$('nBlurtBtn').hidden=!state.prefs.blurt||!NOTES_PARSED.some(n=>noteScope(n.ch)&&/^\d/.test(n.ch));
- $('ndocs').innerHTML=DOCS.map(d=>{const u=docURL(d);return u?'<a class="btn sm docbtn" href="'+esc(docView(d,u))+'"'+(docView(d,u)===u?' target="_blank" rel="noopener" title="Opens in a new tab"':'')+'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>'+esc(d.title||'Full transes')+'</a>':''}).join('');
+ // Up to 3 documents: inline buttons. More: one "Documents" button that opens a grouped list (v113, the Chem row got too long).
+ $('ndocs').innerHTML=DOCS.length<=3?DOCS.map(d=>docLink(d)).join(''):'<button class="btn sm docbtn" onclick="openDocs()">'+DOC_SVG+'Documents <span class="dcount">'+DOCS.filter(docRel).length+'</span></button>';
  document.title='Notes · '+CONFIG.title;
  $('nchips').innerHTML=chChips(NOTES_PARSED.filter(n=>noteScope(n.ch)).map(n=>n.ch),notesCh,'setNotesCh');
  $('selftest').setAttribute('aria-checked',String(!!state.prefs.selftest));$('ntip').hidden=!state.prefs.selftest;
@@ -1964,6 +1977,9 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'113',date:'Nov 9, 2026',title:'Tidier Notes page',items:[
+  'Transes, lecture notes and slides now sit behind one Documents button on the Notes page, grouped by kind.',
+  'Documents for the test you are studying for come first; older ones are folded under Earlier documents.']},
  {v:'110',date:'Nov 6, 2026',title:'Share questions and game results',items:[
   'After answering, tap Share to send the question to a classmate\'s DMs. They can answer it right in the chat.',
   'Game results (crossword, APMed\'le, Sort It, duels) can be sent to a classmate too.']},
@@ -2571,6 +2587,7 @@ document.addEventListener('keydown',e=>{
  if(!$('charts').hidden&&!(CW&&CW.on)){if(e.key==='Escape'){closeCharts();e.preventDefault()}return}
  if(!$('charts').hidden&&e.key==='Escape'){closeCharts();e.preventDefault();return}
  if(!$('news').hidden){if(e.key==='Escape'){closeNews();e.preventDefault()}return}
+ if(!$('docs').hidden){if(e.key==='Escape'){closeDocs();e.preventDefault()}return}
  if(!$('dialog').hidden){if(e.key==='Escape'||e.key==='Enter'){closeDialog();e.preventDefault()}return}
  if(e.key==='Escape'){toggleNav(false);return}
  const t=e.target;if(t.closest&&t.closest('input,textarea,select'))return;

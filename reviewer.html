@@ -852,6 +852,14 @@ body.notesonly .side>.label,body.notesonly #nav{display:none}
 #ndocs{display:contents}
 .docbtn{text-decoration:none}
 .docbtn svg{margin-right:2px}
+.docbtn .dcount{font-size:12px;font-weight:600;color:var(--mute);margin-left:2px}
+.modal .docbox{max-width:520px;width:100%;max-height:85vh;overflow:auto}
+.docgrp h3{margin:14px 0 8px;font-size:12.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+.docgrp:first-child h3{margin-top:0}
+.doclist{display:flex;flex-direction:column;gap:6px}
+.doclist .docbtn{justify-content:flex-start;text-align:left;width:100%}
+details.docold{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+details.docold summary{cursor:pointer;color:var(--mute);font-size:13.5px}
 /* During an exam the header (title, Charts, timer) stays pinned; the answer sheet pins right under it */
 #examView.running>.top{position:sticky;top:0;z-index:12;background:var(--bg);margin:-14px -12px 0;padding:14px 12px 12px;box-shadow:0 1px 0 var(--line)}
 #examView.running .sheet{top:calc(var(--exhead,84px) + 12px);max-height:calc(100vh - var(--exhead,84px) - 28px)}
@@ -1186,6 +1194,7 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
 </div>
 <div class="tooltip" id="tip" role="tooltip" aria-hidden="true"></div>
 <div class="modal" id="charts" hidden onclick="if(event.target===this)closeCharts()"><div class="box chartbox" role="dialog" aria-modal="true" aria-labelledby="chh"><div class="chhead"><h2 id="chh">Charts</h2><span class="seg" id="chtabs" role="tablist" aria-label="Chart"></span><button class="btn sm chfloat" id="chpin" onclick="toggleChartFloat()" aria-pressed="false" title="Float: move and resize the chart, and keep answering underneath">Float</button><button class="icon close" onclick="closeCharts()" aria-label="Close charts"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div id="chbody"></div><span class="chgrip" id="chgrip" title="Drag to resize"></span></div></div>
+<div class="modal" id="docs" hidden onclick="if(event.target===this)closeDocs()"><div class="box docbox" role="dialog" aria-modal="true" aria-labelledby="dch"><div class="chhead"><h2 id="dch">Documents</h2><button class="icon close" onclick="closeDocs()" aria-label="Close documents"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div id="docbody"></div></div></div>
 <div class="modal" id="news" hidden onclick="if(event.target===this)closeNews()"><div class="box news" role="dialog" aria-modal="true" aria-labelledby="newsh"><h2 id="newsh">What's new</h2><p>How the reviewer has changed, newest first.</p><div id="newsbody"></div><button class="btn primary" onclick="closeNews()">Close</button></div></div>
 <div class="modal" id="dialog" hidden><div class="box"><h2>All done</h2><p id="modalbody"></p><button class="btn primary" onclick="closeDialog()">Close</button></div></div>
 <div class="modal" id="setmodal" hidden><div class="box setbox" role="dialog" aria-modal="true" aria-labelledby="seth">

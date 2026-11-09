@@ -1154,5 +1154,21 @@
   "title": "Chem: Enzymes added for the Nov 14 eval",
   "text": "Enzymes (Unit XVII) is now in General Chemistry: 191 questions from the slides and the class discussion (classes, specificity, factors, cofactors, inhibition), added to the Nov 14 mock eval. The transes now cover topics 15 to 18, and the Enzymes lecture notes and slides are under Notes.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 141,
+  "date": "2026-11-09",
+  "type": "content",
+  "title": "Chem: Lipids added, all Nov 14 topics are in",
+  "text": "Lipids (Unit XVIII) is now in General Chemistry: 144 questions on lipid functions and types, fatty acids, omega-3 and omega-6, cis and trans, fats and oils, and triacylglycerols. The Nov 14 mock eval now covers all five topics (15 to 19), and the transes cover topics 15 to 19.",
+  "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 142,
+  "date": "2026-11-09",
+  "type": "feature",
+  "title": "Tidier Notes page",
+  "text": "On the Notes page, transes, lecture notes and slides now open from one Documents button, grouped by kind. The current test's documents come first; older ones are under Earlier documents.",
+  "link": "reviewer.html?course=chem"
  }
 ]
