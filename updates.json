@@ -1200,7 +1200,15 @@
   "date": "2026-11-10",
   "type": "course",
   "title": "Pharma Lesson 8: GI Drugs (draft)",
-  "text": "Ready for next week's Evals 3: 129 practice questions on acid secretion, GERD and ulcers, antacids, H2 blockers, PPIs, sucralfate, misoprostol, bismuth and laxatives, plus 30 eval-style cases and an Eval 3 mock (13 MCQ + 2 typed). Made from the seniors' annotated slides (in Documents) before our lecture, so it will be revised after the discussion. Notes, charts, drills and the finals transes are updated too.",
+  "text": "Ready for next week's Evals 3: 129 practice questions on acid secretion, GERD and ulcers, antacids, H2 blockers, PPIs, sucralfate, misoprostol, bismuth and laxatives, plus 30 eval-style cases and an Eval 3 mock (13 MCQ + 2 typed). Made before our lecture, so it will be revised after the discussion. Notes, charts, drills and the finals transes are updated too.",
+  "link": "reviewer.html?course=pharma"
+ },
+ {
+  "id": 147,
+  "date": "2026-11-10",
+  "type": "content",
+  "title": "Pharma GI Drugs: Dr. Orig's own slides added",
+  "text": "Today's official GI Drugs deck is now in Documents. Its new slides are in the lesson too: GI tract parts and accessory organs, the six GI functions, the stomach's regions, curvatures and cell jobs, fiber supplements (Metamucil) and Senokot. 23 new questions, plus updated notes and transes.",
   "link": "reviewer.html?course=pharma"
  }
 ]
