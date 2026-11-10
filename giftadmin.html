@@ -46,7 +46,9 @@ h1{font:600 28px/1.15 var(--serif);letter-spacing:-.3px;margin:14px 0 6px;text-a
 .gh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .gh b{font-size:14.5px;overflow-wrap:anywhere}
 .gh .cn{color:var(--accent);font-weight:700;overflow-wrap:anywhere}
-.gw{margin-top:5px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.gw{margin-top:5px;font-size:14px;overflow-wrap:anywhere}
+.gw p{margin:0 0 3px;color:inherit;font-size:inherit}.gw p:last-child{margin-bottom:0}.gw ul{margin:2px 0 4px;padding-left:19px}.gw li{margin:1px 0}.gw li::marker{color:var(--faint)}
+.wlink{color:var(--accent);font-weight:600;text-decoration:none;overflow-wrap:anywhere}.wlink:hover{text-decoration:underline}
 .gw.none{color:var(--faint)}
 .acct{margin-top:6px;font-size:12.5px;color:var(--mute);overflow-wrap:anywhere}
 .gfoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
@@ -65,6 +67,7 @@ h1{font:600 28px/1.15 var(--serif);letter-spacing:-.3px;margin:14px 0 6px;text-a
  <div id="view"><p class="empty">Loading…</p></div>
 </main>
 <script src="auth.js"></script>
+<script src="giftfmt.js"></script>
 <script src="dialog.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -100,7 +103,7 @@ function draw(){
     ?'<a class="chip" href="moderate.html#links">'+esc(st[0])+'</a>'
     :'<span class="chip '+st[1]+'">'+esc(st[0])+'</span>';
    return '<div class="grow"><div class="gh"><b>#'+esc(r.roll)+' '+esc(r.student)+'</b><span class="cn">'+esc(r.codename)+'</span></div>'+
-    (r.wishlist?'<div class="gw">'+esc(r.wishlist)+'</div>':'<div class="gw none">No wishlist yet</div>')+
+    (r.wishlist?'<div class="gw">'+GiftFmt.html(r.wishlist)+'</div>':'<div class="gw none">No wishlist yet</div>')+
     '<div class="acct">'+esc(r.google||'')+' · '+esc(r.email||'')+'</div>'+
     '<div class="gfoot">'+chip+'<span class="sp"></span><button class="btn rm" type="button" data-roll="'+esc(r.roll)+'">Remove</button></div></div>';
   }).join('');

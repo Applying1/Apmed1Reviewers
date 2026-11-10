@@ -51,7 +51,9 @@ h1{font:600 30px/1.15 var(--serif);letter-spacing:-.3px;margin:12px 0 6px}
 .tagbody{padding:18px}
 .cname{font:600 28px/1.2 var(--serif);overflow-wrap:anywhere;margin:0 0 12px}
 .lab{display:block;font:700 11px/1 var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--faint);margin:0 0 5px}
-.gw{font-size:14.5px;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}
+.gw{font-size:14.5px;color:var(--text);overflow-wrap:anywhere}
+.gw p{margin:0 0 3px;color:inherit;font-size:inherit}.gw p:last-child{margin-bottom:0}.gw ul{margin:2px 0 4px;padding-left:19px}.gw li{margin:1px 0}.gw li::marker{color:var(--faint)}
+.wlink{color:var(--accent);font-weight:600;text-decoration:none;overflow-wrap:anywhere}.wlink:hover{text-decoration:underline}
 .gw.none{color:var(--faint)}
 .tagbody>.gw{margin:0 0 16px}
 .acts{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -121,13 +123,14 @@ h1{font:600 30px/1.15 var(--serif);letter-spacing:-.3px;margin:12px 0 6px}
  <div id="view"><p class="empty">Loading…</p></div>
 </main>
 <script src="auth.js"></script>
+<script src="giftfmt.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ic=(n,z)=>'<svg class="i" width="'+(z||16)+'" height="'+(z||16)+'" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
 const REPLIES={
  'slow down':'Too many tries. Wait a minute.',
- 'long':'Keep the wishlist under 600 characters.',
+ 'long':'Keep the wishlist under 1,000 characters.',
  'bad_name':'Use 2 to 24 letters, numbers or spaces for the codename.',
  'mismatch':'That roll number and last name don’t match the class list. Check both.',
  'taken':'That student already has a codename from another account. Sign in with that account, or message the class secretary.',
@@ -152,8 +155,8 @@ function formHtml(s){
  h+='<div class="field"><label for="cn">Codename</label><input id="cn" type="text" maxlength="24" placeholder="e.g. Midnight Mango" value="'+esc(m.codename||'')+'" autocomplete="off" autocapitalize="words" spellcheck="false"'+(locked?' disabled':'')+'>'+
   (locked?'<p class="note">Codenames are locked. You can still edit your wishlist.</p>'
          :'<p class="hint"><span>Don’t use your name, nickname or anything that gives you away.</span></p>')+'</div>';
- h+='<div class="field"><label for="wl">Wishlist</label><textarea id="wl" rows="4" maxlength="600" placeholder="A few things you’d love to get">'+esc(m.wishlist||'')+'</textarea>'+
-  '<p class="hint"><span>Everyone sees your wishlist exactly as you write it.</span><span class="n" id="wcnt">'+String((m.wishlist||'').length)+'/600</span></p></div>';
+ h+='<div class="field"><label for="wl">Wishlist</label><textarea id="wl" rows="4" maxlength="1000" placeholder="A few things you’d love to get">'+esc(m.wishlist||'')+'</textarea>'+
+  '<p class="hint"><span>One item per line makes a neat list. Links work. Everyone sees what you write.</span><span class="n" id="wcnt">'+String((m.wishlist||'').length)+'/1000</span></p></div>';
  if(need){
   h+='<div class="who"><p>Your account isn’t linked to the class list yet. Saving also sends a link request to the class secretary. You don’t have to wait for it.</p>'+
    '<div class="two"><div class="field"><label for="roll">Roll number</label><input id="roll" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off"></div>'+
@@ -172,7 +175,7 @@ function draw(){
   h+='<p>Codenames are closed. Message the class secretary.</p>';
  }else if(s.mine&&!EDIT){
   h+='<div class="cname">'+esc(s.mine.codename)+'</div><span class="lab">Wishlist</span>';
-  h+=s.mine.wishlist?'<div class="gw">'+esc(s.mine.wishlist)+'</div>':'<div class="gw none">No wishlist yet</div>';
+  h+=s.mine.wishlist?'<div class="gw">'+GiftFmt.html(s.mine.wishlist)+'</div>':'<div class="gw none">No wishlist yet</div>';
   h+='<div class="acts"><button class="btn" type="button" data-act="edit">'+ic('pencil',15)+'Edit</button>'+(NOTICE?'<p class="msg ok" role="status">'+esc(NOTICE)+'</p>':'')+'</div>';
  }else{
   h+=formHtml(s);
@@ -188,13 +191,13 @@ function draw(){
   if(rows.length>8)h+='<div class="find">'+ic('search',16)+'<input id="gq" type="search" placeholder="Find a codename" aria-label="Find a codename" autocomplete="off"></div>';
   h+='<div class="list"><div class="cols" aria-hidden="true"><span>Codename</span><span>Wishlist</span></div>'+
    rows.map(r=>'<div class="grow'+(r.me?' me':'')+'"><span class="mono" style="--h:'+hue(r.c)+'" aria-hidden="true">'+esc(first(r.c))+'</span><div class="gname"><b>'+esc(r.c)+'</b>'+(r.me?'<span class="you">You</span>':'')+'</div>'+
-   (r.w?'<div class="gw">'+esc(r.w)+'</div>':'<div class="gw none">No wishlist yet</div>')+'</div>').join('')+
+   (r.w?'<div class="gw">'+GiftFmt.html(r.w)+'</div>':'<div class="gw none">No wishlist yet</div>')+'</div>').join('')+
    '<p class="empty nomatch" id="gnone" hidden>No codename matches.</p></div>';
  }
  if(s.owner)h+='<p class="ownerlink"><a href="giftadmin.html">Review names (only you)</a></p>';
  $('view').innerHTML=h;
  const c=$('wcnt'),wl=$('wl');
- if(c&&wl)c.textContent=wl.value.length+'/600';
+ if(c&&wl)c.textContent=wl.value.length+'/1000';
 }
 
 function showFormMsg(t,bad){const m=$('gmsg');if(!m)return;m.textContent=t;m.className='msg'+(bad?' bad':'');}
@@ -236,7 +239,7 @@ $('view').addEventListener('click',e=>{
  else if(b.dataset.act==='retry'){boot()}
 });
 $('view').addEventListener('input',e=>{
- if(e.target.id==='wl'){const c=$('wcnt');if(c)c.textContent=e.target.value.length+'/600'}
+ if(e.target.id==='wl'){const c=$('wcnt');if(c)c.textContent=e.target.value.length+'/1000'}
  if(e.target.id==='gq'){const q=e.target.value.trim().toLowerCase();let n=0;
   document.querySelectorAll('.list .grow').forEach(r=>{const hit=!q||r.querySelector('.gname b').textContent.toLowerCase().includes(q);r.hidden=!hit;if(hit)n++});
   const g=$('gnone');if(g)g.hidden=n>0}
