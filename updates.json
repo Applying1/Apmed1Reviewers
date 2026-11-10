@@ -1194,5 +1194,13 @@
   "title": "Blurt checked by AI",
   "text": "Blurt on the Notes page now has AI read what you wrote: it counts ideas in your own words or Taglish, marks points you only partly got, and flags anything the notes say is wrong. 60 AI checks a day (10 Claude Haiku, then 50 DeepSeek); after that the keyword checker takes over.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 146,
+  "date": "2026-11-10",
+  "type": "course",
+  "title": "Pharma Lesson 8: GI Drugs (draft)",
+  "text": "Ready for next week's Evals 3: 129 practice questions on acid secretion, GERD and ulcers, antacids, H2 blockers, PPIs, sucralfate, misoprostol, bismuth and laxatives, plus 30 eval-style cases and an Eval 3 mock (13 MCQ + 2 typed). Made from the seniors' annotated slides (in Documents) before our lecture, so it will be revised after the discussion. Notes, charts, drills and the finals transes are updated too.",
+  "link": "reviewer.html?course=pharma"
  }
 ]

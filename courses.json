@@ -264,10 +264,10 @@
  {
   "id": "pharma",
   "title": "Pharmacology",
-  "scope": "Finals: Antihypertensives and Anti-Inflammatory Drugs (+ midterm topics)",
+  "scope": "Finals: Antihypertensives, Anti-Inflammatory and GI Drugs (+ midterm topics)",
   "unit": "Lesson",
   "itemWord": "question",
-  "count": 843,
+  "count": 1026,
   "storageKey": "study_reviewer_pharma_2026_v1",
   "image": "img/icons/pharma.svg",
   "extras": [],
@@ -283,10 +283,10 @@
    "img/icons/pharma.svg"
   ],
   "exam": {
-   "name": "Evals 2 (anti-inflammatory)",
+   "name": "Evals 3 (GI drugs, draft)",
    "date": ""
   },
-  "activeExam": "evals2",
+  "activeExam": "evals3",
   "exams": [
    {
     "id": "evals",
@@ -314,6 +314,19 @@
     ]
    },
    {
+    "id": "evals3",
+    "name": "Evals 3 (GI drugs, draft)",
+    "sections": [
+     "8-1",
+     "8-2",
+     "8-3",
+     "8-4",
+     "8-5",
+     "8-6",
+     "8-7"
+    ]
+   },
+   {
     "id": "prefinal",
     "name": "Prefinals",
     "sections": [
@@ -329,7 +342,14 @@
      "7-3",
      "7-4",
      "7-5",
-     "7-6"
+     "7-6",
+     "8-1",
+     "8-2",
+     "8-3",
+     "8-4",
+     "8-5",
+     "8-6",
+     "8-7"
     ]
    },
    {
@@ -353,7 +373,8 @@
      "4",
      "5",
      "6",
-     "7"
+     "7",
+     "8"
     ]
    }
   ],
