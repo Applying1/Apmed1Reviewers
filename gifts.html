@@ -1,0 +1,261 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gift exchange · APMed '33</title>
+<meta name="description" content="Pick a codename and write your wishlist for the year-end gift exchange.">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+/* Gift exchange with codenames (supabase_gifts.sql). SECRET: this page only ever receives codename + wishlist (gift_state),
+   never a name, roll, picture or time, and it saves nothing on the device. Keep it that way. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+main{max-width:640px;margin:0 auto;padding:14px 16px calc(40px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:8px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;padding:9px 16px;font-weight:600;font-size:14.5px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s;color:var(--text)}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07);background:var(--accent)}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.6;cursor:default}
+
+/* header */
+.hero{text-align:center;margin:14px 0 22px}
+.hero .ico{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line,transparent)}
+h1{font:600 30px/1.15 var(--serif);letter-spacing:-.3px;margin:12px 0 6px}
+.sub{margin:0 auto;max-width:400px;color:var(--mute);font-size:14.5px}
+
+.card{margin:0 0 14px;padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.card p{margin:0 0 12px;color:var(--mute);font-size:14px}
+.card p:last-child{margin-bottom:0}
+.err{color:var(--bad,#c0392b)!important}
+.empty{color:var(--faint);font-size:14px;text-align:center;padding:22px 12px;margin:0}
+
+/* your codename: a gift tag */
+.tag{padding:0;overflow:hidden}
+.taghead{display:flex;align-items:center;gap:10px;padding:11px 18px;background:var(--accent-soft);border-bottom:1px dashed var(--accent-line,var(--line2))}
+.taghead::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--bg);border:1px solid var(--accent-line,var(--line2));flex:none}
+.taghead b{font:700 11.5px/1 var(--sans);letter-spacing:.7px;text-transform:uppercase;color:var(--accent)}
+.taghead span{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--mute)}
+.tagbody{padding:18px}
+.cname{font:600 28px/1.2 var(--serif);overflow-wrap:anywhere;margin:0 0 12px}
+.lab{display:block;font:700 11px/1 var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--faint);margin:0 0 5px}
+.gw{font-size:14.5px;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}
+.gw.none{color:var(--faint)}
+.tagbody>.gw{margin:0 0 16px}
+.acts{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.msg{margin:0!important;font-size:13.5px!important;color:var(--mute)!important}
+.msg:empty{display:none}
+.msg.bad{color:var(--bad)!important}
+.msg.ok{color:var(--good)!important;font-weight:600}
+
+/* form */
+.gform label{display:block;margin:0 0 6px;font-size:13px;font-weight:600;color:var(--text)}
+.gform input,.gform textarea{display:block;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:inherit;font-size:16px;transition:border-color .15s,box-shadow .15s}
+.gform input:focus,.gform textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.gform #cn{font:600 20px/1.3 var(--serif)}
+.gform textarea{min-height:108px;resize:vertical;line-height:1.45}
+.gform input:disabled{opacity:.6}
+.field{margin:0 0 16px}
+.hint{display:flex;justify-content:space-between;gap:12px;margin:6px 0 0!important;font-size:12.5px!important;color:var(--faint)!important}
+.hint .n{font-variant-numeric:tabular-nums;white-space:nowrap}
+.who{margin:0 0 16px;padding:14px;border-radius:14px;background:var(--raised);border:1px solid var(--line)}
+.who p{margin:0 0 12px!important;font-size:13px!important;color:var(--mute)!important}
+.who .two{display:grid;grid-template-columns:110px 1fr;gap:10px}
+.who .field{margin:0}
+.note{margin:6px 0 0!important;font-size:12.5px!important;color:var(--mute)!important}
+
+/* the table */
+.lhead{display:flex;align-items:baseline;gap:10px;margin:26px 2px 8px}
+.lhead h2{margin:0;font:600 19px/1.2 var(--serif)}
+.lhead span{margin-left:auto;font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.bar{height:5px;border-radius:99px;background:var(--raised);overflow:hidden;margin:0 2px 12px}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .4s var(--ease,ease)}
+.find{position:relative;margin:0 0 10px}
+.find svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.find input{width:100%;padding:9px 12px 9px 36px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:16px}
+.find input:focus{outline:0;border-color:var(--accent)}
+.list{border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden}
+.cols{display:none}
+.grow{display:grid;grid-template-columns:36px minmax(0,1fr);column-gap:12px;row-gap:3px;padding:13px 16px;border-top:1px solid var(--line);min-width:0}
+.grow:first-of-type{border-top:0}
+.grow.me{background:var(--accent-soft)}
+.mono{grid-row:1/3;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:700 15px/1 var(--sans);background:hsl(var(--h) 70% 50%/.15);color:color-mix(in srgb,hsl(var(--h) 65% 45%) 72%,var(--text))}
+.gname{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0;align-self:end}
+.gname b{font-size:15px;font-weight:700;overflow-wrap:anywhere}
+.you{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:99px;background:var(--accent);color:var(--accent-ink)}
+.grow .gw{grid-column:2;font-size:14px;color:var(--mute)}
+.grow .gw.none{color:var(--faint);font-style:italic}
+.nomatch{border-top:0}
+.ownerlink{margin:18px 0 0;font-size:13px;text-align:center}
+.ownerlink a{color:var(--accent);font-weight:600;text-decoration:none}
+.ownerlink a:hover{text-decoration:underline}
+@media (min-width:600px){
+ .cols{display:grid;grid-template-columns:36px 190px minmax(0,1fr);column-gap:12px;padding:9px 16px;background:var(--raised);font:700 11px/1 var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--faint)}
+ .cols span:first-child{grid-column:2}
+ .grow{grid-template-columns:36px 190px minmax(0,1fr);align-items:center}
+ .mono{grid-row:auto}
+ .gname{align-self:center}
+ .grow .gw{grid-column:3}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<main>
+ <div class="top"><a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a></div>
+ <header class="hero">
+  <span class="ico"><svg class="i" width="26" height="26" aria-hidden="true"><use href="icons.svg#i-gift"/></svg></span>
+  <h1>Gift exchange</h1>
+  <p class="sub" id="sub">Pick a codename and write your wishlist. Nobody can see who is behind a codename.</p>
+ </header>
+ <div id="view"><p class="empty">Loading…</p></div>
+</main>
+<script src="auth.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ic=(n,z)=>'<svg class="i" width="'+(z||16)+'" height="'+(z||16)+'" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
+const REPLIES={
+ 'slow down':'Too many tries. Wait a minute.',
+ 'long':'Keep the wishlist under 600 characters.',
+ 'bad_name':'Use 2 to 24 letters, numbers or spaces for the codename.',
+ 'mismatch':'That roll number and last name don’t match the class list. Check both.',
+ 'taken':'That student already has a codename from another account. Sign in with that account, or message the class secretary.',
+ 'locked':'Codenames are locked.',
+ 'has_name':'Your codename can’t contain your own name. Pick something that doesn’t give you away.',
+ 'name_used':'That codename is taken. Pick another one.'
+};
+let STATE=null,EDIT=false,NOTICE='';
+// circle color + letter come from the codename text only, so they say nothing about the person
+const hue=s=>{let h=0;for(const c of String(s).toLowerCase())h=(h*31+c.charCodeAt(0))%360;return h};
+const first=s=>(String(s).match(/[A-Za-z0-9]/)||['?'])[0].toUpperCase();
+
+function signedOut(msg){
+ $('view').innerHTML='<div class="card"><p>Sign in with Google to join the gift exchange.</p>'+
+  '<button class="btn primary wide" onclick="Auth.signIn(location.href)">Sign in with Google</button>'+
+  (msg?'<p class="err" style="margin-top:10px">'+esc(msg)+'</p>':'')+'</div>';
+}
+
+function formHtml(s){
+ const m=s.mine||{},locked=!!s.locked,need=!s.linked&&!s.mine;
+ let h='<form id="gform" class="gform" autocomplete="off">';
+ h+='<div class="field"><label for="cn">Codename</label><input id="cn" type="text" maxlength="24" placeholder="e.g. Midnight Mango" value="'+esc(m.codename||'')+'" autocomplete="off" autocapitalize="words" spellcheck="false"'+(locked?' disabled':'')+'>'+
+  (locked?'<p class="note">Codenames are locked. You can still edit your wishlist.</p>'
+         :'<p class="hint"><span>Don’t use your name, nickname or anything that gives you away.</span></p>')+'</div>';
+ h+='<div class="field"><label for="wl">Wishlist</label><textarea id="wl" rows="4" maxlength="600" placeholder="A few things you’d love to get">'+esc(m.wishlist||'')+'</textarea>'+
+  '<p class="hint"><span>Everyone sees your wishlist exactly as you write it.</span><span class="n" id="wcnt">'+String((m.wishlist||'').length)+'/600</span></p></div>';
+ if(need){
+  h+='<div class="who"><p>Your account isn’t linked to the class list yet. Saving also sends a link request to the class secretary. You don’t have to wait for it.</p>'+
+   '<div class="two"><div class="field"><label for="roll">Roll number</label><input id="roll" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off"></div>'+
+   '<div class="field"><label for="last">Last name</label><input id="last" type="text" maxlength="40" autocomplete="family-name"></div></div></div>';
+ }
+ h+='<div class="acts"><button class="btn primary" id="gsave" type="submit">Save</button>';
+ if(s.mine)h+='<button class="btn" type="button" data-act="cancel">Cancel</button>';
+ return h+'<p class="msg" id="gmsg" role="status"></p></div></form>';
+}
+
+function draw(){
+ if(!STATE)return;
+ const s=STATE,rows=s.rows||[],total=s.total||0;
+ let h='<section class="card tag"><div class="taghead"><b>Your codename</b><span>'+ic('lock',13)+'Only you see this card</span></div><div class="tagbody">';
+ if(s.locked&&!s.mine){
+  h+='<p>Codenames are closed. Message the class secretary.</p>';
+ }else if(s.mine&&!EDIT){
+  h+='<div class="cname">'+esc(s.mine.codename)+'</div><span class="lab">Wishlist</span>';
+  h+=s.mine.wishlist?'<div class="gw">'+esc(s.mine.wishlist)+'</div>':'<div class="gw none">No wishlist yet</div>';
+  h+='<div class="acts"><button class="btn" type="button" data-act="edit">'+ic('pencil',15)+'Edit</button>'+(NOTICE?'<p class="msg ok" role="status">'+esc(NOTICE)+'</p>':'')+'</div>';
+ }else{
+  h+=formHtml(s);
+ }
+ h+='</div></section>';
+ h+='<div class="lhead"><h2>Codenames and wishlists</h2><span>'+rows.length+' of '+total+' in</span></div>';
+ if(!s.can_see){
+  h+='<div class="list"><p class="empty">Make your codename to see everyone’s wishlist.</p></div>';
+ }else if(!rows.length){
+  h+='<div class="list"><p class="empty">No codenames yet.</p></div>';
+ }else{
+  h+='<div class="bar" aria-hidden="true"><i style="width:'+(total?Math.min(100,Math.round(rows.length/total*100)):0)+'%"></i></div>';
+  if(rows.length>8)h+='<div class="find">'+ic('search',16)+'<input id="gq" type="search" placeholder="Find a codename" aria-label="Find a codename" autocomplete="off"></div>';
+  h+='<div class="list"><div class="cols" aria-hidden="true"><span>Codename</span><span>Wishlist</span></div>'+
+   rows.map(r=>'<div class="grow'+(r.me?' me':'')+'"><span class="mono" style="--h:'+hue(r.c)+'" aria-hidden="true">'+esc(first(r.c))+'</span><div class="gname"><b>'+esc(r.c)+'</b>'+(r.me?'<span class="you">You</span>':'')+'</div>'+
+   (r.w?'<div class="gw">'+esc(r.w)+'</div>':'<div class="gw none">No wishlist yet</div>')+'</div>').join('')+
+   '<p class="empty nomatch" id="gnone" hidden>No codename matches.</p></div>';
+ }
+ if(s.owner)h+='<p class="ownerlink"><a href="giftadmin.html">Review names (only you)</a></p>';
+ $('view').innerHTML=h;
+ const c=$('wcnt'),wl=$('wl');
+ if(c&&wl)c.textContent=wl.value.length+'/600';
+}
+
+function showFormMsg(t,bad){const m=$('gmsg');if(!m)return;m.textContent=t;m.className='msg'+(bad?' bad':'');}
+
+async function save(){
+ if(!STATE)return;
+ const cn=$('cn'),wl=$('wl'),btn=$('gsave');
+ if(!cn||!wl||!btn||btn.disabled)return;
+ const need=!STATE.linked&&!STATE.mine;
+ const rollEl=$('roll'),lastEl=$('last');
+ const roll=need?parseInt(rollEl?rollEl.value:'',10):null;
+ const last=need?(lastEl?lastEl.value.trim():''):null;
+ if(cn.value.trim().length<2){showFormMsg('Type a codename first.',true);return}
+ if(need&&(!roll||last.length<3)){showFormMsg('Type your roll number and last name.',true);return}
+ btn.disabled=true;btn.textContent='Saving…';
+ let r;
+ try{
+  r=await Auth.rpc('gift_save',{p_codename:cn.value,p_wishlist:wl.value,p_roll:need?roll:null,p_last:need?last:null},true);
+ }catch(e){
+  showFormMsg('Couldn’t save. Check your connection.',true);
+  btn.disabled=false;btn.textContent='Save';
+  return;
+ }
+ if(r==='ok'){
+  try{STATE=await Auth.rpc('gift_state',{},true)}catch(e){}
+  EDIT=false;NOTICE='Saved.';
+  draw();
+  return;
+ }
+ showFormMsg(REPLIES[r]||'Couldn’t save. Check your connection.',true);
+ btn.disabled=false;btn.textContent='Save';
+}
+
+$('view').addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');
+ if(!b)return;
+ if(b.dataset.act==='edit'){EDIT=true;NOTICE='';draw();const w=$('wl');if(w)w.focus({preventScroll:true})}
+ else if(b.dataset.act==='cancel'){EDIT=false;draw()}
+ else if(b.dataset.act==='retry'){boot()}
+});
+$('view').addEventListener('input',e=>{
+ if(e.target.id==='wl'){const c=$('wcnt');if(c)c.textContent=e.target.value.length+'/600'}
+ if(e.target.id==='gq'){const q=e.target.value.trim().toLowerCase();let n=0;
+  document.querySelectorAll('.list .grow').forEach(r=>{const hit=!q||r.querySelector('.gname b').textContent.toLowerCase().includes(q);r.hidden=!hit;if(hit)n++});
+  const g=$('gnone');if(g)g.hidden=n>0}
+});
+$('view').addEventListener('submit',e=>{if(e.target.id==='gform'){e.preventDefault();save()}});
+
+async function boot(){
+ try{const cl=await (await fetch('courses.json')).json();const c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
+ if(!Auth.cloud){$('view').innerHTML='<div class="card"><p>The gift exchange needs the class cloud, which isn’t set up here.</p></div>';return}
+ let msg='';try{await Auth.finish()}catch(e){msg=e.message}
+ if(!Auth.ses()){signedOut(msg);return}
+ try{STATE=await Auth.rpc('gift_state',{},true)}catch(e){
+  const m=String(e&&e.message||'');
+  if(/sign in/i.test(m)){signedOut();return}
+  $('view').innerHTML='<div class="card"><p class="err">Couldn’t load the gift exchange. Check your connection.</p><button class="btn" type="button" data-act="retry">Try again</button></div>';
+  return;
+ }
+ draw();
+}
+boot();
+</script>
+</body></html>

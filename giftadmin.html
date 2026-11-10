@@ -1,0 +1,145 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gift exchange: names · APMed '33</title>
+<meta name="description" content="Who picked which codename in the gift exchange. Only the class secretary can see this.">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:620px;margin:0 auto;padding:14px 16px calc(28px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:8px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;padding:9px 16px;font-weight:600;font-size:14.5px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s;color:var(--text)}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad,#c0392b);border-color:var(--bad,#c0392b)}
+.btn.wide{width:100%}
+h1{font:600 28px/1.15 var(--serif);letter-spacing:-.3px;margin:14px 0 6px;text-align:center}
+.sub{margin:0 0 16px;color:var(--mute);font-size:14px;text-align:center}
+.card{margin:0 0 14px;padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.card p{margin:0 0 12px;color:var(--mute);font-size:14px}
+.card p:last-child{margin-bottom:0}
+.err{color:var(--bad,#c0392b)!important}
+.empty{color:var(--faint);font-size:14px;text-align:center;padding:14px 0;margin:0}
+.lockrow{display:flex;align-items:center;gap:14px;justify-content:space-between;margin:0 0 8px}
+.lockrow b{display:block;font-size:14px}
+.lockrow span{display:block;font-size:12.5px;color:var(--mute)}
+.sw{flex:none;position:relative;width:42px;height:24px;border-radius:12px;border:0;background:var(--line2);transition:background .15s;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px #0003}
+.sw[aria-checked="true"]{background:var(--accent)}.sw[aria-checked="true"]::after{transform:translateX(18px)}
+.sw:disabled{opacity:.45}
+.locknote{margin:0!important;font-size:12.5px!important;color:var(--faint)!important}
+.sec{margin:16px 0 8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);display:flex;align-items:center;gap:7px}
+.gcount{margin:-2px 0 10px!important;font-size:13px!important;color:var(--mute)!important;font-variant-numeric:tabular-nums}
+.grow{padding:13px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);margin:0 0 9px;min-width:0}
+.gh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.gh b{font-size:14.5px;overflow-wrap:anywhere}
+.gh .cn{color:var(--accent);font-weight:700;overflow-wrap:anywhere}
+.gw{margin-top:5px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.gw.none{color:var(--faint)}
+.acct{margin-top:6px;font-size:12.5px;color:var(--mute);overflow-wrap:anywhere}
+.gfoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{display:inline-flex;align-items:center;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent);text-decoration:none}
+.chip.warn{background:color-mix(in srgb,var(--warn,#b7791f) 16%,transparent);color:var(--warn,#b7791f)}
+.chip.mute{background:var(--raised);color:var(--mute)}
+.gfoot .sp{flex:1}
+.rm{padding:5px 11px;border-radius:9px;font-size:12.5px}
+.miss{margin:0;font-size:14px;color:var(--mute);overflow-wrap:anywhere}
+.miss b{color:var(--text);font-weight:500;white-space:nowrap}
+</style></head><body>
+<main>
+ <div class="top"><a class="back" href="moderate.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>Moderator</a></div>
+ <h1>Gift exchange: names</h1>
+ <p class="sub" id="sub">Who picked which codename. Only you can see this.</p>
+ <div id="view"><p class="empty">Loading…</p></div>
+</main>
+<script src="auth.js"></script>
+<script src="dialog.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ic=n=>'<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-'+n+'"/></svg>';
+const STATUS={
+ linked:['Linked',''],
+ pending:['Link request waiting',''],
+ rejected:['Link request rejected','warn'],
+ other_roll:['Account is linked to a different student','warn'],
+ none:['No link request','mute']
+};
+let DATA=null,BUSY=false;
+
+function denied(){
+ $('sub').textContent='';
+ $('view').innerHTML='<div class="card"><p>Only the class secretary can open this page.</p>'+
+  '<a class="btn" href="gifts.html">Back to the gift exchange</a></div>';
+}
+
+function draw(){
+ if(!DATA)return;
+ const rows=DATA.rows||[],miss=DATA.missing||[],total=rows.length+miss.length;
+ let h='<section class="card"><div class="lockrow"><div><b>Lock codenames</b><span>When locked, nobody can make or change a codename. Wishlists stay editable.</span></div>'+
+  '<button class="sw" id="locksw" role="switch" aria-checked="'+(!!DATA.locked)+'" aria-label="Lock codenames"'+(BUSY?' disabled':'')+'></button></div></section>';
+ h+='<h2 class="sec">Codenames ('+rows.length+' of '+total+')</h2>';
+ if(!rows.length){
+  h+='<p class="empty">No codenames yet.</p>';
+ }else{
+  h+=rows.map(r=>{
+   const st=STATUS[r.status]||[r.status||'No link request','mute'];
+   const chip=r.status==='pending'
+    ?'<a class="chip" href="moderate.html#links">'+esc(st[0])+'</a>'
+    :'<span class="chip '+st[1]+'">'+esc(st[0])+'</span>';
+   return '<div class="grow"><div class="gh"><b>#'+esc(r.roll)+' '+esc(r.student)+'</b><span class="cn">'+esc(r.codename)+'</span></div>'+
+    (r.wishlist?'<div class="gw">'+esc(r.wishlist)+'</div>':'<div class="gw none">No wishlist yet</div>')+
+    '<div class="acct">'+esc(r.google||'')+' · '+esc(r.email||'')+'</div>'+
+    '<div class="gfoot">'+chip+'<span class="sp"></span><button class="btn rm" type="button" data-roll="'+esc(r.roll)+'">Remove</button></div></div>';
+  }).join('');
+ }
+ h+='<h2 class="sec">No codename yet ('+miss.length+')</h2>';
+ h+=miss.length?'<p class="miss">'+miss.map(m=>'<b>#'+esc(m.roll)+' '+esc(m.student)+'</b>').join(' · ')+'</p>':'<p class="empty">Everyone has one.</p>';
+ $('view').innerHTML=h;
+}
+
+async function load(){
+ try{DATA=await Auth.rpc('gift_admin_list',{},true)}catch(e){denied();return}
+ if(!DATA||typeof DATA!=='object'){denied();return}
+ BUSY=false;draw();
+}
+
+$('view').addEventListener('click',async e=>{
+ if(e.target.closest('#locksw')){
+  if(BUSY)return;
+  BUSY=true;draw();
+  try{await Auth.rpc('gift_admin_lock',{p_on:!DATA.locked},true)}catch(err){}
+  await load();
+  return;
+ }
+ const b=e.target.closest('[data-roll]');
+ if(!b)return;
+ const roll=parseInt(b.dataset.roll,10);
+ if(!await ask('Remove this codename? The student can make a new one.',{title:'Remove codename?',ok:'Remove',danger:1}))return;
+ b.disabled=true;
+ try{await Auth.rpc('gift_admin_remove',{p_roll:roll},true)}catch(err){}
+ await load();
+});
+
+async function boot(){
+ try{const cl=await (await fetch('courses.json')).json();const c=cl.find(x=>x.cloud&&x.cloud.url);if(c)Auth.cloud=c.cloud}catch(e){}
+ if(!Auth.cloud){denied();return}
+ let msg='';try{await Auth.finish()}catch(e){msg=e.message}
+ if(!Auth.ses()){denied();return}
+ await load();
+}
+boot();
+</script>
+</body></html>
