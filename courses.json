@@ -267,7 +267,7 @@
   "scope": "Finals: Antihypertensives, Anti-Inflammatory and GI Drugs (+ midterm topics)",
   "unit": "Lesson",
   "itemWord": "question",
-  "count": 1075,
+  "count": 1093,
   "storageKey": "study_reviewer_pharma_2026_v1",
   "image": "img/icons/pharma.svg",
   "extras": [],
@@ -283,7 +283,7 @@
    "img/icons/pharma.svg"
   ],
   "exam": {
-   "name": "Evals 3 (GI drugs, draft)",
+   "name": "Evals 3 (GI drugs)",
    "date": "2026-11-17"
   },
   "activeExam": "evals3",
@@ -315,7 +315,7 @@
    },
    {
     "id": "evals3",
-    "name": "Evals 3 (GI drugs, draft)",
+    "name": "Evals 3 (GI drugs)",
     "sections": [
      "8-1",
      "8-2",
