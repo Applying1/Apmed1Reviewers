@@ -1234,5 +1234,13 @@
   "title": "Gift exchange: pick your codename",
   "text": "For the year-end fellowship party. Sign in, pick ONE codename and write your wishlist. Everyone sees the codenames and wishlists, nobody sees who is behind them. No account link yet? Add your roll number and last name and you're in right away.",
   "link": "gifts.html"
+ },
+ {
+  "id": 151,
+  "date": "2026-11-10",
+  "type": "content",
+  "title": "Psychology: clearer wording on one question",
+  "text": "Chapter 12 (Health): the breast cancer and immigrants question is now worded more clearly.",
+  "link": "reviewer.html?course=psych"
  }
 ]
