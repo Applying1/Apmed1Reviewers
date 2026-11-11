@@ -564,16 +564,16 @@ const SPOT_KEY='reviewer_spot_sync_discuss';
 function spotlight(){try{if(localStorage.getItem(SPOT_KEY))return;localStorage.setItem(SPOT_KEY,'1')}catch(e){return}
  if(!document.getElementById('sync').hidden)return;const a=getAcc();
  document.getElementById('spotbody').innerHTML=
-  '<div class="spot"><span class="ic" aria-hidden="true">☁️</span><div><h3>Sign in to sync your progress</h3><p>Sign in with Google once and your progress follows you to your phone, laptop and any browser. Switch devices without starting over, and nothing is lost if you clear your browser.</p>'+
-   (a?'<span class="ok">✓ You&#39;re signed in, so your progress already syncs.</span>':'<button class="btn primary" onclick="closeSpot();signIn()">Sign in with Google</button>')+'</div></div>'+
-  '<div class="spot"><span class="ic" aria-hidden="true">💬</span><div><h3>Discuss any question</h3><p>In <b>Intro to Psychology</b>, tap <b>Discuss this question</b> under any question to ask classmates or explain an answer. It opens beside the question, so you keep your place.</p><a class="btn" href="reviewer.html?course=psych">Open Psychology</a></div></div>'+
+  '<div class="spot"><span class="ic" aria-hidden="true"><svg class="i" width="20" height="20" aria-hidden="true"><use href="icons.svg#i-cloud-upload"/></svg></span><div><h3>Sign in to sync your progress</h3><p>Sign in with Google once and your progress follows you to your phone, laptop and any browser. Switch devices without starting over, and nothing is lost if you clear your browser.</p>'+
+   (a?'<span class="ok"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-check"/></svg> You&#39;re signed in, so your progress already syncs.</span>':'<button class="btn primary" onclick="closeSpot();signIn()">Sign in with Google</button>')+'</div></div>'+
+  '<div class="spot"><span class="ic" aria-hidden="true"><svg class="i" width="20" height="20" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg></span><div><h3>Discuss any question</h3><p>In <b>Intro to Psychology</b>, tap <b>Discuss this question</b> under any question to ask classmates or explain an answer. It opens beside the question, so you keep your place.</p><a class="btn" href="reviewer.html?course=psych">Open Psychology</a></div></div>'+
   '<div class="spotfoot"><button class="btn" onclick="closeSpot()">Got it</button></div>';
  document.getElementById('spot').hidden=false}
 function closeSpot(){document.getElementById('spot').hidden=true}
 // Next class (or the one going on now), from schedule.json
 (async function(){try{await Sched.load();const c=Sched.upNext();if(!c)return;const e=document.getElementById('upnext');
  e.style.setProperty('--h',+c.subj.hue||260);
- e.innerHTML='<span class="bar"></span><span class="w"><span class="l'+(c.now?' live':'')+'">'+(c.now?'Now · until '+Sched.time(c.end):'Next class · '+Sched.when(c.date)+', '+Sched.time(c.start))+'</span><b>'+esc(c.subj.name)+(c.kind?' · '+esc(c.kind):'')+'</b><span class="s">'+esc(c.topic||c.teacher||'')+'</span></span><span class="go">Timetable →</span>';
+ e.innerHTML='<span class="bar"></span><span class="w"><span class="l'+(c.now?' live':'')+'">'+(c.now?'Now · until '+Sched.time(c.end):'Next class · '+Sched.when(c.date)+', '+Sched.time(c.start))+'</span><b>'+esc(c.subj.name)+(c.kind?' · '+esc(c.kind):'')+'</b><span class="s">'+esc(c.topic||c.teacher||'')+'</span></span><span class="go">Timetable<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>';
  e.hidden=false;
  // a warm-up on the topic, from the day before until class starts (only where the timetable links the topic to the course's questions)
  const crs=c.subj&&c.subj.course,hrs=(c.from-new Date())/36e5;
@@ -585,7 +585,7 @@ function closeSpot(){document.getElementById('spot').hidden=true}
  const [an,rec]=await Promise.all([Auth.rpc('discussion_announcements',{},!!Auth.ses()).catch(()=>[]),Auth.rpc('discussion_recent',{p_course:'general'},!!Auth.ses()).catch(()=>[])]);
  const last=(rec||[])[0];if(last){const t=last.body.split('\n').map(x=>x.trim()).filter(Boolean)[0]||'';$('gdsub').textContent=last.author.split(' ')[0]+': '+(t.length>90?t.slice(0,88).trim()+'…':t)}
  const a=(an||[]).find(x=>x.id>(window.Notify?Notify.annSeen():0));if(!a)return;const b=$('annc');
- b.innerHTML='<span class="tic"><svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-megaphone"/></svg></span><div class="ab"><div class="ak">Announcement <span>· '+esc(a.author||'')+' · '+new Date(a.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'})+'</span></div><p>'+esc(a.body)+'</p><a href="discuss.html?c=general#p'+a.id+'">Open in General discussion →</a></div>'+
+ b.innerHTML='<span class="tic"><svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-megaphone"/></svg></span><div class="ab"><div class="ak">Announcement <span>· '+esc(a.author||'')+' · '+new Date(a.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'})+'</span></div><p>'+esc(a.body)+'</p><a href="discuss.html?c=general#p'+a.id+'">Open in General discussion<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></a></div>'+
   '<button class="mx" onclick="annClose('+a.id+')" aria-label="Close the announcement" title="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>';
  b.hidden=false}catch(err){}})();
 function annClose(id){if(window.Notify)Notify.annDone(id);$('annc').hidden=true}
@@ -618,7 +618,7 @@ async function modTile(){try{const m=await Auth.rpc('mod_counts',{},true),n=(m.l
  let names={};try{for(const c of await getCourses())names[c.id]=c.title.replace(/^(Intro to|Introduction to|General) /,'').replace(/ in the Modern World$/,'')}catch(e){}
  const nm=p=>p.courses.map(c=>names[c]||c).join(' + ');
  if(today.length){
-  if(today.every(done))sub.innerHTML='<span class="done">Solved today ✓</span> · a new one tomorrow';
+  if(today.every(done))sub.innerHTML='<span class="done"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-seal"/></svg> Solved today</span> · a new one tomorrow';
   else{let when='';try{await Sched.load();const a=Remind.list(8).find(x=>x.subj&&today.some(p=>p.courses.includes(x.subj.course)));if(a)when=' · for '+(a.kind==='evals'?'Evals':a.kind==='quiz'?'the quiz':'the exam')+' '+(/^(Today|Tomorrow)$/.test(Sched.when(a.date))?Sched.when(a.date).toLowerCase():'on '+Sched.when(a.date))}catch(e){}
    sub.textContent='Today: '+today.filter(p=>!done(p)).map(nm).join(' and ')+when}
  }else{const left=all.filter(p=>!done(p));if(!left.length)return;sub.textContent='Catch up: '+nm(left[left.length-1])+' from '+(left[left.length-1].date===shiftDay(day,-1)?'yesterday':'this week')}
@@ -700,7 +700,7 @@ window.clTile();
  const d=((await (await fetch('sortit/days.json')).json()).days||[]).find(x=>x.date===day);if(!d)return;
  let st={};try{st=JSON.parse(localStorage.getItem('reviewer_sortit'))||{}}catch(e){}
  const g=(st.g||{})[day],t=document.getElementById('sttool'),sub=document.getElementById('stsub');
- if(g&&g.d)sub.innerHTML='<span class="done">'+(g.c===1?'Perfect today ✓':'Sorted today ✓')+'</span> · new set tomorrow';
+ if(g&&g.d)sub.innerHTML='<span class="done"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-seal"/></svg> '+(g.c===1?'Perfect today':'Sorted today')+'</span> · new set tomorrow';
  else sub.textContent=g&&g.c?'Keep going: '+g.ok.length+' of '+d.items.length+' sorted':d.title+' · '+d.items.length+' terms';
  if(!st.how)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
  t.hidden=false;syncGamesTile()}catch(e){}})();
@@ -710,7 +710,7 @@ window.clTile();
  const d=((await (await fetch('apmeddle/days.json')).json()).days||[]).find(x=>x.date===day);if(!d)return;
  let st={};try{st=JSON.parse(localStorage.getItem('reviewer_apmeddle'))||{}}catch(e){}
  const g=(st.g||{})[day],t=$('wdtool'),sub=$('wdsub');
- if(g&&g.w===1)sub.innerHTML='<span class="done">Solved today in '+g.r.length+'/6 ✓</span> · new word tomorrow';
+ if(g&&g.w===1)sub.innerHTML='<span class="done"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-seal"/></svg> Solved today in '+g.r.length+'/6</span> · new word tomorrow';
  else if(g&&(g.r||[]).length>=6)sub.textContent='Missed today · new word tomorrow';
  else sub.textContent=g&&(g.r||[]).length?'Keep going: '+g.r.length+'/6 guesses used':'Spin for today’s subject · '+d.n+' letters';
  if(!st.how)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
@@ -721,8 +721,8 @@ window.clTile();
  const left=ms=>{const s=Math.max(0,Math.floor(ms/1e3)),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),x=s%60,p=n=>String(n).padStart(2,'0');
   return d>=1?d+'d '+h+'h '+p(m)+'m':h>=1?h+'h '+p(m)+'m '+p(x)+'s':m+'m '+p(x)+'s'};
  const draw=()=>{pick();if(!list.length){box.hidden=true;return}
-  box.innerHTML='<h2>'+ic('hourglass')+' Tests coming up<a href="notifications.html#settings">Reminders →</a></h2>'+list.map((a,i)=>{const c=a.subj.course;
-   return '<a class="trow'+(i?' more':' first')+'" style="--h:'+(+a.subj.hue||260)+'" href="'+(c?'reviewer.html?course='+encodeURIComponent(c):'schedule.html')+'"><span class="bar"></span><span class="w"><b>'+esc(a.subj.name)+'</b><span class="s">'+esc(Sched.when(a.date))+', '+esc(Sched.time(a.start))+' · '+esc(a.label)+'</span></span><span class="cd"><b data-at="'+(+a.from)+'"></b><span>'+(c?'Review now →':'Timetable →')+'</span></span></a>'}).join('');
+  box.innerHTML='<h2>'+ic('hourglass')+' Tests coming up<a href="notifications.html#settings">Reminders<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></a></h2>'+list.map((a,i)=>{const c=a.subj.course;
+   return '<a class="trow'+(i?' more':' first')+'" style="--h:'+(+a.subj.hue||260)+'" href="'+(c?'reviewer.html?course='+encodeURIComponent(c):'schedule.html')+'"><span class="bar"></span><span class="w"><b>'+esc(a.subj.name)+'</b><span class="s">'+esc(Sched.when(a.date))+', '+esc(Sched.time(a.start))+' · '+esc(a.label)+'</span></span><span class="cd"><b data-at="'+(+a.from)+'"></b><span>'+(c?'Review now':'Timetable')+'<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span></span></a>'}).join('');
   const n=list.length-1;if(n>0)box.insertAdjacentHTML('beforeend','<button class="tmore" aria-expanded="false" onclick="testsToggle()"><span></span><svg class="i" width="14" height="14"><use href="icons.svg#i-chevron-down"/></svg></button>');
   testsOpen(OPEN());box.hidden=false;tick()};
  // collapsed by default: only the nearest test; the choice is remembered on this device
@@ -754,7 +754,7 @@ window.clTile();
    const since=new Date(g.since+'T00:00:00+08:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
    h+='<div class="cg'+(hit?' hit':'')+'"><div class="cgt"><span><b class="num">'+fmt(g.n)+'</b> answers from the class</span><span class="s">'+esc(short(t.subj.course)||t.subj.name)+' · '+esc(t.label)+' · '+esc(Sched.when(t.date))+'</span></div>'+
     '<div class="cgb" role="progressbar" aria-label="Class answers toward '+fmt(g.next)+'" aria-valuemin="'+g.prev+'" aria-valuemax="'+g.next+'" aria-valuenow="'+g.n+'"><i style="width:'+pct+'%"></i></div>'+
-    '<div class="cgs">'+(hit?'<b>The class just passed '+fmt(g.prev)+'! 🎉</b>':'<span>Counting since '+esc(since)+'</span>')+'<span>Next stop <b>'+fmt(g.next)+'</b> · '+fmt(g.next-g.n)+' to go</span></div></div>'}
+    '<div class="cgs">'+(hit?'<b>The class just passed '+fmt(g.prev)+'!</b>':'<span>Counting since '+esc(since)+'</span>')+'<span>Next stop <b>'+fmt(g.next)+'</b> · '+fmt(g.next-g.n)+' to go</span></div></div>'}
   const done=doneAt&&Date.now()-doneAt<8000;
   h+='<div class="cn"><span class="dot'+(s&&s.total?' on':'')+'" aria-hidden="true"></span><span class="ct">'+studyLine(s)+'</span>'+
    (fl?'<button class="btn on" data-cn="stop" aria-label="Focus timer running. Stop it">'+ic('timer')+'<span id="cnleft">'+ClassNow.mmss(fl)+'</span></button>'
@@ -830,7 +830,7 @@ function syncGamesTile(){
  const stDone=$('stsub')&&$('stsub').querySelector('.done');
  const doneCount=(cwDone?1:0)+(wdDone?1:0)+(stDone?1:0);
  if(doneCount===3){
-  s.innerHTML='<span class="done">All 3 solved today ✓</span> · Crossword · APMed\'le · Sort It';
+  s.innerHTML='<span class="done"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-seal"/></svg> All 3 solved today</span> · Crossword · APMed\'le · Sort It';
  }else if(doneCount>0){
   s.textContent=doneCount+'/3 solved · Crossword · APMed\'le · Sort It';
  }else{
@@ -920,7 +920,7 @@ function drawSync(msg,ok){const c=getCode(),a=getAcc(),b=$('syncbody');$('synch'
   b.innerHTML='<div class="who">'+Profile.html(m,52)+'<div><b>'+esc(m.name)+(a.mod?' <span class="modtag">Moderator</span>':'')+'</b><span>'+esc(a.dname&&g&&g!==a.dname?g+' · ':'')+esc(a.email||'')+'</span></div>'+
    (off?'':'<button class="btn sm" onclick="editProfile()">Edit</button>')+'</div>'+
    (off?'<div class="ended"><b>Your sign-in ended on this device.</b> Your progress still syncs, but the discussion, attendance and your profile need you to sign in again.<button class="gbtn" onclick="this.disabled=true;signIn()">'+G+'Sign in again</button></div>'
-    :'<p class="okline">✓ Your progress in every course syncs to this account. Sign in with the same Google account on your other devices.</p>')+
+    :'<p class="okline"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-check"/></svg> Your progress in every course syncs to this account. Sign in with the same Google account on your other devices.</p>')+
    '<div class="alinks">'+
     (off?'':'<div class="al" style="cursor:default"><div><span>Status: <b id="syncstlbl">'+(curPresence()==='invisible'?'Invisible':'Active')+'</b></span><small>'+(curPresence()==='invisible'?'Classmates see you as Offline':'Shown on the class list')+'</small></div><select id="syncst" aria-label="Status" onchange="setPresence(this.value)" style="padding:5px 9px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:600 13px var(--sans)"><option value="active"'+(curPresence()!=='invisible'?' selected':'')+'>Active</option><option value="invisible"'+(curPresence()==='invisible'?' selected':'')+'>Invisible</option></select></div>')+
     '<a class="al" href="classlist.html"><span>Class list</span><small>See who is studying or on the site</small></a>'+
@@ -959,7 +959,7 @@ function drawToday(){const box=$('today');if(!window.Daily)return;const s=Daily.
  const remLink=r.on?'<a class="rm" href="notifications.html#settings">'+ic('alarm-clock')+' Daily reminder · '+hourTxt(r.hour)+'</a>':FEATS&&FEATS.includes('daily')?'<a class="rm" href="notifications.html#settings">'+ic('alarm-clock')+' Get a daily reminder</a>':'';
  box.innerHTML='<h2>'+ic('flame')+' Today<label>Goal <select onchange="setGoal(+this.value)" aria-label="Daily goal">'+Daily.GOALS.map(n=>'<option value="'+n+'"'+(n===s.goal?' selected':'')+'>'+n+' questions</option>').join('')+'</select></label><button class="thide" onclick="hideToday()" aria-label="Hide the streak and daily goal" title="Hide">'+ic('x')+'</button></h2>'+
   '<div class="tdy"><div class="strk'+(s.met?' lit':s.streak?' cold':'')+'"><span class="fl">'+ic('flame')+'</span><div><b>'+s.streak+'</b><span>day streak</span>'+(s.atRisk?'<span class="risk">'+left+' more today keeps it</span>':s.best>s.streak?'<span>best '+s.best+'</span>':'')+'</div></div>'+
-  '<div class="gl"><div class="gt">'+(s.today>=s.goal?'<span><b>'+s.today+'</b> questions today</span><span class="ok">Goal of '+s.goal+' done ✓</span>':'<span><b>'+s.today+'</b> of '+s.goal+' questions today</span><span>'+left+' to go</span>')+'</div>'+
+  '<div class="gl"><div class="gt">'+(s.today>=s.goal?'<span><b>'+s.today+'</b> questions today</span><span class="ok"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-check"/></svg> Goal of '+s.goal+' done</span>':'<span><b>'+s.today+'</b> of '+s.goal+' questions today</span><span>'+left+' to go</span>')+'</div>'+
    '<span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span>'+
    '<div class="wk" aria-label="This week">'+s.week.map(d=>{const w=new Date(d.day+'T12:00');return '<i class="'+(d.met?'met':d.n?'some':'')+(d.today?' now':'')+'" title="'+esc(w.toLocaleDateString(undefined,{weekday:'long'})+': '+d.n+' answered')+'">'+DOW[w.getDay()]+'</i>'}).join('')+'</div></div></div>'+
   (total||remLink?'<div class="due">'+(total?'<span class="dl">'+total+' review'+(total>1?'s':'')+' due</span>'+due.map(c=>'<a href="reviewer.html?course='+encodeURIComponent(c.id)+'#due">'+esc(shortName(c.id))+' <em>'+c.n+'</em></a>').join(''):'<span>No reviews due right now.</span>')+remLink+'</div>':'');

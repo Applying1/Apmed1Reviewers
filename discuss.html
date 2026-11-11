@@ -96,7 +96,7 @@ textarea:focus{border-color:var(--accent)}
 .annrow b{color:var(--text)}
 </style></head><body>
 <main>
- <a class="back" id="back" href="./">← Back to the course</a>
+ <a class="back" id="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg><span id="backt">Back to the course</span></a>
  <h1 id="ttl">Discussion</h1>
  <p class="lede" id="lede">Ask questions, share tips, help each other out. Posts show your display name and picture, and classmates can tap them to see your Google account name, so keep it kind.</p>
  <div id="qbox"></div>
@@ -219,7 +219,7 @@ function postHTML(p){
 async function pin(id,on){try{await Auth.rpc('discussion_pin',{p_id:id,p_on:on},true);pingOthers();await load();if(on)scrollTo({top:0,behavior:'smooth'})}catch(e){tell(e.message||'Could not change the pin.')}}
 function jump(id){const e=$('p'+id);if(!e){tell('That post is further up. Tap Show earlier posts.');return}e.scrollIntoView({block:'center',behavior:'smooth'});e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash')}
 function drawList(stick){const L=$('list'),atEnd=innerHeight+scrollY>=document.body.scrollHeight-80,pinned=new Set(PINS.map(p=>p.id)),shown=posts.filter(p=>!pinned.has(p.id));
- $('pins').hidden=!PINS.length;$('pins').innerHTML=PINS.length?'<h2>📌 Pinned</h2>'+PINS.map(postHTML).join(''):'';
+ $('pins').hidden=!PINS.length;$('pins').innerHTML=PINS.length?'<h2><svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-pin"/></svg> Pinned</h2>'+PINS.map(postHTML).join(''):'';
  L.innerHTML=shown.length?shown.map(postHTML).join(''):PINS.length?'<p class="empty">No other posts yet.</p>':'<p class="empty">'+(qid?'No posts about this question yet. Ask or explain it here!':'No posts yet. Start the conversation!')+'</p>';
  if(stick||atEnd)scrollTo(0,document.body.scrollHeight)}
 async function load(first){if(busy)return;busy=true;
@@ -262,7 +262,7 @@ function pingOthers(){if(!window.Live)return;Live.ping('discuss:'+thread);Live.p
 // ---- replies and @mentions: REPLY = the post being answered; MENT = people picked from the @ list (sent only if still in the text)
 let REPLY=null,MENT=[],PEOPLE=null,MQ=null,MSEL=0;
 function replyTo(id){const p=posts.find(x=>x.id===id);if(!p)return;REPLY={id,author:p.author,body:p.body};drawChip();const t=$('msg');if(t)t.focus()}
-function drawChip(){const c=$('rchip');if(!c)return;c.hidden=!REPLY;if(REPLY){const snip=(window.Stickers?Stickers.cleanSnippet(REPLY.body||''):REPLY.body||'');c.innerHTML='<span>Replying to <b>'+esc(REPLY.author)+'</b> · '+esc(String(snip).slice(0,80))+'</span><button onclick="REPLY=null;drawChip()" aria-label="Cancel the reply">×</button>'}}
+function drawChip(){const c=$('rchip');if(!c)return;c.hidden=!REPLY;if(REPLY){const snip=(window.Stickers?Stickers.cleanSnippet(REPLY.body||''):REPLY.body||'');c.innerHTML='<span>Replying to <b>'+esc(REPLY.author)+'</b> · '+esc(String(snip).slice(0,80))+'</span><button onclick="REPLY=null;drawChip()" aria-label="Cancel the reply"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>'}}
 async function people(){if(PEOPLE)return PEOPLE;try{PEOPLE=await Auth.rpc('discussion_people',{},true)||[]}catch(e){PEOPLE=[]}return PEOPLE}
 function mentionAt(){const t=$('msg');if(!t)return null;const pre=t.value.slice(0,t.selectionStart),m=pre.match(/(^|\s)@([^\s@]{0,24}(?: [^\s@]{0,24})?)$/);return m?{q:m[2],at:pre.length-m[2].length-1}:null}
 async function mentionList(){const box=$('mlist');if(!box)return;if(!mentionAt()){box.hidden=true;MQ=null;return}
@@ -286,9 +286,9 @@ function drawDock(msg){const a=Auth.acc(),d=$('dock');if(!msg&&Auth.ended())msg=
 (async function(){
  if(!/^[a-z0-9_-]{1,40}$/.test(course)||(qid&&!/^[a-z0-9_.-]{1,60}$/.test(qid))){$('list').innerHTML='<p class="empty">This discussion could not be found.</p>';return}
  $('back').href=GENERAL?'./':'reviewer.html?course='+encodeURIComponent(course);
- if(GENERAL){$('back').textContent='← All courses';$('ttl').textContent='General discussion';document.title='General discussion · APMed \'33';
+ if(GENERAL){$('backt').textContent='All courses';$('ttl').textContent='General discussion';document.title='General discussion · APMed \'33';
   $('lede').textContent='For the whole class: anything that isn\u2019t about one course. Posts show your display name and picture, and classmates can tap them to see your Google account name, so keep it kind.'}
- if(qid){$('back').textContent='← Back to practice';$('back').onclick=e=>{if(history.length>1&&document.referrer.includes('reviewer.html')){e.preventDefault();history.back()}}}
+ if(qid){$('backt').textContent='Back to practice';$('back').onclick=e=>{if(history.length>1&&document.referrer.includes('reviewer.html')){e.preventDefault();history.back()}}}
  let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
  const c=list.find(x=>x.id===course),cl=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;
  if(c){$('ttl').textContent=qid?'Question discussion':c.title+' discussion';document.title=(qid?'Question':c.title)+' discussion · APMed \'33'}
@@ -297,7 +297,7 @@ function drawDock(msg){const a=Auth.acc(),d=$('dock');if(!msg&&Auth.ended())msg=
    if(it){const q=it.q||it.term,ans=it.q?it.a:it.definition;
     $('qbox').innerHTML='<div class="qcard"><div class="k">'+esc(it.section||'')+(c?' · '+esc(c.title):'')+'</div><div class="q">'+esc(q)+'</div>'+
     '<details><summary>'+(it.q?'Show the answer':'Show the meaning')+'</summary><p><b>'+esc(ans||'')+'</b></p>'+(it.why?'<p>'+esc(it.why)+'</p>':'')+'</details>'+
-    '<a class="all" href="discuss.html?c='+encodeURIComponent(course)+(EMBED?'&embed=1':'')+'">All '+esc(c?c.title:'course')+' discussion →</a></div>'}}catch(e){}}
+    '<a class="all" href="discuss.html?c='+encodeURIComponent(course)+(EMBED?'&embed=1':'')+'">All '+esc(c?c.title:'course')+' discussion<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></a></div>'}}catch(e){}}
  if(!cl){$('list').innerHTML='<p class="empty">The discussion could not be loaded. Check your connection and reload.</p>';return}
  Auth.cloud=cl;
  let msg='',done=null;try{done=await Auth.finish()}catch(e){msg=e.message}

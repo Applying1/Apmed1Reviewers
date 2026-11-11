@@ -96,7 +96,7 @@ main,#app,.card{min-width:0}#app>.card:first-child,#app>.qhead:first-child,#app>
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
 <main id="main">
- <a class="back" id="back" href="./">← All courses</a>
+ <a class="back" id="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg><span id="backt">All courses</span></a>
  <div id="app" aria-live="polite"></div>
 </main>
 <script src="live.js"></script>
@@ -173,7 +173,7 @@ function start(){Sfx.music(null);Sfx.stopCount();P=null;H=null;
  for(const g of ['hn','hs'])$(g).onclick=e=>{const b=e.target.closest('button');if(!b)return;$(g).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))};
  $('jc').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5)});
  for(const id of ['jc','jn'])$(id).addEventListener('keydown',e=>{if(e.key==='Enter')join()});
- if(cid&&!pre){$('back').href='reviewer.html?course='+encodeURIComponent(cid);const c=COURSES.find(x=>x.id===cid);if(c)$('back').textContent='← Back to '+c.title}
+ if(cid&&!pre){$('back').href='reviewer.html?course='+encodeURIComponent(cid);const c=COURSES.find(x=>x.id===cid);if(c)$('backt').textContent='Back to '+c.title}
  pickCourse();if(pre)setTimeout(()=>{const n=$('jn');if(n&&!P)n.focus()},50)}
 const FILES={};
 async function courseFile(id){if(!FILES[id]){const r=await fetch('courses/'+id+'.json');if(!r.ok)throw new Error(r.status);FILES[id]=await r.json()}return FILES[id]}
@@ -243,7 +243,7 @@ function hDraw(){const a=$('app');$('main').classList.toggle('wide',H.phase!=='l
   hCount();bar($('tbar'),H.cfg.dur*1000-(Date.now()-H.qStart),H.cfg.dur*1000);mathIn(a,H.math);return}
  if(H.phase==='reveal'){const q=H.qs[H.i],tot=Math.max(1,H.counts.reduce((x,y)=>x+y,0)),rank=hRank(),last=H.i+1>=H.qs.length;
   a.innerHTML='<div class="qhead"><span>Question '+(H.i+1)+' of '+H.qs.length+'</span><span class="sp"></span><span class="cnt">'+Object.keys(H.answers).length+' of '+np+' answered</span></div>'+
-   '<p class="stem">'+esc(q.stem)+'</p><div class="ch'+(q.choices.length<3?' one':'')+'">'+q.choices.map((c,k)=>'<div class="opt c'+k+(k===q.correct?' right':' dim')+'"><span class="l">'+(k===q.correct?'✓':LETTERS[k])+'</span><span>'+esc(c)+'</span><span class="n">'+H.counts[k]+'</span><i class="bar" style="width:'+Math.round(100*H.counts[k]/tot)+'%"></i></div>').join('')+'</div>'+
+   '<p class="stem">'+esc(q.stem)+'</p><div class="ch'+(q.choices.length<3?' one':'')+'">'+q.choices.map((c,k)=>'<div class="opt c'+k+(k===q.correct?' right':' dim')+'"><span class="l">'+(k===q.correct?'<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-check"/></svg>':LETTERS[k])+'</span><span>'+esc(c)+'</span><span class="n">'+H.counts[k]+'</span><i class="bar" style="width:'+Math.round(100*H.counts[k]/tot)+'%"></i></div>').join('')+'</div>'+
    (q.why?'<div class="why"><b>Why:</b> '+esc(q.why)+'</div>':'')+
    '<section class="card" style="margin-top:16px"><h2>'+ic('trophy')+'Leaderboard</h2><ol class="lb">'+rank.slice(0,5).map(([pid,p],k)=>'<li><span class="rk">'+(k+1)+'</span><b>'+esc(p.name)+'</b><span class="dl">'+(H.gain[pid]?'+'+H.gain[pid]:'')+'</span><span class="sc">'+p.score+'</span></li>').join('')+'</ol></section>'+
    '<div class="ctl"><button class="btn" onclick="hEnd()">End quiz</button><button class="btn primary" onclick="hNext()">'+(last?'See final results':'Next question')+' '+ic('arrow-right')+'</button></div>';
@@ -276,7 +276,7 @@ function pOn(m){if(!P||!m||typeof m!=='object')return;
  if(m.t==='lobby'){const me=(m.players||[]).some(x=>x[0]===P.pid);if(!me)return;P.title=m.title;P.n=m.n;P.count=(m.players||[]).length;if(P.phase==='joining'||P.phase==='lobby'&&m.phase==='lobby'){if(P.phase==='joining')Sfx.join();P.phase='lobby';Sfx.music('lobby',false,.55);pDraw()}}
  else if(m.t==='q'){if(P.phase==='joining')P.phase='lobby';if(P.q&&P.q.i===m.i&&P.phase==='q')return;
   P.phase='q';P.q={i:m.i,n:m.n,stem:String(m.stem||''),choices:(m.choices||[]).map(String).slice(0,4),dur:+m.dur||20000,left:+m.left||0,at:Date.now(),math:!!m.math};P.pick=null;P.sent=false;pDraw();Sfx.go();Sfx.music('q',false,.55);Sfx.countdown(P.q.left)}
- else if(m.t==='got'){if(P.phase==='q'&&P.q&&m.i===P.q.i&&(m.pids||[]).includes(P.pid)){P.sent=true;clearTimeout(resend);const s=$('sent');if(s)s.textContent='Answer received ✓'}}
+ else if(m.t==='got'){if(P.phase==='q'&&P.q&&m.i===P.q.i&&(m.pids||[]).includes(P.pid)){P.sent=true;clearTimeout(resend);const s=$('sent');if(s)s.textContent='Answer received'}}
  else if(m.t==='reveal'){if(P.phase==='joining')return;const r=(m.res||{})[P.pid];if(!r)return;
   P.phase='reveal';P.rv=m;P.score=r[1];clearTimeout(resend);Sfx.stopCount();Sfx.music(null);if(r[3]===1)Sfx.correct();else Sfx.wrong();pDraw();if(navigator.vibrate)try{navigator.vibrate(r[3]===1?40:[40,60,40])}catch(e){}}
  else if(m.t==='end'){if(P.phase==='joining')return;P.phase='end';P.end=m;clearTimeout(resend);Sfx.stopCount();Sfx.music(null);if(!(m.closed&&!(m.board||[]).length)){const w=(m.board||[]).findIndex(x=>x[0]===P.pid);if(w===0)Sfx.fanfare();else Sfx.over()}try{sessionStorage.removeItem('quiz_player')}catch(e){}pDraw()}}
@@ -287,12 +287,12 @@ function pDraw(){const a=$('app');$('main').classList.remove('wide');
  if(P.phase==='q'){const q=P.q,left=Math.max(0,q.left-(Date.now()-q.at));
   a.innerHTML='<div class="qhead"><span>Question '+(q.i+1)+' of '+q.n+'</span><span class="sp"></span><span class="cnt">'+P.score+' pts</span></div><div class="timer"><i id="tbar"></i></div>'+
    '<p class="stem">'+esc(q.stem)+'</p><div class="ch'+(q.choices.length<3?' one':'')+'">'+q.choices.map((c,k)=>'<button class="opt c'+k+(P.pick==null?'':k===P.pick?' pick':' dim')+'" onclick="pick('+k+')"'+(P.pick==null?'':' disabled')+'><span class="l">'+LETTERS[k]+'</span><span>'+esc(c)+'</span></button>').join('')+'</div>'+
-   (P.pick!=null?'<p class="note" id="sent" style="text-align:center">'+(P.sent?'Answer received ✓':'Answer sent…')+'</p>':'');
+   (P.pick!=null?'<p class="note" id="sent" style="text-align:center">'+(P.sent?'Answer received':'Answer sent…')+'</p>':'');
   bar($('tbar'),left,q.dur);mathIn(a,q.math);return}
  if(P.phase==='reveal'){const m=P.rv,r=m.res[P.pid],ok=r[3]===1,none=r[3]===-1;
   a.innerHTML='<section class="card fb '+(ok?'ok':'no')+'"><div class="ic">'+(ok?ic('check'):ic('x'))+'</div><h2>'+(ok?'Correct!':none?'Time\'s up':'Not quite')+'</h2>'+(ok?'<div class="pts">+'+r[0]+'</div>':'')+
    '<p>You\'re <b>'+ord(r[2])+'</b> of '+m.players+' · <b>'+r[1]+'</b> pts</p>'+
-   '<div class="ans">'+(r[3]===0&&P.pick!=null&&m.choices[P.pick]!=null?'<p style="margin:0 0 8px">Your answer: <b>'+esc(m.choices[P.pick])+'</b></p>':'')+'<div class="opt c'+m.correct+' right" style="cursor:default"><span class="l">✓</span><span>'+esc(m.choices[m.correct])+'</span></div>'+(m.why?'<div class="why">'+esc(m.why)+'</div>':'')+'</div><p class="note">Next question soon…</p></section>';
+   '<div class="ans">'+(r[3]===0&&P.pick!=null&&m.choices[P.pick]!=null?'<p style="margin:0 0 8px">Your answer: <b>'+esc(m.choices[P.pick])+'</b></p>':'')+'<div class="opt c'+m.correct+' right" style="cursor:default"><span class="l"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span><span>'+esc(m.choices[m.correct])+'</span></div>'+(m.why?'<div class="why">'+esc(m.why)+'</div>':'')+'</div><p class="note">Next question soon…</p></section>';
   mathIn(a,m.math);return}
  if(P.phase==='end'){const b=P.end.board||[],me=b.findIndex(x=>x[0]===P.pid);
   if(P.end.closed&&!b.length){a.innerHTML='<section class="card fb wait"><div class="ic">'+ic('x')+'</div><h2>The host closed the quiz</h2><p><button class="btn" onclick="start()">Back</button></p></section>';return}

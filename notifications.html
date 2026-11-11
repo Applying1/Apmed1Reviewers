@@ -50,7 +50,7 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
 .up b{font-size:14px}.up .s{display:block;color:var(--mute);font-size:13px}.up .w{display:block;font-size:12.5px;color:var(--faint);margin-top:2px}.up .w.on{color:var(--accent)}
 </style></head><body>
 <main>
- <a class="back" href="index.html">← All courses</a>
+ <a class="back" href="index.html"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg><span>All courses</span></a>
  <h1>Notifications</h1>
  <div class="tabs" role="tablist" aria-label="Notifications">
   <button role="tab" id="t-feed" aria-selected="true" onclick="tab('feed')">Updates</button>
@@ -164,7 +164,7 @@ function backLink(){const el=document.querySelector('.back');let r=null;
  try{if(r)sessionStorage.setItem('reviewer_notify_from',r);else r=sessionStorage.getItem('reviewer_notify_from')}catch(e){}
  if(!r)return;const u=new URL(r),pg=u.pathname.split('/').pop(),id=u.searchParams.get('course');
  const label=pg==='reviewer.html'&&id?((COURSES[id]||{}).title||'the course'):pg==='schedule.html'?'the timetable':pg==='discuss.html'?'the discussion':'';
- if(!label)return;el.href=r;el.textContent='← Back to '+label}
+ if(!label)return;el.href=r;(el.querySelector('span')||el).textContent='Back to '+label}
 (async()=>{let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
  try{await Sched.load()}catch(e){}
  list.forEach(c=>COURSES[c.id]=c);backLink();const cl=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;Push.init(cl);if(cl)Auth.cloud=cl;Push.attRefresh();Push.heal().then(()=>{if(!$('settings').hidden)drawSettings()});

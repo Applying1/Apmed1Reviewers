@@ -1274,5 +1274,13 @@
   "title": "Chem: mock matches the real eval format",
   "text": "The Nov 14 Chem mock now follows the real test: 30 True or False, 30 fill in the blank or identification, then 3 naming and 3 predict-the-product items from the carboxylic acids chapter. Chirality (optical isomers) is not covered, so it is now an optional section that is off by default.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 156,
+  "date": "2026-11-11",
+  "type": "feature",
+  "title": "A cleaner look",
+  "text": "Drawn marks instead of typed ticks and crosses, a calmer answer box with Flashcard, Notes and Discuss in one row, a shorter dashboard, a grouped side menu and a shorter Personalize page.",
+  "link": "./"
  }
 ]

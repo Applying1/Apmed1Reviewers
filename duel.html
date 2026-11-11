@@ -215,7 +215,7 @@ function showDuel(){
  $('sub').innerHTML=esc(short(c.title))+(d.scope?' · '+esc(d.scope):'')+' · '+d.qids.length+' questions';
  const side=(k)=>{const p=d[k];if(!p)return '<div class="p">'+who(null,56)+'<b>'+(d.open?'Anyone':'Nobody')+'</b><span class="t">'+(d.open?'open challenge':'closed')+'</span></div>';
   const seen=p.res!=null,won=r&&r.w===k;
-  return '<div class="p'+(won?' won':'')+'">'+who(p,56)+'<b>'+esc(p.name)+(me===k?' (you)':'')+'</b><span class="sc">'+(seen?score(p.res)+'<small style="font-size:.5em;color:var(--mute)">/'+d.qids.length+'</small>':p.done?'✓':'–')+'</span><span class="t">'+(seen&&p.secs?fmtT(p.secs):p.done?'played':'not yet')+'</span></div>'};
+  return '<div class="p'+(won?' won':'')+'">'+who(p,56)+'<b>'+esc(p.name)+(me===k?' (you)':'')+'</b><span class="sc">'+(seen?score(p.res)+'<small style="font-size:.5em;color:var(--mute)">/'+d.qids.length+'</small>':p.done?'<svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-check"/></svg>':'–')+'</span><span class="t">'+(seen&&p.secs?fmtT(p.secs):p.done?'played':'not yet')+'</span></div>'};
  let h='<div class="card"><div class="vs">'+side('a')+'<span class="x">VS</span>'+side('b')+'</div>';
  if(d.declined){const other=me==='a'?'b':'a',p=d[other];
    h+='<p class="banner">Declined</p>';
@@ -223,7 +223,7 @@ function showDuel(){
    else if(me==='a')h+='<p class="what"><b>'+esc(p&&p.name||'They')+'</b> can\'t duel right now. Challenge someone else?</p><div class="acts"><button class="btn primary" onclick="home()">'+ic('zap')+'Start a new duel</button></div>';
    else h+='<p class="what">This duel was declined.</p>'}
   else if(r){const mine=me==='a'?r.sa:r.sb,theirs=me==='a'?r.sb:r.sa;
-   h+='<p class="banner">'+(r.w===''?'It\'s a draw!':me&&r.w===me?'You win'+(r.byTime?' on time':'')+'! 🎉':me?d[r.w].name+' wins'+(r.byTime?' on time':''):d[r.w].name+' wins')+'</p>';
+   h+='<p class="banner">'+(r.w===''?'It\'s a draw!':me&&r.w===me?'You win'+(r.byTime?' on time':'')+'!':me?d[r.w].name+' wins'+(r.byTime?' on time':''):d[r.w].name+' wins')+'</p>';
    h+=gridHTML(d);
    if(me)h+='<div class="acts"><button class="btn" onclick="shareResult()">'+ic('message-circle')+'Send to a classmate</button></div>'}
  else if(!me){h+=d.open?'<p class="what"><b>'+esc(d.a.name)+'</b> challenges you to '+d.qids.length+' questions. You\'ll see their score after you play.</p><div class="acts"><button class="btn primary" onclick="accept()">'+ic('zap')+'Accept and play</button></div>'
@@ -263,14 +263,14 @@ function shareResult(){
  loadShareChat().then(()=>ShareChat.open({body:body,label:'Duel result',preview:result.split('\n')[0]})).catch(()=>{});
 }
 const fmtT=s=>s>=60?Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s':s+'s';
-function gridHTML(d){const n=d.qids.length,cell=x=>'<i class="'+(x==='1'?'y':x==='0'?'n':'q')+'">'+(x==='1'?'✓':x==='0'?'✗':'·')+'</i>';
+function gridHTML(d){const n=d.qids.length,cell=x=>'<i class="'+(x==='1'?'y':x==='0'?'n':'q')+'">'+(x==='1'?'<svg class="i" width="12" height="12" aria-hidden="true"><use href="icons.svg#i-check"/></svg>':x==='0'?'<svg class="i" width="12" height="12" aria-hidden="true"><use href="icons.svg#i-x"/></svg>':'·')+'</i>';
  return '<div class="grid" style="--n:'+n+'"><span></span>'+d.qids.map((_,i)=>'<span>'+(i+1)+'</span>').join('')+
   ['a','b'].map(k=>'<span class="nm">'+esc(d[k].name)+'</span>'+[...d[k].res].map(cell).join('')).join('')+'</div>'}
 async function review(){
  const d=DUEL,box=$('rev');try{const c=await bank(d.course),by=Object.fromEntries(c.bank.map(x=>[x.id,x])),L=local(d.code),res=d[d.me].res||'';
   box.innerHTML=d.qids.map((id,i)=>{const q=by[id];if(!q)return '<details><summary><em>·</em>Question '+(i+1)+' was removed from the course</summary></details>';
    const ok=res[i]==='1',pick=(L.p||[])[i],wrongWhy=!ok&&pick&&q.dw&&q.dw[pick]?q.dw[pick]:'';
-   return '<details'+(ok?'':' open')+'><summary><em>'+(ok?'✓':'✗')+'</em><span>'+stem(q.q)+'</span></summary><p class="a"><b>'+esc(q.a)+'</b>'+(q.why?' <span>· '+esc(q.why)+'</span>':'')+'</p>'+
+   return '<details'+(ok?'':' open')+'><summary><em>'+(ok?'<svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-check"/></svg>':'<svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg>')+'</em><span>'+stem(q.q)+'</span></summary><p class="a"><b>'+esc(q.a)+'</b>'+(q.why?' <span>· '+esc(q.why)+'</span>':'')+'</p>'+
     (!ok&&pick?'<p class="a"><span>You picked: '+esc(pick)+(wrongWhy?' · '+esc(wrongWhy):'')+'</span></p>':'')+'</details>'}).join('')+
    '<div class="acts"><a class="btn" href="reviewer.html?course='+encodeURIComponent(d.course)+'">'+ic('book-open')+'Practice in the course</a></div>'}
  catch(e){box.innerHTML='<p class="empty">'+esc(e.message)+'</p>'}

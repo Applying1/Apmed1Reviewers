@@ -909,7 +909,7 @@ function buildSingleMsgHtml(m, prevDate){
   rxHtml+
   '<div class="mfoot">'+
    '<span class="mtime">'+timeClock(m.created_at)+'</span>'+
-   (m.mine?(m.read?'<span class="read" title="Seen">✓✓</span>':'<span title="Delivered">✓</span>'):'')+
+   (m.mine?(m.read?'<span class="read" title="Seen"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-check-check"/></svg></span>':'<span title="Delivered"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span>'):'')+
   '</div>'+
  '</div>';
  return html;
@@ -980,7 +980,7 @@ function updateMessagesIncrementally(newMsgs){
      const mfoot = el.querySelector('.mfoot');
      if(mfoot){
       mfoot.innerHTML = '<span class="mtime">'+timeClock(nm.created_at)+'</span>' +
-       (nm.read?'<span class="read" title="Seen">✓✓</span>':'<span title="Delivered">✓</span>');
+       (nm.read?'<span class="read" title="Seen"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-check-check"/></svg></span>':'<span title="Delivered"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span>');
      }
     }
    }

@@ -46,7 +46,7 @@ h1 em{font-style:normal;color:var(--accent)}
 .it{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:7px 11px;border-radius:11px;border:1px solid var(--line2);background:var(--surface);font:600 13.5px/1.25 var(--sans);text-align:left;box-shadow:0 1px 0 var(--line2);touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .it.sel{border-color:var(--accent);background:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 3px var(--accent-soft)}
 .it.ok{border-color:color-mix(in oklab,var(--good,#22a06b) 50%,var(--line));background:color-mix(in oklab,var(--good,#22a06b) 12%,var(--surface));cursor:default;touch-action:auto;box-shadow:none}
-.it.ok::after{content:"✓";color:var(--good,#22a06b);font-weight:800}
+.it.ok::after{content:"";display:inline-block;width:.95em;height:.95em;flex:none;background:var(--good,#22a06b);-webkit-mask:var(--ic-tick) center/contain no-repeat;mask:var(--ic-tick) center/contain no-repeat}
 .it.bad{animation:shake .45s;border-color:var(--bad,#c0392b);background:color-mix(in oklab,var(--bad,#c0392b) 12%,var(--surface))}
 .it.ghost{position:fixed;left:0;top:0;z-index:40;pointer-events:none;box-shadow:0 12px 28px #0003;scale:1.05}
 .it.lift{opacity:.3}
@@ -101,7 +101,7 @@ h1 em{font-style:normal;color:var(--accent)}
  <h2 id="howh">How to play Sort It</h2>
  <ul><li>Put every term in its group: <b>tap a term, then tap a group</b>. You can also drag it.</li>
   <li>Changed your mind? Tap a term in a group to pick it up again.</li>
-  <li>When the tray is empty, tap <b>Check</b>. Right ones lock in ✓; wrong ones jump back to the tray.</li>
+  <li>When the tray is empty, tap <b>Check</b>. Right ones lock in; wrong ones jump back to the tray.</li>
   <li>Sort everything in one check for a perfect day. Afterward you see <b>why</b> each term belongs where it does.</li>
   <li>One set a day for the whole class, from the subject with the nearest eval. A new set comes at midnight.</li></ul>
  <div class="row2"><button class="btn primary" onclick="closeHow()">Let's sort</button></div>

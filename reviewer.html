@@ -410,8 +410,8 @@ h1{font-size:clamp(24px,2.8vw,31px)}
 @media (max-width:920px){.hero::after{right:-40px;width:180px;height:180px}#card::before{left:18px;right:18px}}
 @media (max-width:920px){
  .app{grid-template-columns:1fr}
- .side{position:fixed;z-index:15;left:0;top:0;bottom:0;width:min(320px,86vw);transform:translateX(-102%);transition:transform .25s var(--ease);box-shadow:20px 0 60px #0004}
- .app.nav-open .side{transform:none}
+ .side{position:fixed;z-index:15;left:0;top:0;bottom:0;width:min(320px,86vw);transform:translateX(-102%);transition:transform .25s var(--ease)}
+ .app.nav-open .side{transform:none;box-shadow:20px 0 60px #0004}
  .scrim{display:block;position:fixed;inset:0;z-index:14;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .25s}
  .app.nav-open .scrim{opacity:1;pointer-events:auto}
  .icon.menu{display:grid}
@@ -498,7 +498,9 @@ h1{font-size:clamp(24px,2.8vw,31px)}
 .selfans .sapts li{font-size:14px;color:var(--mute);padding-left:22px;position:relative}
 .selfans .sapts li::before{content:'○';position:absolute;left:4px;color:var(--faint)}
 .selfans .sapts li.ok{color:var(--text)}
-.selfans .sapts li.ok::before{content:'✓';color:var(--good);font-weight:700}
+.selfans :root{--ic-tick:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M20 6 9 17l-5-5%22/%3E%3C/svg%3E')}
+.mk{flex:none;vertical-align:-.18em}.link .mk,.aichip .mk{vertical-align:-.1em;margin-left:3px}.sec .ct .mk,.ct .mk{display:block}
+.sapts li.ok::before{content:'';width:.95em;height:.95em;background:currentColor;-webkit-mask:var(--ic-tick) center/contain no-repeat;mask:var(--ic-tick) center/contain no-repeat;top:.25em;color:var(--good)}
 .selfans .sanote{margin:8px 0 0;font-size:13px;color:var(--faint)}
 .exchk .exc{border-top:1px solid var(--line);padding:14px 0 6px}
 .exchk .exc:first-of-type{border-top:0}
@@ -657,6 +659,26 @@ body.notesonly .side>.label,body.notesonly #nav{display:none}
 .nhead .reveal+.link{margin-left:0}
 /* Exam prep: mock exam, Don't mix up, typing */
 .shuffle-link.due{color:var(--accent);font-weight:600}
+/* Winter update (v116): calmer hero. One row of small buttons with counts, no ghost bulb, flat bar. */
+.hero::after{display:none!important}.hero .fill,.bar-row .fill{background:var(--accent)}
+.hero .sub .when{display:block;margin-bottom:2px}
+.next .eyebrow{text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:var(--mute);margin-bottom:4px}
+.next .quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.next .quick .shuffle-link{width:auto;margin:0;padding:6px 11px;min-height:34px;justify-content:flex-start;gap:6px;border:1px solid var(--line2);border-radius:99px;background:var(--surface);color:var(--text);font-size:13px;font-weight:600}
+.next .quick .shuffle-link:hover{background:var(--hover);color:var(--text)}.next .quick .shuffle-link svg{color:var(--mute)}
+.next .quick .shuffle-link b{font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
+/* Personalize rows: one line of help (tap for the rest); the control stays beside the label on phones */
+.prow .pl span.pd{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden;cursor:pointer}
+.prow .pl span.pd.open{display:block;overflow:visible}
+@media (max-width:640px){.prow:not(.stack){flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 14px}.prow:not(.stack) .pl{flex:1 1 200px;min-width:0}.prow:not(.stack) .ctl{flex:0 1 auto;min-width:0;max-width:100%}.prow .ctl select{min-width:0;max-width:100%}}
+@media (max-width:520px){.goal>span:first-child{display:none}}
+.pgsep{display:block;height:1px;margin:8px 10px;background:var(--line)}
+.kpis{gap:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.kpi,.kpi:hover{background:none;border:0;border-left:1px solid var(--line);border-radius:0;box-shadow:none;transform:none}.kpi:first-child{border-left:0}
+.kpi .k svg{padding:0;background:none;color:var(--faint)}
+@media (max-width:920px){.kpi:nth-child(odd){border-left:0}.kpi:nth-child(n+3){border-top:1px solid var(--line)}}
+.next .quick .shuffle-link.due svg{color:var(--accent)}.next .quick .shuffle-link.cram svg{color:var(--accent-2,#e3a21a)}
+
 #dtabs{margin-right:4px}
 #dtabs button{padding:5px 12px;font-size:13px}
 .mixcue{text-align:center;margin:28px 0 24px}
@@ -1043,7 +1065,7 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
 .llist li{counter-increment:ll;position:relative;padding:14px 0 14px 38px;border-bottom:1px solid var(--line)}
 .llist li::before{content:counter(ll);position:absolute;left:0;top:15px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--raised);color:var(--mute);font:700 12px/1 var(--sans)}
 .llq{margin:0 0 6px;font-weight:600;font-size:15.5px;line-height:1.45}
-.lla{margin:0;font-size:15px;color:var(--good);font-weight:600}.lla::before{content:"✓ "}
+.lla{margin:0;font-size:15px;color:var(--good);font-weight:600}.lla::before{content:'';width:.95em;height:.95em;background:currentColor;-webkit-mask:var(--ic-tick) center/contain no-repeat;mask:var(--ic-tick) center/contain no-repeat;display:inline-block;margin-right:6px;vertical-align:-.08em}
 .llshow{display:none!important}
 .llist.hid li:not(.shown) .llshow{display:inline-flex!important}
 .llist.hid li:not(.shown) .lla,.llist.hid li:not(.shown) .llw{display:none}
@@ -1110,6 +1132,16 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
 .fcleech{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--hint-bg);border:1px solid var(--hint-b);color:var(--hint-ink);font-size:14px}
 .fcleech .fclr{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.fcai{margin-top:10px;white-space:pre-line;color:var(--text);font-size:14.5px}.fcai.err{color:var(--bad)}
 .fcmk{margin-top:10px}
+/* Winter update (v116): calmer feedback. Neutral panel, a thin edge in the verdict color, one row of actions. */
+.fb.good,.fb.bad,.fb.look{background:transparent;border-color:var(--line);box-shadow:inset 3px 0 0 var(--fbc)}
+.fb.good{--fbc:var(--good)}.fb.bad{--fbc:var(--bad)}.fb.look{--fbc:var(--amber)}
+.fbacts{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 2px}
+.fbacts>.fba,.fbacts>.btn.sm{display:inline-flex;align-items:center;gap:7px;margin:0;padding:7px 12px;min-height:36px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--text)!important;font-family:inherit;font-size:13.5px;font-weight:600;line-height:1.2;text-decoration:none;cursor:pointer}
+.fbacts>.qdisc span:empty{display:none}
+.fbacts>.fba:hover,.fbacts>.btn.sm:hover{background:var(--hover)}.fbacts>.fba svg,.fbacts>.btn.sm svg{color:var(--mute)}
+.fbacts>.qdisc b{font-weight:600;color:var(--mute);margin-left:1px}
+.stats .keys{margin-left:0}@media (hover:none),(pointer:coarse){.stats{display:none}}
+
 .fcmine h2{margin-top:0}.fcform{display:grid;gap:10px;margin:10px 0 16px}.fcform label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
 .fcform textarea,.fcform select{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--text);font:inherit;font-size:14.5px;resize:vertical}
 .fcfa{display:flex;align-items:center;gap:8px;justify-content:flex-end}.fcfa .fcnote{flex:1;margin:0;color:var(--bad)}

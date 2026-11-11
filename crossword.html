@@ -267,7 +267,7 @@ function drawHead(){
  $('chip').innerHTML=t?'<span class="chip">'+ic('hourglass')+esc(t.label.replace(/\s*\(.*$/,''))+' · '+esc(Sched.when(t.date))+'</span>':'';
  const set=dayPuzzles(P.date),tb=$('tabs');
  tb.hidden=set.length<2;
- tb.innerHTML=set.map(x=>'<button role="tab" aria-selected="'+(x.id===P.id)+'" onclick="go(\''+x.id+'\')">'+esc(label(x))+(solved(x)?'<span class="ck">✓</span>':'')+'</button>').join('');
+ tb.innerHTML=set.map(x=>'<button role="tab" aria-selected="'+(x.id===P.id)+'" onclick="go(\''+x.id+'\')">'+esc(label(x))+(solved(x)?'<span class="ck"><svg class="i" width="12" height="12" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span>':'')+'</button>').join('');
 }
 function go(id){const p=ALL.find(x=>x.id===id);if(p&&p!==P){open(p);scrollTo({top:0,behavior:'smooth'})}}
 

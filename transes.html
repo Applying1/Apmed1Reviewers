@@ -192,8 +192,8 @@ function renderStrip(){const rs=document.getElementById('rstrip');if(!rs)return;
  if(!resume&&!stars.length){rs.hidden=true;rs.innerHTML='';return}
  let h='';
  if(resume)h+='<button type="button" class="rstc res" data-res="1">Resume p. '+at.p+chipLab(at.p)+'</button>';
- for(const p of stars)h+='<button type="button" class="rstc" data-p="'+p+'">★ p. '+p+chipLab(p)+'</button>';
- h+='<button type="button" class="rstx" aria-label="Hide the resume strip" title="Hide">×</button>';
+ for(const p of stars)h+='<button type="button" class="rstc" data-p="'+p+'"><svg class="i fill" width="12" height="12" aria-hidden="true"><use href="icons.svg#i-star"/></svg> p. '+p+chipLab(p)+'</button>';
+ h+='<button type="button" class="rstx" aria-label="Hide the resume strip" title="Hide"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>';
  rs.innerHTML=h;rs.hidden=false;
  const rb=rs.querySelector('[data-res]');if(rb)rb.addEventListener('click',()=>resumeTo(at));
  rs.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>gotoStar(+b.dataset.p)));
@@ -202,7 +202,7 @@ function renderStrip(){const rs=document.getElementById('rstrip');if(!rs)return;
 function drawTocStars(){const t=document.getElementById('toc');if(!t)return;t.querySelectorAll('.starsec').forEach(e=>e.remove());if(!window.Marks||!toc.length)return;
  const stars=Marks.get(file).stars.filter(p=>p<=pages.length);if(!stars.length)return;
  const d=document.createElement('div');d.className='starsec';
- d.innerHTML='<div class="th">Starred</div>'+stars.map(p=>'<div class="ch"><button class="row" onclick="starFromToc('+p+')"><span class="ct">★ p. '+p+chipLab(p)+'</span></button></div>').join('');
+ d.innerHTML='<div class="th">Starred</div>'+stars.map(p=>'<div class="ch"><button class="row" onclick="starFromToc('+p+')"><span class="ct"><svg class="i fill" width="12" height="12" aria-hidden="true"><use href="icons.svg#i-star"/></svg> p. '+p+chipLab(p)+'</span></button></div>').join('');
  t.insertBefore(d,t.firstChild);
 }
 function starFromToc(p){gotoStar(p);if(!wide())toggleToc(false)}
@@ -274,7 +274,7 @@ function markTab(){document.querySelectorAll('#tabs button').forEach(b=>{const o
 function setTab(i,page,y){const pg=curPage()+1;tab=i;const r=i>=0?tabRange(i):[1,pages.length];
  pages.forEach((p,k)=>{p.el.hidden=k+1<r[0]||k+1>r[1]});
  const end=document.getElementById('chend');
- if(i>=0){const nx=toc[i+1];end.innerHTML='<span>End of <b>'+(toc[i].num?'Chapter '+esc(toc[i].num):esc(toc[i].name))+'</b></span>'+(nx?'<button class="btn" onclick="setTab('+(i+1)+');scrollTo(0,0)">Next: '+(nx.num?'Ch '+esc(nx.num)+' · ':'')+esc(nx.name)+' →</button>':'');end.hidden=false}else end.hidden=true;
+ if(i>=0){const nx=toc[i+1];end.innerHTML='<span>End of <b>'+(toc[i].num?'Chapter '+esc(toc[i].num):esc(toc[i].name))+'</b></span>'+(nx?'<button class="btn" onclick="setTab('+(i+1)+');scrollTo(0,0)">Next: '+(nx.num?'Ch '+esc(nx.num)+' · ':'')+esc(nx.name)+'<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></button>':'');end.hidden=false}else end.hidden=true;
  try{localStorage.setItem('transes_tab_'+file,String(i))}catch(e){}
  markTab();layout();drawScope();if(scopeTab&&!document.getElementById('sbar').hidden&&document.getElementById('sq').value.trim())setTimeout(runSearch,80);
  const to=page!=null?page:i>=0?r[0]:pg;const el=pages[to-1]&&pages[to-1].el;

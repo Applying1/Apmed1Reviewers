@@ -136,7 +136,7 @@ dd.none{color:var(--faint);font-style:italic}
 </style></head><body>
 <main>
  <div class="top">
-  <a class="brand" href="./"><img src="icons/icon-192.png" alt="" width="32" height="32">← Courses</a>
+  <a class="brand" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg><img src="icons/icon-192.png" alt="" width="32" height="32">All courses</a>
  </div>
  <h1>Timetable</h1>
  <p class="term" id="term">&nbsp;</p>
@@ -217,7 +217,7 @@ function draw(){
  h+=cs.length?cs.map(c=>'<div class="item sw"'+hue(c)+'><div class="tm"><b>'+Sched.time(c.start).replace(' ','&nbsp;')+'</b>'+Sched.time(c.end).replace(' ','&nbsp;')+'</div><div class="card'+(c.cancelled?' off':'')+'">'+
    '<b>'+(c.extra?'<span class="tagx">'+esc(c.kind||'Make-up')+'</span> ':'')+esc(c.subj.name)+'</b>'+(c.changed?'<div class="k"><b class="newt">New time this week</b></div>':'')+'<div class="k">'+esc([c.cancelled?'Cancelled':'',kindOf(c),c.teacher,c.official?'on the sheet: '+c.official:''].filter(Boolean).join(' · '))+'</div>'+
    (c.topic?'<div class="tp">'+esc(c.topic)+'</div>':'<div class="tp none">Topic not posted yet</div>')+
-   (reviewer(c)?'<a href="'+reviewer(c)+'">Open reviewer →</a>':'')+'</div></div>').join('')
+   (reviewer(c)?'<a href="'+reviewer(c)+'">Open reviewer<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></a>':'')+'</div></div>').join('')
   :'<div class="empty">'+esc(free||'No classes')+'</div>';
  document.getElementById('day').innerHTML=h;
 }
@@ -240,7 +240,7 @@ function drawNow(){
  if(reviewer(c))el.setAttribute('href',reviewer(c));else el.removeAttribute('href');
  el.innerHTML='<span class="bar"></span><span><span class="lbl'+(c.now?' live':'')+'">'+(c.now?'Now · until '+Sched.time(c.end):'Next · '+Sched.when(c.date)+', '+Sched.time(c.start))+'</span>'+
   '<b>'+esc(c.subj.name)+(c.kind?' <span class="sub">'+esc(c.kind)+'</span>':'')+'</b><span class="sub">'+esc(c.topic||c.teacher||'')+'</span></span>'+
-  (reviewer(c)?'<span class="go">Open reviewer →</span>':'');
+  (reviewer(c)?'<span class="go">Open reviewer<svg class="i" width="13" height="13" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>':'');
  el.hidden=false}
 
 (async function(){
