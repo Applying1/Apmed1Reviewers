@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='114',APP_DATE='Nov 10, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='115',APP_DATE='Nov 11, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -154,7 +154,15 @@ function labelHTML(t){return isMol(t)?'<span class="molc" role="img" aria-label=
 function labelText(t){return isMol(t)?'(structure)':t}
 function ansHTML(t){const m=String(t).match(/^([A-E])\. (@m:.+)$/);return m?m[1]+'. <span class="molc sm" role="img" aria-label="Structure">'+(MOLS[m[2].slice(3)]||'')+'</span>':isMol(t)?labelHTML(t).replace('class="molc"','class="molc sm"'):esc(t)}
 function figHTML(cid){const c=byId[cid],f=c&&c.fig;if(!f)return '';const ks=[].concat(f);
- return '<figure class="qfig'+(ks.length>1?' two':'')+'" role="img" aria-label="'+esc(c.figlabel||(MATH?'Figure':'Structure'))+'">'+ks.map((k,i)=>(i?'<span class="figsep">'+esc(c.figsep||'and')+'</span>':'')+'<span class="mol"'+molW(k)+'>'+(MOLS[k]||'')+'</span>').join('')+'</figure>'}
+ return '<figure class="qfig'+(ks.length>1?' two':'')+figZoomAttr(ks)+'" role="img" aria-label="'+esc(c.figlabel||(MATH?'Figure':'Structure'))+'">'+ks.map((k,i)=>(i?'<span class="figsep">'+esc(c.figsep||'and')+'</span>':'')+'<span class="mol"'+molW(k)+'>'+(MOLS[k]||'')+'</span>').join('')+'</figure>'}
+// v115: a graph opens larger on a tap (class "zoom" + figZoom); the attribute string closes and reopens the class quote
+const isPlot=k=>/class='mplot'/.test(MOLS[k]||'');
+function figZoomAttr(ks){return ks.some(isPlot)?' zoom" tabindex="0" title="Tap to enlarge" onclick="figZoom(this,event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();figZoom(this,event)}':''}
+function figZoom(el,ev){if(ev)ev.stopPropagation();let m=$('figzoom');if(!m){m=document.createElement('div');m.className='modal figzoom';m.id='figzoom';m.hidden=true;document.body.appendChild(m)}
+ m.innerHTML='<div class="box" role="dialog" aria-modal="true" aria-label="Graph, enlarged"><div class="fzin">'+[...el.querySelectorAll('.mol')].map(x=>x.innerHTML).join('')+'</div><button class="btn" id="fzx">Close</button></div>';
+ const prev=document.activeElement,key=e=>{if(e.key==='Escape'||e.key==='Enter'){e.preventDefault();e.stopPropagation();done()}};
+ const done=()=>{if(m.hidden)return;m.hidden=true;ovClosed('figzoom');document.removeEventListener('keydown',key,true);try{prev&&prev.focus&&prev.focus({preventScroll:true})}catch(e){}};
+ m.hidden=false;ovOpen('figzoom',done);document.addEventListener('keydown',key,true);m.onclick=e=>{if(e.target===m||e.target.id==='fzx')done()};$('fzx').focus({preventScroll:true})}
 function molW(k){const m=/data-w='(\d+)'|viewBox='0 0 ([\d.]+)/.exec(MOLS[k]||'');return m?' style="flex-basis:'+Math.round(+(m[1]||m[2]))+'px"':''}
 const GOALS=CONFIG.recallGoals||[1,2];
 const MLETTERS='ABCDEFGHIJKL';
@@ -182,7 +190,8 @@ function numIn(s){s=String(s).replace(/[−–]/g,'-').replace(/(\d)[,\s](?=\d{3
  m=s.match(/(-?\d*\.?\d+)\s*\/\s*(\d*\.?\d+)/);if(m&&+m[2])return (+m[1])/(+m[2]);                          // 2/3
  m=s.match(/-?\d*\.?\d+(?:e-?\d+)?/i);return m?parseFloat(m[0]):NaN}
 function numOK(input,c){if(!c||c.num==null)return false;const v=numIn(input);if(isNaN(v))return false;const tol=c.tol!=null?c.tol:Math.max(.005,Math.abs(c.num)*.01);return Math.abs(v-c.num)<=tol+1e-12}
-function stepsHTML(c){return (c&&c.steps&&c.steps.length?'<ol class="steps">'+c.steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol>':'')+(c&&c.solfig&&MOLS[c.solfig]?'<figure class="qfig" role="img" aria-label="'+esc(c.solfiglabel||'Solution graph')+'"><span class="mol"'+molW(c.solfig)+'>'+MOLS[c.solfig]+'</span></figure>':'')}
+function stepsHTML(c){return (c&&c.solfig&&MOLS[c.solfig]?'<figure class="qfig'+figZoomAttr([c.solfig])+'" role="img" aria-label="'+esc(c.solfiglabel||'Solution graph')+'"><span class="mol"'+molW(c.solfig)+'>'+MOLS[c.solfig]+'</span></figure>':'')+
+ (c&&c.steps&&c.steps.length?'<ol class="steps">'+c.steps.reduce((L,s)=>{const f=isMol(s)&&MOLS[s.slice(3)];if(f&&L.length)L[L.length-1]+='<div class="stepfig">'+f+'</div>';else L.push(f?'<div class="stepfig">'+f+'</div>':esc(s));return L},[]).map(x=>'<li>'+x+'</li>').join('')+'</ol>':'')}
   // matching drills can have more choices than the A–E answer sheet
 const LETTERS='ABCDE',THEME_KEY='reviewer_theme';
 const $=id=>document.getElementById(id);
@@ -699,6 +708,7 @@ function cardHTML(){
  }
  // Current question
  const q=state.active,st=state.concepts[q.cid],fb=state.feedback,mixed=isX(s)||isCh(s);
+ if(wsLive(q,fb))return wsCardHTML(q,fb);
  return '<div class="qhead"><span class="kind">'+(mixed?esc(byId[q.cid].section)+' · ':'')+(isSelf(byId[q.cid])?'Written · check it yourself':isWr(byId[q.cid])?'Written answer':q.typed?'Type the answer':kindName(q.kind))+srcTag(q.cid)+'</span><span class="mastery">'+flagBtn("flagQ('live')")+starBtn(q.cid)+pips(st.right)+(st.right>=T()?'Mastered':'Recall '+st.right+' of '+T())+'</span></div>'+
   caseHTML(q.cid)+casePrev(q.cid)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+figHTML(q.cid)+(isSelf(byId[q.cid])?selfHTML(q,fb):q.typed?typedHTML(fb):choicesHTML(q,state.selected,fb,true))+
   (q.usedHint&&!fb?'<div class="hint"><b>Hint</b>'+esc(q.hint)+'</div>':'')+
@@ -768,7 +778,7 @@ function drawStudy(){
  if(!$('dots').hidden){let list=items.map(c=>({c,r:Math.min(state.concepts[c.id].right,T())}));if(rand)list.sort((a,b)=>b.r-a.r);
   $('dots').innerHTML=list.map(({c,r})=>'<i class="'+(r>=T()?'full':r>0?'half':'')+(!rand&&state.active&&state.active.cid===c.id&&view==null?' cur':'')+'"></i>').join('')}
 
- const card=$('card');setHTML(card,cardHTML());card.classList.toggle('fbnew',!!(state.feedback&&view==null&&Date.now()-(state.feedback.at||0)<900));
+ const card=$('card');setHTML(card,cardHTML());wsFill();card.classList.toggle('fbnew',!!(state.feedback&&view==null&&Date.now()-(state.feedback.at||0)<900));
  const ck=s+'|'+view+'|'+(state.pmatch?'m'+state.pmatch.i:'')+(state.active?.cid||'done')+'|'+(state.concepts[state.active?.cid]?.seen??'');
  if(ck!==lastCardKey&&!reduceMotion){if(card.animate)card.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});else{card.classList.remove('enter');void card.offsetWidth;card.classList.add('enter')}}   // no forced layout (v70)
  lastCardKey=ck;
@@ -1449,12 +1459,14 @@ function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.l
  const qsBuilt=picked.map(c=>exQ(makeQuestion(c))).concat(mq,vs.map(c=>exQ(makeQuestion(c),true)));HARD=LONG=INEX=false;
  state.exam={qs:qsBuilt,easy:easy?1:0,
   ans:{},i:0,start:Date.now(),limit:exMinutes(st,n)*60000,done:false,sheet:st.format==='sheet'||undefined,paperless:st.format==='paperless'||undefined};
+ if(!state.exam.sheet&&wsExamOK(qsBuilt))state.exam.ws=1;
  save();drawExam();window.scrollTo(0,0)}
 function drawExamRun(){const ex=state.exam,q=ex.qs[ex.i],n=ex.qs.length,answered=Object.keys(ex.ans).length;if(q.ident)setTimeout(()=>{const i=$('extyped');if(i)i.focus({preventScroll:true})},0);
  if(ex.limit&&exLeft()<=0){finishExam(true);return}
  $('extitle').textContent='Question '+(ex.i+1)+' of '+n;
  if(ex.limit){const t=$('extimer');t.hidden=false;const tick=()=>{const left=exLeft();t.textContent=clock(left);t.classList.toggle('low',left<60000);if(left<=0)finishExam(true)};tick();exTick=setInterval(tick,1000)}
  if(ex.sheet){$('extitle').textContent=n+' '+ITEMS;$('exbody').innerHTML=sheetHTML(ex);return}
+ if(ex.ws){const G=wsGroups(ex).length,b=$('exbody'),h=wsExamHTML(ex);$('extitle').textContent=G+' problem'+(G>1?'s':'')+' · '+n+' answers';if(b._ws!==h||!b.querySelector('.wsx')){b.innerHTML=h;b._ws=h}wsExSync();return}
  $('exbody').innerHTML='<div class="meter"><div class="labels"><span><b>'+answered+'</b> of '+n+' answered</span><span>Answers are shown at the end</span></div><div class="track"><div class="fill" style="width:'+(100*answered/n)+'%"></div></div></div>'+
   '<section class="card" id="excard"><div class="qhead"><span class="kind">'+(q.self?'Written · you check it at the end':q.wr?'Written answer'+(byId[q.cid].part?' · part '+byId[q.cid].part+' of '+byId[q.cid].parts:''):ex.paperless?(q.vsa?'VSA · type your answer':q.mt?'Matching type':'Multiple choice'):exKind(q)+srcTag(q.cid))+'</span></div>'+caseHTML(q.cid)+caseMine(ex,ex.i)+'<p class="prompt">'+stemHTML(q.stem)+'</p>'+(q.mt?'<p class="mgi">Options may be used more than once.</p>':'')+figHTML(q.cid)+
   (q.self?'<div class="typein wr"><textarea id="extyped" class="typed wrin" rows="4" placeholder="Write your answer, or work on paper and tap Done on paper" aria-label="Your answer" oninput="exType(this.value)">'+esc(ex.ans[ex.i]&&ex.ans[ex.i]!==ONPAPER?ex.ans[ex.i]:'')+'</textarea><p class="pqid"><button class="link" onclick="exPaper()">'+(ex.ans[ex.i]===ONPAPER?'✓ Done on paper':'Done on paper')+'</button> · You\'ll compare it with the answer on the results page.</p></div>'
@@ -1510,7 +1522,7 @@ function finishExam(timeUp){const ex=state.exam;if(!ex||ex.done)return;const n=e
   k.seen++;if(ok){state.correct++;masteryUp(k);delete k.back}else{k.wrong++;state.wrong++;masteryDown(k);relearn(k)}
   crowdAdd(q.cid,!ok,!ok&&!q.ident?(q.choices.find(x=>x.letter===a)||{}).label:'');state.history.push({cid:q.cid,correct:ok,lookup:false,mode:'EXAM'})});
  dailyAdd(ex.qs.filter((q,j)=>{const a=ex.ans[j];return !(a==null||a===''||q.mt)}).length);badgeAdd('exams',1);
- ex.right=right;ex.byCh=byCh;if(100*right/n>=(Object.assign({pass:60},CONFIG.grading||{})).pass)setTimeout(()=>celebrate('exam'),380);
+ ex.right=right;ex.byCh=byCh;if(ex.ws)ex.review=true;if(100*right/n>=(Object.assign({pass:60},CONFIG.grading||{})).pass)setTimeout(()=>celebrate('exam'),380);
  state.exams=(state.exams||[]).concat({right,total:n,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),time:clock(ex.end-ex.start),chal:ex.chal?1:0,easy:ex.easy?1:0}).slice(-20);
  // A challenge keeps your first score; later tries are shared as retakes.
  if(ex.chal){state.chalLog=state.chalLog||{};const k=ex.chal.key;ex.retake=!!state.chalLog[k];if(!ex.retake)state.chalLog[k]={right,total:n}}
@@ -1531,14 +1543,14 @@ function drawExamResult(){const ex=state.exam,n=ex.qs.length,pct=Math.round(100*
    '<div class="exmk"><button class="btn'+(m===0?' on':'')+'" onclick="exMark(\''+esc(q.cid)+'\',0)" aria-pressed="'+(m===0)+'">I missed it</button><button class="btn'+(m===1?' on':'')+'" onclick="exMark(\''+esc(q.cid)+'\',1)" aria-pressed="'+(m===1)+'">I got it</button></div></article>'}).join('')+'</section>':'';
  $('exbody').innerHTML='<section class="card hero exres"><div>'+(ex.chal?'<div class="eyebrow">'+esc(ex.chal.label)+(ex.retake?' · retake':'')+'</div>':'')+gradeHTML(ex.right,n)+'<div class="big num">'+pct+'%<small>'+ex.right+' of '+n+' right</small></div>'+(ex.chal&&ex.chal.by&&ex.chal.sc?'<p class="chalbeat">'+(ex.right>ex.chal.sc?'🎉 You beat <b>'+esc(ex.chal.by)+'</b>\'s '+ex.chal.sc+' of '+n+'!':ex.right===ex.chal.sc?'🤝 Tied with <b>'+esc(ex.chal.by)+'</b> at '+ex.chal.sc+' of '+n+(ex.chal.tm&&ex.end-ex.start<ex.chal.tm?', and you were faster!':'.'):'<b>'+esc(ex.chal.by)+'</b>\'s '+ex.chal.sc+' of '+n+' stays on top. Review your mistakes and try again!')+'</p>':'')+'<p class="sub">Time: '+clock(ex.end-ex.start)+(ex.timeUp?' (time ran out)':'')+' · '+(wrong.length?wrong.length+' to review':'no mistakes')+'</p>'+(ex.chal?'<div class="sqrow" role="img" aria-label="Green: right, red: wrong, white: skipped">'+squares(ex)+'</div>':'')+'</div></section>'+
   chk+'<section class="panel" style="margin-top:12px"><h2>By '+unitW+'</h2><div class="bars">'+Object.entries(ex.byCh).map(([ch,[r,t]])=>'<div class="bar-row"><span class="n"><span>'+esc(ch)+'</span>'+esc(CH_NAMES[ch]||'')+'</span><span class="p">'+r+' of '+t+'</span><span class="track"><span class="fill" style="display:block;width:'+(100*r/t)+'%"></span></span></div>').join('')+'</div></section>'+
-  '<div class="exacts">'+(ex.chal?'<button class="btn primary" onclick="copyChalScore()">Copy my score</button><button class="btn" onclick="copyChalLink(state.exam.chal)">Copy challenge link</button>':'')+(wrong.length?'<button class="btn'+(ex.chal?'':' primary')+'" onclick="toggleExReview()">'+(ex.review?'Hide my mistakes':'Review my mistakes ('+wrong.length+')')+'</button>':'')+
+  '<div class="exacts">'+(ex.chal?'<button class="btn primary" onclick="copyChalScore()">Copy my score</button><button class="btn" onclick="copyChalLink(state.exam.chal)">Copy challenge link</button>':'')+(ex.ws?'<button class="btn" onclick="toggleExReview()">'+(ex.review?'Hide my paper':'Show my checked paper')+'</button>':wrong.length?'<button class="btn'+(ex.chal?'':' primary')+'" onclick="toggleExReview()">'+(ex.review?'Hide my mistakes':'Review my mistakes ('+wrong.length+')')+'</button>':'')+
   (wrong.length&&state.prefs.missed?'<button class="btn" onclick="selectSection(\'MISSED\')">Drill missed '+ITEMS+'</button>':'')+'<button class="btn" onclick="newExam()">'+(ex.chal?'Done':'New exam')+'</button></div>'+
-  (ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.ident?null:q.choices.find(c=>c.letter===a);
+  (ex.review&&ex.ws?wsReviewHTML(ex):ex.review?'<div class="exreview">'+wrong.map(({q,j,a})=>{const ok=q.choices.find(c=>c.correct),mine=q.ident?null:q.choices.find(c=>c.letter===a);
    return '<article class="panel"><div class="qhead"><span class="kind">Question '+(j+1)+' · '+(q.mt?exKind(q):esc(byId[q.cid].section))+'</span><span class="mastery">'+flagBtn("flagQ('ex',"+j+")")+'</span></div>'+caseHTML(q.cid)+'<p class="exq">'+esc(q.stem)+'</p>'+figHTML(q.cid)+(q.wr&&a?wrCheck(a,byId[q.cid].wr).html:'')+
     '<p class="exa bad"'+(q.wr?' style="white-space:pre-line"':'')+'><b>Your answer:</b> '+(q.ident&&a?esc(a):mine?mine.letter+'. '+labelHTML(mine.label):a?esc(a)+' (not one of the choices)':'skipped')+'</p><p class="exa good"><b>Correct:</b> '+(q.ident?(q.wr?ansHTML(ok.label):esc(ok.label)):ok.letter+'. '+labelHTML(ok.label))+'</p>'+(q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')+(mine&&!mine.correct&&whyNot(q.cid,mine.label)?'<p class="exwhy"><b>Why not your choice:</b> '+esc(whyNot(q.cid,mine.label))+'</p>':'')+stepsHTML(byId[q.cid])+'</article>'}).join('')+'</div>':'')}
 function toggleExReview(){state.exam.review=!state.exam.review;save();drawExam()}
 function newExam(){state.exam=null;save();draw();window.scrollTo(0,0)}
-function examKey(e){const ex=state.exam;if(!ex||ex.done||ex.sheet)return false;const k=e.key;
+function examKey(e){const ex=state.exam;if(!ex||ex.done||ex.sheet||ex.ws)return false;const k=e.key;
  if(/^[a-e1-5]$/i.test(k)){if(ex.qs[ex.i].ident||ex.qs[ex.i].self)return false;const l=/^[1-5]$/.test(k)?LETTERS[+k-1]:k.toUpperCase();if(ex.qs[ex.i].choices.some(c=>c.letter===l)){exAnswer(l);return true}return false}
  if(k==='ArrowLeft'){exGo(-1);return true}
  if(k==='ArrowRight'||(k==='Enter'&&e.target.tagName!=='BUTTON')){if(ex.i<ex.qs.length-1)exGo(1);else finishExam();return true}
@@ -1889,7 +1901,7 @@ function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r)
   if(add.length){state.missLog=(state.missLog||[]).concat(add).sort((a,b)=>a[2]-b[2]).slice(-MISS_MAX);changed=true}}
  if(r.prefs&&(r.prefsAt||0)>(state.prefsAt||0)){state.prefs=Object.assign({},DEFAULT_PREFS,r.prefs);if(!state.prefs.blurtV75){state.prefs.blurt=true;state.prefs.blurtV75=1}if(r.exSetup)state.exSetup=r.exSetup;state.prefsAt=r.prefsAt;prefSigLast=prefSig();refreshBank();changed=true}
  // Continue on the question the other device showed last, unless you are in the middle of answering one here.
- const C=r.cur,typing=$('typed')&&$('typed').value.trim();
+ const C=r.cur,typing=($('typed')&&$('typed').value.trim())||wsTyping();
  if(C&&(C.at||0)>(state.curAt||0)&&!(state.selected&&!state.feedback)&&!typing&&!state.pmatch&&validSection(C.section)&&(!C.active||byId[C.active.cid])){
   Object.assign(state,{section:C.section,active:C.active,feedback:C.feedback,selected:C.feedback?C.selected:null,pass:C.pass,starDone:C.starDone,dueDone:C.dueDone,classDone:C.classDone,curAt:C.at});
   view=null;if(!isX(C.section))openCh.add(secCh(C.section));changed=true}
@@ -1947,6 +1959,7 @@ function drawPrefs(){
   row('Cross out choices','Rule out answers while you think: right-click a choice, tap its ×, or press Shift + its letter.',sw(state.prefs.crossout,"setPref('crossout',"+!state.prefs.crossout+")",'Cross out choices'))+
   row('Lucky guess button','After a correct answer, undo the mastery point if you were only guessing, so the '+ITEM+' stays in your queue.',sw(state.prefs.lucky,"setPref('lucky',"+!state.prefs.lucky+")",'Lucky guess button'))+
   row('How sure are you?','Answer with <b>Sure</b> or <b>Not sure</b> instead of Check answer. A right guess comes back like a lucky guess; a wrong answer you were sure of comes back sooner and is marked in Needs work. Confident mistakes are the ones you fix best once you see the answer.',sw(state.prefs.sure,"setPref('sure',"+!state.prefs.sure+")",'How sure are you'))+
+  (BANK.some(c=>c.case&&c.wr)?row('Test sheet','Problems with written parts are answered like the paper quiz: every part on one sheet, checked all at once, in practice and in the mock exam. Turn this off to go one part at a time.',sw(wsPrefOn(),"setPref('sheet',"+!wsPrefOn()+")",'Test sheet')):'')+
   row('Why did I miss it?','After a wrong answer, tap why: didn&#39;t know, mixed it up, misread or careless. The dashboard shows what trips you up most and lets you practice your mix-ups.',sw(missOn(),"setPref('missTags',"+!missOn()+")",'Why did I miss it'))+
   (cloudOn()?row('AI study help','One-tap buttons after an answer: explain it simply, give a memory trick, compare your choice with the answer, or quiz you on a similar question. Also adds an AI helper bar on Notes and Flashcards.',sw(aiOn(),"setPref('ai',"+!aiOn()+")",'AI study help')):'')+
   (NOTES_PARSED.length?row('Blurt','On the Notes page: write everything you remember about a '+unitW+' with the notes hidden, then check it against the notes. Recalling from a blank page is the strongest kind of practice.',sw(state.prefs.blurt,"setPref('blurt',"+!state.prefs.blurt+")",'Blurt')):'')+
@@ -1997,6 +2010,11 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ ...(BANK.some(c=>c.case&&c.wr)?[{v:'115',date:'Nov 11, 2026',title:'Test sheet and clearer graphs',items:[
+  'Problems with written parts are now a <b>test sheet</b>: the problem on top, a box for every part, and one <b>Check my work</b> for all of them, like the paper quiz. The mock quiz is one whole paper you submit at the end.',
+  'After checking you see each part marked, the answer key, and the worked solution once, with the corner values in a table.',
+  'Graphs are easier to read on a phone: each constraint has its own color and dash style with a legend, small teeth show the allowed side, and a tap opens the graph larger.',
+  'Prefer one part at a time? Turn off <b>Test sheet</b> in Personalize.']}]:[]),
  {v:'114',date:'Nov 10, 2026',title:'Blurt checked by AI',items:[
   'Blurt now has AI read what you wrote: it gives credit for ideas in your own words or in Taglish, marks points you only partly got, and points out anything you wrote that the notes say is wrong.',
   'Up to 60 AI checks a day (10 with Claude Haiku, then 50 with DeepSeek). After that, the keyword checker takes over as before.']},
@@ -2379,8 +2397,8 @@ function wrCheck(input,wr){const s=String(input||''),L=[];let ok=false;
   L.push(wrLi(vOK,isNaN(v)?'Give the value, e.g. P = 460':vOK?'Value is right':'Value isn\'t the '+(wr.sense==='min'?'minimum':'maximum')));
   if(pts.length)L.push(wrLi(pOK,pOK?'Point is right':'Wrong point'));else if(wr.pt)L.push('<li class="tip">Also say where: at ('+wrFmt(wr.pt[0])+', '+wrFmt(wr.pt[1])+').</li>')}
  return {ok,html:'<ul class="wrn">'+L.join('')+'</ul>'}}
-function wrKeys(){return '<div class="wrkeys" aria-label="Symbols">'+['≤','≥','(',')',',','/'].map(k=>'<button type="button" onmousedown="event.preventDefault()" onclick="wrIns(\''+k+'\')">'+k+'</button>').join('')+'</div>'}
-function wrIns(k){const t=document.querySelector('textarea.wrin, input.wrin');if(!t)return;const a=t.selectionStart??t.value.length,b=t.selectionEnd??a;t.value=t.value.slice(0,a)+k+t.value.slice(b);t.selectionStart=t.selectionEnd=a+k.length;t.focus();t.dispatchEvent(new Event('input'))}
+function wrKeys(){return '<div class="wrkeys" aria-label="Symbols">'+['≤','≥','(',')',',','/'].map(k=>'<button type="button" onmousedown="event.preventDefault()" onclick="wrIns(\''+k+'\',this)">'+k+'</button>').join('')+'</div>'}
+function wrIns(k,btn){const box=btn&&btn.closest&&btn.closest('.typein'),t=(box&&box.querySelector('textarea.wrin, input.wrin'))||document.querySelector('textarea.wrin, input.wrin');if(!t)return;const a=t.selectionStart??t.value.length,b=t.selectionEnd??a;t.value=t.value.slice(0,a)+k+t.value.slice(b);t.selectionStart=t.selectionEnd=a+k.length;t.focus();t.dispatchEvent(new Event('input'))}
 function wrBox(c,id,val,extra){const multi=c.wr.t==='cons'||c.wr.t==='pts';
  return '<div class="typein wr"><textarea id="'+id+'" class="typed wrin" rows="'+(c.wr.t==='cons'?4:2)+'" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+esc(WR_PH[c.wr.t])+'" aria-label="Your answer"'+(extra||'')+'>'+esc(val||'')+'</textarea>'+
   '<div class="wrfoot"><span>'+esc(WR_TIP[c.wr.t])+(multi?' Ctrl+Enter checks it.':'')+'</span>'+wrKeys()+'</div></div>'}
@@ -2396,6 +2414,79 @@ function casePrev(cid){const c=byId[cid];if(!c||!c.case||!(c.part>1))return '';c
 function caseMine(ex,i){const c=byId[ex.qs[i].cid];if(!c||!c.case||!(c.part>1))return '';const rows=ex.qs.map((x,j)=>({j,p:byId[x.cid]})).filter(o=>o.j!==i&&o.p&&o.p.case===c.case&&o.p.part<c.part).sort((a,b)=>a.p.part-b.p.part);if(!rows.length)return '';
  return '<div class="cprev"><div class="cph">Your earlier parts</div>'+rows.map(o=>'<div class="cprow"><span class="cpl">Part '+o.p.part+' · '+esc(partTitle(o.p))+'</span><span class="cpa mine">'+(ex.ans[o.j]?esc(ex.ans[o.j]):'<i>not answered yet</i>')+'</span></div>').join('')+'</div>'}
 const nextPart=cid=>{const c=byId[cid];return !!c&&!!c.case&&poolFor(state.section).some(x=>x.case===c.case&&(x.part||0)>(c.part||0))};
+/* ---------- v115: test sheet (Personalize: prefs.sheet, on by default) ----------
+   A problem with written parts is answered like the paper quiz: the problem on top, every part with its own answer box, one check
+   for all of them. Practice: wsCheck() records each part through record(), exactly as if they were answered one after another, so
+   mastery, relearning, Missed, the log and class stats keep their shape; the last part's feedback carries ws = the part ids that
+   were checked together. Mock exam: state.exam.ws draws the whole paper on one page; answers still go to exam.ans[j].
+   Drafts (WSV) live in memory only and are put back after a redraw. */
+const wsPrefOn=()=>state.prefs.sheet!==false;
+let WSB=false;const WSV={};
+const wsAsk=s=>String(s||'').replace(/^Part \d+ of \d+\s*·\s*/,'');
+function wsParts(c){if(!c||!c.case)return [];return poolFor(state.section).filter(x=>x.case===c.case&&(x.part||0)>=(c.part||0)).sort((a,b)=>(a.part||0)-(b.part||0))}
+function wsLive(q,fb){if(!q||view!=null||state.pmatch)return false;if(fb)return Array.isArray(fb.ws);if(!wsPrefOn())return false;const P=wsParts(byId[q.cid]);return P.length>1&&P.every(isWr)}
+const wsTyping=()=>!!document.querySelector('#card textarea[data-ws]')&&Object.values(WSV).some(v=>v&&v.trim());
+function wsFill(){document.querySelectorAll('#card textarea[data-ws]').forEach(t=>{const v=WSV[t.dataset.ws];if(v&&!t.value)t.value=v})}
+function wsRowHTML(title,mine,ok,note,key,extra){return '<section class="wsp '+(ok?'ok':'bad')+'"><h3><span class="wsn" aria-hidden="true">'+(ok?'✓':'✗')+'</span><span class="wst">'+title+'</span><span class="wsv">'+(ok?'Right':'Missed')+'</span></h3>'+
+ (mine?'<div class="typein done wr '+(ok?'ok':'bad')+'"><span class="yl">You wrote</span><b class="wrout">'+mine+'</b>'+(note||'')+'</div>':'<p class="pqid">Left blank.</p>')+
+ '<div class="wskey"><span class="yl">Answer</span><b>'+key+'</b></div>'+(extra||'')+'</section>'}
+function wsSolHTML(c,open){const h=stepsHTML(c);return h?'<details class="wssol"'+(open?' open':'')+'><summary>Worked solution</summary>'+h+'</details>':''}
+function wsLogOf(id){for(let i=state.log.length-1;i>=0&&i>=state.log.length-12;i--){const e=state.log[i];if(e&&e.q&&e.q.cid===id)return e}return null}
+function wsCardHTML(q,fb){const c=byId[q.cid],s=state.section,mixed=isX(s)||isCh(s);
+ const head=n=>'<div class="qhead"><span class="kind">'+(mixed?esc(c.section)+' · ':'')+'Test sheet · '+n+' parts'+srcTag(q.cid)+'</span><span class="mastery">'+flagBtn("flagQ('live')")+'</span></div>';
+ if(!fb){const P=wsParts(c);
+  return head(P.length)+caseHTML(q.cid)+casePrev(q.cid)+'<p class="wsnote">Work the problem on paper, write each answer in its box, then check them all at once.</p><div class="ws">'+
+   P.map(p=>'<section class="wsp"><h3><span class="wsn">'+p.part+'</span><span class="wst">'+stemHTML(wsAsk(p.q))+'</span></h3>'+figHTML(p.id)+
+    wrBox(p,'ws_'+p.part,'',' data-ws="'+esc(p.id)+'" oninput="WSV[this.dataset.ws]=this.value" onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();wsCheck()}"')+'</section>').join('')+'</div>'+
+   '<div class="actions">'+backBtn()+'<span class="aux"></span><button class="btn primary" id="go" onclick="wsCheck()">Check my work</button></div>'}
+ const rows=fb.ws.map(id=>({p:byId[id],e:wsLogOf(id)})).filter(r=>r.p&&r.e&&r.e.fb),right=rows.filter(r=>r.e.fb.correct).length,n=rows.length;
+ const solC=rows.map(r=>r.p).reverse().find(p=>p.solfig)||c;
+ return head(n)+caseHTML(q.cid)+'<div class="wsscore'+(right===n?' ok':'')+'" role="status"><b>'+right+' of '+n+'</b> parts right'+(right===n?' · full marks':'')+'</div><div class="ws done">'+
+  rows.map(r=>{const f=r.e.fb;return wsRowHTML(esc(partTitle(r.p)),f.typed?esc(f.typed)+(f.override?'</b><span class="ov">counted as right</span><b>':''):'',f.correct,f.wrnote,ansHTML(r.p.a),
+   f.correct||!f.typed?'':'<p class="wsfix"><button class="link" onclick="wsCount(\''+esc(r.p.id)+'\')" title="The checker reads math by meaning, but it can still miss a correct answer">I was right, count it</button></p>')}).join('')+'</div>'+
+  wsSolHTML(solC,right<n)+(right<n?'<p class="pqid">The parts you missed come back in a few questions.</p>':'')+
+  '<div class="actions">'+backBtn()+'<span class="aux"></span><button class="btn primary" id="go" onclick="next()">Next problem <kbd>Enter</kbd></button></div>'}
+function wsCheck(sure){const q=state.active;if(view!=null||state.feedback||!q||WSB)return;const P=wsParts(byId[q.cid]);if(P.length<2)return;
+ const vals=P.map(p=>(($('ws_'+p.part)||{}).value||WSV[p.id]||'').trim()),blank=vals.filter(v=>!v).length;
+ if(blank===P.length){const f=$('ws_'+P[0].part);if(f)f.focus();return}
+ if(blank&&!sure){ask(blank+' part'+(blank>1?'s are':' is')+' still blank. Blank parts count as missed.',{title:'Check it now?',ok:'Check',no:'Keep working'}).then(y=>{if(y)wsCheck(true)});return}
+ const ids=P.map(p=>p.id);let right=0;WSB=true;
+ try{P.forEach((p,i)=>{const qq=i?makeQuestion(p):q;qq.typed=true;state.active=qq;state.feedback=null;const res=wrCheck(vals[i],p.wr),target=qq.choices.find(x=>x.correct);
+   state.selected=res.ok?target.letter:null;record(res.ok,false);if(res.ok)right++;
+   Object.assign(state.feedback,{typed:vals[i],correctLabel:target.label,wrnote:vals[i]?res.html:'',ws:ids});const last=state.log[state.log.length-1];if(last)last.fb=state.feedback;delete WSV[p.id]})}
+ finally{WSB=false}
+ buzz(right===P.length);save();draw();
+ requestAnimationFrame(()=>{const el=document.querySelector('#card .wsscore');if(el&&el.getBoundingClientRect().top<0)el.scrollIntoView({block:'center',behavior:reduceMotion?'auto':'smooth'})})}
+// A part marked wrong that was really right (same bookkeeping as overrideTyped, for any part of the sheet).
+function wsCount(id){const cur=state.feedback;if(view!=null||!cur||!Array.isArray(cur.ws)||!cur.ws.includes(id))return;const e=wsLogOf(id),fb=e&&e.fb,k=state.concepts[id];if(!fb||fb.correct||!fb.typed||!k)return;
+ if(freeOn()){state.wrong=Math.max(0,state.wrong-1);state.correct++;state.pass.right=(state.pass.right||0)+1}
+ else{delete k.back;k.wrong=Math.max(0,k.wrong-1);state.wrong=Math.max(0,state.wrong-1);if(fb.prev){k.right=fb.prev.right;k.srs=fb.prev.srs}
+  fb.prev={right:k.right,srs:k.srs?{...k.srs}:null};masteryUp(k);state.correct++;if(onPass(state.section))state.pass.miss=state.pass.miss.filter(x=>x!==id);
+  for(let i=state.history.length-1;i>=0&&i>=state.history.length-12;i--)if(state.history[i].cid===id){state.history[i].correct=true;break}
+  const kh=k.history[k.history.length-1];if(kh)kh.correct=true}
+ fb.correct=true;fb.override=true;if(cur!==fb&&state.active&&state.active.cid===id){cur.correct=true;cur.override=true}save();draw()}
+// ---- mock exam as one paper
+const wsExamOK=qs=>wsPrefOn()&&qs.some(q=>q.wr&&byId[q.cid]&&byId[q.cid].case)&&qs.every(q=>!q.mt&&!q.self&&byId[q.cid]);
+function wsGroups(ex){const G=[];ex.qs.forEach((q,j)=>{const c=byId[q.cid],g=G[G.length-1];if(c&&c.case&&g&&g.id===c.case)g.js.push(j);else G.push({id:c&&c.case||null,js:[j]})});return G}
+function wsExamHTML(ex){const n=ex.qs.length;
+ const part=(j,inCase)=>{const q=ex.qs[j],c=byId[q.cid];
+  return '<section class="wsp" id="wsq'+j+'"><h3><span class="wsn">'+(inCase?c.part||'':'•')+'</span><span class="wst">'+stemHTML(inCase?wsAsk(q.stem):q.stem)+'</span></h3>'+figHTML(q.cid)+
+   (q.wr?wrBox(c,'wsa'+j,'',' data-j="'+j+'" oninput="wsExType('+j+',this.value)"')
+    :q.ident?'<div class="typein"><input id="wsa'+j+'" data-j="'+j+'" class="typed" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer" aria-label="Your answer" oninput="wsExType('+j+',this.value)"></div>'
+    :'<div class="choices'+(molq(q)?' ichoices':'')+'">'+q.choices.map(x=>'<button class="choice" data-l="'+x.letter+'" onclick="wsExPick('+j+',\''+x.letter+'\')"><span class="key">'+x.letter+'</span><span class="lab">'+labelHTML(x.label)+'</span></button>').join('')+'</div>')+'</section>'};
+ return '<div class="wsx"><p class="lede wsnote">This is the whole paper. Work each problem, write every answer in its box, and submit when you are done. Answers are checked at the end.</p>'+
+  wsGroups(ex).map((g,i)=>'<section class="card wsprob"><div class="pqh"><b>Problem '+(i+1)+'</b><span class="kind">'+(g.js.length>1?g.js.length+' parts':exKind(ex.qs[g.js[0]]))+'</span></div>'+(g.id?caseHTML(ex.qs[g.js[0]].cid):'')+'<div class="ws">'+g.js.map(j=>part(j,!!g.id)).join('')+'</div></section>').join('')+
+  '<div class="wsbar"><span id="wsct"></span><span class="wsacts"><button class="link danger" onclick="discardExam()" title="Throw this exam away: nothing from it is saved">Discard</button><button class="btn primary" onclick="finishExam()">Submit paper</button></span></div></div>'}
+function wsExSync(){const ex=state.exam;if(!ex)return;ex.qs.forEach((q,j)=>{const a=ex.ans[j],el=$('wsa'+j);if(el){if(a!=null&&el.value!==a&&document.activeElement!==el)el.value=a}
+  else document.querySelectorAll('#wsq'+j+' .choice').forEach(b=>b.classList.toggle('sel',b.dataset.l===a))});
+ const c=$('wsct');if(c)c.textContent=Object.keys(ex.ans).length+' of '+ex.qs.length+' answered'}
+function wsExType(j,v){const ex=state.exam;if(!ex||ex.done)return;if(v.trim())ex.ans[j]=v;else delete ex.ans[j];save();const c=$('wsct');if(c)c.textContent=Object.keys(ex.ans).length+' of '+ex.qs.length+' answered'}
+function wsExPick(j,l){const ex=state.exam;if(!ex||ex.done)return;if(ex.ans[j]===l)delete ex.ans[j];else ex.ans[j]=l;save();wsExSync()}
+function wsReviewHTML(ex){return '<div class="exreview wsx">'+wsGroups(ex).map((g,i)=>{let right=0;const rows=g.js.map(j=>{const q=ex.qs[j],c=byId[q.cid],a=ex.ans[j],ok=exOK(q,a),key=q.choices.find(x=>x.correct)||{},mine=q.ident?null:q.choices.find(x=>x.letter===a);if(ok)right++;
+   return wsRowHTML(g.id&&c.wr?esc(partTitle(c)):stemHTML(q.stem),q.ident?(a?esc(a):''):mine?mine.letter+'. '+labelHTML(mine.label):'',ok,q.wr&&a?wrCheck(a,c.wr).html:'',q.ident?ansHTML(key.label):key.letter+'. '+labelHTML(key.label),
+    !g.id&&q.why?'<p class="exwhy">'+esc(q.why)+'</p>':'')}).join('');
+  const cs=g.js.map(j=>byId[ex.qs[j].cid]),solC=cs.slice().reverse().find(c=>c.solfig)||cs.find(c=>c.steps)||cs[0];
+  return '<article class="panel wsprob"><div class="pqh"><b>Problem '+(i+1)+'</b><span class="kind">'+right+' of '+g.js.length+' right</span><span class="mastery">'+flagBtn("flagQ('ex',"+g.js[0]+")")+'</span></div>'+(g.id?caseHTML(ex.qs[g.js[0]].cid):'')+'<div class="ws done">'+rows+'</div>'+wsSolHTML(solC,right<g.js.length)+'</article>'}).join('')+'</div>'}
 function caseHTML(cid){const c=byId[cid];return c&&c.cstem?'<div class="cstem"><span class="ck">'+esc(c.clabel||'Problem')+'</span>'+stemHTML(c.cstem)+'</div>':''}
 
 // v69 (3) confetti for milestones: a short burst of the theme's colors (skipped with reduced motion)
@@ -2507,7 +2598,7 @@ function record(correct,lookup,conf){
  if(!free)state.qn=(state.qn||0)+1;
  const hinted=correct&&!free&&state.prefs.strict&&q.usedHint;   // stricter mastery: right with a hint is practice, not a recall
  if(!free)if(correct){if(!hinted)masteryUp(k);state.correct++;delete k.back}else{if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}masteryDown(k);relearn(k)}
- if(!lookup)buzz(correct);
+ if(!lookup&&!WSB)buzz(correct);
  if(correct&&!free&&c0&&!wasSec&&secAll.every(isM))setTimeout(()=>celebrate(!wasCh&&chAll.every(isM)?'lesson':'section'),280);
  const own=choice&&!choice.correct&&choice.owner?byId[choice.owner]:null,dw=choice&&!choice.correct?whyNot(q.cid,choice.label):'';
  state.feedback={at:Date.now(),correct,lookup,prev,hinted,correctLabel:target.letter+'. '+target.label,wrongExplain:dw||(own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':'')};
@@ -2519,6 +2610,7 @@ function record(correct,lookup,conf){
  if(state.history.length>600)state.history=state.history.slice(-600);
  state.log.push({sec:state.section,sel:state.selected,fb:state.feedback,q:{cid:q.cid,kind:q.kind,stem:q.stem,why:q.why===((byId[q.cid]||{}).why||'')?undefined:q.why,choices:q.choices.map(({letter,label,correct})=>({letter,label,correct}))}});
  if(state.log.length>150)state.log=state.log.slice(-150);
+ if(WSB)return;   // the test sheet records its parts one after another and draws once at the end
  save();draw();
  requestAnimationFrame(()=>{const f=document.querySelector('#card .fb'),r=f?.getBoundingClientRect();if(r&&r.bottom>innerHeight)f.scrollIntoView({block:'nearest',behavior:reduceMotion?'auto':'smooth'})});
 }

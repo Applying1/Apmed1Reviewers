@@ -1250,5 +1250,13 @@
   "title": "Gift exchange: anonymous chat",
   "text": "New on the Gift exchange page: Messages. Chat with the classmate you drew to ask about their wishlist, and answer your own Secret Santa. Nobody sees a name on either side, so don't give yourself away! A red dot on the home tile and a pop-up tell you when a message arrives.",
   "link": "gifts.html"
+ },
+ {
+  "id": 153,
+  "date": "2026-11-11",
+  "type": "feature",
+  "title": "Math: test sheet and clearer graphs",
+  "text": "Math problems with written parts are now a test sheet: the problem on top, a box for every part, and one Check my work for all of them, like the paper quiz. The mock quiz is one whole paper. Graphs have colored lines with a legend and open larger when you tap them.",
+  "link": "reviewer.html?course=mmw"
  }
 ]

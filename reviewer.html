@@ -917,6 +917,31 @@ details.docold summary{cursor:pointer;color:var(--mute);font-size:13.5px}
 .qfig .mtab{border-collapse:collapse;font-size:14px;margin:0 auto}.qfig .mtab th,.qfig .mtab td{border:1px solid var(--line,#8884);padding:4px 10px;text-align:center}
 .qfig .mtab th{background:var(--accent-soft,#7c6cf022);font-weight:700}.qfig .mplot{display:block;max-width:100%;height:auto}
 .qfig .mol:has(.mplot),.qfig .mol:has(.mtab){flex:1 1 auto;max-width:560px}.qfig .mol svg.mplot{max-height:440px}
+/* v115: graphs open larger on a tap; corner table in the worked solution; the test sheet */
+.qfig.zoom{cursor:zoom-in;position:relative}.qfig.zoom:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.qfig.zoom::after{content:'⤢';position:absolute;right:8px;top:6px;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-size:14px;line-height:1;color:var(--mute);background:var(--surface);border:1px solid var(--line);opacity:.85}
+.qfig .mol svg.mplot{max-height:none;margin:0 auto}
+@media (max-width:640px){.qfig{padding:10px 6px}}
+.modal.figzoom{padding:12px;z-index:60}.modal.figzoom .box{max-width:min(96vw,860px);width:100%;padding:14px;display:grid;gap:10px;justify-items:center;max-height:96vh;overflow:auto}
+.figzoom .fzin{width:100%;display:grid;gap:12px;color:var(--text)}.figzoom .fzin svg.mplot{display:block;width:100%;height:auto;max-width:none!important;max-height:80vh}
+.mtab tr.best td{background:var(--accent-soft,#7c6cf022);font-weight:700}.mtab caption{caption-side:bottom;font-size:12.5px;color:var(--mute);padding-top:6px}
+.steps .stepfig{margin:8px 0 4px;overflow-x:auto}.steps .stepfig .mtab{border-collapse:collapse;font-size:14.5px;margin:0}.steps .stepfig .mtab th,.steps .stepfig .mtab td{border:1px solid var(--line,#8884);padding:5px 12px;text-align:center}.steps .stepfig .mtab th{background:var(--raised);font-weight:700}
+.wsnote{margin:0 0 12px;font-size:14px;color:var(--mute)}.ws .wrfoot>span{display:none}.ws .wrfoot{justify-content:flex-end}
+.ws{display:grid;gap:12px}.wsp{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--surface)}
+.wsp h3{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font:600 16px/1.45 var(--sans,inherit);color:var(--text)}
+.wsp .wsn{flex:none;min-width:24px;height:24px;padding:0 6px;border-radius:8px;display:inline-grid;place-items:center;font:700 13px/1 var(--sans,inherit);background:var(--accent-soft);color:var(--accent);align-self:flex-start}
+.wsp .wst{flex:1;min-width:0}.wsp .wsv{margin-left:auto;flex:none;font:700 11px/1.2 var(--sans,inherit);letter-spacing:.06em;text-transform:uppercase}
+.wsp.ok{border-color:var(--good-line)}.wsp.ok .wsn{background:var(--good-bg);color:var(--good)}.wsp.ok .wsv{color:var(--good)}
+.wsp.bad{border-color:var(--bad-line)}.wsp.bad .wsn{background:var(--bad-bg);color:var(--bad)}.wsp.bad .wsv{color:var(--bad)}
+.wsp .qfig{margin:0 0 10px}.wsp .typein{margin:0}.wsp .pqid{margin:0 0 8px}.wsp .choices{margin:0}
+.wskey{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-top:8px;font-size:15px}.wskey .yl{font-size:12.5px;color:var(--mute)}.wskey b{font-weight:600}
+.wsfix{margin:6px 0 0;font-size:13px}
+.wsscore{margin:0 0 12px;padding:10px 14px;border-radius:12px;border:1px solid var(--line2);background:var(--raised);font-size:15px}.wsscore b{font-size:17px}.wsscore.ok{border-color:var(--good-line);background:var(--good-bg);color:var(--good)}
+.wssol{margin:14px 0 4px;border:1px solid var(--line);border-radius:14px;padding:4px 14px 10px;background:var(--raised)}.wssol summary{cursor:pointer;padding:9px 0;font:700 13px/1.2 var(--sans,inherit);letter-spacing:.05em;text-transform:uppercase;color:var(--accent)}
+.wssol .qfig{background:var(--surface);margin:4px 0 10px}
+.wsx{display:grid;gap:12px}.wsx .wsprob{margin:0}.wsx .wsprob>.pqh{margin-bottom:10px}.wsx .wsprob .pqh .mastery{margin-left:auto}
+.wsbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--line2);border-radius:14px;background:var(--surface);font-size:14px;color:var(--mute)}.wsbar .wsacts{display:flex;align-items:center;gap:14px}
+#examView.running .wsprob{scroll-margin-top:calc(var(--exhead,84px) + 12px)}
 .molc svg.mplot{max-height:none;max-width:280px;margin:0 auto}.molc.sm svg.mplot{max-width:150px}
 /* v68 written answers and case problems */
 .cstem{border-left:3px solid var(--accent);background:var(--raised,#0001);padding:14px 16px;border-radius:12px;margin:0 0 14px;font-size:17.5px;line-height:1.6}
