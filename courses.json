@@ -469,10 +469,10 @@
  {
   "id": "mmw",
   "title": "Math in the Modern World",
-  "scope": "Finals: Linear Programming",
+  "scope": "Finals: Linear Programming and Simplex Method",
   "unit": "Lesson",
   "itemWord": "problem",
-  "count": 660,
+  "count": 845,
   "storageKey": "study_reviewer_mmw_2026_v1",
   "image": "img/icons/mmw.svg",
   "extras": [],
@@ -491,7 +491,8 @@
     "id": "finals",
     "name": "Finals",
     "chapters": [
-     "8"
+     "8",
+     "9"
     ]
    }
   ],

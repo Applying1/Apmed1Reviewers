@@ -1258,5 +1258,13 @@
   "title": "Math: test sheet and clearer graphs",
   "text": "Math problems with written parts are now a test sheet: the problem on top, a box for every part, and one Check my work for all of them, like the paper quiz. The mock quiz is one whole paper. Graphs have colored lines with a legend and open larger when you tap them.",
   "link": "reviewer.html?course=mmw"
+ },
+ {
+  "id": 154,
+  "date": "2026-11-11",
+  "type": "course",
+  "title": "Math: Simplex method (Lesson 9)",
+  "text": "New lesson in Math in the Modern World: the simplex method for maximizing, and the dual for minimizing. Practice the slack variables, the pivot column and row, and every tableau, then solve full problems with all the steps shown. The slides are in Documents. There is a Simplex quiz mock: one simplex problem and one dual problem.",
+  "link": "reviewer.html?course=mmw"
  }
 ]
