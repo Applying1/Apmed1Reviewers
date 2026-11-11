@@ -265,8 +265,9 @@ function replyTo(id){const p=posts.find(x=>x.id===id);if(!p)return;REPLY={id,aut
 function drawChip(){const c=$('rchip');if(!c)return;c.hidden=!REPLY;if(REPLY){const snip=(window.Stickers?Stickers.cleanSnippet(REPLY.body||''):REPLY.body||'');c.innerHTML='<span>Replying to <b>'+esc(REPLY.author)+'</b> · '+esc(String(snip).slice(0,80))+'</span><button onclick="REPLY=null;drawChip()" aria-label="Cancel the reply">×</button>'}}
 async function people(){if(PEOPLE)return PEOPLE;try{PEOPLE=await Auth.rpc('discussion_people',{},true)||[]}catch(e){PEOPLE=[]}return PEOPLE}
 function mentionAt(){const t=$('msg');if(!t)return null;const pre=t.value.slice(0,t.selectionStart),m=pre.match(/(^|\s)@([^\s@]{0,24}(?: [^\s@]{0,24})?)$/);return m?{q:m[2],at:pre.length-m[2].length-1}:null}
-async function mentionList(){const box=$('mlist'),m=mentionAt();if(!box)return;if(!m){box.hidden=true;MQ=null;return}
- const all=await people(),q=m.q.toLowerCase(),hit=all.filter(x=>!q||x.name.toLowerCase().split(/\s+/).some(w=>w.startsWith(q))||x.name.toLowerCase().startsWith(q)).slice(0,8);
+async function mentionList(){const box=$('mlist');if(!box)return;if(!mentionAt()){box.hidden=true;MQ=null;return}
+ const all=await people(),m=mentionAt();if(!m){box.hidden=true;MQ=null;return}
+ const q=m.q.toLowerCase(),hit=all.filter(x=>!q||x.name.toLowerCase().split(/\s+/).some(w=>w.startsWith(q))||x.name.toLowerCase().startsWith(q)).slice(0,8);
  MQ={at:m.at,len:m.q.length+1,hit};MSEL=Math.min(MSEL,Math.max(0,hit.length-1));box.hidden=false;
  box.innerHTML=hit.length?hit.map((x,i)=>'<button type="button" class="'+(i===MSEL?'on':'')+'" onmousedown="event.preventDefault()" onclick="pickMention('+i+')">'+Profile.html({av:x.av,url:x.avatar,name:x.name},26)+esc(x.name)+'</button>').join(''):'<p>No classmate by that name.</p>'}
 function pickMention(i){const t=$('msg'),x=MQ&&MQ.hit[i];if(!t||!x)return;const v=t.value,ins='@'+x.name+' ';

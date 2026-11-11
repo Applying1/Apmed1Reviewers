@@ -123,7 +123,7 @@ $('view').addEventListener('click',async e=>{
  if(e.target.closest('#locksw')){
   if(BUSY)return;
   BUSY=true;draw();
-  try{await Auth.rpc('gift_admin_lock',{p_on:!DATA.locked},true)}catch(err){}
+  try{await Auth.rpc('gift_admin_lock',{p_on:!DATA.locked},true)}catch(err){if(/draw sealed/i.test(err&&err.message))await tell('Bunot bunot is already prepared. Reset the draw on Moderator first if you need to unlock codenames.',{title:'Draw is sealed'})}
   await load();
   return;
  }
@@ -132,7 +132,7 @@ $('view').addEventListener('click',async e=>{
  const roll=parseInt(b.dataset.roll,10);
  if(!await ask('Remove this codename? The student can make a new one.',{title:'Remove codename?',ok:'Remove',danger:1}))return;
  b.disabled=true;
- try{await Auth.rpc('gift_admin_remove',{p_roll:roll},true)}catch(err){}
+ try{await Auth.rpc('gift_admin_remove',{p_roll:roll},true)}catch(err){if(/draw sealed/i.test(err&&err.message))await tell('Bunot bunot is already prepared. Reset the draw on Moderator first if you need to remove a codename.',{title:'Draw is sealed'})}
  await load();
 });
 

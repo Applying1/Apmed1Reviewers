@@ -86,6 +86,10 @@ textarea.inp{resize:vertical;line-height:1.45}
 pre.code{margin:10px 0 8px;padding:12px;border-radius:10px;background:var(--raised);border:1px solid var(--line);font:12.5px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow:auto}
 .urlrow{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}.urlrow .inp{flex:1 1 240px;width:auto}
 .cbox{position:fixed;inset:0;background:#0007;display:grid;place-items:center;padding:16px;z-index:10}.cbox .card{width:min(560px,100%);margin:0}.cbox textarea{margin-top:10px;font:12.5px ui-monospace,Consolas,monospace}
+.bprog{height:6px;border-radius:99px;background:var(--raised);overflow:hidden;margin-top:10px}.bprog i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .3s ease}
+.bbatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.bbatch{font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--raised);color:var(--mute);border:1px solid var(--line)}.bbatch.open{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)}.bbatch.done{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good);border-color:color-mix(in srgb,var(--good) 30%,transparent)}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;gap:6px 10px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);font-size:14px}.prow:last-child{border-bottom:0}.parr{color:var(--mute);font-weight:700}.pwho{min-width:0;overflow-wrap:anywhere}.ptgt .mobarr{display:none;color:var(--mute);font-weight:700;margin-right:4px}
+@media (max-width:620px){.prow{grid-template-columns:minmax(0,1fr) auto}.prow .parr{display:none}.prow .ptgt{grid-column:1;grid-row:2}.prow .ptgt .mobarr{display:inline}.prow .pst{grid-column:2;grid-row:1/3}}
 .newpill{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:8;border:0;border-radius:99px;padding:8px 16px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:13.5px;box-shadow:0 4px 14px #0003}
 .newpill[hidden]{display:none}
 @media (max-width:480px){.stat{padding:9px 10px}.stat b{font-size:20px}.top .acts{margin-left:0}}
@@ -99,7 +103,7 @@ pre.code{margin:10px 0 8px;padding:12px;border-radius:10px;background:var(--rais
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PASS_KEY='reviewer_mod_pass';
-let CLOUD=null,COURSES=[],BYKEY={},DATA={},ME=null,PASS='',ROWS=[],tab='pending',courseF='',kindF='',busy=false,ATT=null,SYNC=null,AIADM=null,view='queue',NEWN=0;
+let CLOUD=null,COURSES=[],BYKEY={},DATA={},ME=null,PASS='',ROWS=[],tab='pending',courseF='',kindF='',busy=false,ATT=null,SYNC=null,AIADM=null,GDRAW=null,GPAIRS=null,BMISS=null,PAIR_Q='',view='queue',NEWN=0;
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2600)}
 function rpc(fn,body){const h={'Content-Type':'application/json',apikey:CLOUD.key};if(/^eyJ/.test(CLOUD.key))h.Authorization='Bearer '+CLOUD.key;
  return fetch(CLOUD.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body)})
@@ -127,11 +131,11 @@ async function boot(){
  try{COURSES=await fetch('courses.json').then(r=>r.json());BYKEY=Object.fromEntries(COURSES.map(c=>[c.storageKey,c]));
   const first=await fetch('courses/'+COURSES[0].id+'.json').then(r=>r.json());CLOUD=first.config.cloud}catch(e){}
  if(!CLOUD||!CLOUD.url){$('app').innerHTML='<p class="empty">The class cloud is not set up for these reviewers.</p>';return}
- if(location.hash==='#sync')view='sync';else if(location.hash==='#links')view='att';else if(location.hash==='#ai')view='ai';
+ if(location.hash==='#sync')view='sync';else if(location.hash==='#links')view='att';else if(location.hash==='#ai')view='ai';else if(location.hash==='#pairs')view='pairs';
  try{PASS=sessionStorage.getItem(PASS_KEY)||localStorage.getItem(PASS_KEY)||''}catch(e){}
  if(PASS&&await signIn(PASS,true))return;
  await attLoad();
- if(ATT&&view!=='queue')return draw();
+ if(ATT&&view!=='queue')return view==='pairs'?openPairs():draw();
  drawLogin()}
 function drawLogin(err){document.title='Moderator';view='queue';
  $('app').innerHTML=(ATT?'<div class="top"><div><h1>Moderator</h1><p class="sub">Your owner tools work without the passphrase.</p></div><div class="acts"><a class="btn" href="./">Home</a></div></div>'+ownerPanel():'')+
@@ -149,7 +153,7 @@ async function signIn(p,quiet,remember){let r=null;
  await load();return true}
 function signOut(){try{sessionStorage.removeItem(PASS_KEY);localStorage.removeItem(PASS_KEY)}catch(e){}PASS='';ME=null;drawLogin()}
 async function load(){try{ROWS=await rpc('contrib_mod_list',{p_pass:PASS,p_status:'all'})||[]}catch(e){toast('Could not load the queue.');ROWS=ROWS||[]}
- await Promise.all([...new Set(ROWS.map(r=>r.course))].map(k=>course(k).catch(()=>null)));await attLoad();$('newpill').hidden=true;draw()}
+ await Promise.all([...new Set(ROWS.map(r=>r.course))].map(k=>course(k).catch(()=>null)));await attLoad();$('newpill').hidden=true;if(view==='pairs'&&ATT)return openPairs();draw()}
 // while the page is open (and on coming back to it): new items show a "N new" button instead of redrawing over edits
 async function poll(){if(!ME||busy||document.hidden||view!=='queue')return;let rows=null,links=linkN();
  try{rows=await rpc('contrib_mod_list',{p_pass:PASS,p_status:'all'})}catch(e){return}
@@ -161,9 +165,10 @@ setInterval(poll,120000);document.addEventListener('visibilitychange',()=>{if(!d
 /* ---------- Attendance links (supabase_attendance.sql): only when this browser is also signed in with the site owner's
    Google account (att_admin_list refuses everyone else, so other moderators never see this). Students send a request from
    My attendance (roll number + last name, checked against the tracker); approve it here. */
-async function attLoad(){ATT=null;SYNC=null;AIADM=null;if(!Auth.ses())return;Auth.cloud=Auth.cloud||CLOUD;
+async function attLoad(){ATT=null;SYNC=null;AIADM=null;GDRAW=null;if(!Auth.ses())return;Auth.cloud=Auth.cloud||CLOUD;
  try{ATT=await Auth.rpc('att_admin_list',{},true)}catch(e){ATT=null;return}
  try{SYNC=await Auth.rpc('att_sync_info',{},true)}catch(e){SYNC=null}
+ try{GDRAW=await Auth.rpc('gift_admin_draw_status',{},true)}catch(e){GDRAW=null}
  try{await aiLoad()}catch(e){}}
 async function aiPostAdmin(body){const tok=await Auth.token();if(!tok)return null;
  const r=await fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/explain',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+tok},body:JSON.stringify(Object.assign({admin:true},body||{}))});
@@ -172,16 +177,81 @@ async function aiLoad(){AIADM=await aiPostAdmin({})||{asks:[],stats:{}};
  const cids=[...new Set((AIADM.asks||[]).map(a=>(COURSES.find(c=>c.id===a.course)||{}).storageKey).filter(Boolean))];
  await Promise.all(cids.map(k=>course(k).catch(()=>null)))}
 const linkN=()=>ATT?(ATT.requests||[]).filter(r=>r.status==='pending').length:0;
-const back=()=>{view='queue';history.replaceState(null,'',location.pathname);ME?draw():drawLogin()};
-// owner tools (site owner's Google account only): attendance update + links + class day, shown on top of the queue
+const back=()=>{GPAIRS=null;PAIR_Q='';view='queue';history.replaceState(null,'',location.pathname);ME?draw():drawLogin()};
+// owner tools (site owner's Google account only): attendance update + links + class day + Bunot bunot, shown on top of the queue
 function ownerPanel(){if(!ATT)return '';const n=linkN(),s=SYNC||{},bad=s.note&&!/^ok/.test(s.note);
  return '<section class="card owner"><div class="oh"><span class="oic"><svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-calendar-days"/></svg></span><div><b>Attendance</b><p class="sub">Tracker imported '+(ATT.imported?esc(ago(ATT.imported)):'never')+
   (s.ready?' · '+(s.auto?'checks the sheet every hour':'hourly check off'):' · not automatic yet')+'</p></div></div>'+
   (bad?'<div class="warn">Last check '+esc(ago(s.sync_at))+': '+esc(s.note)+'</div>':'')+
   '<div class="acts2">'+(s.ready?'<button class="btn primary" id="syncbtn" onclick="attSync(this)"><svg class="i" width="15" height="15" aria-hidden="true"><use href="icons.svg#i-rotate-cw"/></svg>Update attendance now</button>':'<button class="btn primary" onclick="go(\'sync\')">Set up one-tap update</button>')+
   '<button class="btn" onclick="go(\'att\')">Link requests'+(n?'<b class="cnt">'+n+'</b>':'')+'</button><button class="btn" onclick="go(\'ai\')">AI questions'+(AIADM&&(AIADM.asks||[]).length?'<b class="cnt">'+(AIADM.asks||[]).length+'</b>':'')+'</button><a class="btn" href="classday.html">Class day</a><a class="btn" href="takeattendance.html">Take attendance</a><a class="btn" href="giftadmin.html">Gift exchange</a>'+
-  (s.ready?'<span class="sp"></span><button class="link" onclick="go(\'sync\')">Update settings</button>':'')+'</div></section>'}
-function go(v){view=v;history.replaceState(null,'',location.pathname+(v==='sync'?'#sync':v==='att'?'#links':v==='ai'?'#ai':''));draw();scrollTo(0,0)}
+  (s.ready?'<span class="sp"></span><button class="link" onclick="go(\'sync\')">Update settings</button>':'')+'</div></section>'+bunotPanel()}
+function bunotPanel(){if(!ATT||!GDRAW)return '';
+ const g=GDRAW,tot=+g.total||0,codes=+g.codes||0,drawn=+g.drawn||0,thru=+g.open_through||0,maxR=+g.max_roll||tot||50,openTot=+g.open_total||0;
+ if(!g.sealed){
+  return '<section class="card owner" id="bunot-panel"><div class="oh"><span class="oic"><svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-gift"/></svg></span><div><b>Bunot bunot · Gift exchange</b>'+
+   '<p class="sub">Not released yet · '+codes+' of '+tot+' codenames in'+(g.locked?' · codenames locked':'')+'</p></div></div>'+
+   (BMISS&&BMISS.length?'<div class="warn">Missing a codename ('+BMISS.length+'): '+BMISS.map(m=>'#'+m.roll+' '+esc(m.student)).join(' · ')+'</div>':'')+
+   '<div class="acts2"><button class="btn primary" id="bsealbtn" onclick="bunotSeal(this)">Lock codenames &amp; prepare draw</button><a class="btn" href="giftadmin.html">Review codenames</a></div></section>';
+ }
+ const nextLo=thru+1,nextHi=thru+10,hasMore=thru<maxR,batches=g.batches||[],notDrawn=g.not_drawn||[];
+ return '<section class="card owner" id="bunot-panel"><div class="oh"><span class="oic"><svg class="i" width="18" height="18" aria-hidden="true"><use href="icons.svg#i-gift"/></svg></span><div><b>Bunot bunot · Gift exchange</b>'+
+  '<p class="sub">'+(thru>0?'Open through roll '+Math.min(thru,maxR):'Prepared · no batches open yet')+' · '+drawn+' of '+tot+' drawn ('+tot+' students)</p></div></div>'+
+  '<div class="bprog" aria-hidden="true"><i style="width:'+(tot?Math.min(100,Math.round(drawn/tot*100)):0)+'%"></i></div>'+
+  (batches.length?'<div class="bbatches">'+batches.map(b=>{const hi=Math.min(b.to,maxR),isOpen=b.to<=thru,isDone=isOpen&&b.n>0&&b.drawn>=b.n;return '<span class="bbatch'+(isDone?' done':isOpen?' open':'')+'">Rolls '+b.from+'–'+hi+': '+b.drawn+'/'+b.n+'</span>'}).join('')+'</div>':'')+
+  (thru>0?(notDrawn.length?'<p class="ulist" style="margin:10px 0 0"><b style="color:var(--text)">Not drawn yet ('+notDrawn.length+'):</b> '+notDrawn.map(x=>'#'+x.roll+' '+esc(x.student)).join(' · ')+'</p>':(openTot>0?'<p class="ulist" style="margin:10px 0 0;color:var(--good)"><b>Everyone in rolls 1–'+Math.min(thru,maxR)+' has drawn.</b></p>':'')):'')+
+  '<div class="acts2">'+
+  (hasMore?'<button class="btn primary" id="bopenbtn" onclick="bunotOpen('+nextHi+',this)">Open rolls '+nextLo+'–'+Math.min(nextHi,maxR)+'</button>':'')+
+  (thru>0?'<button class="btn" onclick="bunotOpen(0,this)">Pause</button>':'')+
+  '<button class="btn" id="bpairsbtn" onclick="go(\'pairs\')">Show pairings</button>'+
+  '<button class="btn" onclick="attLoad().then(()=>ME?draw():drawLogin())">Refresh</button>'+
+  '<span class="sp"></span><button class="link warnt" onclick="bunotReset()">Reset draw</button></div></section>';
+}
+async function bunotSeal(btn){if(btn){btn.disabled=true;btn.textContent='Preparing…'}BMISS=null;
+ try{await Auth.rpc('gift_admin_lock',{p_on:true},true);const r=await Auth.rpc('gift_admin_draw_seal',{},true);
+  if(r&&r.ok===false&&r.missing){BMISS=r.missing;toast(r.missing.length+' student(s) still need a codename.')}
+  else if(r&&r.ok){toast('Draw prepared for '+r.n+' students. Open rolls 1–10 when ready.')}}
+ catch(e){await tell(e.message||'Could not prepare the draw.',{title:'Draw not prepared'})}
+ await attLoad();ME?draw():drawLogin()}
+async function bunotOpen(through,btn){if(btn)btn.disabled=true;
+ try{await Auth.rpc('gift_admin_draw_open',{p_through:through},true);toast(through>0?'Opened through roll '+through+'.':'Bunot bunot paused.')}
+ catch(e){toast('Could not update draw: '+e.message)}
+ await attLoad();ME?draw():drawLogin()}
+function askResetCode(drawnN){return new Promise(res=>{
+ const d=document.createElement('div');d.className='cbox';
+ d.innerHTML='<div class="card" role="alertdialog" aria-modal="true"><h2 style="margin:0 0 8px;font:600 19px/1.3 var(--serif)">Reset Bunot bunot?</h2>'+
+  '<p style="margin:0 0 12px;color:var(--mute);font-size:14.5px">'+drawnN+' student'+(drawnN===1?' has':'s have')+' already drawn a codename. Resetting erases all pairings so a brand-new draw can be prepared. Type <b>RESET</b> below to confirm.</p>'+
+  '<input class="inp" id="rstinp" type="text" placeholder="Type RESET" autocomplete="off" aria-label="Type RESET to confirm">'+
+  '<div class="acts2"><span class="sp"></span><button class="btn" type="button" data-r="0">Cancel</button><button class="btn bad" type="button" data-r="1" id="rstok" disabled>Reset draw</button></div></div>';
+ document.body.appendChild(d);
+ const inp=d.querySelector('#rstinp'),ok=d.querySelector('#rstok'),done=v=>{d.remove();res(v)};
+ inp.oninput=()=>{ok.disabled=inp.value.trim()!=='RESET'};
+ inp.onkeydown=e=>{if(e.key==='Escape')done('');else if(e.key==='Enter'&&inp.value.trim()==='RESET')done('RESET')};
+ d.onclick=e=>{if(e.target===d)done('');const b=e.target.closest('[data-r]');if(b)done(b.dataset.r==='1'?'RESET':'')};
+ inp.focus()})}
+async function bunotReset(){if(!GDRAW)return;const drawnN=+GDRAW.drawn||0;let conf='';
+ if(drawnN>0){conf=await askResetCode(drawnN);if(conf!=='RESET')return}
+ else{if(!await ask('Clear the prepared pairings and return Bunot bunot to unreleased?',{title:'Reset draw?',ok:'Reset draw',danger:1}))return}
+ try{await Auth.rpc('gift_admin_draw_reset',{p_confirm:conf},true);toast('Bunot bunot reset.')}
+ catch(e){toast('Could not reset: '+e.message)}
+ await attLoad();ME?draw():drawLogin()}
+async function openPairs(){if(!ATT){view='queue';return ME?draw():drawLogin()}GPAIRS=null;drawPairs();scrollTo(0,0);
+ try{GPAIRS=await Auth.rpc('gift_admin_draw_pairs',{},true)||[]}catch(e){GPAIRS=[];toast('Could not load pairings: '+e.message)}
+ if(view==='pairs')drawPairs()}
+function drawPairs(){if(!ATT){view='queue';return ME?draw():drawLogin()}document.title='Bunot bunot pairings';
+ const q=PAIR_Q.trim().toLowerCase(),rows=(GPAIRS||[]).filter(p=>!q||('#'+p.giver_roll+' '+p.giver+' '+p.giver_codename+' #'+p.target_roll+' '+p.target+' '+p.target_codename).toLowerCase().includes(q));
+ const drawn=(GPAIRS||[]).filter(p=>p.drawn_at).length;
+ $('app').innerHTML='<div class="top"><div><h1>Bunot bunot pairings</h1><p class="sub">Owner-only view: who is giving a gift to whom ('+drawn+' of '+((GPAIRS||[]).length)+' drawn). Never cached on this device.</p></div>'+
+  '<div class="acts"><button class="btn" onclick="openPairs()">Refresh</button><button class="btn" onclick="back()">Back</button></div></div>'+
+  (GPAIRS===null?'<p class="empty">Loading pairings…</p>':!GPAIRS.length?'<p class="empty">No draw prepared yet.</p>':
+   '<div class="bar"><input class="inp" id="pairq" type="search" placeholder="Search by roll, student name or codename" aria-label="Search pairings" value="'+esc(PAIR_Q)+'" style="max-width:380px"></div>'+
+   '<div class="card" id="pairs-list">'+(rows.length?rows.map(p=>'<div class="prow">'+
+    '<div class="pwho"><b>#'+p.giver_roll+' '+esc(p.giver)+'</b> <span class="tag q">'+esc(p.giver_codename||'—')+'</span></div>'+
+    '<span class="parr" aria-hidden="true">→</span>'+
+    '<div class="pwho ptgt"><span class="mobarr" aria-hidden="true">→</span><b>#'+p.target_roll+' '+esc(p.target)+'</b> <span class="tag k">'+esc(p.target_codename||'—')+'</span></div>'+
+    '<div class="pst">'+(p.drawn_at?'<span class="tag approved">Drawn · '+esc(ago(p.drawn_at))+'</span>':'<span class="tag">Waiting</span>')+'</div></div>').join(''):'<p class="empty">No pairing matches.</p>')+'</div>');
+ const pq=$('pairq');if(pq){pq.oninput=e=>{PAIR_Q=e.target.value;const pos=pq.selectionStart;drawPairs();const nq=$('pairq');if(nq){nq.focus();try{nq.setSelectionRange(pos,pos)}catch(err){}}}}}
+function go(v){if(v!=='pairs'){GPAIRS=null;PAIR_Q=''}view=v;history.replaceState(null,'',location.pathname+(v==='sync'?'#sync':v==='att'?'#links':v==='ai'?'#ai':v==='pairs'?'#pairs':''));if(v==='pairs')return openPairs();draw();scrollTo(0,0)}
 async function attSync(btn){if(btn){btn.disabled=true;btn.lastChild.textContent='Updating…'}let r=null;
  try{const tok=await Auth.token();if(!tok)throw new Error('signin');
   const res=await fetch(CLOUD.url.replace(/\/+$/,'')+'/functions/v1/attsync',{method:'POST',headers:{'Content-Type':'application/json',apikey:CLOUD.key,Authorization:'Bearer '+tok},body:'{}'});
@@ -278,7 +348,7 @@ function copyAiAsk(id){const a=((AIADM&&AIADM.asks)||[]).find(x=>x.id===id);if(!
 const isOpen=r=>r.status==='pending';
 const inTab=r=>tab==='pending'?isOpen(r):tab==='approved'?r.status==='approved':tab==='done'?r.status==='rejected'||r.status==='resolved':true;
 const KINDS=[['question','Questions'],['report','Reports'],['card','Flashcards']];
-function draw(){if(view==='att')return drawAtt();if(view==='sync')return drawSync();if(view==='ai')return drawAI();if(!ME)return drawLogin();NEWN=0;
+function draw(){if(view==='att')return drawAtt();if(view==='sync')return drawSync();if(view==='ai')return drawAI();if(view==='pairs')return drawPairs();if(!ME)return drawLogin();NEWN=0;
  const mine=ROWS.filter(r=>(!courseF||r.course===courseF)&&(!kindF||r.kind===kindF)),n=t=>{const k=tab;tab=t;const c=mine.filter(inTab).length;tab=k;return c};
  const keys=[...new Set(ROWS.map(r=>r.course))],list=mine.filter(inTab),wait=k=>ROWS.filter(r=>isOpen(r)&&r.kind===k&&(!courseF||r.course===courseF)).length;
  const total=ROWS.filter(isOpen).length+linkN();document.title=(total?'('+total+') ':'')+'Moderator';

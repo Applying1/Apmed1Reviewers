@@ -50,6 +50,52 @@ h1{font:600 30px/1.15 var(--serif);letter-spacing:-.3px;margin:12px 0 6px}
 .taghead span{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--mute)}
 .tagbody{padding:18px}
 .cname{font:600 28px/1.2 var(--serif);overflow-wrap:anywhere;margin:0 0 12px}
+
+/* bunot bunot: waiting banner, draw box + animation, and sticky pinned giftee card */
+.waitcard{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:16px;background:var(--accent-soft);border:1px solid var(--accent-line,var(--line2));margin:0 0 14px}
+.waitcard .wico{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--surface);color:var(--accent);flex:none}
+.waitcard b{display:block;font-size:14px;color:var(--text)}
+.waitcard p{margin:1px 0 0!important;font-size:13px!important;color:var(--mute)!important}
+
+.bunot-card{text-align:center;padding:22px 18px 20px;border:1.5px solid var(--accent-line,var(--accent));background:linear-gradient(180deg,var(--accent-soft) 0%,var(--surface) 62%);overflow:hidden;position:relative}
+.bstage{position:relative;height:132px;display:grid;place-items:end center;margin:0 auto 14px;width:220px;perspective:500px}
+.gbox{position:relative;width:88px;height:74px;z-index:2;transform-origin:50% 100%}
+.gbase{position:absolute;bottom:0;left:4px;right:4px;height:54px;border-radius:0 0 12px 12px;background:var(--accent);box-shadow:inset 0 -6px 0 rgba(0,0,0,.14)}
+.gbase::before{content:"";position:absolute;inset:0;margin:auto;width:14px;height:100%;background:rgba(255,255,255,.32)}
+.glid{position:absolute;top:4px;left:0;right:0;height:20px;border-radius:7px;background:var(--accent);filter:brightness(1.08);box-shadow:0 3px 0 rgba(0,0,0,.12);transform-origin:15% 100%;transition:transform .45s cubic-bezier(.2,.9,.3,1.2)}
+.glid::before{content:"";position:absolute;inset:0;margin:auto;width:14px;height:100%;background:rgba(255,255,255,.38)}
+.glid::after{content:"";position:absolute;top:-11px;left:50%;width:28px;height:12px;margin-left:-14px;border:3px solid var(--accent);border-bottom:0;border-radius:12px 12px 0 0}
+.gslip{position:absolute;bottom:22px;left:50%;width:184px;margin-left:-92px;padding:10px 12px;border-radius:11px;background:var(--surface);border:1.5px solid var(--accent);box-shadow:0 10px 24px rgba(0,0,0,.16);z-index:3;opacity:0;transform:translateY(26px) scaleY(.25) rotateX(-70deg);transform-origin:50% 100%;transition:transform .5s cubic-bezier(.2,.85,.25,1.15),opacity .3s ease;pointer-events:none}
+.gslip small{display:block;font:700 10px/1 var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.gslip b{display:block;font:600 19px/1.2 var(--serif);color:var(--accent);overflow-wrap:anywhere}
+.bconf{position:absolute;inset:0;pointer-events:none;z-index:4}
+.bconf i{position:absolute;left:50%;bottom:48px;width:7px;height:7px;border-radius:2px;background:var(--c,var(--accent));opacity:0}
+@keyframes bwobble{0%,100%{transform:rotate(0) scale(1)}20%{transform:rotate(-7deg) scale(1.04,.96)}40%{transform:rotate(7deg) scale(1.05,.95)}60%{transform:rotate(-5deg) scale(.98,1.03)}80%{transform:rotate(4deg) scale(1.02,.98)}}
+@keyframes bpop{0%{opacity:1;transform:translate(0,0) scale(.5) rotate(0)}70%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0),var(--dy,-60px)) scale(1) rotate(220deg)}}
+.bunot-card.opening .gbox{animation:bwobble .52s ease-in-out}
+.bunot-card.opening .glid,.bunot-card.revealed .glid{transform:translateY(-34px) rotate(-18deg)}
+.bunot-card.revealed .gslip{opacity:1;transform:translateY(-22px) scaleY(1) rotateX(0)}
+.bunot-card.revealed .bconf i{animation:bpop .75s cubic-bezier(.15,.85,.35,1) forwards}
+.btitle{display:block;font:600 22px/1.2 var(--serif);margin:0 0 6px;color:var(--text)}
+.bunot-card>p{max-width:420px;margin:0 auto 14px}
+.bunot-btn{max-width:260px;margin:0 auto;font-size:15.5px;padding:11px 20px;box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 32%,transparent)}
+
+.pincard{position:sticky;top:8px;z-index:10;padding:0;overflow:hidden;border:1.5px solid var(--accent);box-shadow:0 8px 26px rgba(0,0,0,.12)}
+.pinhead{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--accent);color:var(--accent-ink)}
+.pinhead b{font:700 11.5px/1 var(--sans);letter-spacing:.65px;text-transform:uppercase}
+.pintog{margin-left:auto;display:inline-flex;align-items:center;gap:4px;border:0;background:rgba(255,255,255,.16);color:inherit;font:600 12px/1 var(--sans);padding:5px 9px;border-radius:99px}
+.pintog:hover{background:rgba(255,255,255,.25)}
+.pinbody{padding:14px 16px;background:var(--surface)}
+.pinwho{display:flex;align-items:center;gap:12px;min-width:0}
+.pinwho .mono{grid-row:auto;width:40px;height:40px;font-size:16px;flex:none}
+.pinwho .lab{margin:0 0 2px}
+.pincname{font:600 23px/1.15 var(--serif);color:var(--text);overflow-wrap:anywhere}
+.pinwish{margin-top:12px;padding-top:11px;border-top:1px dashed var(--line2)}
+.pincard.compact .pinbody{padding:10px 14px}
+.pincard.compact .pincname{font-size:18px}
+.pincard.compact .pinwho .mono{width:32px;height:32px;font-size:13.5px}
+.grow.giftee{background:color-mix(in srgb,var(--good,#16a34a) 10%,var(--surface))}
+.you.giftee-tag{background:var(--good,#16a34a);color:#fff}
 .lab{display:block;font:700 11px/1 var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--faint);margin:0 0 5px}
 .gw{font-size:14.5px;color:var(--text);overflow-wrap:anywhere}
 .gw p{margin:0 0 3px;color:inherit;font-size:inherit}.gw p:last-child{margin-bottom:0}.gw ul{margin:2px 0 4px;padding-left:19px}.gw li{margin:1px 0}.gw li::marker{color:var(--faint)}
@@ -111,7 +157,7 @@ h1{font:600 30px/1.15 var(--serif);letter-spacing:-.3px;margin:12px 0 6px}
  .gname{align-self:center}
  .grow .gw{grid-column:3}
 }
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
 <main>
  <div class="top"><a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a></div>
@@ -138,7 +184,14 @@ const REPLIES={
  'has_name':'Your codename can’t contain your own name. Pick something that doesn’t give you away.',
  'name_used':'That codename is taken. Pick another one.'
 };
-let STATE=null,EDIT=false,NOTICE='';
+const DRAW_ERR={
+ 'closed':'Bunot bunot isn’t open right now.',
+ 'not_yet':'Your roll batch isn’t open yet.',
+ 'no_roll':'Save your codename first so the draw knows your roll.',
+ 'slow_down':'Too many tries. Wait a minute.'
+};
+const CONF_PTS=[[-74,-62,'#f59e0b'],[-52,-84,'#ec4899'],[-28,-74,'#10b981'],[-8,-88,'#3b82f6'],[14,-82,'#8b5cf6'],[36,-72,'#f97316'],[58,-80,'#14b8a6'],[76,-58,'#eab308'],[-64,-34,'#6366f1'],[64,-36,'#ef4444']];
+let STATE=null,EDIT=false,NOTICE='',PIN_OPEN=true,DRAWING=false;
 // circle color + letter come from the codename text only, so they say nothing about the person
 const hue=s=>{let h=0;for(const c of String(s).toLowerCase())h=(h*31+c.charCodeAt(0))%360;return h};
 const first=s=>(String(s).match(/[A-Za-z0-9]/)||['?'])[0].toUpperCase();
@@ -167,10 +220,47 @@ function formHtml(s){
  return h+'<p class="msg" id="gmsg" role="status"></p></div></form>';
 }
 
+function bunotHtml(s){
+ const d=s.draw;
+ if(!d||!d.status||d.status==='off')return '';
+ const thru=+d.open_through||0;
+ if(d.status==='waiting'){
+  return '<section class="waitcard" aria-label="Bunot bunot status"><span class="wico">'+ic('hourglass',18)+'</span><div>'+
+   '<b>'+(thru>0?'Bunot bunot is open for rolls 1–'+thru+'.':'Bunot bunot is ready.')+'</b>'+
+   '<p>'+(thru>0?'Your roll batch will open soon. Hang tight!':'Waiting for the first batch of rolls to open.')+'</p></div></section>';
+ }
+ if(d.status==='ready'){
+  return '<section class="card bunot-card" id="bunot-card">'+
+   '<div class="bstage" aria-hidden="true">'+
+    '<div class="bconf">'+CONF_PTS.map(p=>'<i style="--dx:'+p[0]+'px;--dy:'+p[1]+'px;--c:'+p[2]+'"></i>').join('')+'</div>'+
+    '<div class="gslip"><small>You drew</small><b id="bslip-name">…</b></div>'+
+    '<div class="gbox"><div class="glid"></div><div class="gbase"></div></div>'+
+   '</div>'+
+   '<b class="btitle">Your turn for Bunot bunot!</b>'+
+   '<p>Rolls 1–'+thru+' are open. Tap below to draw one classmate’s codename for the gift exchange.</p>'+
+   '<button class="btn primary wide bunot-btn" type="button" id="bunot-btn" data-act="bunot">'+ic('sparkles',17)+'Bunot!</button>'+
+   '<p class="msg" id="bmsg" role="status" style="margin-top:10px!important"></p></section>';
+ }
+ if(d.status==='drawn'&&d.target&&d.target.c){
+  const tc=d.target.c,row=(s.rows||[]).find(r=>r.c===tc),tw=row&&row.w!=null?row.w:(d.target.w||'');
+  return '<section class="card pincard'+(PIN_OPEN?'':' compact')+'" id="pincard" aria-label="Your giftee">'+
+   '<div class="pinhead">'+ic('pin',14)+'<b>Your giftee · Bunot bunot</b>'+
+    '<button class="pintog" type="button" data-act="pintog" aria-expanded="'+(PIN_OPEN?'true':'false')+'">'+(PIN_OPEN?'Compact'+ic('chevron-up',14):'Wishlist'+ic('chevron-down',14))+'</button>'+
+   '</div>'+
+   '<div class="pinbody">'+
+    '<div class="pinwho"><span class="mono" style="--h:'+hue(tc)+'" aria-hidden="true">'+esc(first(tc))+'</span>'+
+     '<div><span class="lab">You’re giving to</span><div class="pincname">'+esc(tc)+'</div></div></div>'+
+    (PIN_OPEN?'<div class="pinwish"><span class="lab">Their wishlist</span>'+(tw?'<div class="gw">'+GiftFmt.html(tw)+'</div>':'<div class="gw none">No wishlist yet — check back later</div>')+'</div>':'')+
+   '</div></section>';
+ }
+ return '';
+}
+
 function draw(){
  if(!STATE)return;
- const s=STATE,rows=s.rows||[],total=s.total||0;
- let h='<section class="card tag"><div class="taghead"><b>Your codename</b><span>'+ic('lock',13)+'Only you see this card</span></div><div class="tagbody">';
+ const s=STATE,rows=s.rows||[],total=s.total||0,tc=s.draw&&s.draw.status==='drawn'&&s.draw.target?s.draw.target.c:'';
+ let h=bunotHtml(s);
+ h+='<section class="card tag"><div class="taghead"><b>Your codename</b><span>'+ic('lock',13)+'Only you see this card</span></div><div class="tagbody">';
  if(s.locked&&!s.mine){
   h+='<p>Codenames are closed. Message the class secretary.</p>';
  }else if(s.mine&&!EDIT){
@@ -190,8 +280,8 @@ function draw(){
   h+='<div class="bar" aria-hidden="true"><i style="width:'+(total?Math.min(100,Math.round(rows.length/total*100)):0)+'%"></i></div>';
   if(rows.length>8)h+='<div class="find">'+ic('search',16)+'<input id="gq" type="search" placeholder="Find a codename" aria-label="Find a codename" autocomplete="off"></div>';
   h+='<div class="list"><div class="cols" aria-hidden="true"><span>Codename</span><span>Wishlist</span></div>'+
-   rows.map(r=>'<div class="grow'+(r.me?' me':'')+'"><span class="mono" style="--h:'+hue(r.c)+'" aria-hidden="true">'+esc(first(r.c))+'</span><div class="gname"><b>'+esc(r.c)+'</b>'+(r.me?'<span class="you">You</span>':'')+'</div>'+
-   (r.w?'<div class="gw">'+GiftFmt.html(r.w)+'</div>':'<div class="gw none">No wishlist yet</div>')+'</div>').join('')+
+   rows.map(r=>{const isT=tc&&r.c===tc;return '<div class="grow'+(r.me?' me':'')+(isT?' giftee':'')+'"><span class="mono" style="--h:'+hue(r.c)+'" aria-hidden="true">'+esc(first(r.c))+'</span><div class="gname"><b>'+esc(r.c)+'</b>'+(r.me?'<span class="you">You</span>':'')+(isT?'<span class="you giftee-tag">Your giftee</span>':'')+'</div>'+
+   (r.w?'<div class="gw">'+GiftFmt.html(r.w)+'</div>':'<div class="gw none">No wishlist yet</div>')+'</div>'}).join('')+
    '<p class="empty nomatch" id="gnone" hidden>No codename matches.</p></div>';
  }
  if(s.owner)h+='<p class="ownerlink"><a href="giftadmin.html">Review names (only you)</a></p>';
@@ -201,6 +291,35 @@ function draw(){
 }
 
 function showFormMsg(t,bad){const m=$('gmsg');if(!m)return;m.textContent=t;m.className='msg'+(bad?' bad':'');}
+
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function doBunot(){
+ if(!STATE||DRAWING)return;
+ const card=$('bunot-card'),btn=$('bunot-btn'),msg=$('bmsg'),slip=$('bslip-name');
+ if(!card||!btn)return;
+ DRAWING=true;btn.disabled=true;btn.textContent='Drawing…';
+ if(msg){msg.textContent='';msg.className='msg'}
+ const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+ card.classList.add('opening');
+ let res=null,err=false;
+ const rpcP=Auth.rpc('gift_draw',{},true).then(r=>{res=r},()=>{err=true});
+ await Promise.all([rpcP,wait(reduced?40:680)]);
+ if(err||!res||res.err||!res.c){
+  card.classList.remove('opening','revealed');
+  btn.disabled=false;btn.innerHTML=ic('sparkles',17)+'Bunot!';
+  if(msg){msg.textContent=(res&&DRAW_ERR[res.err])||'Couldn’t draw. Check your connection.';msg.className='msg bad'}
+  DRAWING=false;
+  return;
+ }
+ if(slip)slip.textContent=res.c;
+ card.classList.add('revealed');
+ await wait(reduced?60:900);
+ STATE.draw={status:'drawn',open_through:(STATE.draw&&STATE.draw.open_through)||0,target:{c:res.c,w:res.w||''}};
+ try{const st=await Auth.rpc('gift_state',{},true);if(st&&st.draw)STATE=st}catch(e){}
+ DRAWING=false;PIN_OPEN=true;
+ draw();
+}
 
 async function save(){
  if(!STATE)return;
@@ -237,6 +356,8 @@ $('view').addEventListener('click',e=>{
  if(b.dataset.act==='edit'){EDIT=true;NOTICE='';draw();const w=$('wl');if(w)w.focus({preventScroll:true})}
  else if(b.dataset.act==='cancel'){EDIT=false;draw()}
  else if(b.dataset.act==='retry'){boot()}
+ else if(b.dataset.act==='bunot'){doBunot()}
+ else if(b.dataset.act==='pintog'){PIN_OPEN=!PIN_OPEN;draw()}
 });
 $('view').addEventListener('input',e=>{
  if(e.target.id==='wl'){const c=$('wcnt');if(c)c.textContent=e.target.value.length+'/1000'}
