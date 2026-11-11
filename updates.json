@@ -1266,5 +1266,13 @@
   "title": "Math: Simplex method (Lesson 9)",
   "text": "New lesson in Math in the Modern World: the simplex method for maximizing, and the dual for minimizing. Practice the slack variables, the pivot column and row, and every tableau, then solve full problems with all the steps shown. The slides are in Documents. There is a Simplex quiz mock: one simplex problem and one dual problem.",
   "link": "reviewer.html?course=mmw"
+ },
+ {
+  "id": 155,
+  "date": "2026-11-11",
+  "type": "content",
+  "title": "Chem: mock matches the real eval format",
+  "text": "The Nov 14 Chem mock now follows the real test: 30 True or False, 30 fill in the blank or identification, then 3 naming and 3 predict-the-product items from the carboxylic acids chapter. Chirality (optical isomers) is not covered, so it is now an optional section that is off by default.",
+  "link": "reviewer.html?course=chem"
  }
 ]
