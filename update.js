@@ -55,5 +55,6 @@
 
 /* the "here now" ping for the owner's Site stats (here.js) */
 (function () { if (window.top === window) { const s = document.createElement("script"); s.src = "here.js"; document.head.appendChild(s); } })();
-/* site-wide pop-ups for DMs, replies and duels (alerts.js) and the one-time notification setup guide (pushnudge.js) */
-(function () { if (window.top === window) ["alerts.js", "pushnudge.js"].forEach(f => { const s = document.createElement("script"); s.src = f; document.head.appendChild(s); }); })();
+/* site-wide pop-ups for DMs, replies and duels (alerts.js), the one-time notification setup guide (pushnudge.js) and the
+   gift exchange chat dot + pop-up (giftping.js) */
+(function () { if (window.top === window) ["alerts.js", "pushnudge.js", "giftping.js"].forEach(f => { const s = document.createElement("script"); s.src = f; document.head.appendChild(s); }); })();

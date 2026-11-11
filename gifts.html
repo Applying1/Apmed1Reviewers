@@ -543,6 +543,10 @@ async function boot(){
  }
  draw();
  watchUnread();
+ // gifts.html?chat=santa|giftee (from the site-wide pop-up, giftping.js): open that thread once, then drop the parameter
+ try{const q=new URLSearchParams(location.search),side=q.get('chat');
+  if(side){q.delete('chat');const rest=q.toString();history.replaceState(null,'',location.pathname+(rest?'?'+rest:''));
+   if(side==='santa'||side==='giftee')openChat(side)}}catch(e){}
 }
 boot();
 </script>
