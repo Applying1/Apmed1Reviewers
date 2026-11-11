@@ -1242,5 +1242,13 @@
   "title": "Psychology: clearer wording on one question",
   "text": "Chapter 12 (Health): the breast cancer and immigrants question is now worded more clearly.",
   "link": "reviewer.html?course=psych"
+ },
+ {
+  "id": 152,
+  "date": "2026-11-11",
+  "type": "feature",
+  "title": "Gift exchange: anonymous chat",
+  "text": "New on the Gift exchange page: Messages. Chat with the classmate you drew to ask about their wishlist, and answer your own Secret Santa. Nobody sees a name on either side, so don't give yourself away!",
+  "link": "gifts.html"
  }
 ]

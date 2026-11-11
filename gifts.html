@@ -96,6 +96,40 @@ h1{font:600 30px/1.15 var(--serif);letter-spacing:-.3px;margin:12px 0 6px}
 .pincard.compact .pinwho .mono{width:32px;height:32px;font-size:13.5px}
 .grow.giftee{background:color-mix(in srgb,var(--good,#16a34a) 10%,var(--surface))}
 .you.giftee-tag{background:var(--good,#16a34a);color:#fff}
+/* anonymous chat (supabase_gift_chat.sql): two rows + an overlay panel. It shows message text and the day only:
+   never a name, a codename of the giver, a clock time or a "seen" mark, and nothing is saved on the device. */
+.chatcard{padding:6px}
+.chathead{display:block;font:700 11.5px/1 var(--sans);letter-spacing:.65px;text-transform:uppercase;color:var(--faint);padding:12px 12px 6px}
+.crow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 12px;border:0;border-radius:13px;background:none}
+.crow:hover{background:var(--raised)}
+.crow .cico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.crow .ctxt{min-width:0;flex:1}
+.crow b{display:block;font-size:14.5px;overflow-wrap:anywhere}
+.crow small{display:block;font-size:12.5px;line-height:1.35;color:var(--mute)}
+.crow>svg{color:var(--faint)}
+.cbadge{min-width:22px;height:22px;padding:0 7px;border-radius:99px;background:var(--bad,#c0392b);color:#fff;font:700 12px/22px var(--sans);text-align:center;flex:none}
+.chatbox{position:fixed;top:0;left:0;right:0;height:100%;z-index:60;display:flex;align-items:stretch;justify-content:center;background:rgba(0,0,0,.45)}
+.chatpane{display:flex;flex-direction:column;width:100%;max-width:560px;min-height:0;background:var(--bg)}
+.chattop{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 10px 10px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.chatname{min-width:0;flex:1}
+.chatname b{display:block;font:600 18px/1.25 var(--serif);overflow-wrap:anywhere}
+.chatname small{display:block;font-size:12.5px;color:var(--mute)}
+.chatx{width:38px;height:38px;border-radius:11px;border:0;background:none;display:grid;place-items:center;color:var(--mute);flex:none}
+.chatx:hover{background:var(--raised);color:var(--text)}
+.chatlist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px 14px 8px;display:flex;flex-direction:column;gap:6px}
+.chatlist .empty{margin:auto}
+.cday{align-self:center;margin:8px 0 2px;font:700 11px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--faint)}
+.cmsg{max-width:82%;padding:8px 12px;border-radius:16px 16px 16px 5px;background:var(--surface);border:1px solid var(--line);font-size:15px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;align-self:flex-start}
+.cmsg.me{align-self:flex-end;border-radius:16px 16px 5px 16px;background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#chatmsg{padding:0 16px 6px}
+.chatform{display:flex;align-items:flex-end;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line)}
+.chatform textarea{flex:1;min-width:0;min-height:44px;max-height:120px;resize:none;padding:10px 12px;border-radius:14px;border:1px solid var(--line2);background:var(--bg);color:var(--text);font:inherit;font-size:16px;line-height:1.4}
+.chatform textarea:focus{outline:0;border-color:var(--accent)}
+.chatform .btn{height:44px}
+@media (min-width:600px){
+ .chatbox{align-items:center;padding:24px}
+ .chatpane{height:min(680px,100%);border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+}
 .lab{display:block;font:700 11px/1 var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--faint);margin:0 0 5px}
 .gw{font-size:14.5px;color:var(--text);overflow-wrap:anywhere}
 .gw p{margin:0 0 3px;color:inherit;font-size:inherit}.gw p:last-child{margin-bottom:0}.gw ul{margin:2px 0 4px;padding-left:19px}.gw li{margin:1px 0}.gw li::marker{color:var(--faint)}
@@ -256,10 +290,138 @@ function bunotHtml(s){
  return '';
 }
 
+// ---------- anonymous chat ----------
+// Side 'giftee' = the codename I drew. Side 'santa' = whoever drew me (this page never learns who that is).
+const CHAT_ERR={empty:'Type a message first.',long:'Keep it under 500 characters.',slow_down:'Too many messages. Wait a minute.',closed:'This chat isn’t open right now.'};
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let CHAT=null,CHAT_T=0,UNREAD_T=0;
+const manilaDay=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+function dayLabel(d){
+ const p=String(d||'').split('-').map(Number),q=manilaDay().split('-').map(Number);
+ if(p.length!==3||!p[0]||!p[1]||!p[2])return '';
+ const k=Math.round((Date.UTC(q[0],q[1]-1,q[2])-Date.UTC(p[0],p[1]-1,p[2]))/864e5);
+ return k<=0?'Today':k===1?'Yesterday':MONTHS[p[1]-1]+' '+p[2];
+}
+function chatTitle(side){const t=STATE&&STATE.draw&&STATE.draw.target;return side==='giftee'?'Your giftee'+(t&&t.c?' · '+t.c:''):'Your Secret Santa'}
+function chatHtml(s){
+ const c=s.chat;
+ if(!c||(c.giftee==null&&c.santa==null))return '';
+ const row=(side,icon,sub)=>{const n=+c[side]||0;
+  return '<button class="crow" type="button" data-act="chat" data-side="'+side+'"><span class="cico">'+ic(icon,18)+'</span>'+
+   '<span class="ctxt"><b>'+esc(chatTitle(side))+'</b><small>'+sub+'</small></span>'+
+   '<span class="cbadge" data-side="'+side+'"'+(n?'':' hidden')+'>'+n+'</span>'+ic('chevron-right',16)+'</button>'};
+ return '<section class="card chatcard" id="chatcard" aria-label="Messages"><span class="chathead">Messages · anonymous</span>'+
+  (c.giftee!=null?row('giftee','gift','Ask about their wishlist. They won’t know who you are.'):'')+
+  (c.santa!=null?row('santa','sparkles','The classmate who drew you. Their name stays hidden.'):'')+'</section>';
+}
+function paintBadges(){
+ const c=STATE&&STATE.chat;if(!c)return;
+ document.querySelectorAll('.cbadge').forEach(b=>{const n=+c[b.dataset.side]||0;b.textContent=n;b.hidden=!n});
+}
+function fitChat(){
+ const b=$('chatbox'),v=window.visualViewport;
+ if(!b||b.hidden||!v)return;
+ b.style.height=v.height+'px';b.style.top=v.offsetTop+'px';
+}
+function chatBox(){
+ let b=$('chatbox');if(b)return b;
+ b=document.createElement('div');b.id='chatbox';b.className='chatbox';b.hidden=true;
+ b.setAttribute('role','dialog');b.setAttribute('aria-modal','true');b.setAttribute('aria-labelledby','chattitle');
+ b.innerHTML='<div class="chatpane"><div class="chattop"><div class="chatname"><b id="chattitle"></b><small id="chatnote"></small></div>'+
+  '<button class="chatx" type="button" id="chatclose" aria-label="Close the chat">'+ic('x',18)+'</button></div>'+
+  '<div class="chatlist" id="chatlist" aria-live="polite"></div><p class="msg bad" id="chatmsg" role="status"></p>'+
+  '<form class="chatform" id="chatform"><textarea id="chatin" rows="1" maxlength="500" placeholder="Write a message" aria-label="Message"></textarea>'+
+  '<button class="btn primary" id="chatsend" type="submit">Send</button></form></div>';
+ document.body.appendChild(b);
+ b.addEventListener('click',e=>{if(e.target===b||e.target.closest('#chatclose'))closeChat()});
+ $('chatform').addEventListener('submit',e=>{e.preventDefault();sendChat()});
+ const inp=$('chatin');
+ inp.addEventListener('input',()=>{inp.style.height='auto';inp.style.height=Math.min(120,inp.scrollHeight+2)+'px'});
+ // Enter sends with a keyboard; on a phone Enter adds a line and the Send button sends
+ inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&window.matchMedia('(pointer:fine)').matches){e.preventDefault();sendChat()}});
+ return b;
+}
+function chatNote(t){const L=$('chatlist');if(!L)return;L.textContent='';const p=document.createElement('p');p.className='empty cempty';p.textContent=t;L.appendChild(p)}
+// own=true: a message I just sent, shown before the next fetch; it must not move the fetch cursor past unseen replies
+function addMsgs(list,own){
+ const L=$('chatlist');if(!CHAT||!L)return;
+ let n=0;
+ for(const m of list||[]){
+  if(!m)continue;
+  if(!own&&m.id>CHAT.last)CHAT.last=m.id;
+  if(CHAT.ids.has(m.id))continue;
+  CHAT.ids.add(m.id);
+  const e=L.querySelector('.cempty');if(e)e.remove();
+  if(m.d&&m.d!==CHAT.day){CHAT.day=m.d;const lab=dayLabel(m.d);if(lab){const s=document.createElement('div');s.className='cday';s.textContent=lab;L.appendChild(s)}}
+  const d=document.createElement('div');d.className='cmsg'+(m.me?' me':'');d.textContent=m.b==null?'':String(m.b);L.appendChild(d);n++;
+ }
+ if(n)L.scrollTop=L.scrollHeight;
+}
+async function pullChat(){
+ const c=CHAT;if(!c||c.busy)return;
+ c.busy=true;
+ let r=null,fail=false;
+ try{r=await Auth.rpc('gift_chat_open',{p_side:c.side,p_after:c.last},true)}catch(e){fail=true}
+ c.busy=false;
+ if(CHAT!==c)return;
+ if(r&&r.ok){addMsgs(r.msgs);if(!c.loaded){c.loaded=true;if(!c.ids.size)chatNote('No messages yet. Say hi!')}}
+ else if(!c.loaded)chatNote(!fail&&r&&r.err==='closed'?CHAT_ERR.closed:'Couldn’t load the chat. Check your connection.');
+ if(c.again){c.again=false;pullChat()}
+}
+function openChat(side){
+ if(!STATE||!STATE.chat||STATE.chat[side]==null||CHAT)return;
+ const b=chatBox();
+ CHAT={side,last:0,ids:new Set(),day:'',busy:false,loaded:false,again:false,from:document.activeElement};
+ $('chattitle').textContent=chatTitle(side);
+ $('chatnote').textContent=side==='giftee'?'Anonymous chat. Don’t share anything that gives you away.':'Anonymous chat. Your Secret Santa’s name stays hidden.';
+ $('chatmsg').textContent='';$('chatin').value='';$('chatin').style.height='';$('chatsend').disabled=false;
+ chatNote('Loading…');
+ b.hidden=false;document.documentElement.style.overflow='hidden';fitChat();
+ STATE.chat[side]=0;paintBadges();
+ pullChat();
+ clearInterval(CHAT_T);CHAT_T=setInterval(()=>{if(document.visibilityState==='visible')pullChat()},8000);
+ if(window.matchMedia('(pointer:fine)').matches)$('chatin').focus({preventScroll:true});
+}
+function closeChat(){
+ const b=$('chatbox'),c=CHAT;
+ if(!b||b.hidden)return;
+ clearInterval(CHAT_T);CHAT_T=0;CHAT=null;
+ b.hidden=true;b.style.height='';b.style.top='';document.documentElement.style.overflow='';
+ $('chatlist').textContent='';
+ if(c&&STATE&&STATE.chat&&STATE.chat[c.side]!=null){STATE.chat[c.side]=0;paintBadges()}
+ if(c&&c.from&&document.contains(c.from)&&c.from.focus)c.from.focus({preventScroll:true});
+}
+async function sendChat(){
+ const c=CHAT,inp=$('chatin'),btn=$('chatsend'),msg=$('chatmsg');
+ if(!c||!inp||!btn||btn.disabled)return;
+ const t=inp.value.trim();
+ if(!t){msg.textContent=CHAT_ERR.empty;return}
+ btn.disabled=true;msg.textContent='';
+ let r=null;
+ try{r=await Auth.rpc('gift_chat_send',{p_side:c.side,p_body:t},true)}catch(e){}
+ btn.disabled=false;
+ if(CHAT!==c)return;
+ if(r&&r.ok){
+  inp.value='';inp.style.height='';
+  addMsgs([{id:r.id,me:true,b:t,d:manilaDay()}],true);
+  if(c.busy)c.again=true;else pullChat();
+ }else msg.textContent=(r&&CHAT_ERR[r.err])||'Couldn’t send. Check your connection.';
+}
+// While the chat is closed, refresh only the unread badges (never draw(): it would wipe a half-typed wishlist).
+function watchUnread(){
+ if(UNREAD_T)return;
+ UNREAD_T=setInterval(async()=>{
+  if(CHAT||document.visibilityState!=='visible'||!STATE||!STATE.chat)return;
+  try{const u=await Auth.rpc('gift_chat_unread',{},true);if(u&&typeof u==='object'&&STATE&&STATE.chat&&!CHAT){STATE.chat=u;paintBadges()}}catch(e){}
+ },45000);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&CHAT)closeChat()});
+if(window.visualViewport){visualViewport.addEventListener('resize',fitChat);visualViewport.addEventListener('scroll',fitChat)}
+
 function draw(){
  if(!STATE)return;
  const s=STATE,rows=s.rows||[],total=s.total||0,tc=s.draw&&s.draw.status==='drawn'&&s.draw.target?s.draw.target.c:'';
- let h=bunotHtml(s);
+ let h=bunotHtml(s)+chatHtml(s);
  h+='<section class="card tag"><div class="taghead"><b>Your codename</b><span>'+ic('lock',13)+'Only you see this card</span></div><div class="tagbody">';
  if(s.locked&&!s.mine){
   h+='<p>Codenames are closed. Message the class secretary.</p>';
@@ -358,6 +520,7 @@ $('view').addEventListener('click',e=>{
  else if(b.dataset.act==='retry'){boot()}
  else if(b.dataset.act==='bunot'){doBunot()}
  else if(b.dataset.act==='pintog'){PIN_OPEN=!PIN_OPEN;draw()}
+ else if(b.dataset.act==='chat'){openChat(b.dataset.side)}
 });
 $('view').addEventListener('input',e=>{
  if(e.target.id==='wl'){const c=$('wcnt');if(c)c.textContent=e.target.value.length+'/1000'}
@@ -379,6 +542,7 @@ async function boot(){
   return;
  }
  draw();
+ watchUnread();
 }
 boot();
 </script>
