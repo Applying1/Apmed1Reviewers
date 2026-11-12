@@ -312,5 +312,5 @@ function pDraw(){const a=$('app');$('main').classList.remove('wide');
  const jc=Q.get('join');if(jc){try{const s=JSON.parse(sessionStorage.getItem('quiz_player')||'null');if(s&&s.code===jc.toUpperCase()){$('jn').value=s.name;join()}}catch(e){}}})();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
-<script src="update.js" defer></script>
+<script src="themefx.js" defer></script><script src="sound.js" defer></script><script src="update.js" defer></script>
 </body></html>

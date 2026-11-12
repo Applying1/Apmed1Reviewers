@@ -170,5 +170,5 @@ function backLink(){const el=document.querySelector('.back');let r=null;
  list.forEach(c=>COURSES[c.id]=c);backLink();const cl=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud;Push.init(cl);if(cl)Auth.cloud=cl;Push.attRefresh();Push.heal().then(()=>{if(!$('settings').hidden)drawSettings()});
  READ0=Notify.readUpTo();tab(/^#(settings|alerts)$/.test(location.hash)?'settings':'feed')})();
 </script>
-<script src="update.js" defer></script>
+<script src="themefx.js" defer></script><script src="sound.js" defer></script><script src="update.js" defer></script>
 </body></html>

@@ -240,12 +240,12 @@ async function submit(){
  if(cur.length<N)return bad('Not enough letters');
  const ok=cur===ANS||(await WORDS).has(cur);
  if(!ok)return bad('Not in the word list');
- const g=cur,i=G.r.length,now=Date.now();cur='';
+ const g=cur,i=G.r.length,now=Date.now();cur='';try{document.dispatchEvent(new CustomEvent('fx:sound',{detail:{name:'step'}}))}catch(e){}
  G.r.push(g);if(!G.t0)G.t0=now;if(g===ANS){G.w=1;G.t1=now}else if(G.r.length>=TRIES){G.w=0;G.t1=now}G.u=now;save();push(true);
  const r=$('r'+i);r.outerHTML=rowHTML(g,score(g,ANS),i,RM?'':'go');
  busy=true;const wait=RM?0:N*220+520;
  setTimeout(()=>{busy=false;drawKb();drawClue();
-  if(g===ANS){const row=$('r'+i);if(row&&!RM){row.classList.remove('go');void row.offsetWidth;row.classList.add('win')}toast(['Genius!','Brilliant!','Great!','Nice one!','Got it!','Phew!'][i],2400);setTimeout(()=>{drawEnd();size()},RM?0:N*90+600)}
+  if(g===ANS){try{document.dispatchEvent(new CustomEvent('fx:moment',{detail:{kind:'solved'}}))}catch(e){}const row=$('r'+i);if(row&&!RM){row.classList.remove('go');void row.offsetWidth;row.classList.add('win')}toast(['Genius!','Brilliant!','Great!','Nice one!','Got it!','Phew!'][i],2400);setTimeout(()=>{drawEnd();size()},RM?0:N*90+600)}
   else if(G.r.length>=TRIES){toast(ANS,3000);drawEnd();size()}
   else drawRow()},wait);
 }
@@ -336,5 +336,5 @@ boot();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 <script src="dialog.js"></script>
-<script src="update.js" defer></script>
+<script src="themefx.js" defer></script><script src="sound.js" defer></script><script src="update.js" defer></script>
 </body></html>

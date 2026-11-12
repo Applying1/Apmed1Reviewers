@@ -102,6 +102,7 @@
   let actx = null;
   function chime() {
     try {
+      if (g.Sound) { document.dispatchEvent(new CustomEvent('fx:moment', { detail: { kind: 'badge' } })); return }   // sound.js plays it at the site's volume; a theme may add its moment
       if (ls.get('reviewer_quiz_mute') === '1') return;
       const AC = g.AudioContext || g.webkitAudioContext; if (!AC) return;
       actx = actx || new AC(); if (actx.state === 'suspended') actx.resume().catch(() => { });

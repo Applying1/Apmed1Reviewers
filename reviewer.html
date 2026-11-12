@@ -81,6 +81,12 @@
 :root[data-palette="coffee"]{color-scheme:light;--bg:#f6f0e8;--side:#faf6f0;--surface:#fbf8f3;--raised:#ebe0d2;--hover:#f0e7db;--line:#ddd0bf;--line2:#c6b49d;--text:#2e2118;--mute:#5c4a3b;--faint:#6b5848;--accent:#8a4b22;--accent-ink:#ffffff;--accent-soft:#f0dfd0;--accent-line:#cfa583;--accent-2:#2b6b5e;--good:#1b7340;--good-bg:#dff2e5;--good-line:#98cfb0;--bad:#b91c1c;--bad-bg:#fde2e1;--bad-line:#f2a7a4;--hint-bg:#f1e5d7;--hint-ink:#2e2118;--hint-b:#8a4b22;--seq-lo:#ebe0d2;--seq-hi:#8a4b22}
 @media (prefers-color-scheme:dark){:root[data-palette="coffee"]:not([data-theme="light"]){color-scheme:dark;--bg:#1c1511;--side:#21190f;--surface:#251c17;--raised:#30251e;--hover:#382b23;--line:#3d2f26;--line2:#54433a;--text:#f1e7dc;--mute:#bfae9d;--faint:#a8978a;--accent:#e0a574;--accent-ink:#2a170a;--accent-soft:#3a2a1e;--accent-line:#8a5f3f;--accent-2:#7fcfbd;--good:#6ee7b7;--good-bg:#183329;--good-line:#346b54;--bad:#fca5a5;--bad-bg:#3b1d20;--bad-line:#7d3a3f;--hint-bg:#33261c;--hint-ink:#f1e7dc;--hint-b:#e0a574;--seq-lo:#30251e;--seq-hi:#e0a574}}
 :root[data-palette="coffee"][data-theme="dark"]{color-scheme:dark;--bg:#1c1511;--side:#21190f;--surface:#251c17;--raised:#30251e;--hover:#382b23;--line:#3d2f26;--line2:#54433a;--text:#f1e7dc;--mute:#bfae9d;--faint:#a8978a;--accent:#e0a574;--accent-ink:#2a170a;--accent-soft:#3a2a1e;--accent-line:#8a5f3f;--accent-2:#7fcfbd;--good:#6ee7b7;--good-bg:#183329;--good-line:#346b54;--bad:#fca5a5;--bad-bg:#3b1d20;--bad-line:#7d3a3f;--hint-bg:#33261c;--hint-ink:#f1e7dc;--hint-b:#e0a574;--seq-lo:#30251e;--seq-hi:#e0a574}
+/* Winter: Snow day (light) and Winter night (dark). The lantern color is kept for the main button. */
+:root[data-palette="winter"]{color-scheme:light;--bg:#eef4f8;--side:#e7eff5;--surface:#ffffff;--raised:#dfe9f0;--hover:#e8f0f5;--line:#d3e0e9;--line2:#b4c8d6;--text:#13243b;--mute:#44586c;--faint:#566a7d;--accent:#2f6f9a;--accent-ink:#ffffff;--accent-soft:#dbeaf3;--accent-line:#94bdd6;--accent-2:#b07420;--good:#1c7558;--good-bg:#def1ea;--good-line:#9bcdb9;--bad:#b3345a;--bad-bg:#f9e3ea;--bad-line:#e3a3b6;--hint-bg:#dcebf5;--hint-ink:#13243b;--hint-b:#2f6f9a;--seq-lo:#dfe9f0;--seq-hi:#2f6f9a;--cta:#f0b45a;--cta-ink:#2b1c06}
+@media (prefers-color-scheme:dark){:root[data-palette="winter"]:not([data-theme="light"]){color-scheme:dark;--bg:#13243b;--side:#0f1d31;--surface:#1b3746;--raised:#234656;--hover:#2a5062;--line:#2b4c5e;--line2:#3f6679;--text:#eef4f8;--mute:#b4c9d6;--faint:#94adbd;--accent:#9ccbe4;--accent-ink:#0e2233;--accent-soft:#1f4458;--accent-line:#4b7f99;--accent-2:#f0b45a;--good:#8fd8b5;--good-bg:#1c4a41;--good-line:#37776a;--bad:#f08aa6;--bad-bg:#47283a;--bad-line:#8a4660;--hint-bg:#1d4257;--hint-ink:#eef4f8;--hint-b:#9ccbe4;--seq-lo:#234656;--seq-hi:#9ccbe4}}
+:root[data-palette="winter"][data-theme="dark"]{color-scheme:dark;--bg:#13243b;--side:#0f1d31;--surface:#1b3746;--raised:#234656;--hover:#2a5062;--line:#2b4c5e;--line2:#3f6679;--text:#eef4f8;--mute:#b4c9d6;--faint:#94adbd;--accent:#9ccbe4;--accent-ink:#0e2233;--accent-soft:#1f4458;--accent-line:#4b7f99;--accent-2:#f0b45a;--good:#8fd8b5;--good-bg:#1c4a41;--good-line:#37776a;--bad:#f08aa6;--bad-bg:#47283a;--bad-line:#8a4660;--hint-bg:#1d4257;--hint-ink:#eef4f8;--hint-b:#9ccbe4;--seq-lo:#234656;--seq-hi:#9ccbe4}
+:root[data-palette="winter"] .btn.primary:not(:disabled){background:var(--cta);border-color:var(--cta);color:var(--cta-ink);box-shadow:0 1px 2px #0000001a,0 2px 10px color-mix(in oklab,var(--cta) 32%,transparent)}
+:root[data-palette="winter"] .btn.primary:hover:not(:disabled){background:var(--cta);filter:brightness(1.06)}
 
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -672,6 +678,7 @@ body.notesonly .side>.label,body.notesonly #nav{display:none}
 .prow .pl span.pd.open{display:block;overflow:visible}
 @media (max-width:640px){.prow:not(.stack){flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 14px}.prow:not(.stack) .pl{flex:1 1 200px;min-width:0}.prow:not(.stack) .ctl{flex:0 1 auto;min-width:0;max-width:100%}.prow .ctl select{min-width:0;max-width:100%}}
 @media (max-width:520px){.goal>span:first-child{display:none}}
+input.vol{width:170px;max-width:100%;accent-color:var(--accent)}
 .pgsep{display:block;height:1px;margin:8px 10px;background:var(--line)}
 .kpis{gap:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
 .kpi,.kpi:hover{background:none;border:0;border-left:1px solid var(--line);border-radius:0;box-shadow:none;transform:none}.kpi:first-child{border-left:0}
@@ -1150,6 +1157,8 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
 .fcla{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
 @media (max-width:640px){.fcdeck{flex-basis:100%}.fcdeck select{max-width:none}.fcstat{margin-left:0;width:100%;justify-content:space-between}.fcq{font-size:19px}.fca{font-size:16.5px}.fccard{min-height:220px}.fckeys{display:none}}
 @media (prefers-reduced-motion:reduce){.fccard,.fcring .f{transition:none}}
+/* v117 labels: sentence case, muted (they were small caps) */
+.label,.chcard .no,.ncard h3,.exres .eyebrow,.scopesw span,.docgrp h3{text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600}
 </style><style>.app.booting main>.view{display:none!important}.skel{display:grid;gap:14px;padding-top:6px}.skel i{display:block;border-radius:16px;background:linear-gradient(100deg,var(--line) 30%,var(--raised) 50%,var(--line) 70%);background-size:300% 100%;animation:skel 1.3s linear infinite}.skel .k1{height:30px;width:55%;border-radius:10px}.skel .k2{height:190px}.skel .k3{height:22px;width:35%;border-radius:8px;margin-top:6px}.skel .kg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.skel .kg i{height:96px}.skel .k4{height:240px}@media (max-width:640px){.skel .kg{grid-template-columns:1fr 1fr}}@keyframes skel{from{background-position:100% 0}to{background-position:-100% 0}}@media (prefers-reduced-motion:reduce){.skel i{animation:none}}</style></head><body>
 <div class="app booting" id="app">
  <aside class="side" id="side" aria-label="Navigation">
@@ -1172,7 +1181,7 @@ ul.wrn{list-style:none;margin:8px 0 0;padding:0;font-size:14px;line-height:1.5}u
     <div style="min-width:0"><div class="crumb" id="dashcrumb">Dashboard</div><h1 id="greet">Welcome</h1></div>
     <button class="btn primary cta" onclick="setPage('study')">Continue practicing</button>
    </div>
-   <section class="card hero" id="hero"></section>
+   <section class="card hero" id="hero" data-fx-slot="hero"></section>
    <div class="kpis" id="kpis"></div>
    <section class="chapters" aria-label="Topics" id="chcards"></section>
    <div class="dgrid">

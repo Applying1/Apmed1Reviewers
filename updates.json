@@ -1282,5 +1282,21 @@
   "title": "A cleaner look",
   "text": "Drawn marks instead of typed ticks and crosses, a calmer answer box with Flashcard, Notes and Discuss in one row, a shorter dashboard, a grouped side menu and a shorter Personalize page.",
   "link": "./"
+ },
+ {
+  "id": 157,
+  "date": "2026-11-12",
+  "type": "feature",
+  "title": "Winter theme and sounds",
+  "text": "A new Winter theme with falling snow and a night sky, and soft sounds for right and wrong answers, finished sections, flashcards and the daily games. Try Winter from the home page; sounds and effects can be changed in Settings.",
+  "link": "./"
+ },
+ {
+  "id": 158,
+  "date": "2026-11-12",
+  "type": "feature",
+  "title": "Hide a question",
+  "text": "After you answer, tap Hide this question to take one you don’t need out of practice for good. The mock exam still uses it. Find them again in Personalize, Hidden questions.",
+  "link": "./"
  }
 ]

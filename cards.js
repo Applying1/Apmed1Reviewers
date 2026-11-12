@@ -218,8 +218,8 @@ function drawCram(el){const c=CRAM.q[0];
  h+=CUR.flip?'<div class="fcbtns"><button class="btn fcg g1" onclick="Cards.grade(1)"><b>Again</b><small>a few cards later</small></button><button class="btn fcg g3" onclick="Cards.grade(3)"><b>Good</b><small>done</small></button></div>'
   :'<div class="fcbtns one"><button class="btn primary" onclick="Cards.flip()">Show answer</button></div>';
  el.innerHTML=h;swipe()}
-function flip(){if(!CUR||CUR.flip)return;CUR.flip=true;draw()}
-function grade(g){if(!CUR||!CUR.flip)return;const c=CUR.c;
+function flip(){if(!CUR||CUR.flip)return;CUR.flip=true;try{fx('sound',{name:'flip'})}catch(e){}draw()}
+function grade(g){if(!CUR||!CUR.flip)return;try{fx('sound',{name:'grade'})}catch(e){}const c=CUR.c;
  if(CRAM){CRAM.q.shift();if(g===1)CRAM.q.splice(Math.min(3,CRAM.q.length),0,c);else CRAM.done++;if(!CRAM.seen.has(c.i)){CRAM.seen.add(c.i);dailyAdd(1)}CUR=null;draw();return}
  const old=FC.c[c.i]||null,k=old?unpack(old):NEWK;dayRoll();
  UNDO={id:c.i,old,day:FC.day.slice(),h:FC.h?JSON.stringify(FC.h):null,c};

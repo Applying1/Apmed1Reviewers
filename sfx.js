@@ -52,7 +52,7 @@ window.Sfx=(function(){
 })();
 // A small sound on/off button for the page corner
 (function(){function add(){if(document.getElementById('sfxbtn'))return;const b=document.createElement('button');b.id='sfxbtn';b.type='button';
- const paint=()=>{const m=Sfx.muted();b.textContent=m?'🔇':'🔊';b.setAttribute('aria-label',m?'Sound is off. Turn sound on':'Sound is on. Turn sound off');b.title=m?'Sound off':'Sound on'};
+ const paint=()=>{const m=Sfx.muted();b.innerHTML='<svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-4px"><use href="icons.svg#i-volume'+(m?'-off':'')+'"/></svg>';b.setAttribute('aria-label',m?'Sound is off. Turn sound on':'Sound is on. Turn sound off');b.title=m?'Sound off':'Sound on'};
  b.style.cssText='position:fixed;top:max(10px,env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));z-index:50;width:40px;height:40px;border-radius:50%;border:1px solid var(--line2);background:var(--surface);color:var(--text);font-size:18px;cursor:pointer;line-height:1';
  b.onclick=()=>{Sfx.unlock();Sfx.toggle();paint()};paint();document.body.appendChild(b)}
  if(document.body)add();else document.addEventListener('DOMContentLoaded',add)})();

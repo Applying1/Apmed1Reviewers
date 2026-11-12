@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='116',APP_DATE='Nov 11, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='118',APP_DATE='Nov 12, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -221,13 +221,14 @@ const FC_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke=
 const NOTE_SM='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 
 /* ---------- saved state ---------- */
-const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true,missTags:true,ai:true,cards:true,fcFour:false,fcRet:.88,fcNew:40,fcRev:150,fcDeck:null,fcExam:true,fcEasy:-1};
+const DEFAULT_PREFS={target:GOALS.includes(2)?2:GOALS[0],order:'random',extras:true,notes:true,matching:true,selftest:false,mix:0,charts:true,opt:{},crossout:true,lucky:true,stars:true,missed:true,srs:true,typeMode:false,exam:true,flag:true,scope:null,crowd:true,classmiss:true,hardPractice:false,strict:false,sure:false,blurt:true,missTags:true,ai:true,cards:true,fcFour:false,fcRet:.88,fcNew:40,fcRev:150,fcDeck:null,fcExam:true,fcEasy:-1,hideq:true};
 function fresh(){return {concepts:{},correct:0,wrong:0,lookups:0,hints:0,section:ALL_SECTIONS[0],complete:[],history:[],log:[],active:null,selected:null,feedback:null,bank:'main',prefs:{...DEFAULT_PREFS},match:{sets:0,right:0,total:0,best:{}}}}
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY))||fresh();if(!state.concepts)state=fresh()}catch(e){state=fresh()}
 ALL_ITEMS.forEach(c=>{if(!state.concepts[c.id])state.concepts[c.id]=blank()});
 try{const r=+localStorage.getItem(KEY+'_rst')||0;if(r>(state.resetAt||0))state.resetAt=r}catch(e){}   // v109: when this course was last started over
 if(!state.chReset||typeof state.chReset!=='object')state.chReset={};
+if(!state.hidden||typeof state.hidden!=='object')state.hidden={};   // v118: questions this student hid, {id:[1 hidden|0 shown again, time]}
 trimState(state,false);
 state.prefs=Object.assign({},DEFAULT_PREFS,state.prefs);if(!state.prefs.blurtV75){state.prefs.blurt=true;state.prefs.blurtV75=1}   // v75: Blurt on by default (v74 saved it off for everyone)
 if(!GOALS.includes(state.prefs.target))state.prefs.target=DEFAULT_PREFS.target;
@@ -271,7 +272,9 @@ const examAll=e=>!e.chapters&&!e.sections;
 const inScopeCh=ch=>{const e=examObj();ch=String(ch);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).some(x=>chOf(x)===ch)};
 const inScope=sec=>{const e=examObj(),ch=chOf(sec);return !e||examAll(e)||!(ch in COURSE_CH)||(e.chapters||[]).map(String).includes(ch)||(e.sections||[]).includes(sec)};
 // xo: exam-only items (e.g. Pharma's VSAs): never in practice, only filling a mock exam's VSA slots (v83)
-const bankItems=b=>b.items.filter(c=>!c.retired&&!c.xo&&(state.prefs.extras||!c.extra)&&secOn(c.section)&&inScope(c.section));
+// v118: a hidden question leaves practice, quizzes, review and the mastery totals; the mock exam still uses it.
+const isHid=c=>{const h=(state.hidden||{})[c.id];return !!(h&&h[0])};
+const bankItems=b=>b.items.filter(c=>!c.retired&&!c.xo&&!isHid(c)&&(state.prefs.extras||!c.extra)&&secOn(c.section)&&inScope(c.section));
 function validSection(s){return s==='ALL'||(s==='DUE'&&state.prefs.srs)||(s==='MISSED'&&state.prefs.missed)||(s==='STAR'&&state.prefs.stars)||(s==='CLASS'&&classOn())||(s==='CRAM'&&cramOn())||(isCh(s)?chapters.includes(s.slice(3)):sectionKeys.includes(s))}
 function refreshBank(){PV++;const b=bankObj();BANK=bankItems(b);if(!BANK.length)BANK=b.items;
  sectionKeys=ALL_SECTIONS.filter(k=>BANK.some(c=>c.section===k));
@@ -334,7 +337,7 @@ function flushSave(){if(!saveQ)return;saveQ=false;
 // the home page can show the right percent after the course's exam changes, without opening the course. It travels with
 // the synced progress too, so a newly signed-in device shows every course's progress on the home page at once.
 function summaryObj(){const main=bankItems(BANKS[0]),e=examObj(),id=courseId(),due=[],secs={};
- for(const c of BANKS[0].items){if(c.retired||c.xo||!(state.prefs.extras||!c.extra)||!secOn(c.section))continue;const s=secs[c.section]||(secs[c.section]=[0,0]);s[1]++;if(isM(c))s[0]++}
+ for(const c of BANKS[0].items){if(c.retired||c.xo||isHid(c)||!(state.prefs.extras||!c.extra)||!secOn(c.section))continue;const s=secs[c.section]||(secs[c.section]=[0,0]);s[1]++;if(isM(c))s[0]++}
  if(id&&state.prefs.srs)for(const c of main){const k=state.concepts[c.id];if(k&&k.srs&&isM(c))due.push(k.srs.due)}
  return Object.assign({m:main.filter(isM).length,t:main.length,at:Date.now(),scope:e?e.name:'',secs,pick:state.prefs.scope||'',seen:state.prefs.scopeSeen||''},id?{id,title:CONFIG.title,due:due.sort((a,b)=>a-b).slice(0,400)}:{})}
 addEventListener('pagehide',flushSave);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSave()});
@@ -502,7 +505,9 @@ function feedbackHTML(q,fb,live,ai){   // ai: the AI box also shows on an earlie
   :fb.sure==='sure'&&!fb.lookup?'You were sure of this one. Confident mistakes are the easiest to fix once you see why, so it comes back in a couple of questions.'
   :fb.typed!=null&&!fb.lookup?'This '+ITEM+' comes back in a few questions.'+(live?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'')
   :'This '+ITEM+' comes back in a few questions, '+(AUTHORED?'with the choices reshuffled':'worded differently')+'.'+(live&&fb.typed?' <button class="link lucky" onclick="overrideTyped()">I was right, count it</button>':'');
- const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+'</p></div>';
+ const cr=state.prefs.classmiss&&q.cid?classRate(q.cid):null;
+ const hid=state.prefs.hideq!==false&&q.cid&&byId[q.cid]&&!byId[q.cid].xo&&!(state.exam&&state.exam.qs&&!state.exam.done&&state.exam.qs.includes(q))?' <button class="link lucky" onclick="hideQ('+esc(JSON.stringify(String(q.cid)))+','+(live?1:0)+')" title="Never ask this '+ITEM+' again in practice">'+(isHid(byId[q.cid])?'Hidden':'Hide this '+ITEM)+'</button>':'';
+ out+='<p class="note">'+note+(cr!=null?' <span class="crate">'+cr+'% of the class missed this one.</span>':'')+hid+'</p></div>';
  return out;
 }
 /* v72: "Check for updates" (Personalize, next to the version). Installed apps on iPad/iPhone have no pull-to-refresh:
@@ -933,6 +938,7 @@ const navDraw=()=>setHTML($('nav'),navHTML());
 function draw(){
  PV++;
  if(!pageOn(page))page='dashboard';
+ fxQuiet();
  navTrack();
  for(const [p,v] of Object.entries(VIEWS))$(v).hidden=p!==page;
  $('main').classList.toggle('wide',page==='dashboard'||page==='notes');
@@ -1370,7 +1376,7 @@ function exSetup(){const st=state.exSetup||(state.exSetup={count:30,chs:chapters
 function qMatch(entry,c){const i=String(entry).indexOf(':');if(i<0)return c.section===entry;const sec=entry.slice(0,i),tag=entry.slice(i+1);return c.section===sec&&(c.kind===tag||c.type===tag)}
 function exPoolOf(items,st){const qs=st.quota&&st.quota.flatMap(q=>q[0]);return items.filter(c=>st.chs.includes(chOf(c.section))&&(!st.secs||st.secs.includes(c.section))&&(!qs||qs.some(e=>qMatch(e,c))))}
 function exItems(){const b=bankObj();if(b.user)return BANK;const have=new Set(BANK.map(c=>c.id));
- return BANK.concat(b.items.filter(c=>!have.has(c.id)&&!c.retired&&!c.xo&&optExam(c.section)&&inScope(c.section)&&(state.prefs.extras||!c.extra)))}
+ return BANK.concat(b.items.filter(c=>!have.has(c.id)&&!c.retired&&!c.xo&&(optExam(c.section)||isHid(c)&&secOn(c.section))&&inScope(c.section)&&(state.prefs.extras||!c.extra)))}
 function exPool(){return exPoolOf(exItems(),exSetup())}
 function exLeft(){const ex=state.exam;return ex.limit?ex.start+ex.limit-Date.now():Infinity}
 function clock(ms){const t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
@@ -1461,7 +1467,7 @@ function exPick(st,pool,n,xo){
   const us=Object.keys(byU);let k=0;while(vs.length<want&&us.some(u=>byU[u].length)){const u=us[k++%us.length];if(byU[u].length)vs.push(byU[u].splice(rnd()%byU[u].length,1)[0])}
   if(vs.length<want){const more=shuffle(pool.filter(c=>vsaOK(c)&&!picked.includes(c)),rnd()).slice(0,want-vs.length);vs.push(...more);picked=picked.filter(c=>!vs.includes(c)).slice(0,nm-vs.length)}else picked=picked.filter(c=>!vs.includes(c))}
  return {mq,picked,vs}}
-function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;const {mq,picked,vs}=exPick(st,pool,n,exPoolOf(bankObj().items.filter(c=>c.xo&&!c.retired),st));
+function startExam(){const st=exSetup(),pool=exPool(),n=Math.min(st.count,pool.length);if(!n)return;fx('sound',{name:'start'});const {mq,picked,vs}=exPick(st,pool,n,exPoolOf(bankObj().items.filter(c=>c.xo&&!c.retired),st));
  const easy=st.level==='easy'&&hasLevels();HARD=!easy;LONG=!easy;INEX=true;
  const qsBuilt=picked.map(c=>exQ(makeQuestion(c))).concat(mq,vs.map(c=>exQ(makeQuestion(c),true)));HARD=LONG=INEX=false;
  state.exam={qs:qsBuilt,easy:easy?1:0,
@@ -1660,6 +1666,13 @@ function copyChalLink(c){const link=chalLink(c);if(!link)return;
 /* ---------- flag a question: copies it, with its ID and answer key, for the group chat ---------- */
 const FLAG_SVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5"/></svg>';
 function flagBtn(call){return state.prefs.flag?'<button class="starbtn flagbtn" onclick="'+call+'" aria-label="Flag a problem with this '+ITEM+'" title="Something wrong? Copy this '+ITEM+' for your group chat (F)">'+FLAG_SVG+'</button>':''}
+/* v118: hide one question for good (practice, quizzes, review); the mock exam still asks it. Shown again from
+   Personalize > Hidden. Saved with its time so the newer choice wins across synced devices. */
+function hideQ(id,live){const c=byId[id];if(!c)return;(state.hidden||(state.hidden={}))[id]=[1,Date.now()];refreshBank();
+ if(live&&state.feedback&&state.active&&state.active.cid===id){next()}else{save();draw()}
+ toast('Hidden. It won\'t come up in practice again. Show it again in Personalize > Hidden '+ITEMS+'.')}
+function unhideQ(id){if(id==='*'){for(const k in state.hidden||{})if(state.hidden[k][0])state.hidden[k]=[0,Date.now()]}
+ else if(state.hidden&&state.hidden[id])state.hidden[id]=[0,Date.now()];refreshBank();save();drawPrefs()}
 function flagQ(where,j){const q=where==='ex'?state.exam&&state.exam.qs[j]:where==='log'?(secLog()[view]||{}).q:state.active;if(!q)return;
  const ok=(q.choices||[]).find(c=>c.correct),c=q.cid&&byId[q.cid];
  const text='['+CONFIG.title+(c?' · '+c.section+' · '+q.cid:'')+'] '+q.stem+(ok?' (Answer key: '+labelText(ok.label)+')':'');
@@ -1865,13 +1878,13 @@ function prefSig(){return JSON.stringify([state.prefs,state.exSetup||null])}
 function syncPayload(){const c={};for(const id in state.concepts){const k=state.concepts[id];if(k.seen||k.star||k.lookups||k.srs)c[id]=[k.seen||0,k.right||0,k.wrong||0,k.lookups||0,k.hints||0,k.star?1:0,k.srs?k.srs.lvl:0,k.srs?k.srs.due:0,k.lucky||0]}
  let sum=null;try{sum=summaryObj()}catch(e){}
  return {v:2,at:Date.now(),c,sum,tot:{correct:state.correct,wrong:state.wrong,lookups:state.lookups,hints:state.hints},match:state.match,exams:state.exams||[],chalLog:state.chalLog||{},miss:state.missLog||[],name:state.name||'',history:(state.history||[]).slice(-60),sets:USER_SETS,fc:FC.c,fcd:FC.day,fch:FC.h||{},fcs:FC.sus||{},mc:MYC.c,
-  prefs:state.prefs,exSetup:state.exSetup||null,prefsAt:state.prefsAt||0,rst:state.resetAt||0,chr:state.chReset||{},
+  prefs:state.prefs,exSetup:state.exSetup||null,prefsAt:state.prefsAt||0,rst:state.resetAt||0,chr:state.chReset||{},hid:state.hidden||{},
   cur:state.pmatch?null:{at:state.curAt||0,section:state.section,active:state.active,feedback:state.feedback,selected:state.selected,pass:state.pass||null,starDone:state.starDone||[],dueDone:state.dueDone||[],classDone:state.classDone||[]}}}
 function unpack(r){const c={};for(const id in r.c||{}){const x=r.c[id];c[id]={seen:x[0],right:x[1],wrong:x[2],lookups:x[3],hints:x[4],star:!!x[5],srs:x[7]?{lvl:x[6],due:x[7]}:null,lucky:x[8]||0,history:[]}}return Object.assign({},r,{concepts:c})}
 // v109 resets: "Start over" saves its time (state.resetAt, also in <KEY>_rst so it outlives the erase) and a chapter reset saves
 // state.chReset[ch]. Both travel with the sync copy (rst, chr). A copy from before a reset never brings the old answers back;
 // a newer reset from another device erases the answers here too. Settings, own flashcards and card memory are never reset.
-function wipeProgress(t){const keep={prefs:state.prefs,prefsAt:state.prefsAt||0,exSetup:state.exSetup,name:state.name,renamed:state.renamed};
+function wipeProgress(t){const keep={prefs:state.prefs,prefsAt:state.prefsAt||0,exSetup:state.exSetup,name:state.name,renamed:state.renamed,hidden:state.hidden||{}};
  state=Object.assign(fresh(),keep,{resetAt:t,chReset:{}});ALL_ITEMS.forEach(c=>{state.concepts[c.id]=blank()});
  try{localStorage.setItem(KEY+'_rst',String(t))}catch(e){}view=null}
 function wipeChapter(ch,t){ALL_ITEMS.forEach(c=>{if(chOf(c.section)===ch)state.concepts[c.id]=blank()});
@@ -1894,6 +1907,10 @@ function mergeRemote(r){let changed=false,reload=false;if(r&&r.v===2)r=unpack(r)
  if((r.exams||[]).length>(state.exams||[]).length){state.exams=r.exams;changed=true}
  for(const k in r.chalLog||{})if(!(state.chalLog||{})[k]){state.chalLog=state.chalLog||{};state.chalLog[k]=r.chalLog[k];changed=true}
  if(r.name&&!state.name){state.name=r.name;changed=true}
+ // v118 hidden questions: per question, the newer hide or show-again wins (both are kept with their time)
+ if(r.hid&&typeof r.hid==='object'){let hc=false;const H=state.hidden||(state.hidden={});for(const id in r.hid){const b=r.hid[id],a=H[id];
+  if(Array.isArray(b)&&b.length>=2&&typeof b[1]==='number'&&(!a||b[1]>a[1])){H[id]=[b[0]?1:0,b[1]];hc=true}}
+  if(hc){refreshBank();changed=true}}
  // own flashcards: per card, the newer change wins (a deletion is a change too)
  if(Array.isArray(r.mc)){let mc=false;for(const b of r.mc){if(!b||typeof b.i!=='string')continue;const i=MYC.c.findIndex(x=>x.i===b.i);if(i<0){MYC.c.push(b);mc=true}else if((b.at||0)>(MYC.c[i].at||0)){MYC.c[i]=b;mc=true}}
   if(mc){syncHold=true;mcSave();syncHold=false;changed=true}}
@@ -1973,6 +1990,10 @@ function drawPrefs(){
   row('Star '+ITEMS,'Flag tricky '+ITEMS+' with the star or the S key, then review them together, even after they are mastered.',sw(state.prefs.stars,"setPref('stars',"+!state.prefs.stars+")",'Star '+ITEMS))+
   row('Missed '+ITEMS+' drill','A sidebar list and a dashboard button that drill only the '+ITEMS+' you got wrong or checked in your slides, until they are mastered.',sw(state.prefs.missed,"setPref('missed',"+!state.prefs.missed+")",'Missed '+ITEMS+' drill'))+
   row('Spaced review','Mastered '+ITEMS+' come back as Due for review after 1, 3, 7, 14 and 30 days (sooner when a test is coming up), so they stick until the exam. Missing one sends it back to practice.',sw(state.prefs.srs,"setPref('srs',"+!state.prefs.srs+")",'Spaced review'))+
+  row('Hide button','After you answer, a <b>Hide this '+ITEM+'</b> link takes a '+ITEM+' you don&#39;t need out of practice for good. The mock exam still uses it.',sw(state.prefs.hideq!==false,"setPref('hideq',"+(state.prefs.hideq===false)+")",'Hide button'))+
+  (()=>{const hs=FULL_BANK.filter(isHid);if(!hs.length)return '';return '<div class="prow stack"><details><summary><b>Hidden '+ITEMS+' ('+hs.length+')</b></summary>'+
+   hs.map(c=>'<p class="note" style="display:flex;gap:8px;align-items:baseline"><span style="flex:1">'+esc(String(c.q||c.a||c.id).slice(0,110))+'</span><button class="link" onclick="unhideQ('+esc(JSON.stringify(String(c.id)))+')">Show again</button></p>').join('')+
+   (hs.length>1?'<p><button class="btn" onclick="unhideQ(\'*\')">Show all again</button></p>':'')+'</details></div>'})()+
   row('Flag button',contribOn()?'A flag next to the star reports a typo or a wrong answer key to the moderator (or copies it for your group chat).':'A flag next to the star copies the '+ITEM+', its ID and the answer key, so you can paste it in your group chat to point out a typo or a wrong answer.',sw(state.prefs.flag,"setPref('flag',"+!state.prefs.flag+")",'Flag button'))+
   (cloudOn()?row('Class stats','A Class stats panel on the dashboard, a sidebar list of the '+CLASS_TOP+' '+ITEMS+' your class misses most, and how many classmates missed each '+ITEM+' after you answer it. Updates every 30 minutes.',sw(state.prefs.classmiss,"setPref('classmiss',"+!state.prefs.classmiss+")",'Class most missed')):'')+
   '</section>';
@@ -1998,7 +2019,7 @@ function drawPrefs(){
   row('Add a question set','Paste questions or upload a .txt or .csv file, like a set a classmate exported or one your group wrote in Google Sheets.','<button class="btn sm" onclick="openSetEditor()">Add a set</button>')+'</section>';
  h+='<section class="panel"><h2>Appearance and you</h2>'+
   row('Theme','System follows your device setting.',segHTML('setThemeMode',[['system','System'],['light','Light'],['dark','Dark']],themeMode(),'Theme'))+
-  row('Colors','Classic indigo, the APMed \'33 palette, or a popular theme. Each has a light and a dark version that follows Dark mode. Applies to every course and the home page on this device.',palHTML(document.documentElement.dataset.palette||'classic')).replace('class="prow"','class="prow stack"')+(CONFIG.home?row('Welcome animation','Play the intro on the home page again.','<button class="btn sm" onclick="replayIntro()">Replay</button>'):'')+
+  row('Colors','Classic indigo, the APMed \'33 palette, or a popular theme. Each has a light and a dark version that follows Dark mode. Applies to every course and the home page on this device.',palHTML(document.documentElement.dataset.palette||'classic')).replace('class="prow"','class="prow stack"')+(window.ThemeFx?row('Theme effects','Some themes, like Winter, add a backdrop and small touches. Still keeps the picture without the motion. Saved on this device.',segHTML('setFx',ThemeFx.MODES,ThemeFx.mode(),'Theme effects')):'')+(window.Sound?row('Sounds','Soft sounds for right and wrong answers, finished sections and flashcards. Saved on this device. A phone on silent stays quiet.',sw(Sound.on(),"setSoundOn("+!Sound.on()+")",'Sounds'))+(Sound.on()?row('Volume','','<input type="range" class="vol" min="5" max="100" step="5" value="'+Math.round(Sound.vol()*100)+'" aria-label="Volume" onchange="setSoundVol(this.value)">'):''):'')+(CONFIG.home?row('Welcome animation','Play the intro on the home page again.','<button class="btn sm" onclick="replayIntro()">Replay</button>'):'')+
   row('Your name','Used to greet you on the dashboard. Saved only in this browser.','<input class="txt" id="pname" maxlength="40" placeholder="Your name" aria-label="Your name" autocomplete="given-name" value="'+esc(state.name||'')+'" onchange="setName(this.value)">')+'</section>';
  h+='<section class="panel"><h2>Your data</h2>'+syncRowHTML(row)+
   (cloudOn()?row('Share anonymous answer stats','Sends only which '+ITEMS+' were answered right or wrong, with no name and no device ID, so the class can see its most missed '+ITEMS+'. It also adds you to the class\'s "studying now" number (a random code for this device, kept 1 hour, never a name).',sw(state.prefs.crowd,"setPref('crowd',"+!state.prefs.crowd+")",'Share anonymous answer stats')):'')+
@@ -2017,6 +2038,14 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'118',date:'Nov 12, 2026',title:'Hide a question',items:[
+  'After you answer, <b>Hide this question</b> takes a question you don&#39;t need out of practice, quizzes and review for good. It also leaves your mastery count. The mock exam still uses it.',
+  'Changed your mind? Personalize, Study tools, <b>Hidden questions</b> lists them with Show again. Hidden questions sync across your signed-in devices, and the link can be switched off there too.']},
+ {v:'117',date:'Nov 12, 2026',title:'Winter theme and sounds',items:[
+  '<b>Winter</b> is a new color theme: a night sky with falling snow and an aurora in dark mode, a snowy day in light mode. Pick it in Personalize, Appearance, Colors, or try it from the home page.',
+  'The snow stops while a question is open, and a short flurry falls when you finish a section or reach your daily goal. <b>Theme effects</b> can be set to Full, Still or Off.',
+  '<b>Sounds</b>: soft recorded sounds for right and wrong answers, finished sections, flashcards and the daily games. They start at a low volume. Turn them off or change the volume in Personalize or in Settings.',
+  'Home page: one notice at a time, and a course you have not started no longer shows an empty bar.']},
  {v:'116',date:'Nov 11, 2026',title:'A cleaner look',items:[
   'Right and wrong answers, finished sections and solved games now use <b>drawn marks</b> instead of typed symbols.',
   'The answer box is calmer: a thin colored edge instead of a full green or pink panel, with <b>Make a flashcard</b>, <b>Notes</b> and <b>Discuss</b> in one row.',
@@ -2296,7 +2325,7 @@ function closeCharts(){$('charts').hidden=true;ovClosed('charts')}
 /* ---------- theme ---------- */
 function curTheme(){return document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}
 // Colors picker: a chip per palette with its swatch (page, accent, second accent)
-const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']],['ocean','Ocean',['#eef5fa','#0a6c9e','#5cc0ef']],['lavender','Lavender',['#f5f2fb','#6b46c1','#b9a2f5']],['coffee','Coffee',['#f6f0e8','#8a4b22','#e0a574']]];
+const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']],['ocean','Ocean',['#eef5fa','#0a6c9e','#5cc0ef']],['lavender','Lavender',['#f5f2fb','#6b46c1','#b9a2f5']],['coffee','Coffee',['#f6f0e8','#8a4b22','#e0a574']],['winter','Winter',['#13243b','#9ccbe4','#f0b45a']]];
 function palHTML(cur){return '<span class="pals" role="radiogroup" aria-label="Colors">'+PALS.map(([v,t,c])=>'<button role="radio" aria-checked="'+(v===cur)+'" class="'+(v===cur?'on':'')+'" onclick="setPalette(\''+v+'\')"><i style="background:linear-gradient(135deg,'+c[0]+' 0 50%,'+c[1]+' 50% 75%,'+c[2]+' 75%)"></i>'+t+'</button>').join('')+'</span>'}
 function replayIntro(){try{localStorage.removeItem('reviewer_intro_v1')}catch(e){}location.href=CONFIG.home||'./'}
 function setPalette(p){if(p==='classic'){delete document.documentElement.dataset.palette;try{localStorage.removeItem('reviewer_palette')}catch(e){}}else{document.documentElement.dataset.palette=p;try{localStorage.setItem('reviewer_palette',p)}catch(e){}}if(page==='prefs')drawPrefs()}
@@ -2503,8 +2532,17 @@ function wsReviewHTML(ex){return '<div class="exreview wsx">'+wsGroups(ex).map((
   return '<article class="panel wsprob"><div class="pqh"><b>Problem '+(i+1)+'</b><span class="kind">'+right+' of '+g.js.length+' right</span><span class="mastery">'+flagBtn("flagQ('ex',"+g.js[0]+")")+'</span></div>'+(g.id?caseHTML(ex.qs[g.js[0]].cid):'')+'<div class="ws done">'+rows+'</div>'+wsSolHTML(solC,right<g.js.length)+'</article>'}).join('')+'</div>'}
 function caseHTML(cid){const c=byId[cid];return c&&c.cstem?'<div class="cstem"><span class="ck">'+esc(c.clabel||'Problem')+'</span>'+stemHTML(c.cstem)+'</div>':''}
 
+// v117 theme effects and sounds. The engine only says what happened (document events) and whether a question or a
+// reading view is open (data-fx-quiet on <html>); site/themefx.js and site/sound.js decide what is shown and heard.
+// Both load only on the website: a course file opened from a folder keeps the colors and stays silent.
+function fx(n,d){try{document.dispatchEvent(new CustomEvent('fx:'+n,{detail:d||{}}))}catch(e){}}
+let FXQ=null;function fxQuiet(){const q=page!=='dashboard'&&page!=='prefs';if(q===FXQ)return;FXQ=q;const d=document.documentElement;if(q)d.dataset.fxQuiet='1';else delete d.dataset.fxQuiet}
+(function(){if(!CONFIG.home||!/^https?:$/.test(location.protocol))return;['themefx.js','sound.js'].forEach(src=>{const s=document.createElement('script');s.src=src;s.async=true;s.onerror=()=>{};s.onload=()=>{if(page==='prefs')drawPrefs()};document.head.appendChild(s)})})();
+function setFx(m){if(window.ThemeFx)ThemeFx.setMode(m);if(page==='prefs')drawPrefs()}
+function setSoundOn(on){if(!window.Sound)return;Sound.set({on});if(on)Sound.test('right');if(page==='prefs')drawPrefs()}
+function setSoundVol(v){if(!window.Sound)return;Sound.set({vol:Math.max(.05,Math.min(1,v/100))});Sound.test('right')}
 // v69 (3) confetti for milestones: a short burst of the theme's colors (skipped with reduced motion)
-function celebrate(kind){if(reduceMotion)return;const big=kind!=='section',n=big?90:60,box=document.createElement('div');box.className='confetti';box.setAttribute('aria-hidden','true');
+function celebrate(kind){fx('moment',{kind});if(reduceMotion)return;const big=kind!=='section',n=big?90:60,box=document.createElement('div');box.className='confetti';box.setAttribute('aria-hidden','true');
  const cs=['var(--accent)','var(--accent-2)','var(--good)','#f2c14e','#ff8fab','#5ec8e5'];let h='';
  for(let i=0;i<n;i++){const w=6+Math.round(Math.random()*6);h+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;--dx:'+Math.round(Math.random()*180-90)+'px;--r:'+Math.round(Math.random()*900-450)+'deg;width:'+w+'px;height:'+Math.round(w*1.5)+'px;background:'+cs[i%cs.length]+';animation-duration:'+(.95+Math.random()*.7).toFixed(2)+'s;animation-delay:'+(Math.random()*.3).toFixed(2)+'s'+(i%3?'':';border-radius:50%')+'"></i>'}
  box.innerHTML=h;document.body.appendChild(box);setTimeout(()=>box.remove(),2400);
@@ -2612,7 +2650,7 @@ function record(correct,lookup,conf){
  if(!free)state.qn=(state.qn||0)+1;
  const hinted=correct&&!free&&state.prefs.strict&&q.usedHint;   // stricter mastery: right with a hint is practice, not a recall
  if(!free)if(correct){if(!hinted)masteryUp(k);state.correct++;delete k.back}else{if(lookup){k.lookups++;state.lookups++}else{k.wrong++;state.wrong++}masteryDown(k);relearn(k)}
- if(!lookup&&!WSB)buzz(correct);
+ if(!lookup&&!WSB)buzz(correct);if(!lookup)fx('answer',{correct});
  if(correct&&!free&&c0&&!wasSec&&secAll.every(isM))setTimeout(()=>celebrate(!wasCh&&chAll.every(isM)?'lesson':'section'),280);
  const own=choice&&!choice.correct&&choice.owner?byId[choice.owner]:null,dw=choice&&!choice.correct?whyNot(q.cid,choice.label):'';
  state.feedback={at:Date.now(),correct,lookup,prev,hinted,correctLabel:target.letter+'. '+target.label,wrongExplain:dw||(own&&own.definition?'“'+own.term+'” refers to '+own.definition.charAt(0).toLowerCase()+own.definition.slice(1)+'.':'')};

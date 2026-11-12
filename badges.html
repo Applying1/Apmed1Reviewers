@@ -21,7 +21,7 @@ main{max-width:720px;margin:0 auto;padding:14px 16px calc(24px + env(safe-area-i
 .back:hover{color:var(--text);background:var(--raised)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--surface);text-decoration:none}
 .btn:hover{background:var(--raised)}
-h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 2px;text-align:center}
+h1{font:600 30px/1.2 var(--serif);letter-spacing:-.3px;margin:10px 0 2px;text-align:center}
 .sub{margin:0;color:var(--mute);font-size:14px;text-align:center}
 .sub b{color:var(--text)}
 .bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin:10px auto 0;max-width:320px}
@@ -107,5 +107,5 @@ $('groups').addEventListener('click',e=>{const t=e.target.closest('.tile');if(t)
  SEEN=Badges._state().seen;LIST=Badges.list();draw();Badges.seen();
 })();
 </script>
-<script src="update.js" defer></script>
+<script src="themefx.js" defer></script><script src="sound.js" defer></script><script src="update.js" defer></script>
 </body></html>

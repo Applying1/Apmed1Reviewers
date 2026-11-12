@@ -21,8 +21,8 @@ window.HomeLayout=(function(){const K='reviewer_home',TOP=['upnext','tests','tod
  const topOrder=h=>{const t=h.top.filter((x,i,a)=>TOP.includes(x)&&a.indexOf(x)===i);return t.concat(TOP.filter(x=>!t.includes(x)))};
  // put the top cards, the tiles and the course list in the saved order (the tiles' CSS order says the same, so nothing jumps)
  function place(h){h=h||get();const n=document.querySelector('nav.tools'),l=document.getElementById('list'),adm=document.getElementById('admintools');if(!n||!l)return;const p=n.parentNode,mv=document.getElementById('move'),pq=document.getElementById('prevq');
-  if(h.first){p.insertBefore(l,n);if(adm)n.after(adm)}else{if(mv)mv.after(l);if(adm)l.after(adm)}
-  const a=h.first?l:n;topOrder(h).forEach(id=>{const e=document.getElementById(id);if(e)p.insertBefore(e,a);if(id==='upnext'&&pq)p.insertBefore(pq,a)});
+  if(h.first){p.insertBefore(l,n);if(adm)n.after(adm)}else{n.after(l);if(adm)l.after(adm)}
+  const a=h.first?l:n;topOrder(h).forEach(id=>{const e=document.getElementById(id);if(e)p.insertBefore(e,a);if(id==='upnext'&&pq)p.insertBefore(pq,a)});{const nt=document.getElementById('notices');if(nt)p.insertBefore(nt,a)}
   const cu=n.querySelector('.cust');h.order.forEach(id=>{if(ADMIN.includes(id))return;const e=document.getElementById(id);if(e&&e.parentNode===n)n.insertBefore(e,cu)});
   if(adm){const aOrder=(h.adminOrder&&h.adminOrder.length)?h.adminOrder:ADMIN;aOrder.forEach(id=>{const e=document.getElementById(id);if(e)adm.appendChild(e)})}}
  function sortCourses(list){const o=get().courses,rk=c=>{const i=o.indexOf(c.id);return i<0?1e3+list.indexOf(c):i};return list.slice().sort((a,b)=>rk(a)-rk(b))}
@@ -128,7 +128,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .upnext:hover{border-color:var(--line2)}
 .upnext .bar{flex:none;align-self:stretch;width:4px;border-radius:9px;background:oklch(.6 .13 var(--h))}
 .upnext .w{flex:1;min-width:0}
-.upnext .l{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--mute)}
+.upnext .l{font-size:12.5px;font-weight:600;color:var(--mute)}
 .upnext .l.live{color:#e11d48}
 .upnext b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .upnext .s{display:block;color:var(--mute);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -136,7 +136,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 /* Test countdown (exams, evals and quizzes from the timetable) */
 .tests{margin:0 0 18px;padding:14px 16px 6px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
 .tests[hidden]{display:none}
-.tests h2{display:flex;align-items:center;gap:8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);margin:0 0 6px}
+.tests h2{display:flex;align-items:center;gap:8px;font:600 13px/1 var(--sans);color:var(--mute);margin:0 0 6px}
 .tests h2 a{margin-left:auto;text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;color:var(--accent);text-decoration:none}
 .trow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);text-decoration:none;color:inherit}
 .trow:first-of-type{border-top:0}
@@ -157,7 +157,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .annc{display:flex;gap:12px;align-items:flex-start;margin:0 0 18px;padding:14px 14px 14px 16px;border-radius:16px;background:var(--accent-soft);border:1px solid var(--accent-line);box-shadow:var(--shadow)}.annc[hidden]{display:none}.annc .tic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink)}.annc .ab{flex:1;min-width:0}.annc .ak{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--accent)}.annc .ak span{font-weight:500;text-transform:none;letter-spacing:0;color:var(--mute)}.annc p{margin:3px 0 6px;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}.annc a{font-size:13.5px;font-weight:600;color:var(--accent);text-decoration:none}.annc .mx{flex:none;border:0;background:none;color:var(--mute);cursor:pointer;padding:4px;border-radius:8px}.annc .mx:hover{color:var(--text);background:var(--surface)}
 .today{margin:0 0 18px;padding:14px 16px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
 .today[hidden]{display:none}
-.today h2{display:flex;align-items:center;gap:8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);margin:0 0 12px}
+.today h2{display:flex;align-items:center;gap:8px;font:600 13px/1 var(--sans);color:var(--mute);margin:0 0 12px}
 .today h2 label{margin-left:auto;display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;color:var(--mute)}
 .thide{flex:none;width:26px;height:26px;margin-left:2px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:var(--faint);font-size:13px;text-transform:none}
 .thide:hover{background:var(--raised);color:var(--text)}
@@ -243,7 +243,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 /* Class card (classnow.js): class goal before the next test, studying now, focus timer */
 .classnow{margin:0 0 18px;padding:14px 16px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
 .classnow[hidden]{display:none}
-.classnow h2{display:flex;align-items:center;gap:8px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute);margin:0 0 12px}
+.classnow h2{display:flex;align-items:center;gap:8px;font:600 13px/1 var(--sans);color:var(--mute);margin:0 0 12px}
 .cg .cgt{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;font-size:14.5px}.cg .cgt b{font-size:22px;letter-spacing:-.3px}
 .cg .cgt .s{font-size:12.5px;color:var(--mute)}
 .cg .cgb{position:relative;height:10px;margin:9px 0 7px;border-radius:99px;background:var(--raised);border:1px solid var(--line);overflow:hidden}
@@ -290,6 +290,7 @@ details.alt summary{cursor:pointer;color:var(--mute);font-size:13.5px;font-weigh
 #syncbtn{min-width:0;max-width:200px}#syncbtn .nm{overflow:hidden;text-overflow:ellipsis}
 #theme svg{flex:none}
 /* One-time offer to try the APMed '33 colors */
+#notices>.try:not([hidden])~.try{display:none}
 .try{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--accent-line)}
 .try[hidden]{display:none}
 .colors{margin:26px 0 4px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}.colors b{font-size:13px;color:var(--mute)}.colors #pals{flex:1 1 100%}.colors small{flex-basis:100%;font-size:12px;color:var(--faint)}
@@ -341,11 +342,12 @@ html.introing body{overflow:hidden}
  <h1 id="hi">Pick a course</h1>
  <section class="annc" id="annc" hidden aria-label="Announcement"></section>
  <div class="bkcard" id="bkcard" hidden></div>
- <a class="upnext" id="upnext" href="schedule.html" hidden></a>
+ <a class="upnext" id="upnext" href="schedule.html" data-fx-slot="ledge" hidden></a>
  <a class="btn prevq" id="prevq" hidden></a>
- <section class="tests" id="tests" hidden aria-label="Tests coming up"></section>
- <section class="today" id="today" hidden aria-label="Today"></section>
- <section class="classnow" id="classnow" hidden aria-label="Class"></section>
+ <section class="tests" id="tests" data-fx-slot="ledge" hidden aria-label="Tests coming up"></section>
+ <section class="today" id="today" data-fx-slot="ledge" hidden aria-label="Today"></section>
+ <section class="classnow" id="classnow" data-fx-slot="ledge" hidden aria-label="Class"></section>
+ <div id="notices"><div class="try" id="try" hidden></div><div class="try" id="prnotice" hidden></div><div class="try" id="move" hidden></div></div>
  <nav class="tools" aria-label="Tools">
   <a class="tool" id="gdtool" href="discuss.html?c=general" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg></span><span><b>General discussion</b><span id="gdsub">Talk with the whole class</span></span></a>
   <a class="tool" id="qztool" href="#quiz" onclick="event.preventDefault();openQuizChallenges()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Quiz challenges</b><span id="qzsub">Live quiz &middot; Duels</span></span></a>
@@ -356,9 +358,6 @@ html.introing body{overflow:hidden}
   <a class="tool locked" id="shoptool" aria-disabled="true" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-sparkles"/></svg></span><span><b id="shopname">Coming soon</b><span id="shopsub">Stay tuned</span></span></a>
   <a class="cust" href="settings.html#home" role="button">Customize home</a>
  </nav>
- <div class="try" id="try" hidden></div>
- <div class="try" id="move" hidden></div>
- <div class="try" id="prnotice" hidden></div>
  <div class="grid" id="list"><p class="empty">Loading courses…</p></div>
  <nav class="sec-tools" id="admintools" aria-label="Class management" hidden>
   <a class="tool" id="cdtool" href="classday.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span><span><b>Class day</b><span>Post today's summary, answer questions (only you see this)</span></span></a>
@@ -367,7 +366,6 @@ html.introing body{overflow:hidden}
  <script>try{HomeLayout.place()}catch(e){}</script>
  <p class="note inst" id="install" hidden>Use this like an app, even offline. <button class="linkbtn" id="installbtn">Install app</button></p>
  <p class="note" id="ios" hidden><b>On iPhone:</b> tap the Share button in Safari, then <b>Add to Home Screen</b> to use this like an app.</p>
- <p class="note setl"><a href="settings.html">Settings</a>: colors, daily goal, notifications, sounds and storage.</p>
  <div class="class"><p class="legal"><a href="privacy.html">Privacy &amp; terms</a></p></div>
 </main>
 <div class="modal" id="quizdlg" hidden onclick="if(event.target===this)closeQuizChallenges()"><div class="box games-box" role="dialog" aria-modal="true" aria-labelledby="quizh">
@@ -537,25 +535,28 @@ function getCourses(){
    '<span class="art">'+artHTML(c)+'</span>'+
    '<span class="body"><span class="t">'+esc(c.title)+'</span>'+
    (c.exam?'<span class="tags">'+examTag(c.exam)+'</span>':'')+
-   '<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(s?(pr.scope&&!(c.exam&&c.exam.name===pr.scope)?esc(pr.scope)+': ':'')+pct+'% mastered':'Not started')+'</span><span>'+(s?'studied '+ago(s.at):'')+'</span></span></span></span></a>'}).join('')};
+   (s?'<span class="prog"><span class="track" style="display:block"><span class="fill" style="display:block;width:'+pct+'%"></span></span><span class="meta"><span>'+(pr.scope&&!(c.exam&&c.exam.name===pr.scope)?esc(pr.scope)+': ':'')+pct+'% mastered</span><span>studied '+ago(s.at)+'</span></span></span>':'')+'</span></a>'}).join('')};
  {const _dc=window.drawCourses;window.drawCourses=()=>{const E=window.HomeEdit;if(E&&E.busy())return E.later();_dc();inlineIcons();if(E&&E.isOn())E.redecorate()}}
  drawCourses();
  window.COURSE_LIST=list;if(window.afterCourses)afterCourses(list);
  if(CLOUD&&getCode()){pullSummaries(list);if(window.Daily&&Daily.sync)Daily.sync(rpc,getCode()).then(c=>{if(c&&window.drawToday)drawToday()})}
 })();
-// Offer the APMed '33 colors once (until the person picks Try it or No thanks). Same setting as Personalize → Appearance → Colors.
+// Offer the Winter theme once (until the person picks Try it or No thanks). It is the same setting as Settings → Colors,
+// so Switch back returns to the colors the person had. It took over the single notice slot from the APMed '33 colors offer.
 function setPal(p){const d=document.documentElement;try{if(p){d.dataset.palette=p;localStorage.setItem('reviewer_palette',p)}else{delete d.dataset.palette;localStorage.removeItem('reviewer_palette')}}catch(e){}}
-function tryBox(step){const b=document.getElementById('try');try{if(step==='ask'&&(localStorage.getItem('reviewer_palette')||localStorage.getItem('reviewer_palette_asked')))return}catch(e){return}
- if(step!=='ask')try{localStorage.setItem('reviewer_palette_asked','1')}catch(e){}
+let palBefore=null;
+function tryBox(step){const b=document.getElementById('try');try{if(step==='ask'&&(localStorage.getItem('reviewer_palette')==='winter'||localStorage.getItem('reviewer_winter_asked')))return}catch(e){return}
+ if(step!=='ask')try{localStorage.setItem('reviewer_winter_asked','1')}catch(e){}
  if(step==='done'||step==='no'){b.hidden=true;return}
- const sw='<span class="sw" aria-hidden="true"><i style="background:#f5eedb"></i><i style="background:#1d7a80"></i><i style="background:#e3a21a"></i></span>';
+ if(step==='tried'){try{palBefore=localStorage.getItem('reviewer_palette')}catch(e){}setPal('winter');if(window.drawPals)drawPals()}
+ const sw='<span class="sw" aria-hidden="true"><i style="background:#13243b"></i><i style="background:#9ccbe4"></i><i style="background:#f0b45a"></i></span>';
  b.innerHTML=step==='ask'
-  ?sw+'<p><b>New: APMed \'33 colors.</b> Cream, teal and mustard, from the batch logo. Want to try them?</p><span class="row"><button class="btn primary" onclick="setPal(\'apmed\');tryBox(\'tried\')">Try it</button><button class="btn" onclick="tryBox(\'no\')">No thanks</button></span>'
-  :sw+'<p><b>Like it?</b> You can change it any time in a course\'s Personalize → Appearance → Colors.</p><span class="row"><button class="btn primary" onclick="tryBox(\'done\')">Keep it</button><button class="btn" onclick="setPal(null);tryBox(\'done\')">Switch back</button></span>';
+  ?sw+'<p><b>Winter is here.</b> A snowy theme with a night sky, falling snow and soft bells. Want to try it?</p><span class="row"><button class="btn primary" onclick="tryBox(\'tried\')">Try it</button><button class="btn" onclick="tryBox(\'no\')">No thanks</button></span>'
+  :sw+'<p><b>Like it?</b> You can change the colors, or turn the snow off, any time in Settings.</p><span class="row"><button class="btn primary" onclick="tryBox(\'done\')">Keep it</button><button class="btn" onclick="setPal(palBefore);if(window.drawPals)drawPals();tryBox(\'done\')">Switch back</button></span>';
  b.hidden=false}
 tryBox('ask');
 // Colors picker on the home page: same setting as a course's Personalize → Appearance → Colors (per device).
-const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']],['ocean','Ocean',['#eef5fa','#0a6c9e','#5cc0ef']],['lavender','Lavender',['#f5f2fb','#6b46c1','#b9a2f5']],['coffee','Coffee',['#f6f0e8','#8a4b22','#e0a574']]];
+const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']],['ocean','Ocean',['#eef5fa','#0a6c9e','#5cc0ef']],['lavender','Lavender',['#f5f2fb','#6b46c1','#b9a2f5']],['coffee','Coffee',['#f6f0e8','#8a4b22','#e0a574']],['winter','Winter',['#13243b','#9ccbe4','#f0b45a']]];
 function drawPals(){if(!document.getElementById('pals'))return;let cur='classic';try{cur=localStorage.getItem('reviewer_palette')||'classic'}catch(e){}
  document.getElementById('pals').innerHTML='<span class="pals" role="radiogroup" aria-label="Colors">'+PALS.map(([v,t,c])=>'<button role="radio" aria-checked="'+(v===cur)+'" class="'+(v===cur?'on':'')+'" onclick="setPal('+(v==='classic'?'null':'\''+v+'\'')+');drawPals()"><i style="background:linear-gradient(135deg,'+c[0]+' 0 50%,'+c[1]+' 50% 75%,'+c[2]+' 75%)"></i>'+t+'</button>').join('')+'</span>'}
 drawPals();
@@ -1063,5 +1064,5 @@ window.shopPoster=function(d){
   o.onclick=e=>{if(e.target===o)close()};o.querySelector('.yes').onclick=()=>{try{localStorage.setItem(KEY,String(MAX))}catch(e){}location.href='shop.html'};o.querySelector('.no').onclick=close;
   addEventListener('keydown',k);document.body.appendChild(o);setTimeout(()=>o.classList.add('on'),40);o.querySelector('.yes').focus()}};
 </script>
-<script src="update.js" defer></script>
+<script src="themefx.js" defer></script><script src="sound.js" defer></script><script src="update.js" defer></script>
 </body></html>

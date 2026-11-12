@@ -171,13 +171,13 @@ function draw(){
  $('act').innerHTML=G.d?'':'<button class="btn primary" id="check" '+(l.length||busy?'disabled':'')+' onclick="check()">'+ic('check')+'Check</button>'+(G.c?'<span class="m">'+G.c+' check'+(G.c>1?'s':'')+' · '+G.m+' mistake'+(G.m===1?'':'s')+'</span>':'');
 }
 function pick(i){if(G.d||busy||G.ok.includes(i))return;sel=sel===i?null:i;draw();if(sel!=null){const b=document.querySelector('.bin');if(b&&matchMedia('(pointer:fine)').matches)b.focus({preventScroll:true})}}
-function place(i,b){if(G.d||busy||i==null||G.ok.includes(i))return;if(b==null)delete G.p[i];else G.p[i]=b;if(!G.t0)G.t0=Date.now();G.u=Date.now();sel=null;save();push();draw()}
+function place(i,b){if(G.d||busy||i==null||G.ok.includes(i))return;if(b==null)delete G.p[i];else{G.p[i]=b;try{document.dispatchEvent(new CustomEvent('fx:sound',{detail:{name:'step'}}))}catch(e){}}if(!G.t0)G.t0=Date.now();G.u=Date.now();sel=null;save();push();draw()}
 function check(){
  if(busy||G.d||loose().length)return;
  const row=D.items.map((_,i)=>G.ok.includes(i)||G.p[i]===ANS[i]?'1':'0').join(''),wrong=D.items.map((_,i)=>i).filter(i=>row[i]==='0');
  G.c++;G.m+=wrong.length;G.h.push(row);D.items.forEach((_,i)=>{if(row[i]==='1'&&!G.ok.includes(i))G.ok.push(i)});
  const now=Date.now();G.u=now;if(!wrong.length){G.d=1;G.t1=now}save();push(true);
- if(!wrong.length){draw();toast(G.c===1?'Perfect! All sorted in one check.':'All sorted!',2400);drawEnd();return}
+ if(!wrong.length){try{document.dispatchEvent(new CustomEvent('fx:moment',{detail:{kind:'solved'}}))}catch(e){}draw();toast(G.c===1?'Perfect! All sorted in one check.':'All sorted!',2400);drawEnd();return}
  busy=true;draw();
  wrong.forEach(i=>{const e=document.querySelector('.it[data-i="'+i+'"]');if(e)e.classList.add('bad')});
  toast(wrong.length+' not in the right group',1800);
@@ -285,5 +285,5 @@ boot();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 <script src="dialog.js"></script>
-<script src="update.js" defer></script>
+<script src="themefx.js" defer></script><script src="sound.js" defer></script><script src="update.js" defer></script>
 </body></html>

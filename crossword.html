@@ -368,7 +368,7 @@ function full(){
  wasFull=isFull;
 }
 function win(){
- pause();G.done=Date.now();G.day=manila();G.u=Date.now();save();clearTimeout(toast.t);$('toast').classList.remove('on');
+ try{document.dispatchEvent(new CustomEvent('fx:moment',{detail:{kind:'solved'}}))}catch(e){}pause();G.done=Date.now();G.day=manila();G.u=Date.now();save();clearTimeout(toast.t);$('toast').classList.remove('on');
  render();drawTimer();drawHead();drawPast();
  const g=$('grid');g.classList.remove('won');void g.offsetWidth;g.classList.add('won');
  drawDone();setTimeout(()=>$('done').scrollIntoView({behavior:'smooth',block:'nearest'}),450);
@@ -521,5 +521,5 @@ async function lbSave(e){e.preventDefault();const n=$('lbn').value.trim().replac
 
 boot();
 </script>
-<script src="update.js" defer></script>
+<script src="themefx.js" defer></script><script src="sound.js" defer></script><script src="update.js" defer></script>
 </body></html>
