@@ -105,14 +105,16 @@ const SYNC=Kit.sync('_blitz',{data:()=>({v:1,b:S.b,how:S.how||0}),merge(r){let a
   if(r.how&&!S.how){S.how=1;any=true}if(any)save();return {any}},changed(m){if(m.any&&!R)drawBest()}});
 
 // ---------- the prompts of a course ----------
+// not for a quick tap: math markup (shown raw here), and note headings that are not terms
+const RAW=/[$\\]|<\w/,NOTERM=/^(example|exercise|problem|figure|slide|step|case|note|rule|method|her |his |she |he |who |what |why |how |when |where )|^[0-9. ]+$/i,NOTOPIC=/slide answers|checklist|what to review|exercise|board work|not asked|stressed in class/i;
 function build(d,cards,chs){
  const out=[],inCh=c=>!chs||chs.has(String(c));
  for(const m of d.matching||[]){const ch=m[0],title=m[1],opts=m[2],pairs=m[3];if(!inCh(ch)||!Array.isArray(opts)||opts.length<2)continue;
-  for(const p of pairs||[]){const q=p[0];if(typeof q!=='string'||q.length>110||opts[p[1]]==null)continue;out.push({c:title,q,a:opts[p[1]],o:opts})}}
+  for(const p of pairs||[]){const q=p[0];if(typeof q!=='string'||q.length>110||opts[p[1]]==null||RAW.test(q+opts.join(' ')))continue;out.push({c:title,q,a:opts[p[1]],o:opts})}}
  // flashcards: the note is the prompt, its heading the answer; the other headings of the same topic are the wrong tiles
  const groups={};
  for(const k of cards){if(k.k!=='b'||!inCh(k.c))continue;const f=String(k.f||'').trim(),b=String(k.b||'').trim();
-  if(!f||f.length>36||b.length<8||b.length>120||b.toLowerCase().includes(f.toLowerCase()))continue;(groups[k.c+'|'+k.t]=groups[k.c+'|'+k.t]||[]).push({f,b,t:k.t})}
+  if(!f||f.length>36||b.length<8||b.length>120||b.toLowerCase().includes(f.toLowerCase())||RAW.test(f+b)||NOTERM.test(f)||NOTOPIC.test(String(k.t)))continue;(groups[k.c+'|'+k.t]=groups[k.c+'|'+k.t]||[]).push({f,b,t:k.t})}
  for(const g of Object.values(groups)){const fs=[...new Set(g.map(x=>x.f))];if(fs.length<3)continue;const seen=new Set();
   for(const x of g){if(seen.has(x.b)||g.filter(y=>y.f===x.f).length>1)continue;seen.add(x.b);out.push({c:x.t,q:x.b,a:x.f,o:fs})}}
  return out;
@@ -149,7 +151,7 @@ async function choose(cid){
 function drawScope(){document.querySelectorAll('#scope button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.s===SCOPE)))}
 function drawBest(){
  const n=pool().length,b=S.b[CID];
- if(n<MIN){$('best').textContent='This course has too few matching sets and flashcards for a round yet.';$('go').disabled=true;return}
+ if(n<MIN){$('best').textContent='Blitz needs terms to match, and this course is mostly worked problems. Pick another course.';$('go').disabled=true;return}
  $('best').innerHTML=(b&&b.s?'Your best here: <b>'+b.s+' points</b> · best run '+b.r:'No score here yet')+' · '+n+' prompts';$('go').disabled=false;
 }
 document.addEventListener('click',e=>{const c=e.target.closest('.cbtn');if(c&&!R){choose(c.dataset.c);return}
