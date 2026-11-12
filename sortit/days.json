@@ -1042,6 +1042,118 @@
 "w": "Black-and-white thinking; one rejection means loneliness."
 }
 ]
+},
+{
+"date": "2026-11-15",
+"course": "psych",
+"sec": "14-7",
+"topic": "Chapter 14: Methods of Therapy · Biological Therapies",
+"title": "Which kind of drug?",
+"bins": [
+"Antianxiety",
+"Antipsychotic",
+"Antidepressant"
+],
+"items": [
+{
+"t": "Valium",
+"b": 0,
+"w": "A benzodiazepine that depresses the central nervous system."
+},
+{
+"t": "Ativan",
+"b": 1,
+"w": "A benzodiazepine for generalized anxiety or panic attacks."
+},
+{
+"t": "Sedation and tolerance",
+"b": 2,
+"w": "Drowsiness, and doses must rise with tolerance."
+},
+{
+"t": "Phenothiazines",
+"b": 1,
+"w": "A drug family that blocks dopamine receptors."
+},
+{
+"t": "Clozapine",
+"b": 2,
+"w": "Blocks dopamine to reduce delusions and hallucinations."
+},
+{
+"t": "Blocks dopamine receptors",
+"b": 0,
+"w": "How these drugs treat schizophrenia."
+},
+{
+"t": "Prozac",
+"b": 2,
+"w": "An SSRI: blocks reuptake of serotonin."
+},
+{
+"t": "Zoloft",
+"b": 0,
+"w": "An SSRI, like Prozac."
+},
+{
+"t": "Effexor",
+"b": 1,
+"w": "An SNRI: blocks reuptake of serotonin and norepinephrine."
+}
+]
+},
+{
+"date": "2026-11-16",
+"course": "pharma",
+"sec": "8-3",
+"topic": "Lesson 8: GI Drugs · H2 Blockers and PPIs",
+"title": "H2 blocker or pump inhibitor?",
+"bins": [
+"H2 blocker",
+"Proton pump inhibitor"
+],
+"items": [
+{
+"t": "Cimetidine",
+"b": 0,
+"w": "Prototype; gynecomastia through CYP450 and estrogen metabolism."
+},
+{
+"t": "Famotidine",
+"b": 1,
+"w": "The most potent: 20 mg twice a day."
+},
+{
+"t": "Nizatidine",
+"b": 0,
+"w": "Least first-pass metabolism."
+},
+{
+"t": "Keeps histamine from binding",
+"b": 1,
+"w": "Only histamine's receptor, so not for allergy."
+},
+{
+"t": "Omeprazole",
+"b": 0,
+"w": "Losec; once a day, 30 min to 1 h before breakfast."
+},
+{
+"t": "Pantoprazole",
+"b": 1,
+"w": "A -prazole, capsule or IV."
+},
+{
+"t": "Irreversible block, lasts 24 h",
+"b": 0,
+"w": "The pump is inactivated for a full day."
+},
+{
+"t": "Blocks the final step",
+"b": 0,
+"w": "So no stimulant can make acid; the best for GERD."
+}
+]
 }
 ]
 }
