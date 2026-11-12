@@ -114,6 +114,7 @@ h1{font:600 clamp(26px,3.2vw,34px)/1.2 var(--serif);letter-spacing:-.4px;margin:
 .gtop b{font:700 14.5px/1.2 var(--sans);color:var(--text)}
 .gitem p{margin:2px 0 0;font-size:12.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gitem p .done{color:var(--good,#1b7340);font-weight:600}
+.gitem[hidden]{display:none}
 .garrow{color:var(--mute);display:inline-flex;align-items:center;flex:none}
 /* One-time spotlight: features people miss */
 .spot{display:flex;gap:14px;padding:14px;margin-top:12px;border:1px solid var(--line2);border-radius:14px;background:var(--bg)}
@@ -351,7 +352,7 @@ html.introing body{overflow:hidden}
  <nav class="tools" aria-label="Tools">
   <a class="tool" id="gdtool" href="discuss.html?c=general" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg></span><span><b>General discussion</b><span id="gdsub">Talk with the whole class</span></span></a>
   <a class="tool" id="qztool" href="#quiz" onclick="event.preventDefault();openQuizChallenges()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Quiz challenges</b><span id="qzsub">Live quiz &middot; Duels</span></span></a>
-  <a class="tool" id="gamestool" href="#games" onclick="event.preventDefault();openGames()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-gamepad"/></svg></span><span><b>Daily games</b><span id="gamessub">Crossword &middot; APMed&#39;le &middot; Sort It</span></span></a>
+  <a class="tool" id="gamestool" href="#games" onclick="event.preventDefault();openGames()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-gamepad"/></svg></span><span><b>Daily games</b><span id="gamessub">Six games from your courses</span></span></a>
   <a class="tool" id="bdtool" href="badges.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crown"/></svg></span><span><b>Badges</b><span id="bdsub">Earn badges for good study habits</span></span></a>
   <a class="tool" id="classtool" href="#class" onclick="event.preventDefault();openClassModal()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-users"/></svg></span><span><b>Class &amp; attendance</b><span id="classsub">Class list &middot; My attendance</span></span><span class="badge badge-unread" id="classUnreadBadge" hidden></span></a>
   <a class="tool" id="gifttool" href="gifts.html"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-gift"/></svg></span><span><b>Gift exchange</b><span id="giftsub">Pick a codename and write your wishlist</span></span></a>
@@ -392,7 +393,7 @@ html.introing body{overflow:hidden}
 </div></div>
 <div class="modal" id="gamesdlg" hidden onclick="if(event.target===this)closeGames()"><div class="box games-box" role="dialog" aria-modal="true" aria-labelledby="gamesh">
  <div class="mhead"><h2 id="gamesh">Daily games</h2><button class="mx" onclick="closeGames()" aria-label="Close" title="Close"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></div>
- <p class="gsub">Three short daily games to test your recall and keep your mind sharp.</p>
+ <p class="gsub">Five daily puzzles and a 60-second round, all built from your courses.</p>
  <div class="ghub">
   <a class="gitem" id="cwtool" href="crossword.html">
    <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-crossword"/></svg></span>
@@ -415,6 +416,30 @@ html.introing body{overflow:hidden}
    <div class="gmain">
     <div class="gtop"><b>Sort It</b></div>
     <p id="stsub">Put today's terms in their groups</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+  <a class="gitem" id="tctool" href="clues.html" hidden>
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-search"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>Three Clues</b></div>
+    <p id="tcsub">Name the mystery term in three clues</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+  <a class="gitem" id="cttool" href="thread.html" hidden>
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-grid"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>Common Thread</b></div>
+    <p id="ctsub">Find the four hidden groups</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+  <a class="gitem" id="bztool" href="blitz.html">
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>Blitz</b></div>
+    <p id="bzsub">60 seconds of quick matching, any time</p>
    </div>
    <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
   </a>
@@ -705,6 +730,23 @@ window.clTile();
  else sub.textContent=g&&g.c?'Keep going: '+g.ok.length+' of '+d.items.length+' sorted':d.title+' · '+d.items.length+' terms';
  if(!st.how)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
  t.hidden=false;syncGamesTile()}catch(e){}})();
+// Three Clues and Common Thread tiles: only on days with a puzzle. Blitz is always there and shows the best score.
+(async function(){try{
+ const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const list=[['clues','reviewer_clues','tctool','tcsub','mystery',(g,d)=>g&&g.d?[g.w?1:0,g.w?(g.p||0)+' of 3 points today':'Missed today']:[0,g&&g.k?'Keep going: clue '+(g.n||1)+' of 3':'Today’s mystery: '+d.kind]],
+  ['thread','reviewer_thread','cttool','ctsub','grid',(g,d)=>g&&g.d?[g.w?1:0,g.w?(g.m?'Solved today, '+g.m+' mistake'+(g.m===1?'':'s'):'Perfect today'):'Missed today']:[0,g&&g.k?'Keep going: '+(g.ok||[]).length+' of 4 groups found':d.title+' · 4 hidden groups']]];
+ for(const [dir,key,tid,sid,word,line] of list){try{
+  const d=((await (await fetch(dir+'/days.json')).json()).days||[]).find(x=>x.date===day);if(!d)continue;
+  let st={};try{st=JSON.parse(localStorage.getItem(key))||{}}catch(e){}
+  const g=(st.g||{})[day],t=$(tid),sub=$(sid),r=line(g,d);
+  if(r[0]){sub.innerHTML='<span class="done"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-seal"/></svg> </span> · new '+word+' tomorrow';sub.querySelector('.done').append(r[1])}
+  else sub.textContent=r[1]+(g&&g.d?' · new '+word+' tomorrow':'');
+  if(!st.how)t.querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>');
+  t.hidden=false}catch(e){}}
+ try{const b=JSON.parse(localStorage.getItem('reviewer_blitz'))||{},top=Object.values(b.b||{}).map(x=>+x.s||0).sort((x,y)=>y-x)[0];
+  if(top)$('bzsub').textContent='Your best: '+top+' points · beat it in 60 seconds';
+  if(!b.how)$('bztool').querySelector('b').insertAdjacentHTML('beforeend','<em class="new">New</em>')}catch(e){}
+ syncGamesTile()}catch(e){}})();
 // APMed'le tile: only on days with a word; "Solved ✓" / "Missed" once played, "New" until the page is opened once
 (async function(){try{
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -826,17 +868,10 @@ if(location.hash==='#games')setTimeout(openGames,60);
 if(location.hash==='#class')setTimeout(openClassModal,60);
 function syncGamesTile(){
  const s=$('gamessub');if(!s)return;
- const cwDone=$('cwsub')&&$('cwsub').querySelector('.done');
- const wdDone=$('wdsub')&&$('wdsub').querySelector('.done');
- const stDone=$('stsub')&&$('stsub').querySelector('.done');
- const doneCount=(cwDone?1:0)+(wdDone?1:0)+(stDone?1:0);
- if(doneCount===3){
-  s.innerHTML='<span class="done"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-seal"/></svg> All 3 solved today</span> · Crossword · APMed\'le · Sort It';
- }else if(doneCount>0){
-  s.textContent=doneCount+'/3 solved · Crossword · APMed\'le · Sort It';
- }else{
-  s.textContent='Crossword · APMed\'le · Sort It';
- }
+ const subs=['cwsub','wdsub','stsub','tcsub','ctsub'].map(id=>$(id)).filter(e=>e&&!e.closest('.gitem').hidden);
+ const n=subs.filter(e=>e.querySelector('.done')).length,all=subs.length;
+ if(n&&n===all)s.innerHTML='<span class="done"><svg class="i" width="14" height="14" aria-hidden="true"><use href="icons.svg#i-seal"/></svg> All '+all+' solved today</span>';
+ else s.textContent=n?n+' of '+all+' solved today':'Six games from your courses';
 }
 function syncClassTile(){
  const s=$('classsub');if(!s)return;

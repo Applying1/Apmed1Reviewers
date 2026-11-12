@@ -390,8 +390,8 @@ function duelCardHtml(m,code){
 
 /* Shared questions and game results in the thread */
 const QTAG_RE=/^\[q:([a-z0-9_-]{1,24}):([\w.:-]{1,60})\]$/;
-const GAME_TAG_RE=/^\[game:(crossword|apmeddle|sortit|duel):([\w-]{1,40})\]$/;
-const GAME_META={crossword:{name:'Crossword',icon:'🧩'},apmeddle:{name:"APMed'le",icon:'🔤'},sortit:{name:'Sort It',icon:'🗂️'},duel:{name:'Duel',icon:'⚔️'}};
+const GAME_TAG_RE=/^\[game:(crossword|apmeddle|sortit|duel|blitz|clues|thread):([\w-]{1,40})\]$/;
+const GAME_META={crossword:{name:'Crossword',icon:'🧩'},apmeddle:{name:"APMed'le",icon:'🔤'},sortit:{name:'Sort It',icon:'🗂️'},blitz:{name:'Blitz',icon:'⚡'},clues:{name:'Three Clues',icon:'🔎'},thread:{name:'Common Thread',icon:'🧵'},duel:{name:'Duel',icon:'⚔️'}};
 const COURSE_JSON={},Q_CARDS={};
 function splitTagBody(txt){
  const s=String(txt==null?'':txt),nl=s.indexOf('\n');
@@ -419,7 +419,7 @@ function questionCardHtml(m,info){
 function gameCardHtml(info){
  const meta=GAME_META[info.game]||{name:info.game,icon:'🏆'};
  const lines=String(info.rest||'').replace(/\r\n?/g,'\n').replace(/\n+$/,'');
- const action=info.game==='duel'?'Open duels':"Play today's";
+ const action=info.game==='duel'?'Open duels':info.game==='blitz'?'Play a round':"Play today's";
  return '<div class="duel-card s-card game-card" data-game="'+esc(info.game)+'">'+
   '<div class="duel-head"><span class="duel-ic s-ic">'+meta.icon+'</span><div style="min-width:0"><div class="duel-title">'+esc(meta.name)+' result</div><div class="duel-meta">'+esc(info.code)+'</div></div></div>'+
   (lines?'<pre class="game-grid">'+esc(lines)+'</pre>':'')+

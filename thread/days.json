@@ -1,0 +1,460 @@
+{
+"v": 1,
+"days": [
+{
+"date": "2026-11-12",
+"course": "chem",
+"sec": "17-2",
+"topic": "Topic 17: Proteins and Optical Isomerism · Classifying Amino Acids by Side Chain",
+"title": "Proteins and amino acids",
+"groups": [
+{
+"n": "Conjugated proteins, by prosthetic group",
+"w": "Each has a non-amino-acid part: heme, a lipid, a carbohydrate, a nucleic acid."
+},
+{
+"n": "Hold the tertiary structure together",
+"w": "The four side-chain interactions; London dispersion is the hydrophobic one, and the disulfide bond is the strongest."
+},
+{
+"n": "Nonpolar side chain",
+"w": "Hydrocarbon side chains. Methionine has S, but S and C share electronegativity 2.5, so C–S–C is nonpolar."
+},
+{
+"n": "Polar neutral side chain",
+"w": "Serine and threonine have –OH, cysteine has –SH and asparagine has an amide: polar but neutral."
+}
+],
+"items": [
+{
+"t": "Leucine",
+"g": 0
+},
+{
+"t": "Threonine",
+"g": 0
+},
+{
+"t": "Disulfide bond",
+"g": 1
+},
+{
+"t": "Nucleoprotein",
+"g": 1
+},
+{
+"t": "Proline",
+"g": 1
+},
+{
+"t": "Glycoprotein",
+"g": 0
+},
+{
+"t": "Cysteine",
+"g": 0
+},
+{
+"t": "Salt bridge",
+"g": 2
+},
+{
+"t": "Lipoprotein",
+"g": 2
+},
+{
+"t": "Asparagine",
+"g": 0
+},
+{
+"t": "London dispersion",
+"g": 1
+},
+{
+"t": "Hemoprotein",
+"g": 1
+},
+{
+"t": "Valine",
+"g": 1
+},
+{
+"t": "Methionine",
+"g": 2
+},
+{
+"t": "Serine",
+"g": 0
+},
+{
+"t": "Hydrogen bond",
+"g": 2
+}
+]
+},
+{
+"date": "2026-11-13",
+"course": "chem",
+"sec": "18-3",
+"topic": "Topic 18: Enzymes · Naming and Classification (EC)",
+"title": "Enzymes",
+"groups": [
+{
+"n": "Enzyme classes (EC numbers)",
+"w": "EC 3 hydrolases, 4 lyases, 5 isomerases, 6 ligases; oxidoreductases and transferases are classes 1 and 2."
+},
+{
+"n": "Kinds of specificity",
+"w": "Absolute: one substrate. Group: similar functional groups. Linkage: one type of bond. Stereospecificity: one stereoisomer."
+},
+{
+"n": "Inhibitors at work",
+"w": "Aspirin blocks prostaglandin synthesis, methotrexate DNA synthesis in cancer cells, sulfa drugs bacterial folic acid; nerve gases are poisons."
+},
+{
+"n": "Need a metal ion as cofactor",
+"w": "Catalase Fe, arginase Mn²⁺, hexokinase Mg²⁺, cytochrome oxidase Cu²⁺. Their names look like classes, but these are single enzymes."
+}
+],
+"items": [
+{
+"t": "Cytochrome oxidase",
+"g": 1
+},
+{
+"t": "Hexokinase",
+"g": 0
+},
+{
+"t": "Ligase",
+"g": 0
+},
+{
+"t": "Absolute",
+"g": 2
+},
+{
+"t": "Lyase",
+"g": 3
+},
+{
+"t": "Isomerase",
+"g": 0
+},
+{
+"t": "Catalase",
+"g": 0
+},
+{
+"t": "Sulfa drugs",
+"g": 2
+},
+{
+"t": "Nerve gases",
+"g": 0
+},
+{
+"t": "Stereospecificity",
+"g": 2
+},
+{
+"t": "Aspirin",
+"g": 2
+},
+{
+"t": "Methotrexate",
+"g": 3
+},
+{
+"t": "Group",
+"g": 0
+},
+{
+"t": "Hydrolase",
+"g": 0
+},
+{
+"t": "Linkage",
+"g": 2
+},
+{
+"t": "Arginase",
+"g": 3
+}
+]
+},
+{
+"date": "2026-11-14",
+"course": "chem",
+"sec": "19-2",
+"topic": "Topic 19: Lipids · Types by Structure and Membrane Lipids",
+"title": "Lipids",
+"groups": [
+{
+"n": "Parts of a glycerophospholipid",
+"w": "Glycerol + two fatty acids + phosphate + an amino alcohol such as choline."
+},
+{
+"n": "Omega-6 and omega-3 fatty acids",
+"w": "Linoleic (18:2) becomes arachidonic acid: omega-6. Linolenic (18:3) becomes EPA: omega-3."
+},
+{
+"n": "Complex lipids",
+"w": "They carry an extra grouping: phosphate, a sugar, a nitrogenous base or a protein."
+},
+{
+"n": "Derived lipids",
+"w": "Usually no fatty acids: steroids (cholesterol, sex hormones), prostaglandins and terpenes such as limonene."
+}
+],
+"items": [
+{
+"t": "Limonene",
+"g": 1
+},
+{
+"t": "Linoleic acid",
+"g": 2
+},
+{
+"t": "Lipoprotein",
+"g": 2
+},
+{
+"t": "Glycerol",
+"g": 1
+},
+{
+"t": "EPA",
+"g": 0
+},
+{
+"t": "Prostaglandin",
+"g": 3
+},
+{
+"t": "Phosphate",
+"g": 1
+},
+{
+"t": "Choline",
+"g": 3
+},
+{
+"t": "Linolenic acid",
+"g": 3
+},
+{
+"t": "Testosterone",
+"g": 0
+},
+{
+"t": "Sphingomyelin",
+"g": 2
+},
+{
+"t": "Cerebroside",
+"g": 3
+},
+{
+"t": "Cholesterol",
+"g": 2
+},
+{
+"t": "Glycolipid",
+"g": 2
+},
+{
+"t": "Two fatty acids",
+"g": 1
+},
+{
+"t": "Arachidonic acid",
+"g": 0
+}
+]
+},
+{
+"date": "2026-11-15",
+"course": "pharma",
+"sec": "8-3",
+"topic": "Lesson 8: GI Drugs · H2 Blockers and PPIs",
+"title": "GI drugs",
+"groups": [
+{
+"n": "H2 receptor blockers",
+"w": "CRFN: they keep histamine off the H2 receptor of the parietal cell."
+},
+{
+"n": "Antacid ingredients",
+"w": "Bicarbonate and carbonate make CO₂ (belching); magnesium and aluminum hydroxide make only water."
+},
+{
+"n": "Antibiotics in H. pylori regimens",
+"w": "Given with a PPI: clarithromycin triple, bismuth quadruple and nonbismuth quadruple therapy."
+},
+{
+"n": "Stimulant laxatives",
+"w": "They irritate the GI lining: the anthraquinones aloe, senna and cascara, and bisacodyl (Dulcolax)."
+}
+],
+"items": [
+{
+"t": "Senna",
+"g": 1
+},
+{
+"t": "Calcium carbonate",
+"g": 2
+},
+{
+"t": "Magnesium hydroxide",
+"g": 1
+},
+{
+"t": "Nizatidine",
+"g": 1
+},
+{
+"t": "Metronidazole",
+"g": 1
+},
+{
+"t": "Tetracycline",
+"g": 2
+},
+{
+"t": "Famotidine",
+"g": 1
+},
+{
+"t": "Ranitidine",
+"g": 2
+},
+{
+"t": "Aloe",
+"g": 1
+},
+{
+"t": "Clarithromycin",
+"g": 3
+},
+{
+"t": "Bisacodyl",
+"g": 3
+},
+{
+"t": "Amoxicillin",
+"g": 3
+},
+{
+"t": "Cimetidine",
+"g": 3
+},
+{
+"t": "Aluminum hydroxide",
+"g": 1
+},
+{
+"t": "Sodium bicarbonate",
+"g": 2
+},
+{
+"t": "Cascara",
+"g": 1
+}
+]
+},
+{
+"date": "2026-11-16",
+"course": "psych",
+"sec": "14-2",
+"topic": "Chapter 14: Methods of Therapy · Psychodynamic Therapies",
+"title": "Methods of therapy",
+"groups": [
+{
+"n": "Biological therapies",
+"w": "Drugs (lithium, antipsychotics), electroconvulsive therapy and psychosurgery act on the body."
+},
+{
+"n": "Psychodynamic therapy",
+"w": "Freud's tools for insight into unconscious conflicts."
+},
+{
+"n": "Behavior therapy",
+"w": "Learning principles change the behavior directly."
+},
+{
+"n": "Cognitive errors",
+"w": "The thinking errors that cognitive therapy teaches clients to catch."
+}
+],
+"items": [
+{
+"t": "ECT",
+"g": 2
+},
+{
+"t": "Antipsychotics",
+"g": 1
+},
+{
+"t": "Absolutist thinking",
+"g": 3
+},
+{
+"t": "Aversive conditioning",
+"g": 3
+},
+{
+"t": "Lithium",
+"g": 3
+},
+{
+"t": "Biofeedback",
+"g": 2
+},
+{
+"t": "Selective perception",
+"g": 0
+},
+{
+"t": "Dream analysis",
+"g": 2
+},
+{
+"t": "Free association",
+"g": 3
+},
+{
+"t": "Modeling",
+"g": 3
+},
+{
+"t": "Resistance",
+"g": 1
+},
+{
+"t": "Overgeneralizing",
+"g": 0
+},
+{
+"t": "Magnifying",
+"g": 2
+},
+{
+"t": "Transference",
+"g": 1
+},
+{
+"t": "Psychosurgery",
+"g": 1
+},
+{
+"t": "Token economy",
+"g": 3
+}
+]
+}
+]
+}

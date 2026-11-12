@@ -1,0 +1,161 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Three Clues · APMed '33</title>
+<meta name="description" content="One mystery term a day and three clues, from hard to easy. The earlier you name it, the more points.">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css"><link rel="stylesheet" href="gamekit.css">
+<style>
+.clues{margin:16px 0 0;display:grid;gap:9px;padding:0;list-style:none}
+.clue{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.clue .n{grid-row:1/3;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 15px/1 var(--serif);background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line)}
+.clue .lab{font-size:12.5px;font-weight:600;color:var(--mute)}
+.clue p{margin:0;font:600 17px/1.4 var(--serif);overflow-wrap:anywhere}
+.clue.locked{background:none;border-style:dashed;border-color:var(--line2);align-items:center}
+.clue.locked .n{background:none;border-color:var(--line2);color:var(--faint);grid-row:auto}
+.clue.locked .lab{color:var(--faint)}
+.clue.new{animation:reveal .45s var(--ease)}
+@keyframes reveal{from{opacity:0;transform:translateY(8px)}}
+/* guessing */
+.guess{margin:14px 0 0;position:relative}
+.guess label{display:block;font-size:13px;font-weight:600;color:var(--mute);margin:0 0 6px}
+.field{display:flex;gap:8px}
+.field input{flex:1;min-width:0;font:inherit;font-size:16px;padding:11px 14px;border-radius:13px;border:1.5px solid var(--line2);background:var(--surface);color:var(--text)}
+.field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.sug{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0 0;min-height:38px}
+.sug button{padding:8px 12px;border-radius:11px;border:1px solid var(--line2);background:var(--surface);font-weight:600;font-size:14px;text-align:left;box-shadow:0 1px 0 var(--line2)}
+.sug button:hover,.sug button.hi{border-color:var(--accent);background:var(--accent-soft)}
+.sug .hint{font-size:13px;color:var(--faint);align-self:center}
+.tried{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.tried span{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;color:var(--mute);background:var(--raised);text-decoration:line-through;text-decoration-color:var(--bad)}
+.skip{display:flex;justify-content:center;margin:12px 0 0}
+.skip .btn{border-style:dashed;color:var(--mute);font-weight:600}
+/* result */
+.end .ans{font:600 28px/1.2 var(--serif);margin:4px 0 0;overflow-wrap:anywhere}
+.pips{display:inline-flex;gap:5px;margin:10px 0 0}
+.pips i{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--accent);display:block}
+.pips i.on{background:var(--accent)}
+.end .because{margin:12px auto 0;max-width:46ch;font-size:14.5px;color:var(--mute);text-align:left}
+</style></head><body>
+<main>
+ <div class="top"><a class="back" href="./#games"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>Games</a><span class="sp"></span>
+  <button class="btn icon" onclick="openHow()" aria-label="How to play">?</button><button class="btn icon" onclick="openStats()" aria-label="Your stats"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-trophy"/></svg></button></div>
+ <h1>Three Clues</h1>
+ <p class="sub" id="sub">Name today's mystery term in as few clues as you can.</p>
+ <div class="chips" id="chips"></div>
+ <div id="game" hidden>
+  <ol class="clues" id="clues"></ol>
+  <div id="live">
+   <div class="guess"><label for="in" id="inl">Your answer</label>
+    <div class="field"><input id="in" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Start typing…" aria-describedby="sug"></div>
+    <div class="sug" id="sug" aria-live="polite"></div>
+    <div class="tried" id="tried"></div></div>
+   <div class="skip" id="skip"></div>
+  </div>
+  <section class="end" id="end" hidden aria-live="polite"></section>
+ </div>
+ <p class="note" id="none" hidden></p>
+</main>
+<div class="dlg" id="how" hidden onclick="if(event.target===this)closeHow()"><div class="dbox" role="dialog" aria-modal="true" aria-labelledby="howh">
+ <h2 id="howh">How to play Three Clues</h2>
+ <ul><li>One mystery term a day for the whole class, from the subject with the nearest eval.</li>
+  <li>You start with the <b>hardest clue</b>. Name the term now for <b>3 points</b>.</li>
+  <li>A wrong answer, or asking for the next clue, opens an easier one: <b>2 points</b>, then <b>1</b>.</li>
+  <li>You get <b>one answer per clue</b>. Type a few letters and pick from the list, so spelling never costs you.</li>
+  <li>Afterward you see why the clues point to that term. A new one comes at midnight.</li></ul>
+ <div class="row2"><button class="btn primary" onclick="closeHow()">Show the first clue</button></div>
+</div></div>
+<div class="dlg" id="stats" hidden onclick="if(event.target===this)Kit.hide('stats')"><div class="dbox" role="dialog" aria-modal="true" aria-labelledby="sth"><h2 id="sth">Your Three Clues</h2><div id="stbody"></div>
+ <div class="row2"><button class="btn" onclick="Kit.hide('stats')">Close</button></div></div></div>
+<div class="toast" id="toast" role="status"></div>
+<script src="schedule-core.js"></script>
+<script src="reminders-core.js"></script>
+<script src="auth.js"></script>
+<script src="gamekit.js"></script>
+<script>
+// Three Clues: one mystery term a day, three clues from hard to easy. Days: clues/days.json (built by tools/make_clues.py from clues_src/).
+// Saved: localStorage 'reviewer_clues' = {v:1, how, g:{<date>:{n clues open (1-3), r:[wrong answers, as places in the day's list],
+// d:1 finished, w:1 named it, p points (3-0), k moves, t1 finished at, u changed at}}}. Site-wide; syncs as row "_clues".
+const KEY='reviewer_clues',$=Kit.$,esc=Kit.esc,ic=Kit.ic,TODAY=Kit.TODAY;
+let S=Kit.open(KEY),D=null,G=null,ANS=-1,TEST=null,fresh=0;
+const save=()=>Kit.save(KEY,S);
+const SYNC=Kit.sync('_clues',{data:()=>({v:1,g:S.g,how:S.how||0}),merge(r){const m=Kit.mergeDays(S,r);if(m.any)save();return m},
+ changed(m){if(m.cur&&D){G=norm(S.g[TODAY]);S.g[TODAY]=G;draw()}}});
+const norm=g=>Object.assign({n:1,r:[],k:0},g||{});
+const POINTS=['3 points','2 points','1 point'];
+
+async function boot(){
+ let data=null;try{data=await (await fetch('clues/days.json')).json()}catch(e){}
+ await Kit.courses();await SYNC.pull();
+ D=((data&&data.days)||[]).find(d=>d.date===TODAY)||null;
+ if(!D){$('none').hidden=false;$('none').textContent='Today\'s mystery isn\'t out yet. Check back later.';if(!S.how)openHow();return}
+ ANS=Kit.unkey(D.a,D.date,0,D.pool.length);
+ G=S.g[TODAY]=norm(S.g[TODAY]);
+ TEST=(await Kit.tests()).find(a=>a.subj.course===D.course)||null;
+ $('sub').innerHTML='Today\'s mystery is <b>'+esc(D.kind)+'</b>.';$('chips').innerHTML=Kit.chips(D.course,TEST);
+ $('game').hidden=false;draw();if(!S.how)openHow();
+}
+function draw(){
+ $('clues').innerHTML=D.clues.map((c,i)=>i<G.n||G.d?'<li class="clue'+(i===fresh?' new':'')+'"><span class="n">'+(i+1)+'</span><span class="lab">Clue '+(i+1)+' · '+POINTS[i]+'</span><p>'+esc(c)+'</p></li>'
+  :'<li class="clue locked"><span class="n">'+(i+1)+'</span><span class="lab">Clue '+(i+1)+' · '+POINTS[i]+' if you need it</span></li>').join('');
+ fresh=-1;$('live').hidden=!!G.d;
+ if(G.d){drawEnd();return}
+ $('inl').textContent='Your answer for '+POINTS[G.n-1];
+ $('tried').innerHTML=G.r.map(i=>'<span>'+esc(D.pool[i])+'</span>').join('');
+ $('skip').innerHTML=G.n<3?'<button class="btn" onclick="skip()">Not sure? Show clue '+(G.n+1)+'</button>':'<button class="btn" onclick="giveUp()">Give up and see the answer</button>';
+ suggest();
+}
+// ---------- the answer box: type, then pick from the list ----------
+const plain=s=>String(s).toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g,' ').trim();
+function matches(){const q=plain($('in').value);if(!q)return [];const out=[];
+ D.pool.forEach((t,i)=>{if(G.r.includes(i))return;const p=plain(t);const at=p.startsWith(q)?0:(' '+p).includes(' '+q)?1:p.includes(q)?2:-1;if(at>=0)out.push([at,i])});
+ return out.sort((a,b)=>a[0]-b[0]||D.pool[a[1]].localeCompare(D.pool[b[1]])).slice(0,6).map(x=>x[1])}
+function suggest(){const m=matches(),q=$('in').value.trim();
+ $('sug').innerHTML=m.length?m.map((i,j)=>'<button data-i="'+i+'"'+(j===0?' class="hi"':'')+'>'+esc(D.pool[i])+'</button>').join(''):'<span class="hint">'+(q?'Nothing in today\'s list starts like that.':'Type a few letters, then tap your answer.')+'</span>'}
+$('in').addEventListener('input',suggest);
+$('in').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const m=matches();if(m.length)guess(m[0])}});
+$('sug').addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(b)guess(+b.dataset.i)});
+function touch(){G.k++;G.u=Date.now()}
+function guess(i){
+ if(!G||G.d||G.r.includes(i))return;touch();$('in').value='';
+ if(i===ANS){G.w=1;G.p=4-G.n;finish();return}
+ G.r.push(i);Kit.fx('answer',{correct:false});
+ if(G.n>=3){G.w=0;G.p=0;finish();return}
+ G.n++;fresh=G.n-1;save();SYNC.push();draw();Kit.toast('Not '+D.pool[i]+'. Here is clue '+G.n+'.',2200);
+}
+function skip(){if(!G||G.d||G.n>=3)return;touch();G.n++;fresh=G.n-1;Kit.fx('sound',{name:'step'});save();SYNC.push();draw()}
+function giveUp(){if(!G||G.d)return;touch();G.w=0;G.p=0;finish()}
+function finish(){G.d=1;G.t1=Date.now();save();SYNC.push(true);if(G.w)Kit.fx('moment',{kind:'solved'});else Kit.fx('sound',{name:'lost'});draw()}
+
+// ---------- result, share, stats ----------
+function drawEnd(){
+ const n=Kit.streak(S),b=$('end'),used=G.w?4-G.p:3;
+ b.innerHTML='<p class="lead">'+(G.w?(G.p===3?'Named on the first clue':'Named on clue '+used):'Today\'s mystery was')+'</p><p class="ans">'+esc(D.pool[ANS])+'</p>'+
+  '<div class="pips" role="img" aria-label="'+G.p+' of 3 points">'+[1,2,3].map(i=>'<i'+(i<=G.p?' class="on"':'')+'></i>').join('')+'</div>'+
+  '<p class="lead">'+G.p+' of 3 points</p>'+(n?'<div class="streak">'+ic('flame')+n+'-day streak</div>':'')+
+  '<p class="because">'+esc(D.why)+'</p>'+
+  '<div class="row2"><button class="btn primary" onclick="share()">'+ic('share')+'Share</button><button class="btn" onclick="sendIt()">'+ic('message-circle')+'Send to a classmate</button>'+
+  '<a class="btn" href="reviewer.html?course='+encodeURIComponent(D.course)+'#preview='+encodeURIComponent(D.sec)+'">Practice 5 questions</a>'+
+  '<a class="btn" href="discuss.html?c='+encodeURIComponent(D.course)+'">'+ic('message-circle')+'Discuss</a></div><p class="next" id="next"></p>';
+ b.hidden=false;Kit.countdown($('next'),'mystery');
+}
+function shareText(){const n=Kit.streak(S);
+ return 'Three Clues · '+Kit.niceDate(TODAY)+' · '+Kit.short(Kit.course(D.course).title)+'\n'+(G.w?G.p+' of 3 points, named on clue '+(4-G.p):'Missed today\'s mystery')+(n>1?' · '+n+'-day streak':'')+'\n'+[1,2,3].map(i=>i<=G.p?'🟪':'⬜').join('')}
+function share(){Kit.share(shareText())}
+function sendIt(){Kit.send('clues',D.date,shareText(),'Three Clues result')}
+function openStats(){
+ const days=Kit.done(S),pts=days.map(d=>S.g[d].p||0),avg=days.length?(pts.reduce((a,b)=>a+b,0)/days.length).toFixed(1):'0',max=Math.max(1,...[3,2,1,0].map(p=>pts.filter(x=>x===p).length));
+ $('stbody').innerHTML='<div class="stats"><div><b>'+days.length+'</b><span>Played</span></div><div><b>'+avg+'</b><span>Average points</span></div><div><b>'+Kit.streak(S)+'</b><span>Streak</span></div><div><b>'+Kit.best(S)+'</b><span>Best streak</span></div></div>'+
+  '<div class="dist">'+[3,2,1,0].map(p=>{const c=pts.filter(x=>x===p).length;return '<div><span>'+(p?p+' point'+(p>1?'s':''):'Missed')+'</span><i style="width:'+Math.round(c*100/max)+'%"></i><em>'+c+'</em></div>'}).join('')+'</div>';
+ Kit.show('stats')}
+function openHow(){Kit.show('how')}
+function closeHow(){Kit.hide('how');if(!S.how){S.how=1;save();SYNC.push()}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('how').hidden)closeHow();else if(!$('stats').hidden)Kit.hide('stats')}});
+boot();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+<script src="dialog.js"></script>
+<script src="themefx.js" defer></script><script src="sound.js" defer></script><script src="update.js" defer></script>
+</body></html>

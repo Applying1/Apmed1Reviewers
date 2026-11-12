@@ -1,0 +1,230 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blitz · APMed '33</title>
+<meta name="description" content="Sixty seconds of quick matching from your course: tap the term that fits each prompt.">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css"><link rel="stylesheet" href="gamekit.css">
+<style>
+/* setup */
+.setup{margin:18px 0 0;padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);text-align:center}
+.setup h2{margin:0 0 10px;font:600 13.5px/1.3 var(--sans);color:var(--mute)}
+.pick{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.cbtn{display:inline-flex;align-items:center;gap:7px;padding:6px 12px 6px 8px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);font-weight:600;font-size:13.5px}
+.cbtn img{width:22px;height:22px}
+.cbtn[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.seg{display:inline-flex;margin:14px 0 0;padding:3px;border-radius:12px;background:var(--raised);border:1px solid var(--line)}
+.seg button{border:0;background:none;padding:6px 14px;border-radius:9px;font-weight:600;font-size:13.5px;color:var(--mute)}
+.seg button[aria-checked="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.best{margin:12px 0 14px;color:var(--mute);font-size:13.5px;min-height:20px}
+.best b{color:var(--text)}
+/* round */
+.hud{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;margin:16px 0 0}
+.clock{position:relative;min-width:52px;font-variant-numeric:tabular-nums}
+.clock b{font:600 30px/1 var(--serif)}.clock span{font-size:12px;color:var(--mute);margin-left:2px}
+.clock.low b{color:var(--bad)}
+.bonus{position:absolute;left:0;top:-16px;font-size:12px;font-weight:700;color:var(--good);opacity:0}
+.bonus.on{animation:rise 1s var(--ease)}
+@keyframes rise{0%{opacity:0;transform:translateY(6px)}25%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
+.bar{height:8px;border-radius:4px;background:var(--raised);overflow:hidden}
+.bar i{display:block;height:100%;width:100%;border-radius:4px;background:var(--accent);transform-origin:left}
+.score{text-align:right;font-variant-numeric:tabular-nums}
+.score b{display:block;font:600 22px/1 var(--serif)}
+.score span{font-size:12px;color:var(--mute);white-space:nowrap}
+.score span.hot{color:var(--accent);font-weight:700}
+.q{margin:14px 0 0;padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);min-height:128px;display:flex;flex-direction:column;justify-content:center;text-align:center}
+.q .ctx{font-size:12.5px;font-weight:600;color:var(--mute)}
+.q p{margin:6px 0 0;font:600 18.5px/1.35 var(--serif);overflow-wrap:anywhere}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0 0}
+.opts.long{grid-template-columns:1fr}
+.opt{min-height:62px;padding:10px 12px;border-radius:14px;border:1.5px solid var(--line2);background:var(--surface);font:600 14.5px/1.3 var(--sans);text-align:center;overflow-wrap:anywhere;touch-action:manipulation;box-shadow:0 1px 0 var(--line2)}
+.opts.long .opt{min-height:50px}
+.opt:hover{border-color:var(--accent-line)}
+.opt.ok{border-color:var(--good);background:color-mix(in oklab,var(--good) 14%,var(--surface));box-shadow:none}
+.opt.bad{border-color:var(--bad);background:color-mix(in oklab,var(--bad) 12%,var(--surface));animation:shake .4s;box-shadow:none}
+.fb{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:var(--raised);border:1px solid var(--line);font-size:14px;display:flex;align-items:center;gap:12px}
+.fb p{margin:0;flex:1}.fb p b{font-weight:700}
+.fb .btn{flex:none}
+/* result */
+.end .pts{font:600 46px/1 var(--serif);font-variant-numeric:tabular-nums;margin:2px 0 0}
+.end .pts small{font:600 15px var(--sans);color:var(--mute);margin-left:6px}
+.rows{margin:10px 0 0;display:grid;gap:6px;text-align:left}
+.rows div{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:11px;background:var(--raised);font-size:13.5px}
+.rows img{width:22px;height:22px}.rows b{flex:1}.rows span{color:var(--mute);font-variant-numeric:tabular-nums}
+</style></head><body>
+<main>
+ <div class="top"><a class="back" href="./#games"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>Games</a><span class="sp"></span>
+  <button class="btn icon" onclick="openHow()" aria-label="How to play">?</button><button class="btn icon" onclick="openStats()" aria-label="Your best scores"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-trophy"/></svg></button></div>
+ <h1>Blitz</h1>
+ <p class="sub" id="sub">Sixty seconds. Tap the term that fits each prompt.</p>
+ <section class="setup" id="setup">
+  <h2 id="pickh">Which course?</h2>
+  <div class="pick" id="pick" role="radiogroup" aria-labelledby="pickh"></div>
+  <div><div class="seg" id="scope" role="radiogroup" aria-label="What to cover" hidden></div></div>
+  <p class="best" id="best" aria-live="polite">Loading…</p>
+  <button class="btn primary big" id="go" onclick="start()" disabled><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-zap"/></svg>Start 60 seconds</button>
+ </section>
+ <section id="play" hidden>
+  <div class="hud"><div class="clock" id="clock"><b id="sec">60</b><span>s</span><em class="bonus" id="bonus">+2 s</em></div><div class="bar" aria-hidden="true"><i id="bar"></i></div><div class="score"><b id="score">0</b><span id="run">&nbsp;</span></div></div>
+  <div class="q"><span class="ctx" id="ctx"></span><p id="q"></p></div>
+  <div class="opts" id="opts"></div>
+  <div class="fb" id="fb" hidden></div>
+ </section>
+ <section class="end" id="end" hidden aria-live="polite"></section>
+</main>
+<div class="dlg" id="how" hidden onclick="if(event.target===this)closeHow()"><div class="dbox" role="dialog" aria-modal="true" aria-labelledby="howh">
+ <h2 id="howh">How Blitz works</h2>
+ <ul><li>Pick a course. You get <b>60 seconds</b> of prompts from its matching sets and flashcards.</li>
+  <li><b>Tap the term that fits.</b> Each right answer scores 10 points.</li>
+  <li>Every 5 in a row raises the multiplier (up to ×4) and adds <b>2 seconds</b>.</li>
+  <li>A wrong tap shows the right answer, pauses the clock for a moment and resets your run.</li>
+  <li>Play as often as you like. Your best score per course is kept.</li></ul>
+ <div class="row2"><button class="btn primary" onclick="closeHow()">Got it</button></div>
+</div></div>
+<div class="dlg" id="stats" hidden onclick="if(event.target===this)Kit.hide('stats')"><div class="dbox" role="dialog" aria-modal="true" aria-labelledby="sth"><h2 id="sth">Your best scores</h2><div id="stbody"></div>
+ <div class="row2"><button class="btn" onclick="Kit.hide('stats')">Close</button></div></div></div>
+<div class="toast" id="toast" role="status"></div>
+<script src="schedule-core.js"></script>
+<script src="reminders-core.js"></script>
+<script src="auth.js"></script>
+<script src="gamekit.js"></script>
+<script>
+// Blitz: 60 seconds of quick matching, built in the browser from a course's matching sets and short flashcards
+// (courses/<id>.json "matching" + the course's cards file). Nothing is authored per day.
+// Saved: localStorage 'reviewer_blitz' = {v:1, how, last: course, scope, b:{<course>:{s best score, r best run, n rounds, t last played}}}.
+// Site-wide; syncs with the courses' sync code (row "_blitz": the higher numbers win).
+const KEY='reviewer_blitz',ROUND=60000,MIN=12,$=Kit.$,esc=Kit.esc,ic=Kit.ic;
+let S=(()=>{let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}return s&&s.v===1&&s.b&&typeof s.b==='object'?s:{v:1,b:{}}})();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let COURSES=[],CID='',SCOPE=S.scope==='all'?'all':'test',DATA={},R=null;
+const SYNC=Kit.sync('_blitz',{data:()=>({v:1,b:S.b,how:S.how||0}),merge(r){let any=false;if(!r||r.v!==1||!r.b||typeof r.b!=='object')return {any};
+  for(const c in r.b){const a=S.b[c]||{},b=r.b[c];if(!b||typeof b!=='object'||c.length>24)continue;const m={s:Math.max(a.s||0,+b.s||0),r:Math.max(a.r||0,+b.r||0),n:Math.max(a.n||0,+b.n||0),t:Math.max(a.t||0,+b.t||0)};
+   if(m.s!==a.s||m.r!==a.r||m.n!==a.n){S.b[c]=m;any=true}}
+  if(r.how&&!S.how){S.how=1;any=true}if(any)save();return {any}},changed(m){if(m.any&&!R)drawBest()}});
+
+// ---------- the prompts of a course ----------
+function build(d,cards,chs){
+ const out=[],inCh=c=>!chs||chs.has(String(c));
+ for(const m of d.matching||[]){const ch=m[0],title=m[1],opts=m[2],pairs=m[3];if(!inCh(ch)||!Array.isArray(opts)||opts.length<2)continue;
+  for(const p of pairs||[]){const q=p[0];if(typeof q!=='string'||q.length>110||opts[p[1]]==null)continue;out.push({c:title,q,a:opts[p[1]],o:opts})}}
+ // flashcards: the note is the prompt, its heading the answer; the other headings of the same topic are the wrong tiles
+ const groups={};
+ for(const k of cards){if(k.k!=='b'||!inCh(k.c))continue;const f=String(k.f||'').trim(),b=String(k.b||'').trim();
+  if(!f||f.length>36||b.length<8||b.length>120||b.toLowerCase().includes(f.toLowerCase()))continue;(groups[k.c+'|'+k.t]=groups[k.c+'|'+k.t]||[]).push({f,b,t:k.t})}
+ for(const g of Object.values(groups)){const fs=[...new Set(g.map(x=>x.f))];if(fs.length<3)continue;const seen=new Set();
+  for(const x of g){if(seen.has(x.b)||g.filter(y=>y.f===x.f).length>1)continue;seen.add(x.b);out.push({c:x.t,q:x.b,a:x.f,o:fs})}}
+ return out;
+}
+async function load(cid){
+ if(DATA[cid])return DATA[cid];
+ const d=await (await fetch('courses/'+cid+'.json')).json();let cards=[];
+ try{if(d.config&&d.config.cards)cards=(await (await fetch(d.config.cards)).json()).cards||[]}catch(e){}
+ const ex=((d.config||{}).exams||[]).find(e=>e.id===d.config.activeExam);let chs=null;
+ if(ex){const l=ex.chapters||(ex.sections||[]).map(s=>String(s).split('-')[0]);if(l.length)chs=new Set(l.map(String))}
+ const all=build(d,cards,null),test=chs?build(d,cards,chs):[];
+ return DATA[cid]={all,test:test.length>=MIN&&test.length<all.length?test:null,exam:ex&&ex.name||''};
+}
+const pool=()=>{const d=DATA[CID];return d?(SCOPE==='test'&&d.test)||d.all:[]};
+
+// ---------- setup ----------
+async function boot(){
+ COURSES=await Kit.courses();await SYNC.pull();
+ const want=new URLSearchParams(location.search).get('course'),tests=await Kit.tests();
+ const first=[want,S.last,...tests.map(t=>t.subj.course)].find(id=>id&&COURSES.some(c=>c.id===id))||(COURSES[0]||{}).id;
+ $('pick').innerHTML=COURSES.map(c=>'<button class="cbtn" role="radio" aria-checked="false" data-c="'+esc(c.id)+'">'+(c.image?'<img src="'+esc(c.image)+'" alt="">':'')+esc(Kit.short(c.title))+'</button>').join('');
+ if(first)choose(first);else $('best').textContent='No courses yet.';
+ if(!S.how)openHow();
+}
+async function choose(cid){
+ CID=cid;document.querySelectorAll('.cbtn').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.c===cid)));
+ $('go').disabled=true;$('scope').hidden=true;$('best').textContent='Loading…';
+ let d=null;try{d=await load(cid)}catch(e){}
+ if(CID!==cid)return;
+ if(!d){$('best').textContent='Could not load this course. Check your connection.';return}
+ if(d.test){$('scope').innerHTML='<button role="radio" data-s="test">'+esc(d.exam||'Next test')+'</button><button role="radio" data-s="all">Whole course</button>';$('scope').hidden=false;drawScope()}
+ drawBest();
+}
+function drawScope(){document.querySelectorAll('#scope button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.s===SCOPE)))}
+function drawBest(){
+ const n=pool().length,b=S.b[CID];
+ if(n<MIN){$('best').textContent='This course has too few matching sets and flashcards for a round yet.';$('go').disabled=true;return}
+ $('best').innerHTML=(b&&b.s?'Your best here: <b>'+b.s+' points</b> · best run '+b.r:'No score here yet')+' · '+n+' prompts';$('go').disabled=false;
+}
+document.addEventListener('click',e=>{const c=e.target.closest('.cbtn');if(c&&!R){choose(c.dataset.c);return}
+ const s=e.target.closest('#scope button');if(s){SCOPE=s.dataset.s;S.scope=SCOPE;save();drawScope();drawBest();return}
+ const o=e.target.closest('.opt');if(o)answer(+o.dataset.i)});
+
+// ---------- a round ----------
+function start(){
+ const items=pool();if(items.length<MIN)return;
+ S.last=CID;save();
+ R={deck:Kit.shuffle(items),at:0,left:ROUND,last:performance.now(),score:0,run:0,bestRun:0,right:0,miss:[],pause:false,lock:false,warned:false,over:false};
+ $('setup').hidden=true;$('end').hidden=true;$('sub').hidden=true;$('play').hidden=false;
+ document.documentElement.setAttribute('data-fx-quiet','');Kit.fx('sound',{name:'start'});
+ next();drawHud();requestAnimationFrame(tick);
+}
+function next(){
+ if(R.at>=R.deck.length){R.deck=Kit.shuffle(R.deck);R.at=0}
+ const it=R.deck[R.at++],others=Kit.shuffle(it.o.filter(x=>x!==it.a)).slice(0,3);
+ R.cur={it,opts:Kit.shuffle([it.a,...others])};R.lock=false;R.shown=performance.now();
+ $('ctx').textContent=it.c;$('q').textContent=it.q;$('fb').hidden=true;
+ $('opts').className='opts'+(R.cur.opts.some(o=>o.length>24)?' long':'');
+ $('opts').innerHTML=R.cur.opts.map((o,i)=>'<button class="opt" data-i="'+i+'">'+esc(o)+'</button>').join('');
+}
+const mult=()=>Math.min(4,1+Math.floor(R.run/5));
+function answer(i){
+ if(!R||R.over||R.pause||R.lock||performance.now()-R.shown<140)return;
+ const c=R.cur,btns=[...document.querySelectorAll('.opt')],ok=c.opts[i]===c.it.a;
+ Kit.fx('answer',{correct:ok});
+ if(ok){R.score+=10*mult();R.run++;R.right++;R.bestRun=Math.max(R.bestRun,R.run);btns[i].classList.add('ok');R.lock=true;
+  if(R.run%5===0){R.left+=2000;const b=$('bonus');b.classList.remove('on');void b.offsetWidth;b.classList.add('on')}
+  drawHud();setTimeout(()=>{if(R&&!R.over)next()},170);return}
+ R.run=0;R.miss.push({q:c.it.q,a:c.it.a,c:c.it.c});R.pause=true;
+ btns[i].classList.add('bad');btns.forEach((b,j)=>{if(c.opts[j]===c.it.a)b.classList.add('ok')});
+ $('fb').innerHTML='<p>It was <b>'+esc(c.it.a)+'</b>. The clock is paused.</p><button class="btn" onclick="resume()">Continue</button>';$('fb').hidden=false;
+ drawHud();clearTimeout(R.t);R.t=setTimeout(resume,2600);
+}
+function resume(){if(!R||R.over||!R.pause)return;clearTimeout(R.t);R.pause=false;R.last=performance.now();next()}
+function tick(now){
+ if(!R||R.over)return;const dt=Math.min(250,Math.max(0,now-R.last));R.last=now;
+ if(!R.pause){R.left-=dt;if(R.left<=5000&&!R.warned){R.warned=true;Kit.fx('sound',{name:'warn'})}if(R.left<=0){R.left=0;finish();return}}
+ drawClock();requestAnimationFrame(tick);
+}
+function drawClock(){$('sec').textContent=Math.ceil(R.left/1000);$('bar').style.transform='scaleX('+Math.min(1,R.left/ROUND)+')';$('clock').classList.toggle('low',R.left<=5000)}
+function drawHud(){$('score').textContent=R.score;const m=mult();$('run').className=m>1?'hot':'';$('run').innerHTML=R.run>1?R.run+' in a row'+(m>1?' · ×'+m:''):'&nbsp;';drawClock()}
+function finish(){
+ R.over=true;clearTimeout(R.t);document.documentElement.removeAttribute('data-fx-quiet');
+ const b=S.b[CID]||{},isBest=R.score>(b.s||0)&&R.score>0;
+ S.b[CID]={s:Math.max(b.s||0,R.score),r:Math.max(b.r||0,R.bestRun),n:(b.n||0)+1,t:Date.now()};save();SYNC.push(true);
+ if(isBest)Kit.fx('moment',{kind:'solved'});
+ const c=Kit.course(CID),tot=R.right+R.miss.length,r=R;
+ $('play').hidden=true;
+ $('end').innerHTML='<p class="lead">'+esc(Kit.short(c.title))+'</p><p class="pts">'+r.score+'<small>points</small></p>'+
+  '<p class="lead">'+r.right+' right'+(r.miss.length?', '+r.miss.length+' missed':'')+(tot?' · best run '+r.bestRun:'')+'</p>'+
+  (isBest?'<div class="streak">'+ic('trophy')+'New best for this course</div>':b.s?'<p class="lead">Your best: '+S.b[CID].s+'</p>':'')+
+  '<div class="row2"><button class="btn primary" onclick="again()">'+ic('rotate-ccw')+'Play again</button><button class="btn" onclick="share()">'+ic('share')+'Share</button>'+
+  '<button class="btn" onclick="sendIt()">'+ic('message-circle')+'Send to a classmate</button><a class="btn" href="reviewer.html?course='+encodeURIComponent(CID)+'">Open the course</a></div>'+
+  (r.miss.length?'<div class="why"><h3>Worth another look</h3>'+r.miss.slice(0,12).map(m=>'<p><b>'+esc(m.a)+'</b> · '+esc(m.q)+'</p>').join('')+'</div>':'');
+ $('end').hidden=false;R=Object.assign({},r,{done:true});LAST=R;R=null;
+}
+let LAST=null;
+function again(){$('end').hidden=true;$('sub').hidden=false;$('setup').hidden=false;drawBest();start()}
+function shareText(){const r=LAST;return 'Blitz · '+Kit.short(Kit.course(CID).title)+'\n'+r.score+' points in 60 seconds · '+r.right+' right, best run '+r.bestRun}
+function share(){if(LAST)Kit.share(shareText())}
+function sendIt(){if(LAST)Kit.send('blitz',CID,shareText(),'Blitz score')}
+function openStats(){
+ const rows=COURSES.filter(c=>S.b[c.id]&&S.b[c.id].n).sort((a,b)=>S.b[b.id].s-S.b[a.id].s);
+ $('stbody').innerHTML=rows.length?'<div class="rows">'+rows.map(c=>'<div>'+(c.image?'<img src="'+esc(c.image)+'" alt="">':'')+'<b>'+esc(Kit.short(c.title))+'</b><span>'+S.b[c.id].s+' pts · run '+S.b[c.id].r+' · '+S.b[c.id].n+' round'+(S.b[c.id].n===1?'':'s')+'</span></div>').join('')+'</div>':'<p style="color:var(--mute);margin:0 0 10px">Play a round and your best score shows up here.</p>';
+ Kit.show('stats')}
+function openHow(){Kit.show('how')}
+function closeHow(){Kit.hide('how');if(!S.how){S.how=1;save();SYNC.push()}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('how').hidden)closeHow();else if(!$('stats').hidden)Kit.hide('stats')}
+ else if(R&&!R.pause&&/^[1-4]$/.test(e.key)&&$('how').hidden)answer(+e.key-1);else if(R&&R.pause&&(e.key==='Enter'||e.key===' ')){e.preventDefault();resume()}});
+boot();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+<script src="dialog.js"></script>
+<script src="themefx.js" defer></script><script src="sound.js" defer></script><script src="update.js" defer></script>
+</body></html>

@@ -1,0 +1,156 @@
+{
+"v": 1,
+"days": [
+{
+"date": "2026-11-12",
+"course": "chem",
+"sec": "19-2",
+"topic": "Topic 19: Lipids · Types by Structure and Membrane Lipids",
+"kind": "a lipid",
+"clues": [
+"A derived lipid: no fatty acids, only three six-membered rings and one five-membered ring fused together.",
+"It sits in the cell membrane, where it regulates how fluid the membrane is.",
+"HDL carries the good kind and LDL the bad kind through the blood."
+],
+"why": "Cholesterol is a steroid, so it is a derived lipid built on the fused steroid nucleus. It is a membrane lipid that regulates fluidity, and lipoproteins (HDL, LDL) transport it in the blood.",
+"pool": [
+"Bile acid",
+"Biological wax",
+"Cerebroside",
+"Cholesterol",
+"Glycerophospholipid",
+"Leukotriene",
+"Limonene",
+"Linoleic acid",
+"Lipoprotein",
+"Prostaglandin",
+"Sphingomyelin",
+"Steroid hormone",
+"Thromboxane",
+"Triacylglycerol"
+],
+"a": 9
+},
+{
+"date": "2026-11-13",
+"course": "chem",
+"sec": "18-2",
+"topic": "Topic 18: Enzymes · Structure: Cofactors and Key Terms",
+"kind": "an enzyme term",
+"clues": [
+"A non-protein helper that is bound and released easily, held only by intermolecular forces.",
+"It is organic and is often derived from a vitamin.",
+"CoA and NADH are examples; it is the loosely bound type of cofactor."
+],
+"why": "A coenzyme is a cofactor that is loosely bound (intermolecular forces only), organic and often vitamin-derived, like CoA and NADH. The tightly bound kind is a prosthetic group.",
+"pool": [
+"Active site",
+"Allosteric activator",
+"Apoenzyme",
+"Coenzyme",
+"Cofactor",
+"Competitive inhibitor",
+"Holoenzyme",
+"Hydrolase",
+"Isomerase",
+"Ligase",
+"Noncompetitive inhibitor",
+"Prosthetic group",
+"Substrate",
+"Transferase"
+],
+"a": 9
+},
+{
+"date": "2026-11-14",
+"course": "chem",
+"sec": "17-6",
+"topic": "Topic 17: Proteins and Optical Isomerism · Secondary, Tertiary and Quaternary Structure",
+"kind": "a protein",
+"clues": [
+"A multimeric protein with quaternary structure: a tetramer whose subunits are held by noncovalent forces.",
+"Two α chains of 141 residues and two β chains of 146 residues.",
+"Each chain has a heme with iron, so it carries four O₂ from the lungs to the tissues."
+],
+"why": "Hemoglobin is the tetramer α₂β₂, so it has quaternary structure, and each chain's heme iron binds one O₂. Myoglobin has one chain and one heme, stores O₂ in muscle and has no quaternary structure.",
+"pool": [
+"Alcohol dehydrogenase",
+"Arginase",
+"Catalase",
+"Creatine kinase",
+"Cytochrome oxidase",
+"Hemoglobin",
+"Hexokinase",
+"Lactate dehydrogenase",
+"Myoglobin",
+"Pepsin",
+"Salivary amylase",
+"Sucrase",
+"Trypsin",
+"Urease"
+],
+"a": 11
+},
+{
+"date": "2026-11-15",
+"course": "pharma",
+"sec": "8-3",
+"topic": "Lesson 8: GI Drugs · H2 Blockers and PPIs",
+"kind": "a GI drug",
+"clues": [
+"It keeps histamine off a receptor on the parietal cell, and it is the prototype of its group.",
+"The least potent of its group, at 800 mg.",
+"Its known adverse effect is gynecomastia; spironolactone is the other drug that does this."
+],
+"why": "Cimetidine is the prototype H2 blocker. It is the least potent of the four (800 mg; famotidine is the most potent) and causes gynecomastia through CYP450 and estrogen metabolism.",
+"pool": [
+"Bisacodyl",
+"Cimetidine",
+"Docusate",
+"Esomeprazole",
+"Famotidine",
+"Lactulose",
+"Lansoprazole",
+"Misoprostol",
+"Nizatidine",
+"Omeprazole",
+"Pantoprazole",
+"Psyllium",
+"Rabeprazole",
+"Ranitidine",
+"Senna",
+"Sucralfate"
+],
+"a": 7
+},
+{
+"date": "2026-11-16",
+"course": "pharma",
+"sec": "8-5",
+"topic": "Lesson 8: GI Drugs · Laxatives",
+"kind": "a laxative",
+"clues": [
+"A stimulant: it directly irritates the GI lining, and it belongs to the anthraquinones.",
+"It is sold as a tea that some people misuse to lose weight.",
+"Chronic users get melanosis coli: dark, giraffe-like spots in the colon."
+],
+"why": "Senna is the important anthraquinone stimulant laxative. Long-term use causes melanosis coli, and it is sold as Biofitea and Senokot Forte.",
+"pool": [
+"Aloe",
+"Bisacodyl",
+"Cascara",
+"Castor oil",
+"Docusate",
+"Glycerin suppository",
+"Lactulose",
+"Methylcellulose",
+"Mineral oil",
+"Polycarbophil",
+"Polyethylene glycol",
+"Psyllium",
+"Senna"
+],
+"a": 5
+}
+]
+}

@@ -102,12 +102,12 @@
     return '<span class="shc-init" aria-hidden="true">' + esc((String(p.name || '?').trim().charAt(0) || '?').toUpperCase()) + '</span>';
   }
 
-  var GAME_NAME = { crossword: 'Crossword', apmeddle: "APMed'le", sortit: 'Sort It', duel: 'Duel' };
+  var GAME_NAME = { crossword: 'Crossword', apmeddle: "APMed'le", sortit: 'Sort It', duel: 'Duel', blitz: 'Blitz', clues: 'Three Clues', thread: 'Common Thread' };
 
   function cleanPreview(txt) {
     var b = String(txt == null ? '' : txt).replace(/^\[reply:[^\]]+\]\s*/, '');
     var nl = b.indexOf('\n'), first = nl < 0 ? b : b.slice(0, nl), rest = nl < 0 ? '' : b.slice(nl + 1);
-    var gm = first.match(/^\[game:(crossword|apmeddle|sortit|duel):[\w-]{1,40}\]$/);
+    var gm = first.match(/^\[game:(crossword|apmeddle|sortit|duel|blitz|clues|thread):[\w-]{1,40}\]$/);
     if (gm) return '🏆 Shared a ' + (GAME_NAME[gm[1]] || gm[1]) + ' result';
     var qm = first.match(/^\[q:[a-z0-9_-]{1,24}:[\w.:-]{1,60}\]$/);
     if (qm) {

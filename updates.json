@@ -1298,5 +1298,13 @@
   "title": "Hide a question",
   "text": "After you answer, tap Hide this question to take one you don’t need out of practice for good. The mock exam still uses it. Find them again in Personalize, Hidden questions.",
   "link": "./"
+ },
+ {
+  "id": 159,
+  "date": "2026-11-12",
+  "type": "feature",
+  "title": "Three new games",
+  "text": "Blitz is 60 seconds of quick matching from any course. Three Clues is a daily mystery term with clues from hard to easy. Common Thread hides four groups in sixteen terms. Find them on the home page under Daily games.",
+  "link": "./#games"
  }
 ]

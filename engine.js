@@ -3,7 +3,7 @@
    ===================================================================== */
 // Safety net: if the app fails while starting, forget only where you were (section, question, page) and reload once.
 // Progress is untouched. __recovered stops a reload loop and is cleared after a good start.
-const APP_VERSION='118',APP_DATE='Nov 12, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
+const APP_VERSION='119',APP_DATE='Nov 12, 2026';   // shown in Personalize, so "is the fix there yet?" is easy to check
 let BOOTED=false;
 let PV=0,PC={v:-1,list:new Map(),prog:new Map()};   // remembered section counts (see inSection)
 addEventListener('error',()=>{if(BOOTED)return;try{const k=CONFIG.storageKey,s=JSON.parse(localStorage.getItem(k));if(s&&!s.__recovered){
@@ -2038,6 +2038,10 @@ function setPrefTab(n){try{localStorage.setItem('reviewer_prefs_tab',n)}catch(e)
 
 /* ---------- what's new: changes to how the app works (not to the questions) ---------- */
 const CHANGELOG=[
+ {v:'119',date:'Nov 12, 2026',title:'Three new games',items:[
+  '<b>Blitz</b>: 60 seconds of quick matching from any course. Every 5 in a row raises your multiplier and adds 2 seconds.',
+  '<b>Three Clues</b>: one mystery term a day. Name it on the hardest clue for 3 points, or open easier clues for fewer.',
+  '<b>Common Thread</b>: sixteen terms, four hidden groups, four mistakes allowed. All three are on the home page under Daily games.']},
  {v:'118',date:'Nov 12, 2026',title:'Hide a question',items:[
   'After you answer, <b>Hide this question</b> takes a question you don&#39;t need out of practice, quizzes and review for good. It also leaves your mastery count. The mock exam still uses it.',
   'Changed your mind? Personalize, Study tools, <b>Hidden questions</b> lists them with Show again. Hidden questions sync across your signed-in devices, and the link can be switched off there too.']},
