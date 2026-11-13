@@ -1332,5 +1332,14 @@
   "title": "Chem cheat sheet for tomorrow's eval",
   "text": "Every identification answer, structure name and modified true-or-false correction for topics 15-19 on one page, with a search box and a Quiz me switch that hides the answers until you tap. Open Chem, then Notes, then Documents.",
   "link": "cheatsheet.html?course=chem"
+ },
+ {
+  "id": 163,
+  "date": "2026-11-13",
+  "type": "course",
+  "course": "chem",
+  "title": "Chem eval: enzyme classes from a drawn reaction",
+  "text": "Tomorrow's Chem eval gives the full reaction and you name the enzyme class. New mock-only practice items show a drawn reaction for all six classes. They are in the Mock eval (Nov 14, written).",
+  "link": "reviewer.html?course=chem"
  }
 ]
