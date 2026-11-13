@@ -1314,5 +1314,14 @@
   "title": "New themes: Sakura, Galaxy and Minecraft",
   "text": "The previous Sakura colors are now Cherry Blossom, and three new themes join Winter with their own backdrops, card touches and sounds: airy Sakura with petals and green leaves, Galaxy with nebula clouds, twinkling stars and shooting stars, and Minecraft with voxel GUI panels, pixel font, XP progress bars and 8-bit chimes. Pick one on the home page or in Settings.",
   "link": "./#pals"
+ },
+ {
+  "id": 161,
+  "date": "2026-11-13",
+  "type": "course",
+  "course": "chem",
+  "title": "Chem eval: structure-given practice",
+  "text": "New mock-only items for Saturday's Chem eval, based on what she said in the class chat: classify an amino acid by its drawn R group, name the interaction between two drawn side chains, dehydration synthesis of esters, amides and anhydrides, decarboxylation, and chiral centers. Find them in the Mock eval (Nov 14, written).",
+  "link": "reviewer.html?course=chem"
  }
 ]
