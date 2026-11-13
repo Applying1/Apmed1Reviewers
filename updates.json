@@ -1306,5 +1306,13 @@
   "title": "Three new games",
   "text": "Blitz is 60 seconds of quick matching from any course. Three Clues is a daily mystery term with clues from hard to easy. Common Thread hides four groups in sixteen terms. Find them on the home page under Daily games.",
   "link": "./#games"
+ },
+ {
+  "id": 160,
+  "date": "2026-11-13",
+  "type": "feature",
+  "title": "New themes: Sakura, Galaxy and Minecraft",
+  "text": "The previous Sakura colors are now Cherry Blossom, and three new themes join Winter with their own backdrops, card touches and sounds: airy Sakura with petals and green leaves, Galaxy with nebula clouds, twinkling stars and shooting stars, and Minecraft with voxel GUI panels, pixel font, XP progress bars and 8-bit chimes. Pick one on the home page or in Settings.",
+  "link": "./#pals"
  }
 ]

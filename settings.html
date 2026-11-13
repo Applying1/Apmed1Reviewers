@@ -29,7 +29,7 @@ h1{font:600 30px/1.2 var(--serif);margin:18px 0 14px;letter-spacing:-.3px}
 .seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:3px;border:1px solid var(--line);border-radius:11px;background:var(--raised)}
 .seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:13.5px;color:var(--mute)}
 .seg button[aria-checked="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 2px #0001}
-.pals{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;width:100%;padding:0 0 12px}
+.pals{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px;width:100%;padding:0 0 12px}
 .pals button{display:flex;align-items:center;gap:8px;padding:6px 10px 6px 7px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font:600 12.5px var(--sans);color:var(--mute);text-align:left;white-space:nowrap;overflow:hidden}
 .pals button:hover:not(.on){color:var(--text);border-color:var(--line2)}.pals button.on{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 2px var(--accent-soft)}
 input.vol{width:170px;max-width:100%;accent-color:var(--accent)}
@@ -51,7 +51,7 @@ input.vol{width:170px;max-width:100%;accent-color:var(--accent)}
  <section class="sec"><h2>Appearance</h2><p class="d">Saved on this device only, so your phone and laptop can look different.</p>
   <div class="row"><div class="t"><b>Theme</b><span>Follow the device, or always light or dark.</span></div><span class="seg" id="theme" role="radiogroup" aria-label="Theme"></span></div>
   <div class="row" style="padding-bottom:6px"><div class="t"><b>Colors</b></div></div><div class="pals" id="pals" role="radiogroup" aria-label="Colors"></div>
-  <div class="row"><div class="t"><b>Theme effects</b><span>Some themes, like Winter, add a backdrop and small touches. Still keeps the picture without the motion.</span></div><span class="seg" id="fxm" role="radiogroup" aria-label="Theme effects"></span></div>
+  <div class="row"><div class="t"><b>Theme effects</b><span>Some themes (Winter, Sakura, Galaxy, Minecraft) add a backdrop and small touches. Still keeps the picture without the motion.</span></div><span class="seg" id="fxm" role="radiogroup" aria-label="Theme effects"></span></div>
  </section>
  <section class="sec" id="home"></section>
  <section class="sec" id="goal"></section>
@@ -81,7 +81,7 @@ function drawAcc(){let a=null,code=null;try{a=JSON.parse(get('reviewer_account')
   :'<div class="row"><div class="t"><b>Not signed in</b><span>Sign in to keep your progress on every device and to post in the discussions.</span></div><a class="btn primary" href="./?signin=1">Sign in with Google</a></div>')}
 function curTheme(){return get('reviewer_theme')||'auto'}
 function setTheme(t){const d=document.documentElement;if(t==='auto'){delete d.dataset.theme;set('reviewer_theme',null)}else{d.dataset.theme=t;set('reviewer_theme',t)}drawLook()}
-const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['sakura','Sakura',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']],['ocean','Ocean',['#eef5fa','#0a6c9e','#5cc0ef']],['lavender','Lavender',['#f5f2fb','#6b46c1','#b9a2f5']],['coffee','Coffee',['#f6f0e8','#8a4b22','#e0a574']],['winter','Winter',['#13243b','#9ccbe4','#f0b45a']]];
+const PALS=[['classic','Classic',['#f6f4ef','#4f46e5','#7c3aed']],['apmed','APMed \'33',['#f5eedb','#1d7a80','#e3a21a']],['catppuccin','Catppuccin',['#1e1e2e','#cba6f7','#89b4fa']],['tokyo','Tokyo Night',['#1a1b26','#7aa2f7','#bb9af7']],['rosepine','Rosé Pine',['#191724','#ebbcba','#9ccfd8']],['cherry','Cherry Blossom',['#fdf2f6','#c2185b','#f48fb1']],['matcha','Matcha',['#f2f5ef','#2d6a4f','#85d1a0']],['ocean','Ocean',['#eef5fa','#0a6c9e','#5cc0ef']],['lavender','Lavender',['#f5f2fb','#6b46c1','#b9a2f5']],['coffee','Coffee',['#f6f0e8','#8a4b22','#e0a574']],['winter','Winter',['#13243b','#9ccbe4','#f0b45a']],['sakura','Sakura',['#fff9fb','#ff9ebb','#68b678']],['galaxy','Galaxy',['#090a14','#b48eff','#4ce0ff']],['minecraft','Minecraft',['#26262f','#52c43b','#4eedd8']]];
 function setPal(p){const d=document.documentElement;if(p==='classic'){delete d.dataset.palette;set('reviewer_palette',null)}else{d.dataset.palette=p;set('reviewer_palette',p)}drawLook()}
 function setFx(m){ThemeFx.setMode(m);drawLook()}
 function sndOn(v){Sound.set({on:v});if(v)Sound.test('right');drawSnd()}
