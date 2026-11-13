@@ -1341,5 +1341,14 @@
   "title": "Chem eval: enzyme classes from a drawn reaction",
   "text": "Tomorrow's Chem eval gives the full reaction and you name the enzyme class. New mock-only practice items show a drawn reaction for all six classes. They are in the Mock eval (Nov 14, written).",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 164,
+  "date": "2026-11-13",
+  "type": "content",
+  "course": "chem",
+  "title": "Chem: common acid names now optional",
+  "text": "She doesn't ask common names (formic, acetic, oxalic, succinic and the rest) on the Nov 14 eval, so those 16 questions are now off by default and left out of the mock and the cheat sheet. Switch them on in Personalize if you want them.",
+  "link": "reviewer.html?course=chem"
  }
 ]
