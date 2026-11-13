@@ -1323,5 +1323,14 @@
   "title": "Chem eval: structure-given practice",
   "text": "New mock-only items for Saturday's Chem eval, based on what she said in the class chat: classify an amino acid by its drawn R group, name the interaction between two drawn side chains, dehydration synthesis of esters, amides and anhydrides, decarboxylation, and chiral centers. Find them in the Mock eval (Nov 14, written).",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 162,
+  "date": "2026-11-13",
+  "type": "feature",
+  "course": "chem",
+  "title": "Chem cheat sheet for tomorrow's eval",
+  "text": "Every identification answer, structure name and modified true-or-false correction for topics 15-19 on one page, with a search box and a Quiz me switch that hides the answers until you tap. Open Chem, then Notes, then Documents.",
+  "link": "cheatsheet.html?course=chem"
  }
 ]
