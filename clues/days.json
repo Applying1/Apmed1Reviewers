@@ -151,6 +151,35 @@
 "Senna"
 ],
 "a": 5
+},
+{
+"date": "2026-11-17",
+"course": "pharma",
+"sec": "8-2",
+"topic": "Lesson 8: GI Drugs · GERD, PUD and Antacids",
+"kind": "an acid-peptic drug",
+"clues": [
+"A non-prescription remedy for intermittent heartburn; one dose works best about 1 h after a meal.",
+"It makes carbon dioxide in the stomach, so the person feels full and belches.",
+"Its everyday name is baking soda."
+],
+"why": "Sodium bicarbonate is the antacid that makes CO2, which causes fullness and belching. Calcium carbonate also burps; the hydroxides make only water.",
+"pool": [
+"Aluminum hydroxide",
+"Bismuth subcitrate",
+"Calcium carbonate",
+"Famotidine",
+"Gaviscon Double Action",
+"Kremil-S",
+"Magnesium hydroxide",
+"Misoprostol",
+"Omeprazole",
+"Simeticone",
+"Sodium alginate",
+"Sodium bicarbonate",
+"Sucralfate"
+],
+"a": 4
 }
 ]
 }

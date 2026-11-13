@@ -455,6 +455,97 @@
 "g": 3
 }
 ]
+},
+{
+"date": "2026-11-17",
+"course": "psych",
+"sec": "14-5",
+"topic": "Chapter 14: Methods of Therapy · Cognitive and Group Therapies",
+"title": "Therapy toolkit",
+"groups": [
+{
+"n": "Treatment with others",
+"w": "Formats in which other people share the session: groups, couples, families and self-help."
+},
+{
+"n": "Behavior therapy methods",
+"w": "Learning principles change behavior directly. Trap: social skills training sounds like talk therapy."
+},
+{
+"n": "In client-centered therapy",
+"w": "Rogers's method: qualities and listening, with no directing. Trap: empathy sounds like a general skill."
+},
+{
+"n": "Changing the thinking",
+"w": "Cognitive approaches: Beck's cognitive therapy and Ellis's REBT challenge irrational beliefs."
+}
+],
+"items": [
+{
+"t": "Empathy",
+"g": 0
+},
+{
+"t": "Group therapy",
+"g": 1
+},
+{
+"t": "Unconditional regard",
+"g": 2
+},
+{
+"t": "REBT",
+"g": 0
+},
+{
+"t": "Rapid smoking",
+"g": 0
+},
+{
+"t": "Genuineness",
+"g": 2
+},
+{
+"t": "Social skills training",
+"g": 2
+},
+{
+"t": "Couple therapy",
+"g": 0
+},
+{
+"t": "Beck",
+"g": 1
+},
+{
+"t": "CBT",
+"g": 0
+},
+{
+"t": "EMDR",
+"g": 1
+},
+{
+"t": "Irrational beliefs",
+"g": 0
+},
+{
+"t": "Active listening",
+"g": 1
+},
+{
+"t": "Family therapy",
+"g": 0
+},
+{
+"t": "Fear hierarchy",
+"g": 2
+},
+{
+"t": "Alcoholics Anonymous",
+"g": 0
+}
+]
 }
 ]
 }

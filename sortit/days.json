@@ -1154,6 +1154,75 @@
 "w": "So no stimulant can make acid; the best for GERD."
 }
 ]
+},
+{
+"date": "2026-11-17",
+"course": "psych",
+"sec": "14-3",
+"topic": "Chapter 14: Methods of Therapy · Humanistic Therapies",
+"title": "Rogers, Perls or Freud?",
+"bins": [
+"Client-centered",
+"Gestalt",
+"Psychodynamic"
+],
+"items": [
+{
+"t": "Rogers",
+"b": 0,
+"w": "Carl Rogers created this warm, accepting method."
+},
+{
+"t": "Nondirective",
+"b": 1,
+"w": "Therapists do not tell clients what to do."
+},
+{
+"t": "Unconditional positive regard",
+"b": 2,
+"w": "Respect for the client; one of the three qualities."
+},
+{
+"t": "Genuineness",
+"b": 0,
+"w": "Being open and honest; one of the three qualities."
+},
+{
+"t": "Perls",
+"b": 2,
+"w": "Fritz Perls originated this directive method."
+},
+{
+"t": "Here and now",
+"b": 0,
+"w": "Focus stays on what the client feels in the present."
+},
+{
+"t": "Integrating conflicting parts",
+"b": 1,
+"w": "Aims to integrate the parts of the personality the client disowns."
+},
+{
+"t": "Free association",
+"b": 0,
+"w": "Freud's tool: say whatever comes to mind."
+},
+{
+"t": "Transference",
+"b": 1,
+"w": "Treating the therapist like someone from childhood."
+},
+{
+"t": "Dream analysis",
+"b": 2,
+"w": "The royal road to the unconscious."
+},
+{
+"t": "Catharsis",
+"b": 0,
+"w": "Releasing repressed feelings."
+}
+]
 }
 ]
 }
