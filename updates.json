@@ -1350,5 +1350,13 @@
   "title": "Chem: common acid names now optional",
   "text": "She doesn't ask common names (formic, acetic, oxalic, succinic and the rest) on the Nov 14 eval, so those 16 questions are now off by default and left out of the mock and the cheat sheet. Switch them on in Personalize if you want them.",
   "link": "reviewer.html?course=chem"
+ },
+ {
+  "id": 165,
+  "date": "2026-11-14",
+  "type": "feature",
+  "title": "New game: Pop Quiz",
+  "text": "A live game for 1 to 10 classmates. The board asks for something with many right answers; when the pencil comes to your desk, type one nobody has said yet. Too slow and it pokes you. Host a room and share the code. It is under Quiz challenges on the home page. Pharmacology prompts for now.",
+  "link": "popquiz.html"
  }
 ]

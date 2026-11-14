@@ -351,7 +351,7 @@ html.introing body{overflow:hidden}
  <div id="notices"><div class="try" id="try" hidden></div><div class="try" id="prnotice" hidden></div><div class="try" id="move" hidden></div></div>
  <nav class="tools" aria-label="Tools">
   <a class="tool" id="gdtool" href="discuss.html?c=general" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-message-circle"/></svg></span><span><b>General discussion</b><span id="gdsub">Talk with the whole class</span></span></a>
-  <a class="tool" id="qztool" href="#quiz" onclick="event.preventDefault();openQuizChallenges()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Quiz challenges</b><span id="qzsub">Live quiz &middot; Duels</span></span></a>
+  <a class="tool" id="qztool" href="#quiz" onclick="event.preventDefault();openQuizChallenges()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><span><b>Quiz challenges</b><span id="qzsub">Pop Quiz &middot; Live quiz &middot; Duels</span></span></a>
   <a class="tool" id="gamestool" href="#games" onclick="event.preventDefault();openGames()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-gamepad"/></svg></span><span><b>Daily games</b><span id="gamessub">Six games from your courses</span></span></a>
   <a class="tool" id="bdtool" href="badges.html" hidden><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-crown"/></svg></span><span><b>Badges</b><span id="bdsub">Earn badges for good study habits</span></span></a>
   <a class="tool" id="classtool" href="#class" onclick="event.preventDefault();openClassModal()"><span class="tic"><svg class="i" aria-hidden="true"><use href="icons.svg#i-users"/></svg></span><span><b>Class &amp; attendance</b><span id="classsub">Class list &middot; My attendance</span></span><span class="badge badge-unread" id="classUnreadBadge" hidden></span></a>
@@ -386,6 +386,14 @@ html.introing body{overflow:hidden}
    <div class="gmain">
     <div class="gtop"><b>Duels</b></div>
     <p id="dusub">Challenge a classmate to 7 questions</p>
+   </div>
+   <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
+  </a>
+  <a class="gitem" id="pqtool" href="popquiz.html">
+   <span class="gtic"><svg class="i" width="22" height="22" aria-hidden="true"><use href="icons.svg#i-pencil"/></svg></span>
+   <div class="gmain">
+    <div class="gtop"><b>Pop Quiz</b></div>
+    <p id="pqsub">Live room: name one or get poked</p>
    </div>
    <span class="garrow"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span>
   </a>
@@ -657,7 +665,7 @@ function syncQuizTile(turn,done,total){
  const qz=document.getElementById('qztool'),sub=document.getElementById('qzsub');if(!qz||!sub)return;
  if(turn){sub.textContent=turn+(turn>1?' duels waiting':' duel waiting')+' · Live quiz';qz.classList.add('due')}
  else if(total){sub.textContent=(done?done+' finished':'Duels')+' · Live quiz'}
- else{sub.textContent='Live quiz · Duels'}
+ else{sub.textContent='Pop Quiz · Live quiz · Duels'}
 }
 (async function(){try{
  const cl=((await getCourses()).find(c=>c.cloud&&c.cloud.url)||{}).cloud;if(!cl)return;
@@ -1098,6 +1106,26 @@ window.shopPoster=function(d){
   const k=e=>{if(e.key==='Escape')close()};
   o.onclick=e=>{if(e.target===o)close()};o.querySelector('.yes').onclick=()=>{try{localStorage.setItem(KEY,String(MAX))}catch(e){}location.href='shop.html'};o.querySelector('.no').onclick=close;
   addEventListener('keydown',k);document.body.appendChild(o);setTimeout(()=>o.classList.add('on'),40);o.querySelector('.yes').focus()}};
+</script>
+<script>
+// Pop Quiz launch poster (Nov 14, 2026; picture from tools/make_popquiz_poster.py). At most 2 times per device, never on the
+// same visit as another popup (waits for the welcome intro and other popups). "Play Pop Quiz" stops it for good.
+// Works without storage (then once per visit).
+(function(){
+ const KEY='reviewer_popquiz_poster_v1',MAX=2;let n=0,tries=0;try{n=+localStorage.getItem(KEY)||0}catch(e){}
+ if(n>=MAX)return;
+ (function wait(){const busy=document.documentElement.classList.contains('introing')||document.querySelector('.hpop,.modal:not([hidden])');
+  if(busy){if(tries++<120)setTimeout(wait,1000);return}
+  setTimeout(()=>{if(document.querySelector('.hpop,.modal:not([hidden])'))return wait();show()},1500)})();
+ function show(){try{localStorage.setItem(KEY,String(n+1))}catch(e){}
+  const o=document.createElement('div');o.className='hpop';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','New game: Pop Quiz');
+  o.innerHTML='<div class="jbox"><img src="img/popquiz-poster.webp" alt="Poster: Pop Quiz, a new live class game. Classmates sit at desks around an angry pencil." width="800" height="1000">'+
+   '<h2>New game: Pop Quiz <span class="jw">✏️</span></h2><p>Host a room, share the code, and name an answer before the pencil pokes you. Find it later under <b>Quiz challenges</b>.</p>'+
+   '<div class="jrow"><button type="button" class="yes">Play Pop Quiz</button><button type="button" class="no">Later</button></div></div>';
+  const close=()=>{o.classList.remove('on');setTimeout(()=>{o.remove();removeEventListener('keydown',k)},260)};
+  const k=e=>{if(e.key==='Escape')close()};
+  o.onclick=e=>{if(e.target===o)close()};o.querySelector('.yes').onclick=()=>{try{localStorage.setItem(KEY,String(MAX))}catch(e){}location.href='popquiz.html'};o.querySelector('.no').onclick=close;
+  addEventListener('keydown',k);document.body.appendChild(o);setTimeout(()=>o.classList.add('on'),40);o.querySelector('.yes').focus()}})();
 </script>
 <script src="themefx.js" defer></script><script src="sound.js" defer></script><script src="update.js" defer></script>
 </body></html>
