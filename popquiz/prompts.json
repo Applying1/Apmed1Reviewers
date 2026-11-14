@@ -1,0 +1,35 @@
+{
+ "v": 1,
+ "note": "Pop Quiz prompts. Hand-written (no build step). Every answer comes from the course bank or its matching sets. Each answer is a list: the first entry is shown, the rest are accepted spellings.",
+ "courses": {
+  "pharma": {
+   "title": "Pharmacology",
+   "prompts": [
+    {"id": "ph01", "q": "Name an antidote from the toxicology lesson", "a": [["Naloxone"], ["Flumazenil"], ["N-acetylcysteine", "NAC", "Acetylcysteine"], ["Deferoxamine"], ["Fomepizole"], ["Atropine"], ["Pralidoxime", "2-PAM"], ["Glucagon"], ["Octreotide"], ["Methylene blue"], ["Hydroxocobalamin"], ["Vitamin K1", "Vitamin K"], ["Physostigmine"], ["Dantrolene"], ["Bromocriptine"], ["Benztropine"], ["Pyridoxine", "Vitamin B6"], ["Leucovorin"], ["Digoxin immune Fab", "Digoxin Fab", "Fab"]]},
+    {"id": "ph02", "q": "Name a chelator for metal poisoning", "a": [["Deferoxamine"], ["Penicillamine"], ["EDTA", "CaNa2 EDTA", "Calcium EDTA"], ["Dimercaprol", "BAL"], ["Succimer", "DMSA"]]},
+    {"id": "ph03", "q": "Name a CYP inducer", "a": [["Barbiturates", "Barbiturate"], ["St. John's Wort", "Saint Johns Wort"], ["Carbamazepine"], ["Rifampin", "Rifampicin"], ["Chronic alcohol use", "Chronic alcohol", "Alcohol"], ["Phenytoin"], ["Griseofulvin"], ["Phenobarbital"], ["Sulfonylureas", "Sulfonylurea", "Glipizide"]]},
+    {"id": "ph04", "q": "Name a CYP inhibitor", "a": [["Sodium valproate", "Valproate", "Valproic acid"], ["Isoniazid", "INH"], ["Cimetidine"], ["Ketoconazole"], ["Fluconazole"], ["Acute alcohol binge", "Acute alcohol", "Alcohol binge"], ["Chloramphenicol"], ["Erythromycin"], ["Sulfonamides", "Sulfonamide"], ["Ciprofloxacin"], ["Omeprazole"], ["Metronidazole"], ["Grapefruit juice", "Grapefruit"]]},
+    {"id": "ph05", "q": "Name a Phase 2 reaction", "a": [["Glucuronidation"], ["Sulfation"], ["Acetylation"], ["Glutathione conjugation", "Glutathione"], ["Methylation"]]},
+    {"id": "ph06", "q": "Name something that blocks acetylcholinesterase", "a": [["Neostigmine"], ["Malathion"], ["Sarin"], ["Edrophonium"], ["Pyridostigmine"], ["Physostigmine"], ["Donepezil"]]},
+    {"id": "ph07", "q": "Name a cholinergic receptor", "a": [["M1"], ["M2"], ["M3"], ["Nm"], ["Nn"]]},
+    {"id": "ph08", "q": "Name a cholinergic drug", "a": [["Bethanechol"], ["Methacholine"], ["Pilocarpine"], ["Edrophonium"], ["Pyridostigmine"], ["Physostigmine"], ["Donepezil"], ["Neostigmine"]]},
+    {"id": "ph09", "q": "Name a beta blocker", "a": [["Metoprolol"], ["Atenolol"], ["Bisoprolol"], ["Esmolol"], ["Propranolol"], ["Timolol"], ["Pindolol"], ["Labetalol"], ["Carvedilol"]]},
+    {"id": "ph10", "q": "Name an adrenergic agonist", "a": [["Phenylephrine"], ["Oxymetazoline"], ["Clonidine"], ["Methyldopa"], ["Dobutamine"], ["Salbutamol", "Albuterol"], ["Terbutaline"]]},
+    {"id": "ph11", "q": "Name an antimuscarinic drug", "a": [["Tropicamide"], ["Cyclopentolate"], ["Tiotropium"], ["Ipratropium"], ["Scopolamine"], ["Oxybutynin"], ["Dicyclomine"], ["Pirenzepine"], ["Atropine"], ["Benztropine"]]},
+    {"id": "ph12", "q": "Name an antidiabetic drug that is not insulin", "a": [["Glipizide"], ["Tolbutamide"], ["Gliclazide"], ["Glyburide"], ["Glimepiride"], ["Repaglinide"], ["Mitiglinide"], ["Metformin"], ["Pioglitazone"], ["Rosiglitazone"], ["Exenatide"], ["Liraglutide"], ["Semaglutide"], ["Sitagliptin"], ["Linagliptin"], ["Dapagliflozin"], ["Empagliflozin"], ["Canagliflozin"], ["Acarbose"], ["Miglitol"], ["Pramlintide"]]},
+    {"id": "ph13", "q": "Name a class of antidiabetic drugs", "a": [["Sulfonylurea", "Sulfonylureas"], ["Meglitinide", "Meglitinides"], ["Biguanide", "Biguanides"], ["Thiazolidinedione", "Thiazolidinediones", "TZD", "Glitazone"], ["GLP-1 agonist", "GLP-1", "GLP-1 receptor agonist"], ["DPP-4 inhibitor", "DPP-4", "Gliptin"], ["SGLT2 inhibitor", "SGLT2", "Gliflozin"], ["Alpha-glucosidase inhibitor", "Alpha-glucosidase"]]},
+    {"id": "ph14", "q": "Name a type of insulin", "a": [["Lispro"], ["Aspart"], ["Glulisine"], ["Regular", "Regular insulin"], ["NPH"], ["Glargine"], ["Detemir"], ["Degludec"]]},
+    {"id": "ph15", "q": "Name a diuretic", "a": [["Furosemide"], ["Bumetanide"], ["Torsemide"], ["Ethacrynic acid"], ["Hydrochlorothiazide", "HCTZ"], ["Chlorthalidone"], ["Metolazone"], ["Spironolactone"], ["Amiloride"], ["Triamterene"], ["Eplerenone"], ["Acetazolamide"]]},
+    {"id": "ph16", "q": "Name a drug that acts on the RAAS", "a": [["Aliskiren"], ["Captopril"], ["Enalapril"], ["Ramipril"], ["Losartan"], ["Valsartan"], ["Telmisartan"], ["Spironolactone"], ["Eplerenone"]]},
+    {"id": "ph17", "q": "Name a vasodilator from the antihypertensives lesson", "a": [["Nitroprusside", "Sodium nitroprusside"], ["Hydralazine"], ["Verapamil"], ["Nifedipine"], ["Diltiazem"], ["Amlodipine"], ["Minoxidil"], ["Diazoxide"], ["Fenoldopam"]]},
+    {"id": "ph18", "q": "Name a pain reliever from the NSAID lesson", "a": [["Aspirin"], ["Mesalamine"], ["Sulfasalazine"], ["Ibuprofen"], ["Naproxen"], ["Ketoprofen"], ["Mefenamic acid"], ["Celecoxib"], ["Etoricoxib"], ["Paracetamol", "Acetaminophen"]]},
+    {"id": "ph19", "q": "Name a cardinal sign of inflammation", "a": [["Calor", "Heat"], ["Rubor", "Redness"], ["Tumor", "Swelling"], ["Dolor", "Pain"], ["Functio laesa", "Loss of function"]]},
+    {"id": "ph20", "q": "Name a mediator of inflammation", "a": [["PGE2"], ["PGI2", "Prostacyclin"], ["PGD2"], ["TXA2", "Thromboxane A2", "Thromboxane"], ["Leukotrienes", "Leukotriene"], ["IL-1"], ["IL-6"], ["TNF-alpha", "TNF", "TNFa"]]},
+    {"id": "ph21", "q": "Name a brand name from the lessons", "a": [["Advil"], ["Medicol"], ["Flanax"], ["Ponstan"], ["Dolfenal"], ["Neozep"], ["Bioflu"], ["Rexidol"], ["Saridon"], ["Gaviscon", "Gaviscon Double Action"], ["Kremil-S"], ["Ratidin"], ["Losec"], ["Dulcolax"], ["SureLax"], ["Biofitea"], ["Senokot", "Senokot Forte"]]},
+    {"id": "ph22", "q": "Name a laxative", "a": [["Psyllium"], ["Methylcellulose"], ["Polycarbophil"], ["Docusate"], ["Glycerin suppository", "Glycerin"], ["Mineral oil"], ["Lactulose"], ["Polyethylene glycol", "PEG"], ["Senna"], ["Cascara"], ["Bisacodyl"]]},
+    {"id": "ph23", "q": "Name a drug for acid-peptic disease", "a": [["Sodium bicarbonate"], ["Aluminum hydroxide"], ["Calcium carbonate"], ["Magnesium hydroxide"], ["Ranitidine"], ["Famotidine"], ["Cimetidine"], ["Omeprazole"], ["Pantoprazole"], ["Sucralfate"], ["Misoprostol"], ["Bismuth", "Bismuth compounds"], ["Pirenzepine"]]},
+    {"id": "ph24", "q": "Name a cell of the stomach", "a": [["Parietal cell", "Parietal"], ["Chief cell", "Chief"], ["G cell", "G"], ["ECL cell", "ECL", "Enterochromaffin-like cell"], ["Mucous cell", "Mucous", "Mucus cell"]]}
+   ]
+  }
+ }
+}

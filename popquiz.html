@@ -1,0 +1,360 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pop Quiz · APMed '33</title>
+<meta name="description" content="A live classroom game: name an answer before the pencil pokes you. Last one at their desk wins.">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
+<link rel="stylesheet" href="ui.css">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+a{color:inherit}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:620px;margin:0 auto;padding:14px 16px calc(28px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:8px;min-height:36px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
+.back:hover{color:var(--text);background:var(--raised)}
+.sp{flex:1}
+.tag{font-size:13px;color:var(--mute);font-weight:600}.tag b{color:var(--text);letter-spacing:2px;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;padding:9px 16px;font-weight:600;font-size:14.5px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s}
+.btn:hover{background:var(--raised)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07);background:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.wide{width:100%}
+.btn.sm{padding:6px 12px;font-size:13px;border-radius:10px}
+h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 2px;text-align:center}
+h1 em{font-style:normal;color:var(--accent)}
+.sub{margin:0 0 16px;color:var(--mute);font-size:14px;text-align:center}
+.card{margin:0 0 14px;padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.card h2{margin:0 0 10px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute)}
+.card p{margin:0 0 12px;color:var(--mute);font-size:14px}
+.card p:last-child{margin-bottom:0}
+.card ol{margin:0;padding-left:20px;color:var(--mute);font-size:14px}.card ol li{margin:0 0 4px}
+.err{margin:8px 0 0;color:var(--bad,#c0392b);font-size:13.5px}
+.empty{color:var(--faint);font-size:14px;text-align:center;padding:6px 0;margin:0}
+.join{display:flex;gap:8px}
+.join input{flex:1;min-width:0;padding:9px 12px;border-radius:11px;border:1px solid var(--line2);background:var(--bg);font-size:16px;font-weight:700;letter-spacing:4px;text-transform:uppercase;text-align:center}
+.join input::placeholder{letter-spacing:0;font-weight:500;text-transform:none;color:var(--faint)}
+.list{display:grid;gap:8px}
+.row{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:var(--bg);border:1px solid var(--line);text-align:left;width:100%}
+.row:hover{border-color:var(--accent-line)}
+.row .w{flex:1;min-width:0}.row b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row .w>span{display:block;font-size:12.5px;color:var(--mute)}
+.pill{flex:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--accent);color:var(--accent-ink)}
+.code{font:800 34px/1 var(--sans);letter-spacing:8px;text-align:center;margin:2px 0 12px;font-variant-numeric:tabular-nums;padding-left:8px}
+.opt{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:14px;font-weight:600}
+.opt>span:first-child{flex:1}
+.opt select{padding:7px 10px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);font-size:14px;max-width:60%}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--bg);padding:6px 13px;font-weight:700;font-size:13.5px}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.sw{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:99px;background:var(--line2);position:relative;cursor:pointer;flex:none;margin:0;transition:background .15s}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw:checked{background:var(--accent)}.sw:checked::after{transform:translateX(18px)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0 0}
+/* the chalkboard keeps its own colors in every theme: it is a classroom object, not a surface */
+.board{position:relative;margin:0 0 16px;padding:18px 16px 16px;border-radius:14px;background:#24513f;color:#f3f1e7;border:6px solid #8a6238;box-shadow:inset 0 0 40px rgba(0,0,0,.28),var(--shadow);text-align:center;min-height:150px;display:flex;flex-direction:column;justify-content:center;gap:8px}
+.board::after{content:"";position:absolute;left:14px;right:14px;bottom:-6px;height:4px;border-radius:0 0 3px 3px;background:#6f4d2a}
+.board .k{font:700 11px/1 var(--sans);letter-spacing:1px;text-transform:uppercase;color:#bcd6c8}
+.board .q{font:600 20px/1.3 var(--serif,Georgia,serif);margin:0}
+.board .said{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;font-size:12.5px}
+.board .said span{padding:2px 8px;border-radius:99px;border:1px dashed rgba(243,241,231,.5);color:#e4ecdf}
+.board .n{font-size:12.5px;color:#bcd6c8}
+.board .big{font:800 22px/1.2 var(--sans);margin:0}
+/* desks */
+.desks{position:relative;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+.desk{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 8px 10px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line);border-bottom-width:5px;text-align:center;min-width:0;transition:border-color .2s,opacity .2s}
+.desk b{font-size:13.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.desk .you{font-size:11px;font-weight:700;color:var(--accent)}
+.desk .hp{font-size:13px;letter-spacing:2px;color:var(--bad,#c0392b);line-height:1}
+.desk .hp i{font-style:normal;color:var(--line2)}
+.desk .say{min-height:19px;font-size:12.5px;color:var(--mute);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.desk .say.ok{color:var(--good,#22a06b);font-weight:700}.desk .say.no{color:var(--bad,#c0392b);font-weight:600}
+.desk.turn{border-color:var(--accent)}
+.desk.turn.hot{border-color:var(--bad,#c0392b)}
+.desk.out{opacity:.45}
+.desk.ouch{animation:ouch .5s 2}
+@keyframes ouch{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px) rotate(-1.5deg)}75%{transform:translateX(5px) rotate(1.5deg)}}
+.pencil{position:absolute;left:0;top:0;width:46px;height:46px;z-index:5;pointer-events:none;transition:transform .4s cubic-bezier(.3,1.3,.5,1);will-change:transform}
+.pencil svg{display:block;width:100%;height:100%;transform-origin:20% 85%;animation:wob var(--wob,1.3s) ease-in-out infinite}
+.pencil.poke svg{animation:jab .32s ease-in 4}
+@keyframes wob{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+@keyframes jab{0%,100%{transform:translate(0,0)}50%{transform:translate(-12px,12px)}}
+/* answer box */
+.dock{display:flex;gap:8px;margin:0 0 8px}
+.dock input{flex:1;min-width:0;padding:11px 13px;border-radius:12px;border:1.5px solid var(--line2);background:var(--surface);font-size:16px}
+.dock input:disabled{opacity:.6}
+.dock input.shake{animation:ouch .3s 1;border-color:var(--bad,#c0392b)}
+.dock.mine input{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-line)}
+.hint{margin:0 0 16px;text-align:center;color:var(--mute);font-size:13.5px;min-height:20px}
+.hint.mine{color:var(--accent);font-weight:700}
+body.playing h1,body.playing .sub{display:none}
+body.playing .board{margin-top:10px}
+.res{display:grid;gap:6px;margin:10px 0 0}
+.res div{display:flex;align-items:center;gap:10px;font-size:14px}.res div b{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.res div span{color:var(--mute);font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:420px){.grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}.board .q{font-size:18px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<main>
+ <div class="top"><a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a><span class="sp"></span><span class="tag" id="tag" hidden></span><button class="btn sm" id="leave" type="button" hidden>Leave room</button></div>
+ <h1>Pop Qu<em>i</em>z</h1>
+ <p class="sub" id="sub">Name an answer before the pencil pokes you.</p>
+ <div class="board" id="board" hidden aria-live="polite"></div>
+ <div id="view"><p class="empty">Loading…</p></div>
+ <form class="dock" id="dock" hidden autocomplete="off"><input id="inp" type="text" maxlength="40" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Your answer" enterkeyhint="send"><button class="btn primary" id="send" type="submit">Send</button></form>
+ <p class="hint" id="hint" hidden></p>
+ <div class="desks" id="desks" hidden><div class="grid" id="grid"></div>
+  <div class="pencil" id="pencil" hidden aria-hidden="true"><svg viewBox="0 0 46 46"><g transform="rotate(45 23 23)"><rect x="17" y="2" width="12" height="6" rx="2.5" fill="#f29bb0"/><rect x="17" y="8" width="12" height="4" fill="#b9bec9"/><rect x="17" y="12" width="12" height="20" fill="#f6c443"/><rect x="21" y="12" width="4" height="20" fill="#ffd96b"/><path d="M17 32h12l-6 11z" fill="#edd2a4"/><path d="M21.2 39.6h3.6L23 43z" fill="#3b3b44"/><circle cx="20.6" cy="19" r="1.5" fill="#3b3b44"/><circle cx="25.4" cy="19" r="1.5" fill="#3b3b44"/><path d="M20.6 23.4q2.4 2 4.8 0" fill="none" stroke="#3b3b44" stroke-width="1.2" stroke-linecap="round"/></g></svg></div>
+ </div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script src="auth.js"></script>
+<script src="profile.js"></script>
+<script src="live.js"></script>
+<script>
+// Pop Quiz (Nov 14): a live turn game for 1 to 10 classmates. The board shows a "name one" prompt with many right answers
+// (site/popquiz/prompts.json); the pencil sits on one desk at a time; that player types an answer nobody has said yet and
+// the pencil hops on. When its hidden fuse runs out it pokes whoever has it: one life gone. Last one with a life wins.
+// Nothing is stored in the cloud: rooms live only in Realtime broadcast (live.js). The host's page runs the clock and
+// checks the answers; it sends the whole room state on every change and every 2 s, and another player takes over when
+// the host goes quiet. With ?local=1 on localhost the messages go through BroadcastChannel (tests, no network).
+const Q=new URLSearchParams(location.search);
+const LOCALNET=Q.get('local')==='1'&&/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const HB=3000,KEEP=2000,MAXP=10,LOBBY='popquiz:lobby';
+// fuse: 15 to 26 s, hidden; a pass always leaves the next desk at least 8 s; 2.8 s to look at a poke; a host silent for 6 s is replaced
+let HOST_LOST=6000,FUSE_MIN=15000,FUSE_MAX=26000,PASS_MIN=8000,PAUSE=2800;
+if(LOCALNET&&+Q.get('fuse')){FUSE_MIN=FUSE_MAX=+Q.get('fuse');PASS_MIN=Math.min(PASS_MIN,FUSE_MIN);PAUSE=700;HOST_LOST=3500}   // tests only
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const now=()=>Date.now();
+function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),ms||2200)}
+const rid=n=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ';let s='';for(let i=0;i<n;i++)s+=a[Math.random()*a.length|0];return s};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+
+let CLOUD=null,DATA={courses:{}},ME=null,room='',S=null,isHost=false;
+let lastState=0,deadline=0,joinAt=0,lastHb=0,lastPush=0,lastBeacon=0,resumeAt=0,deck=[],typing={},seen={},left=new Set(),rooms={},shown=0,sig='',lastType=0,wasTurn=false;
+const T=()=>'popquiz:'+room;
+
+// ---- messages: Realtime broadcast, or BroadcastChannel in local tests ----
+const Net={ch:{},
+ open(topic,on,onOpen){if(LOCALNET){if(this.ch[topic])return;const bc=new BroadcastChannel(topic);bc.onmessage=e=>on(e.data||{});this.ch[topic]=bc;if(onOpen)setTimeout(onOpen,0)}else if(window.Live&&CLOUD)Live.listen(CLOUD,topic,on,onOpen)},
+ send(topic,d){if(LOCALNET){const bc=this.ch[topic];if(bc)bc.postMessage(d)}else if(window.Live&&CLOUD)Live.ping(topic,d)}};
+
+// ---- answers ----
+const norm=s=>String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/β/g,'beta').replace(/α/g,'alpha').replace(/[^a-z0-9]/g,'');
+function lev(a,b){const m=a.length,n=b.length;if(Math.abs(m-n)>2)return 9;let p=[];for(let j=0;j<=n;j++)p[j]=j;
+ for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+// index of the answer a typed text means, or -1. Exact spelling first; then one slip (6+ letters) or two (10+), if only one answer is that close
+function match(p,text){const t=norm(text);if(!t)return -1;
+ for(let i=0;i<p.a.length;i++)if(p.a[i].some(x=>norm(x)===t))return i;
+ const tol=t.length>=10?2:t.length>=6?1:0;if(!tol)return -1;
+ let best=9,at=-1,tie=false;
+ p.a.forEach((al,i)=>{const d=Math.min(...al.map(x=>{const k=norm(x);return k.length>=6?lev(t,k):9}));if(d<best){best=d;at=i;tie=false}else if(d===best&&d<9)tie=true});
+ return best<=tol&&!tie?at:-1}
+const prompt=id=>{for(const c in DATA.courses){const p=DATA.courses[c].prompts.find(x=>x.id===id);if(p)return p}return null};
+const courseIds=()=>Object.keys(DATA.courses);
+
+// ---- people ----
+function clean(p){if(!p||typeof p!=='object')return null;const id=String(p.id||'');if(!/^[A-Z]{10}$/.test(id))return null;
+ const av=/^x:[a-z0-9]{1,12}:[0-7]$/.test(p.av||'')?p.av:'g',url=/^https:\/\//.test(p.url||'')?String(p.url).slice(0,300):'';
+ return {id,name:String(p.name||'Classmate').slice(0,24),av,url}}
+const player=id=>S?S.players.find(p=>p.id===id):null;
+const first=n=>String(n||'').split(' ')[0]||'Someone';
+const alive=()=>S.players.filter(p=>p.lives>0);
+function nextAlive(id){const n=S.players.length,i=Math.max(0,S.players.findIndex(p=>p.id===id));for(let k=1;k<=n;k++){const q=S.players[(i+k)%n];if(q.lives>0)return q.id}return ''}
+
+// ---- host: owns the clock and the rules ----
+const fuse=()=>FUSE_MIN+Math.random()*(FUSE_MAX-FUSE_MIN);
+function push(keep){if(!keep)S.seq++;S.left=Math.max(0,deadline-now());lastPush=now();Net.send(T(),{t:'state',s:S});draw()}
+function newPrompt(){const c=DATA.courses[S.opts.course]||DATA.courses[courseIds()[0]];if(!deck.length)deck=shuffle(c.prompts.map(p=>p.id).filter(id=>id!==S.pid));S.pid=deck.pop();S.used=[]}
+function stamp(o){o.at=S.seq+1;S.last=o}
+function hostSeen(p){p=clean(p);if(!p||!S)return;seen[p.id]=now();
+ if(!player(p.id)&&S.phase==='lobby'&&S.players.length<MAXP){S.players.push(Object.assign(p,{lives:0,n:0}));push()}}
+function hostStart(){if(S.phase!=='lobby'||!S.players.length)return;
+ S.players.forEach(p=>{p.lives=S.opts.lives;p.n=0;p.gone=0;seen[p.id]=now()});
+ S.n0=S.players.length;S.phase='play';S.winner='';S.last=null;deck=[];S.pid='';newPrompt();
+ S.turn=S.players[Math.random()*S.players.length|0].id;deadline=now()+fuse();push()}
+function hostAnswer(id,x){if(!S||S.phase!=='play'||!S.turn||id!==S.turn)return;const p=prompt(S.pid),pl=player(id);if(!p||!pl)return;
+ const i=match(p,x),text=String(x).slice(0,40);
+ if(i<0)stamp({k:'bad',id,x:text});
+ else if(S.used.includes(i))stamp({k:'dup',id,x:p.a[i][0]});
+ else{S.used.push(i);pl.n=(pl.n||0)+1;stamp({k:'ok',id,x:p.a[i][0]});S.turn=nextAlive(id);deadline=Math.max(deadline,now()+PASS_MIN);
+  if(S.used.length>=p.a.length){S.last.full=1;newPrompt()}}
+ push()}
+function over(){const a=alive();if(a.length<=(S.n0>1?1:0)){S.phase='over';S.turn='';S.winner=a[0]?a[0].id:'';return true}return false}
+function hostPoke(){const pl=player(S.turn),p=prompt(S.pid);if(!pl)return;pl.lives=Math.max(0,pl.lives-1);
+ const miss=p?shuffle(p.a.map((a,i)=>i).filter(i=>!S.used.includes(i))).slice(0,3).map(i=>p.a[i][0]):[];
+ stamp({k:'poke',id:pl.id,miss});S.turn='';if(!over())resumeAt=now()+PAUSE;push()}
+function hostResume(){const from=S.last&&S.last.k==='poke'?S.last.id:(S.players[0]||{}).id;newPrompt();S.turn=nextAlive(from);deadline=now()+fuse();push()}
+function hostGone(id){const p=player(id);if(!p||id===ME.id)return;
+ if(S.phase==='play'){if(!p.lives)return;p.lives=0;p.gone=1;if(!over()&&S.turn===id){S.turn=nextAlive(id);deadline=Math.max(deadline,now()+PASS_MIN)}}
+ else S.players=S.players.filter(q=>q.id!==id);
+ push()}
+function hostAgain(){if(S.phase!=='over')return;S.phase='lobby';S.turn='';S.pid='';S.used=[];S.last=null;S.winner='';
+ S.players=S.players.filter(p=>!p.gone);S.players.forEach(p=>{p.lives=0;seen[p.id]=now()});push()}
+function hostTick(){const t=now();
+ S.players.slice().forEach(p=>{if(p.id===ME.id)return;const age=t-(seen[p.id]||0);
+  if(S.phase==='lobby'&&age>10000)hostGone(p.id);else if(S.phase==='play'&&p.lives>0&&age>20000)hostGone(p.id)});
+ if(S.phase==='play'){if(S.turn&&t>=deadline)hostPoke();else if(!S.turn&&t>=resumeAt)hostResume()}
+ if(t-lastPush>=KEEP)push(true);
+ if(S.phase==='lobby'&&S.opts.open&&t-lastBeacon>=HB){lastBeacon=t;Net.send(LOBBY,{t:'room',code:room,host:ME.name,n:S.players.length})}}
+// the host went quiet: the remaining players take over in id order, each waiting a little longer than the one before
+function claim(){isHost=true;const old=S.host;S.host=ME.id;S.seq+=1000;deck=[];
+ S.players.forEach(p=>seen[p.id]=now());
+ if(S.phase==='play'){if(S.turn)deadline=Math.max(deadline,now()+PASS_MIN);else resumeAt=now()+800}
+ if(left.has(old))hostGone(old);else if(S.phase==='lobby')seen[old]=now()-4000;
+ left.forEach(id=>hostGone(id));left.clear();push()}
+
+// ---- everyone ----
+function onState(s){if(!s||typeof s!=='object'||s.v!==1||!Array.isArray(s.players))return;
+ if(isHost){if(s.host===ME.id)return;if(s.seq>S.seq||(s.seq===S.seq&&s.host<ME.id))isHost=false;else{push(true);return}}
+ else if(S&&(s.seq<S.seq||(s.seq===S.seq&&s.host!==S.host&&s.host>S.host)))return;
+ const moved=!S||S.turn!==s.turn||S.pid!==s.pid;S=s;lastState=now();
+ const d=now()+(+s.left||0);if(moved||Math.abs(d-deadline)>600)deadline=d;if(moved)typing={};draw()}
+function onMsg(m){if(!m||typeof m!=='object')return;
+ if(m.t==='state')onState(m.s);
+ else if(m.t==='hb'){if(isHost)hostSeen(m.p)}
+ else if(m.t==='ans'){if(isHost)hostAnswer(String(m.id||''),String(m.x||''))}
+ else if(m.t==='type'){if(S&&m.id===S.turn){typing={id:m.id,x:String(m.x||'').slice(0,40)};drawSay()}}
+ else if(m.t==='leave'){const id=String(m.id||'');if(isHost)hostGone(id);else{left.add(id);if(S&&id===S.host)lastState=Math.min(lastState,now()-HOST_LOST)}}}
+function hello(){lastHb=now();Net.send(T(),{t:'hb',p:ME})}
+function tick(){if(!room)return;const t=now();
+ if(isHost)hostTick();
+ else{if(t-lastHb>=HB)hello();
+  if(S){const late=t-lastState,order=S.players.filter(p=>p.id!==S.host&&!p.gone).map(p=>p.id).sort(),r=order.indexOf(ME.id);
+   if(r>=0&&late>HOST_LOST+r*2000)claim();else if(r<0&&late>15000&&S.phase!=='closed'){S.phase='closed';draw()}}
+  else if(t-joinAt>4000&&shown!==-1){shown=-1;draw()}}
+ drawFuse()}
+function enter(code,host){room=code;joinAt=now();
+ try{history.replaceState(null,'','popquiz.html?r='+code+(LOCALNET?'&local=1&name='+encodeURIComponent(ME.name):''))}catch(e){}
+ Net.open(T(),onMsg,()=>{if(!isHost)hello();else if(S)push(true)});
+ if(host){isHost=true;seen[ME.id]=now();
+  S={v:1,seq:0,host:ME.id,phase:'lobby',opts:{lives:3,course:courseIds()[0]||'',open:true},players:[Object.assign({},ME,{lives:0,n:0})],turn:'',pid:'',used:[],left:0,last:null,winner:'',n0:0};push()}
+ else{hello();draw()}}
+function answer(x){x=String(x||'').trim();if(!x||!S||S.turn!==ME.id)return;typing={};
+ if(isHost)hostAnswer(ME.id,x);else Net.send(T(),{t:'ans',id:ME.id,x})}
+
+// ---- drawing ----
+const hearts=(n,max)=>{let h='';for(let i=0;i<max;i++)h+=i<n?'♥':'<i>♥</i>';return '<span class="hp" role="img" aria-label="'+n+(n===1?' life':' lives')+'">'+h+'</span>'};
+function sayOf(p){const l=S.last;
+ if(S.turn===p.id&&typing.id===p.id&&typing.x)return ['',typing.x];
+ if(l&&l.id===p.id){if(l.k==='ok')return ['ok','✓ '+l.x];if(l.k==='dup'&&S.turn===p.id)return ['no','Already said: '+l.x];if(l.k==='bad'&&S.turn===p.id)return ['no','✗ '+l.x];if(l.k==='poke'&&!S.turn)return ['no','Poked!']}
+ if(S.turn===p.id)return ['','thinking…'];
+ return ['',p.gone?'left':'']}
+function drawSay(){if(!S)return;S.players.forEach(p=>{const e=document.querySelector('.desk[data-id="'+p.id+'"] .say');if(e){const s=sayOf(p);e.className='say'+(s[0]?' '+s[0]:'');e.textContent=s[1]}})}
+function desksHtml(){const play=S.phase!=='lobby',mx=S.opts.lives;
+ return S.players.map(p=>'<div class="desk'+(S.turn===p.id?' turn':'')+(play&&!p.lives&&S.winner!==p.id?' out':'')+'" data-id="'+p.id+'">'+
+  Profile.html({av:p.av,url:p.url,name:p.name},40)+'<b>'+esc(p.name)+'</b>'+
+  (p.id===ME.id?'<span class="you">You'+(p.id===S.host?' · host':'')+'</span>':p.id===S.host?'<span class="you">Host</span>':'')+
+  (play?hearts(p.lives,mx):'')+'<span class="say"></span></div>').join('')}
+function movePencil(){const pen=$('pencil'),id=S&&S.phase==='play'?(S.turn||(S.last&&S.last.k==='poke'?S.last.id:'')):'',d=id&&document.querySelector('.desk[data-id="'+id+'"]');
+ if(!d){pen.hidden=true;return}pen.hidden=false;
+ pen.style.transform='translate('+(d.offsetLeft+d.offsetWidth-34)+'px,'+(d.offsetTop-20)+'px)'}
+function drawFuse(){if(!S||S.phase!=='play'||!S.turn)return;const l=deadline-now(),pen=$('pencil'),d=document.querySelector('.desk.turn');
+ pen.style.setProperty('--wob',l>10000?'1.3s':l>5000?'.7s':l>2500?'.35s':'.18s');if(d)d.classList.toggle('hot',l<5000)}
+function boardHtml(){const p=prompt(S.pid),l=S.last;
+ if(S.phase==='over'){const w=player(S.winner);return '<div class="k">Class dismissed</div><p class="big">'+(S.n0>1?(w?esc(first(w.name))+' wins!':'Nobody is left!'):'Practice over')+'</p>'+(l&&l.miss&&l.miss.length?'<div class="n">Could have said: '+esc(l.miss.join(', '))+'</div>':'')}
+ if(!S.turn&&l&&l.k==='poke'){const w=player(l.id);return '<div class="k">Poke!</div><p class="big">'+esc(w?first(w.name):'Someone')+' ran out of time</p>'+(l.miss&&l.miss.length?'<div class="n">Could have said: '+esc(l.miss.join(', '))+'</div>':'')}
+ if(!p)return '<p class="big">Get ready…</p>';
+ return '<div class="k">Pop quiz</div><p class="q">'+esc(p.q)+'</p>'+
+  (S.used.length?'<div class="said">'+S.used.map(i=>'<span>'+esc(p.a[i][0])+'</span>').join('')+'</div>':'')+
+  '<div class="n">'+S.used.length+' of '+p.a.length+' said</div>'}
+function homeHtml(){const list=Object.keys(rooms).filter(c=>now()-rooms[c].at<9000);
+ return '<div class="card"><h2>Play</h2><button class="btn primary wide" id="host" type="button">Host a room</button>'+
+  '<form class="join" id="joinf" style="margin-top:10px"><input id="code" maxlength="4" placeholder="Room code" aria-label="Room code" autocomplete="off" autocapitalize="characters"><button class="btn" type="submit">Join</button></form><p class="err" id="jerr" hidden></p></div>'+
+  '<div class="card"><h2>Open rooms</h2><div class="list" id="rooms">'+(list.length?list.map(c=>'<button class="row" type="button" data-room="'+esc(c)+'"><span class="w"><b>'+esc(rooms[c].host)+'’s room</b><span>'+rooms[c].n+(rooms[c].n===1?' classmate':' classmates')+' waiting</span></span><span class="pill">Join</span></button>').join(''):'<p class="empty">No open rooms right now. Host one and share the code.</p>')+'</div></div>'+
+  '<div class="card"><h2>How to play</h2><ol><li>The board asks for something with many right answers.</li><li>When the pencil is on your desk, type one nobody has said yet. It hops to the next desk.</li><li>Too slow and the pencil pokes you: one life gone. Last one with a life wins.</li></ol></div>'}
+function lobbyHtml(){const host=S.host===ME.id,inRoom=!!player(ME.id),h=player(S.host),n=S.players.length,cs=courseIds();
+ let s='<div class="card"><h2>Room code</h2><div class="code">'+esc(room)+'</div><div class="acts" style="margin-top:0"><button class="btn sm" id="copy" type="button">Copy invite link</button></div></div>';
+ if(host)s+='<div class="card"><h2>Settings</h2>'+
+  (cs.length>1?'<label class="opt"><span>Prompts from</span><select id="ocourse">'+cs.map(c=>'<option value="'+esc(c)+'"'+(c===S.opts.course?' selected':'')+'>'+esc(DATA.courses[c].title)+'</option>').join('')+'</select></label>':'<div class="opt"><span>Prompts from</span><span>'+esc((DATA.courses[S.opts.course]||{}).title||'')+'</span></div>')+
+  '<div class="opt"><span>Lives</span><span class="seg" role="group" aria-label="Lives">'+[1,2,3].map(k=>'<button type="button" data-lives="'+k+'" aria-pressed="'+(S.opts.lives===k)+'">'+k+'</button>').join('')+'</span></div>'+
+  '<label class="opt"><span>Show in Open rooms</span><input class="sw" type="checkbox" id="oopen"'+(S.opts.open?' checked':'')+'></label>'+
+  '<button class="btn primary wide" id="start" type="button">'+(n>1?'Start with '+n+' players':'Start solo practice')+'</button></div>';
+ else s+='<div class="card"><p class="empty">'+(inRoom?'Waiting for '+esc(h?first(h.name):'the host')+' to start…':n>=MAXP?'This room is full.':'Taking a seat…')+'</p></div>';
+ return s}
+function overHtml(){const host=S.host===ME.id,rank=S.players.slice().sort((a,b)=>(b.id===S.winner)-(a.id===S.winner)||b.lives-a.lives||(b.n||0)-(a.n||0));
+ return '<div class="card"><h2>Results</h2><div class="res">'+rank.map(p=>'<div>'+Profile.html({av:p.av,url:p.url,name:p.name},28)+'<b>'+esc(p.name)+(p.id===S.winner&&S.n0>1?' · winner':'')+'</b><span>'+(p.n||0)+((p.n||0)===1?' answer':' answers')+'</span></div>').join('')+'</div>'+
+  '<div class="acts">'+(host?'<button class="btn primary" id="again" type="button">Play again</button>':'<span class="empty">Waiting for the host to start another round…</span>')+'</div></div>'}
+function draw(){const v=$('view'),inRoom=!!room;
+ $('tag').hidden=$('leave').hidden=!inRoom;if(inRoom)$('tag').innerHTML='Room <b>'+esc(room)+'</b>';
+ if(!ME){$('board').hidden=$('desks').hidden=$('dock').hidden=$('hint').hidden=true;return}
+ if(!inRoom){$('board').hidden=$('desks').hidden=$('dock').hidden=$('hint').hidden=true;const a=document.activeElement;if(a&&a.id==='code'&&sig==='home')return drawRooms();sig='home';v.hidden=false;v.innerHTML=homeHtml();return}
+ if(!S||S.phase==='closed'){$('board').hidden=$('desks').hidden=$('dock').hidden=$('hint').hidden=true;v.hidden=false;sig='';
+  v.innerHTML='<div class="card"><p class="empty">'+(S?'This room has closed.':shown===-1?'No room with the code '+esc(room)+' is open right now.':'Looking for room '+esc(room)+'…')+'</p>'+(S||shown===-1?'<div class="acts"><button class="btn primary" id="home" type="button">Back to Pop Quiz</button></div>':'')+'</div>';return}
+ const play=S.phase==='play',mine=play&&S.turn===ME.id,me=player(ME.id);
+ // cards (lobby, results): rebuilt only when something they show has changed, so open selects and focus survive the 2 s keepalive
+ const vs=S.phase+'|'+S.host+'|'+S.players.map(p=>p.id+p.lives+(p.n||0)).join(',')+'|'+JSON.stringify(S.opts)+'|'+S.winner;
+ if(vs!==draw.vs){draw.vs=vs;v.hidden=play;v.innerHTML=play?'':S.phase==='lobby'?lobbyHtml():overHtml()}
+ $('board').hidden=S.phase==='lobby';if(S.phase!=='lobby'){const b=boardHtml();if(b!==draw.b){draw.b=b;$('board').innerHTML=b}}
+ $('desks').hidden=false;const ds=S.phase+'|'+S.turn+'|'+S.host+'|'+S.winner+'|'+S.opts.lives+'|'+S.players.map(p=>p.id+p.lives+(p.gone||0)+p.name).join(',');
+ if(ds!==draw.ds){draw.ds=ds;$('grid').innerHTML=desksHtml()}
+ drawSay();movePencil();
+ // the poke: once per event
+ const l=S.last;if(l&&l.at!==shown){shown=l.at;
+  if(l.k==='poke'){const pen=$('pencil'),d=document.querySelector('.desk[data-id="'+l.id+'"]');pen.classList.remove('poke');void pen.offsetWidth;pen.classList.add('poke');if(d){d.classList.remove('ouch');void d.offsetWidth;d.classList.add('ouch')}setTimeout(()=>pen.classList.remove('poke'),1400)}
+  if((l.k==='bad'||l.k==='dup')&&l.id===ME.id){const i=$('inp');i.classList.remove('shake');void i.offsetWidth;i.classList.add('shake');setTimeout(()=>i.classList.remove('shake'),400)}}
+ $('dock').hidden=!play||!me||!me.lives;const inp=$('inp');
+ // the box stays usable between turns (a phone keeps its keyboard up, and you may type ahead); only Send waits for the pencil
+ if(!$('dock').hidden){$('send').disabled=!mine;$('dock').classList.toggle('mine',mine);inp.placeholder=mine?'Type an answer':'Get one ready…';
+  if(mine&&!wasTurn){try{inp.focus({preventScroll:true})}catch(e){}if(inp.value){typing={id:ME.id,x:inp.value.slice(0,40)};Net.send(T(),{t:'type',id:ME.id,x:typing.x});drawSay()}}}
+ wasTurn=mine;
+ const h=$('hint'),tp=player(S.turn);h.hidden=!play;h.classList.toggle('mine',mine);document.body.classList.toggle('playing',play);
+ if(play)h.textContent=!me?'A round is on. You will get a desk in the next one.':!me.lives?'You are out. Watch how it ends.':mine?'Your turn! Type one and send it.':tp?first(tp.name)+' has the pencil.':''}
+function drawRooms(){const e=$('rooms');if(!e||room)return;const t=document.createElement('div');t.innerHTML=homeHtml();const n=t.querySelector('#rooms');if(n&&n.innerHTML!==e.innerHTML)e.innerHTML=n.innerHTML}
+
+// ---- taps ----
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+ if(b.id==='host')enter(rid(4),true);
+ else if(b.dataset.room)enter(b.dataset.room,false);
+ else if(b.id==='home'||b.id==='leave'){if(room)Net.send(T(),{t:'leave',id:ME.id});location.href='popquiz.html'+(LOCALNET?'?local=1&name='+encodeURIComponent(ME.name):'')}
+ else if(b.id==='signin')Auth.signIn();
+ else if(b.id==='copy'){const u=new URL('popquiz.html?r='+room,location.href).href;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Invite link copied'),()=>toast('Share this code: '+room,4000))}
+ else if(!isHost||!S)return;
+ else if(b.id==='start')hostStart();
+ else if(b.id==='again')hostAgain();
+ else if(b.dataset.lives&&S.phase==='lobby'){S.opts.lives=+b.dataset.lives;push()}});
+document.addEventListener('change',e=>{if(!isHost||!S||S.phase!=='lobby')return;
+ if(e.target.id==='ocourse'&&DATA.courses[e.target.value]){S.opts.course=e.target.value;push()}
+ else if(e.target.id==='oopen'){S.opts.open=e.target.checked;if(!S.opts.open)Net.send(LOBBY,{t:'gone',code:room});push()}});
+document.addEventListener('submit',e=>{e.preventDefault();
+ if(e.target.id==='dock'){const i=$('inp');if(S&&S.turn===ME.id&&i.value.trim()){answer(i.value);i.value=''}try{i.focus({preventScroll:true})}catch(x){}}
+ else if(e.target.id==='joinf'){const c=$('code').value.toUpperCase().replace(/[^A-Z]/g,''),er=$('jerr');if(c.length!==4){er.textContent='A room code has 4 letters.';er.hidden=false;return}enter(c,false)}});
+$('inp').addEventListener('input',()=>{if(!S||S.turn!==ME.id)return;const x=$('inp').value.slice(0,40);typing={id:ME.id,x};drawSay();
+ const t=now();if(t-lastType>150){lastType=t;Net.send(T(),{t:'type',id:ME.id,x})}});
+addEventListener('pagehide',()=>{if(room&&ME)Net.send(T(),{t:'leave',id:ME.id})});
+addEventListener('resize',movePencil);
+
+// ---- start ----
+function myId(){let v='';try{v=sessionStorage.getItem('popquiz_id')||''}catch(e){}if(!/^[A-Z]{10}$/.test(v)){v=rid(10);try{sessionStorage.setItem('popquiz_id',v)}catch(e){}}return v}
+(async()=>{
+ let list=[];try{list=await (await fetch('courses.json')).json()}catch(e){}
+ CLOUD=(list.find(x=>x.cloud&&x.cloud.url)||{}).cloud||null;
+ try{const d=await (await fetch('popquiz/prompts.json')).json();if(d&&d.courses)DATA=d}catch(e){}
+ const v=$('view');
+ if(!courseIds().length){v.innerHTML='<div class="card"><p class="empty">Pop Quiz could not be loaded. Check your connection and reload.</p></div>';return}
+ let who=null;
+ if(LOCALNET)who={name:Q.get('name')||'Tester',av:'g',url:''};
+ else{if(!CLOUD){v.innerHTML='<div class="card"><p class="empty">Pop Quiz could not be loaded. Check your connection and reload.</p></div>';return}
+  Auth.cloud=CLOUD;let msg='';try{await Auth.finish()}catch(e){msg=e.message}
+  if(Auth.ses()){await Auth.token();if(Auth.ses()){await Profile.refresh();who=Profile.me()}}
+  if(!who){v.innerHTML='<div class="card"><h2>Sign in to play</h2><p>Pop Quiz shows your class name and picture at your desk, so it needs your account.</p><button class="btn primary wide" id="signin" type="button">'+(Auth.ended()?'Sign in again':'Sign in with Google')+'</button>'+(msg?'<p class="err">'+esc(msg)+'</p>':'')+'</div>';return}}
+ ME=clean({id:myId(),name:who.name,av:who.av,url:who.url});
+ Net.open(LOBBY,m=>{if(!m||typeof m!=='object'||room)return;const c=String(m.code||'');if(!/^[A-Z]{4}$/.test(c))return;
+  if(m.t==='room')rooms[c]={host:first(String(m.host||'').slice(0,24)),n:Math.max(1,Math.min(MAXP,+m.n||1)),at:now()};else if(m.t==='gone')delete rooms[c];drawRooms()});
+ setInterval(tick,250);setInterval(()=>{if(!room)drawRooms()},3000);
+ const r=(Q.get('r')||'').toUpperCase();
+ if(/^[A-Z]{4}$/.test(r))enter(r,false);else draw();
+})();
+</script>
+</body></html>
