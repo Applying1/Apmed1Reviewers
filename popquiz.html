@@ -4,10 +4,14 @@
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#4f46e5">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
 <script>try{const t=localStorage.getItem('reviewer_theme')||localStorage.getItem('psych_theme');if(t)document.documentElement.dataset.theme=t;const p=localStorage.getItem('reviewer_palette');if(p)document.documentElement.dataset.palette=p}catch(e){}</script>
 <link rel="stylesheet" href="ui.css">
 <style>
+/* Pop Quiz look: one classroom. A chalkboard on top, a wooden floor with a rug, classmates seated in a circle, and the
+   pencil in the middle. The board, floor and characters keep their own colors in every theme (they are objects, not
+   surfaces); cards, buttons and text follow the site theme. --chalk is the handwriting used on the board and in bubbles. */
+:root{--chalk:"Patrick Hand","Comic Sans MS","Segoe Print",cursive}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
@@ -16,12 +20,11 @@ a{color:inherit}
 button,select,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-main{max-width:620px;margin:0 auto;padding:14px 16px calc(28px + env(safe-area-inset-bottom))}
-.top{display:flex;align-items:center;gap:8px;min-height:36px}
+main{max-width:560px;margin:0 auto;padding:14px 16px calc(28px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:8px;min-height:36px;margin:0 0 10px}
 .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:600;padding:6px 10px 6px 6px;border-radius:10px}
 .back:hover{color:var(--text);background:var(--raised)}
 .sp{flex:1}
-.tag{font-size:13px;color:var(--mute);font-weight:600}.tag b{color:var(--text);letter-spacing:2px;font-variant-numeric:tabular-nums}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;padding:9px 16px;font-weight:600;font-size:14.5px;border:1px solid var(--line2);background:var(--surface);text-decoration:none;transition:background .15s}
 .btn:hover{background:var(--raised)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -29,11 +32,8 @@ main{max-width:620px;margin:0 auto;padding:14px 16px calc(28px + env(safe-area-i
 .btn:disabled{opacity:.5;cursor:default}
 .btn.wide{width:100%}
 .btn.sm{padding:6px 12px;font-size:13px;border-radius:10px}
-h1{font:800 26px/1.15 var(--sans);letter-spacing:-.5px;margin:10px 0 2px;text-align:center}
-h1 em{font-style:normal;color:var(--accent)}
-.sub{margin:0 0 16px;color:var(--mute);font-size:14px;text-align:center}
 .card{margin:0 0 14px;padding:16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
-.card h2{margin:0 0 10px;font:700 12px/1 var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--mute)}
+.card h2{margin:0 0 10px;font:700 15px/1.2 var(--sans)}
 .card p{margin:0 0 12px;color:var(--mute);font-size:14px}
 .card p:last-child{margin-bottom:0}
 .card ol{margin:0;padding-left:20px;color:var(--mute);font-size:14px}.card ol li{margin:0 0 4px}
@@ -47,7 +47,6 @@ h1 em{font-style:normal;color:var(--accent)}
 .row:hover{border-color:var(--accent-line)}
 .row .w{flex:1;min-width:0}.row b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row .w>span{display:block;font-size:12.5px;color:var(--mute)}
 .pill{flex:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--accent);color:var(--accent-ink)}
-.code{font:800 34px/1 var(--sans);letter-spacing:8px;text-align:center;margin:2px 0 12px;font-variant-numeric:tabular-nums;padding-left:8px}
 .opt{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:14px;font-weight:600}
 .opt>span:first-child{flex:1}
 .opt select{padding:7px 10px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);font-size:14px;max-width:60%}
@@ -59,68 +58,125 @@ h1 em{font-style:normal;color:var(--accent)}
 .sw::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
 .sw:checked{background:var(--accent)}.sw:checked::after{transform:translateX(18px)}
 .acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0 0}
-/* the chalkboard keeps its own colors in every theme: it is a classroom object, not a surface */
-.board{position:relative;margin:0 0 16px;padding:18px 16px 16px;border-radius:14px;background:#24513f;color:#f3f1e7;border:6px solid #8a6238;box-shadow:inset 0 0 40px rgba(0,0,0,.28),var(--shadow);text-align:center;min-height:150px;display:flex;flex-direction:column;justify-content:center;gap:8px}
-.board::after{content:"";position:absolute;left:14px;right:14px;bottom:-6px;height:4px;border-radius:0 0 3px 3px;background:#6f4d2a}
-.board .k{font:700 11px/1 var(--sans);letter-spacing:1px;text-transform:uppercase;color:#bcd6c8}
-.board .q{font:600 20px/1.3 var(--serif,Georgia,serif);margin:0}
-.board .said{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;font-size:12.5px}
-.board .said span{padding:2px 8px;border-radius:99px;border:1px dashed rgba(243,241,231,.5);color:#e4ecdf}
-.board .n{font-size:12.5px;color:#bcd6c8}
-.board .big{font:800 22px/1.2 var(--sans);margin:0}
-/* desks */
-.desks{position:relative;margin:0 0 14px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
-.desk{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 8px 10px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line);border-bottom-width:5px;text-align:center;min-width:0;transition:border-color .2s,opacity .2s}
-.desk b{font-size:13.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.desk .you{font-size:11px;font-weight:700;color:var(--accent)}
-.desk .hp{font-size:13px;letter-spacing:2px;color:var(--bad,#c0392b);line-height:1}
-.desk .hp i{font-style:normal;color:var(--line2)}
-.desk .say{min-height:19px;font-size:12.5px;color:var(--mute);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.desk .say.ok{color:var(--good,#22a06b);font-weight:700}.desk .say.no{color:var(--bad,#c0392b);font-weight:600}
-.desk.turn{border-color:var(--accent)}
-.desk.turn.hot{border-color:var(--bad,#c0392b)}
-.desk.out{opacity:.45}
-.desk.ouch{animation:ouch .5s 2}
-@keyframes ouch{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px) rotate(-1.5deg)}75%{transform:translateX(5px) rotate(1.5deg)}}
-.pencil{position:absolute;left:0;top:0;width:46px;height:46px;z-index:5;pointer-events:none;transition:transform .4s cubic-bezier(.3,1.3,.5,1);will-change:transform}
-.pencil svg{display:block;width:100%;height:100%;transform-origin:20% 85%;animation:wob var(--wob,1.3s) ease-in-out infinite}
-.pencil.poke svg{animation:jab .32s ease-in 4}
-@keyframes wob{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
-@keyframes jab{0%,100%{transform:translate(0,0)}50%{transform:translate(-12px,12px)}}
-/* answer box */
-.dock{display:flex;gap:8px;margin:0 0 8px}
+
+/* ---- chalkboard ---- */
+.board{position:relative;margin:0 0 20px;padding:16px 16px 18px;border-radius:10px;color:#f4f1e6;border:7px solid #8a6238;text-align:center;min-height:132px;display:flex;flex-direction:column;justify-content:center;gap:6px;
+ background:radial-gradient(120% 90% at 30% 20%,rgba(255,255,255,.07),transparent 60%),linear-gradient(175deg,rgba(255,255,255,.035) 0 30%,transparent 30% 62%,rgba(255,255,255,.03) 62%),#234d3c;
+ box-shadow:inset 0 0 0 1px rgba(0,0,0,.35),inset 0 0 46px rgba(0,0,0,.3),0 2px 0 #6c4a26,0 10px 18px -10px rgba(0,0,0,.45);font-family:var(--chalk)}
+/* the chalk tray, with two sticks of chalk and the eraser */
+.board::after{content:"";position:absolute;left:10px;right:10px;bottom:-15px;height:9px;border-radius:2px 2px 5px 5px;
+ background:linear-gradient(#fff,#fff) 14% 0/26px 4px no-repeat,linear-gradient(#f6b9c6,#f6b9c6) 24% 0/18px 4px no-repeat,linear-gradient(#5b4a3a 0 45%,#d8cdbb 45%) 84% 0/34px 7px no-repeat,linear-gradient(#a37645,#7d5730)}
+.board h1{font:400 44px/1 var(--chalk);margin:0;letter-spacing:.5px;text-shadow:0 0 1px rgba(255,255,255,.5)}
+.board .q{font:400 27px/1.12 var(--chalk);margin:0;text-wrap:balance;text-shadow:0 0 1px rgba(255,255,255,.45)}
+.board .n{font-size:17px;line-height:1.2;color:#c3dccd}
+.board .said{display:flex;flex-wrap:wrap;gap:2px 12px;justify-content:center;font-size:18px;line-height:1.2;color:#dfe9dd}
+.board .said span{text-decoration:line-through;text-decoration-color:rgba(255,255,255,.55);text-decoration-thickness:1.5px}
+.board .big{font:400 32px/1.1 var(--chalk);margin:0}
+.board .code{font:400 58px/1 var(--chalk);letter-spacing:12px;padding-left:12px;margin:0}
+.board .cbtn{align-self:center;margin-top:4px;font:400 17px/1 var(--chalk);color:#f4f1e6;background:none;border:1.5px dashed rgba(244,241,230,.6);border-radius:9px;padding:6px 14px}
+.board .cbtn:hover{background:rgba(255,255,255,.08)}
+.board .mini{position:absolute;right:8px;bottom:-4px;width:38px;height:55px;transform:rotate(9deg);pointer-events:none}
+
+/* ---- answer box ---- */
+.dock{display:flex;gap:8px;margin:0 0 6px}
 .dock input{flex:1;min-width:0;padding:11px 13px;border-radius:12px;border:1.5px solid var(--line2);background:var(--surface);font-size:16px}
-.dock input:disabled{opacity:.6}
-.dock input.shake{animation:ouch .3s 1;border-color:var(--bad,#c0392b)}
 .dock.mine input{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-line)}
-.hint{margin:0 0 16px;text-align:center;color:var(--mute);font-size:13.5px;min-height:20px}
+.dock input.shake{animation:shake .3s 1;border-color:var(--bad,#c0392b)}
+.hint{margin:0 0 10px;text-align:center;color:var(--mute);font-size:13.5px;min-height:20px}
 .hint.mine{color:var(--accent);font-weight:700}
-body.playing h1,body.playing .sub{display:none}
-body.playing .board{margin-top:10px}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* ---- the classroom floor ---- */
+.room{--fl:#e0c294;--fl2:#d6b584;--gap:rgba(96,62,22,.2);--rug:#2f6a55;--rug2:#efe2bf;--rug3:#c9553c;position:relative;max-width:430px;margin:0 auto 16px;aspect-ratio:1/1.04;border-radius:26px;
+ background:radial-gradient(circle closest-side at 50% 47%,var(--rug3) 0 5%,var(--rug2) 5.5% 9%,var(--rug) 9.5% 37%,var(--rug2) 37.5% 41%,var(--rug) 41.5% 47%,transparent 48%),
+  repeating-linear-gradient(90deg,transparent 0 47px,var(--gap) 47px 48px),repeating-linear-gradient(0deg,var(--fl) 0 64px,var(--fl2) 64px 128px);
+ box-shadow:inset 0 0 0 5px rgba(96,62,22,.22),inset 0 0 70px rgba(70,40,10,.25)}
+:root[data-theme="dark"] .room{--fl:#54402c;--fl2:#4a3826;--gap:rgba(0,0,0,.3);--rug:#1f4c3d;--rug2:#a3987a;--rug3:#8c3b2a}
+/* a classmate: head (their picture), shoulders, a desk in front, name and lives under it */
+.stu{position:absolute;width:84px;margin:-50px 0 0 -42px;display:flex;flex-direction:column;align-items:center;transition:left .5s var(--ease),top .5s var(--ease)}
+.stu .in{display:flex;flex-direction:column;align-items:center;transform:scale(var(--sc,1));transform-origin:50% 45%}
+.fig{position:relative;width:68px;height:74px}
+.fig .body{position:absolute;left:6px;top:27px;width:56px;height:40px}
+.fig .head{position:absolute;left:15px;top:0;width:38px;height:38px;border-radius:50%;border:2.5px solid #fff;background:#fff;box-shadow:0 2px 0 rgba(60,35,10,.25);overflow:hidden;transition:transform .35s var(--ease);display:grid;place-items:center}
+.fig .head span.pfa:not(.e){background:#ece8f8;color:#33312e}
+.board.home{padding-left:50px;padding-right:50px}
+.fig .dsk{position:absolute;left:0;top:48px;width:68px;height:26px}
+.stu .nm{max-width:84px;margin-top:2px;padding:1px 8px;border-radius:99px;background:rgba(255,253,246,.92);color:#33312e;font:700 11.5px/1.5 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stu.me .nm{background:var(--accent);color:var(--accent-ink)}
+.stu .hp{height:13px;font-size:11px;line-height:13px;letter-spacing:1.5px;color:#d8402c;text-shadow:0 1px 0 rgba(255,255,255,.7)}
+.stu .hp i{font-style:normal;color:rgba(60,35,10,.28);text-shadow:none}
+.stu::before{content:"";position:absolute;left:50%;top:52px;width:104px;height:46px;margin-left:-52px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,246,196,.95),rgba(255,246,196,0));opacity:0;transition:opacity .3s;z-index:-1}
+.stu.turn::before{opacity:1}
+.stu.turn .fig{animation:fidget 1.1s ease-in-out infinite}
+.stu.hot .fig::after{content:"";position:absolute;right:8px;top:4px;width:7px;height:10px;border-radius:50% 50% 50% 50%/65% 65% 35% 35%;background:#7cc4f2;box-shadow:inset -1px -1px 0 #4a9fd6;animation:drip .6s ease-in infinite}
+.stu.hot .fig{animation:fidget .3s ease-in-out infinite}
+.stu.out{filter:grayscale(.85)}
+.stu.out .in{opacity:.72}
+.stu.out .head{transform:translate(4px,17px) rotate(24deg)}
+.stu.ouch .fig{animation:jump .42s ease-out 2}
+.stu.win .fig::before{content:"\2605";position:absolute;left:50%;top:-30px;margin-left:-15px;width:30px;font-size:30px;line-height:1;color:#f6c443;text-shadow:0 2px 0 #b9831c;animation:star 1s ease-in-out infinite}
+@keyframes fidget{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes drip{0%{transform:translateY(0);opacity:1}100%{transform:translateY(16px);opacity:0}}
+@keyframes jump{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-13px) rotate(-7deg)}70%{transform:translateY(0) rotate(5deg)}}
+@keyframes star{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-5px) rotate(8deg)}}
+/* speech bubble: live typing, then the answer */
+.bub{position:absolute;left:50%;bottom:calc(100% - 3px);transform:translateX(-50%);max-width:150px;padding:3px 10px 4px;border-radius:13px;background:#fffdf4;color:#33312e;font:400 17px/1.15 var(--chalk);white-space:nowrap;box-shadow:0 2px 0 rgba(60,35,10,.28);z-index:3}
+.bub span{display:block;overflow:hidden;text-overflow:ellipsis}
+.bub::after{content:"";position:absolute;left:50%;top:100%;margin-left:-6px;border:6px solid transparent;border-top-color:#fffdf4;border-bottom:0}
+.bub:empty{display:none}
+.bub.ok{background:#dff3e4;color:#17603c}.bub.ok::after{border-top-color:#dff3e4}
+.bub.ok{animation:said 2.8s forwards}
+@keyframes said{0%,78%{opacity:1}100%{opacity:0}}
+.room.many{aspect-ratio:1/1.26}
+.bub.no{background:#fde2dc;color:#a52a14}.bub.no::after{border-top-color:#fde2dc}
+.stu.L .bub{left:4px;transform:none}.stu.L .bub::after{left:34px}
+.stu.R .bub{left:auto;right:4px;transform:none}.stu.R .bub::after{left:auto;right:28px}
+
+/* ---- the pencil ---- */
+.pen{--pb:#f6c443;position:absolute;left:50%;top:47%;width:calc(52px*var(--sc,1));height:calc(75px*var(--sc,1));margin:calc(-50px*var(--sc,1)) 0 0 calc(-26px*var(--sc,1));z-index:200;pointer-events:none;transition:left .5s cubic-bezier(.45,1.5,.5,1),top .5s cubic-bezier(.45,1.5,.5,1)}
+.pen svg{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 92%}
+.pen .bd{fill:var(--pb);transition:fill .7s}
+.pen .f,.pen .st,.pen .zz{display:none}
+.pen[data-m="0"] .f0,.pen[data-m="1"] .f1,.pen[data-m="2"] .f2,.pen[data-m="3"] .f3,.pen[data-m="z"] .fz,.pen[data-m="3"] .st,.pen[data-m="z"] .zz{display:block}
+.pen[data-m="1"]{--pb:#f6b03a}.pen[data-m="2"]{--pb:#f0812f}.pen[data-m="3"]{--pb:#e2412b}
+.pen[data-m="0"] svg{animation:bob 1.7s ease-in-out infinite}
+.pen[data-m="1"] svg{animation:tap .7s ease-in-out infinite}
+.pen[data-m="2"] svg{animation:stomp .38s ease-in-out infinite}
+.pen[data-m="3"] svg{animation:rage .11s linear infinite}
+.pen[data-m="z"] svg{transform:translateY(16px) rotate(78deg);animation:none}
+.pen .st{animation:steam .7s ease-out infinite}.pen .st.b{animation-delay:.35s}
+.pen .zz{animation:zz 2.4s ease-in-out infinite}
+.pen.hop svg{animation:hop .5s ease-out 1}
+.pen.poke svg{transform-origin:50% 55%;animation:jab .3s ease-in 4}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-3px) rotate(3deg)}}
+@keyframes tap{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg) translateY(-2px)}}
+@keyframes stomp{0%,100%{transform:translateY(0) scale(1.04,.96)}50%{transform:translateY(-7px) scale(.97,1.04)}}
+@keyframes rage{0%{transform:translate(-2px,0) rotate(-4deg) scale(1.1)}50%{transform:translate(2px,-1px) rotate(4deg) scale(1.1)}100%{transform:translate(-2px,0) rotate(-4deg) scale(1.1)}}
+@keyframes hop{0%,100%{transform:translateY(0)}45%{transform:translateY(-20px) rotate(10deg)}}
+@keyframes jab{0%,100%{transform:rotate(var(--rot,0deg)) translateY(0) scale(1.1)}50%{transform:rotate(var(--rot,0deg)) translateY(24px) scale(1.1)}}
+@keyframes steam{0%{transform:translateY(0);opacity:.9}100%{transform:translateY(-12px);opacity:0}}
+@keyframes zz{0%,100%{opacity:.25;transform:translate(0,0)}50%{opacity:1;transform:translate(3px,-4px)}}
+
 .res{display:grid;gap:6px;margin:10px 0 0}
 .res div{display:flex;align-items:center;gap:10px;font-size:14px}.res div b{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.res div span{color:var(--mute);font-variant-numeric:tabular-nums}
-.toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:60;max-width:calc(100vw - 32px);text-align:center}
+.toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);opacity:0;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;pointer-events:none;transition:.25s var(--ease);z-index:300;max-width:calc(100vw - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
-@media (max-width:420px){.grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}.board .q{font-size:18px}}
+@media (max-width:420px){.board .q{font-size:24px}.board .code{font-size:50px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
 <main>
- <div class="top"><a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a><span class="sp"></span><span class="tag" id="tag" hidden></span><button class="btn sm" id="leave" type="button" hidden>Leave room</button></div>
- <h1>Pop Qu<em>i</em>z</h1>
- <p class="sub" id="sub">Name an answer before the pencil pokes you.</p>
- <div class="board" id="board" hidden aria-live="polite"></div>
+ <div class="top"><a class="back" href="./"><svg class="i" width="16" height="16" aria-hidden="true"><use href="icons.svg#i-chevron-left"/></svg>All courses</a><span class="sp"></span><button class="btn sm" id="sfxbtn" type="button"></button><button class="btn sm" id="leave" type="button" hidden>Leave room</button></div>
+ <div class="board home" id="board" aria-live="polite"><h1>Pop Quiz</h1><div class="n">Name one before the pencil pokes you.</div></div>
  <div id="view"><p class="empty">Loading…</p></div>
  <form class="dock" id="dock" hidden autocomplete="off"><input id="inp" type="text" maxlength="40" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Your answer" enterkeyhint="send"><button class="btn primary" id="send" type="submit">Send</button></form>
  <p class="hint" id="hint" hidden></p>
- <div class="desks" id="desks" hidden><div class="grid" id="grid"></div>
-  <div class="pencil" id="pencil" hidden aria-hidden="true"><svg viewBox="0 0 46 46"><g transform="rotate(45 23 23)"><rect x="17" y="2" width="12" height="6" rx="2.5" fill="#f29bb0"/><rect x="17" y="8" width="12" height="4" fill="#b9bec9"/><rect x="17" y="12" width="12" height="20" fill="#f6c443"/><rect x="21" y="12" width="4" height="20" fill="#ffd96b"/><path d="M17 32h12l-6 11z" fill="#edd2a4"/><path d="M21.2 39.6h3.6L23 43z" fill="#3b3b44"/><circle cx="20.6" cy="19" r="1.5" fill="#3b3b44"/><circle cx="25.4" cy="19" r="1.5" fill="#3b3b44"/><path d="M20.6 23.4q2.4 2 4.8 0" fill="none" stroke="#3b3b44" stroke-width="1.2" stroke-linecap="round"/></g></svg></div>
- </div>
+ <div class="room" id="room" hidden><div id="seats"></div><div class="pen" id="pencil" data-m="z" aria-hidden="true"></div></div>
 </main>
 <div class="toast" id="toast" role="status"></div>
 <script src="auth.js"></script>
 <script src="profile.js"></script>
 <script src="live.js"></script>
+<script src="sfx.js"></script>
 <script>
 // Pop Quiz (Nov 14): a live turn game for 1 to 10 classmates. The board shows a "name one" prompt with many right answers
 // (site/popquiz/prompts.json); the pencil sits on one desk at a time; that player types an answer nobody has said yet and
@@ -245,73 +301,110 @@ function answer(x){x=String(x||'').trim();if(!x||!S||S.turn!==ME.id)return;typin
  if(isHost)hostAnswer(ME.id,x);else Net.send(T(),{t:'ans',id:ME.id,x})}
 
 // ---- drawing ----
+// The art is drawn here as small SVGs so real sprites can replace it later: PEN (the pencil and its five faces: calm,
+// impatient, annoyed, furious, asleep), BODY (shoulders in a shirt color) and DESK. A classmate's head is their picture.
+const INK='#33312e',SHIRTS=['#6f9fd8','#e58f7f','#7fbf8d','#c39be0','#e3b84f','#6cc3c0','#e391bb','#98a6e6','#d39a6a','#93c96c'];
+const PEN='<svg viewBox="0 0 52 75"><circle class="st" cx="7" cy="9" r="4" fill="#fff"/><circle class="st b" cx="45" cy="9" r="4" fill="#fff"/>'+
+ '<text class="zz" x="41" y="9" font-size="14" font-weight="700" fill="'+INK+'">z</text>'+
+ '<rect x="13" y="1" width="26" height="12" rx="5.5" fill="#f29bb0"/><rect x="13" y="11" width="26" height="8" fill="#b9bec9"/><path d="M13 13.5h26M13 16.5h26" stroke="#8f95a3" stroke-width="1"/>'+
+ '<rect class="bd" x="13" y="19" width="26" height="33"/><rect x="16" y="19" width="5" height="33" fill="#fff" opacity=".28"/><rect x="34" y="19" width="5" height="33" fill="#000" opacity=".08"/>'+
+ '<path d="M13 52H39L26 73Z" fill="#edd2a4"/><path d="M22.3 67H29.7L26 73Z" fill="#3b3b44"/>'+
+ '<g class="f f0"><circle cx="20.5" cy="30" r="2.7" fill="'+INK+'"/><circle cx="31.5" cy="30" r="2.7" fill="'+INK+'"/><circle cx="21.4" cy="29.1" r=".9" fill="#fff"/><circle cx="32.4" cy="29.1" r=".9" fill="#fff"/><path d="M20.5 38q5.5 5 11 0" fill="none" stroke="'+INK+'" stroke-width="1.9" stroke-linecap="round"/></g>'+
+ '<g class="f f1"><circle cx="20.5" cy="31" r="2.6" fill="'+INK+'"/><circle cx="31.5" cy="31" r="2.6" fill="'+INK+'"/><path d="M17 28.6h7M28 28.6h7M21 40h10" fill="none" stroke="'+INK+'" stroke-width="1.9" stroke-linecap="round"/></g>'+
+ '<g class="f f2"><circle cx="20.5" cy="31.5" r="2.4" fill="'+INK+'"/><circle cx="31.5" cy="31.5" r="2.4" fill="'+INK+'"/><path d="M16.5 25l7 3.2M35.5 25l-7 3.2" fill="none" stroke="'+INK+'" stroke-width="2.3" stroke-linecap="round"/><path d="M20.5 42q5.5-5 11 0" fill="none" stroke="'+INK+'" stroke-width="1.9" stroke-linecap="round"/><path d="M42 21l4-4M46 21l-4-4" stroke="#c9321d" stroke-width="2" stroke-linecap="round"/></g>'+
+ '<g class="f f3"><circle cx="20.5" cy="31" r="3.3" fill="#fff"/><circle cx="31.5" cy="31" r="3.3" fill="#fff"/><circle cx="20.9" cy="31.4" r="1.2" fill="'+INK+'"/><circle cx="31.1" cy="31.4" r="1.2" fill="'+INK+'"/><path d="M15.5 23l8.5 5M36.5 23l-8.5 5" fill="none" stroke="'+INK+'" stroke-width="2.7" stroke-linecap="round"/><path d="M19.5 38h13v8h-13z" fill="#4a1410"/><path d="M19.5 38l2.2 2.8 2.1-2.8 2.2 2.8 2.2-2.8 2.1 2.8 2.2-2.8z" fill="#fff"/></g>'+
+ '<g class="f fz"><path d="M17.5 30q3 3 6 0M28.5 30q3 3 6 0" fill="none" stroke="'+INK+'" stroke-width="1.9" stroke-linecap="round"/><circle cx="26" cy="39" r="1.8" fill="'+INK+'"/></g></svg>';
+const BODY=c=>'<svg class="body" viewBox="0 0 56 40"><path d="M4 40V25q0-15 24-15t24 15v15z" fill="'+c+'"/><path d="M20 11l8 9 8-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+const DESK='<svg class="dsk" viewBox="0 0 68 26"><rect x="7" y="13" width="5" height="13" fill="#8a5a2c"/><rect x="56" y="13" width="5" height="13" fill="#8a5a2c"/><rect x="1" y="2" width="66" height="12" rx="4" fill="#cf9659"/><rect x="1" y="10" width="66" height="6" rx="3" fill="#a66f3a"/><rect x="25" y="0" width="19" height="9" rx="1.5" fill="#fffdf4" transform="rotate(-7 34 4)"/><path d="M28 3.4l11-1.3M28.4 6l8-1" stroke="#b9bec9" stroke-width="1"/></svg>';
+const CX=50,CY=47,RX=36,RY=34;
+// seats go round the rug; you always sit at the bottom
+function seats(){const n=S.players.length,mi=Math.max(0,S.players.findIndex(p=>p.id===ME.id)),o={};
+ S.players.forEach((p,i)=>{const a=Math.PI/2+(i-mi)*2*Math.PI/n;o[p.id]={x:CX+RX*Math.cos(a),y:CY+RY*Math.sin(a),i}});return o}
 const hearts=(n,max)=>{let h='';for(let i=0;i<max;i++)h+=i<n?'♥':'<i>♥</i>';return '<span class="hp" role="img" aria-label="'+n+(n===1?' life':' lives')+'">'+h+'</span>'};
 function sayOf(p){const l=S.last;
  if(S.turn===p.id&&typing.id===p.id&&typing.x)return ['',typing.x];
- if(l&&l.id===p.id){if(l.k==='ok')return ['ok','✓ '+l.x];if(l.k==='dup'&&S.turn===p.id)return ['no','Already said: '+l.x];if(l.k==='bad'&&S.turn===p.id)return ['no','✗ '+l.x];if(l.k==='poke'&&!S.turn)return ['no','Poked!']}
- if(S.turn===p.id)return ['','thinking…'];
+ if(l&&l.id===p.id){if(l.k==='ok')return ['ok','✓ '+l.x];if(l.k==='dup'&&S.turn===p.id)return ['no','Already said: '+l.x];if(l.k==='bad'&&S.turn===p.id)return ['no','✗ '+l.x];if(l.k==='poke'&&!S.turn&&S.phase==='play')return ['no','Ouch!']}
+ if(S.turn===p.id)return ['','…'];
  return ['',p.gone?'left':'']}
-function drawSay(){if(!S)return;S.players.forEach(p=>{const e=document.querySelector('.desk[data-id="'+p.id+'"] .say');if(e){const s=sayOf(p);e.className='say'+(s[0]?' '+s[0]:'');e.textContent=s[1]}})}
-function desksHtml(){const play=S.phase!=='lobby',mx=S.opts.lives;
- return S.players.map(p=>'<div class="desk'+(S.turn===p.id?' turn':'')+(play&&!p.lives&&S.winner!==p.id?' out':'')+'" data-id="'+p.id+'">'+
-  Profile.html({av:p.av,url:p.url,name:p.name},40)+'<b>'+esc(p.name)+'</b>'+
-  (p.id===ME.id?'<span class="you">You'+(p.id===S.host?' · host':'')+'</span>':p.id===S.host?'<span class="you">Host</span>':'')+
-  (play?hearts(p.lives,mx):'')+'<span class="say"></span></div>').join('')}
-function movePencil(){const pen=$('pencil'),id=S&&S.phase==='play'?(S.turn||(S.last&&S.last.k==='poke'?S.last.id:'')):'',d=id&&document.querySelector('.desk[data-id="'+id+'"]');
- if(!d){pen.hidden=true;return}pen.hidden=false;
- pen.style.transform='translate('+(d.offsetLeft+d.offsetWidth-34)+'px,'+(d.offsetTop-20)+'px)'}
-function drawFuse(){if(!S||S.phase!=='play'||!S.turn)return;const l=deadline-now(),pen=$('pencil'),d=document.querySelector('.desk.turn');
- pen.style.setProperty('--wob',l>10000?'1.3s':l>5000?'.7s':l>2500?'.35s':'.18s');if(d)d.classList.toggle('hot',l<5000)}
-function boardHtml(){const p=prompt(S.pid),l=S.last;
- if(S.phase==='over'){const w=player(S.winner);return '<div class="k">Class dismissed</div><p class="big">'+(S.n0>1?(w?esc(first(w.name))+' wins!':'Nobody is left!'):'Practice over')+'</p>'+(l&&l.miss&&l.miss.length?'<div class="n">Could have said: '+esc(l.miss.join(', '))+'</div>':'')}
- if(!S.turn&&l&&l.k==='poke'){const w=player(l.id);return '<div class="k">Poke!</div><p class="big">'+esc(w?first(w.name):'Someone')+' ran out of time</p>'+(l.miss&&l.miss.length?'<div class="n">Could have said: '+esc(l.miss.join(', '))+'</div>':'')}
+function drawSay(){if(!S)return;S.players.forEach(p=>{const e=document.querySelector('.stu[data-id="'+p.id+'"] .bub');if(!e)return;const s=sayOf(p),k='bub'+(s[0]?' '+s[0]:'');
+ if(e.className!==k)e.className=k;if(e.textContent!==s[1])e.innerHTML=s[1]?'<span>'+esc(s[1])+'</span>':''})}
+function seatsHtml(){const play=S.phase!=='lobby',mx=S.opts.lives,st=seats();
+ return S.players.map((p,i)=>{const s=st[p.id];return '<div class="stu'+(p.id===ME.id?' me':'')+(S.turn===p.id?' turn':'')+(play&&!p.lives&&S.winner!==p.id?' out':'')+(S.phase==='over'&&S.winner===p.id&&S.n0>1?' win':'')+(s.x<30?' L':s.x>70?' R':'')+
+  '" data-id="'+p.id+'" style="left:'+s.x.toFixed(2)+'%;top:'+s.y.toFixed(2)+'%;z-index:'+Math.round(s.y)+'"><div class="bub"></div><div class="in"><div class="fig">'+BODY(SHIRTS[i%SHIRTS.length])+
+  '<span class="head">'+Profile.html({av:p.av,url:p.url,name:p.name},33)+'</span>'+DESK+'</div><b class="nm">'+esc(first(p.name))+(p.id===S.host?' · host':'')+'</b>'+(play?hearts(p.lives,mx):'<span class="hp"></span>')+'</div></div>'}).join('')}
+// where the pencil stands: asleep on the rug in the lobby, in front of the desk whose turn it is, right at the desk for a poke
+function movePencil(){const pen=$('pencil');if(!S||$('room').hidden)return;const st=seats();let x=CX,y=CY,m='z',s=null,k=0;
+ if(S.phase==='play'){s=st[S.turn||(S.last&&S.last.k==='poke'?S.last.id:'')];k=S.turn?.42:.62;m=S.turn?pen.dataset.m==='z'?'0':pen.dataset.m:'3'}
+ else if(S.phase==='over'){s=st[S.winner];k=.5;m='0'}
+ if(s){x=CX+(s.x-CX)*k;y=CY+(s.y-CY)*k}
+ const at=x.toFixed(1)+','+y.toFixed(1);
+ if(at!==pen.dataset.at){if(pen.dataset.at&&m!=='z'){pen.classList.remove('hop');void pen.offsetWidth;pen.classList.add('hop')}pen.dataset.at=at;pen.style.left=x+'%';pen.style.top=y+'%';pen.style.zIndex=Math.round(y)+1}
+ if(pen.dataset.m!==m)pen.dataset.m=m;
+ if(s){const r=$('room'),dx=(s.x-x)*r.clientWidth,dy=(s.y-y)*r.clientHeight;pen.style.setProperty('--rot',(Math.atan2(dy,dx)*180/Math.PI-90).toFixed(0)+'deg')}}
+// the hidden fuse shows only in the pencil's temper and in the classmate starting to sweat
+function drawFuse(){if(!S||S.phase!=='play'||!S.turn)return;const l=deadline-now(),pen=$('pencil'),d=document.querySelector('.stu.turn'),m=l>11000?'0':l>7000?'1':l>3500?'2':'3';
+ if(pen.dataset.m!==m)pen.dataset.m=m;if(d)d.classList.toggle('hot',l<5000)}
+const MINI='<span class="mini pen" data-m="0" style="position:absolute;left:auto;top:auto;margin:0;transition:none">'+PEN+'</span>';
+function boardHtml(){
+ if(!room)return '<h1>Pop Quiz</h1><div class="n">Name one before the pencil pokes you.</div>'+MINI;
+ if(!S||S.phase==='closed')return '<p class="big">Room '+esc(room)+'</p>';
+ const p=prompt(S.pid),l=S.last;
+ if(S.phase==='lobby')return '<div class="n">Room code</div><p class="code">'+esc(room)+'</p><button class="cbtn" id="copy" type="button">Copy invite link</button>';
+ if(S.phase==='over'){const w=player(S.winner);return '<p class="big">'+(S.n0>1?(w?esc(first(w.name))+' wins!':'Nobody is left!'):'Practice over')+'</p>'+(l&&l.miss&&l.miss.length?'<div class="n">Could have said: '+esc(l.miss.join(', '))+'</div>':'')+'<div class="n">Class dismissed.</div>'}
+ if(!S.turn&&l&&l.k==='poke'){const w=player(l.id);return '<p class="big">Poke! '+esc(w?first(w.name):'Someone')+' ran out of time</p>'+(l.miss&&l.miss.length?'<div class="n">Could have said: '+esc(l.miss.join(', '))+'</div>':'')}
  if(!p)return '<p class="big">Get ready…</p>';
- return '<div class="k">Pop quiz</div><p class="q">'+esc(p.q)+'</p>'+
-  (S.used.length?'<div class="said">'+S.used.map(i=>'<span>'+esc(p.a[i][0])+'</span>').join('')+'</div>':'')+
-  '<div class="n">'+S.used.length+' of '+p.a.length+' said</div>'}
+ return '<p class="q">'+esc(p.q)+'</p>'+(S.used.length?'<div class="said">'+S.used.map(i=>'<span>'+esc(p.a[i][0])+'</span>').join('')+'</div>':'')+'<div class="n">'+S.used.length+' of '+p.a.length+' said</div>'}
 function homeHtml(){const list=Object.keys(rooms).filter(c=>now()-rooms[c].at<9000);
- return '<div class="card"><h2>Play</h2><button class="btn primary wide" id="host" type="button">Host a room</button>'+
+ return '<div class="card"><button class="btn primary wide" id="host" type="button">Host a room</button>'+
   '<form class="join" id="joinf" style="margin-top:10px"><input id="code" maxlength="4" placeholder="Room code" aria-label="Room code" autocomplete="off" autocapitalize="characters"><button class="btn" type="submit">Join</button></form><p class="err" id="jerr" hidden></p></div>'+
   '<div class="card"><h2>Open rooms</h2><div class="list" id="rooms">'+(list.length?list.map(c=>'<button class="row" type="button" data-room="'+esc(c)+'"><span class="w"><b>'+esc(rooms[c].host)+'’s room</b><span>'+rooms[c].n+(rooms[c].n===1?' classmate':' classmates')+' waiting</span></span><span class="pill">Join</span></button>').join(''):'<p class="empty">No open rooms right now. Host one and share the code.</p>')+'</div></div>'+
-  '<div class="card"><h2>How to play</h2><ol><li>The board asks for something with many right answers.</li><li>When the pencil is on your desk, type one nobody has said yet. It hops to the next desk.</li><li>Too slow and the pencil pokes you: one life gone. Last one with a life wins.</li></ol></div>'}
+  '<div class="card"><h2>How to play</h2><ol><li>The board asks for something with many right answers.</li><li>When the pencil comes to your desk, type one nobody has said yet. It moves on to the next desk.</li><li>The longer it waits, the angrier it gets. Too slow and it pokes you: one life gone. Last one with a life wins.</li></ol></div>'}
 function lobbyHtml(){const host=S.host===ME.id,inRoom=!!player(ME.id),h=player(S.host),n=S.players.length,cs=courseIds();
- let s='<div class="card"><h2>Room code</h2><div class="code">'+esc(room)+'</div><div class="acts" style="margin-top:0"><button class="btn sm" id="copy" type="button">Copy invite link</button></div></div>';
- if(host)s+='<div class="card"><h2>Settings</h2>'+
+ if(!host)return '<div class="card"><p class="empty">'+(inRoom?'Waiting for '+esc(h?first(h.name):'the host')+' to start…':n>=MAXP?'This room is full.':'Taking a seat…')+'</p></div>';
+ return '<div class="card">'+
   (cs.length>1?'<label class="opt"><span>Prompts from</span><select id="ocourse">'+cs.map(c=>'<option value="'+esc(c)+'"'+(c===S.opts.course?' selected':'')+'>'+esc(DATA.courses[c].title)+'</option>').join('')+'</select></label>':'<div class="opt"><span>Prompts from</span><span>'+esc((DATA.courses[S.opts.course]||{}).title||'')+'</span></div>')+
   '<div class="opt"><span>Lives</span><span class="seg" role="group" aria-label="Lives">'+[1,2,3].map(k=>'<button type="button" data-lives="'+k+'" aria-pressed="'+(S.opts.lives===k)+'">'+k+'</button>').join('')+'</span></div>'+
   '<label class="opt"><span>Show in Open rooms</span><input class="sw" type="checkbox" id="oopen"'+(S.opts.open?' checked':'')+'></label>'+
-  '<button class="btn primary wide" id="start" type="button">'+(n>1?'Start with '+n+' players':'Start solo practice')+'</button></div>';
- else s+='<div class="card"><p class="empty">'+(inRoom?'Waiting for '+esc(h?first(h.name):'the host')+' to start…':n>=MAXP?'This room is full.':'Taking a seat…')+'</p></div>';
- return s}
+  '<button class="btn primary wide" id="start" type="button">'+(n>1?'Start with '+n+' players':'Start solo practice')+'</button></div>'}
 function overHtml(){const host=S.host===ME.id,rank=S.players.slice().sort((a,b)=>(b.id===S.winner)-(a.id===S.winner)||b.lives-a.lives||(b.n||0)-(a.n||0));
- return '<div class="card"><h2>Results</h2><div class="res">'+rank.map(p=>'<div>'+Profile.html({av:p.av,url:p.url,name:p.name},28)+'<b>'+esc(p.name)+(p.id===S.winner&&S.n0>1?' · winner':'')+'</b><span>'+(p.n||0)+((p.n||0)===1?' answer':' answers')+'</span></div>').join('')+'</div>'+
+ return '<div class="card"><h2>Results</h2><div class="res">'+rank.map(p=>'<div>'+Profile.html({av:p.av,url:p.url,name:p.name},28)+'<b>'+esc(p.name)+(p.id===S.winner&&S.n0>1?' (winner)':'')+'</b><span>'+(p.n||0)+((p.n||0)===1?' answer':' answers')+'</span></div>').join('')+'</div>'+
   '<div class="acts">'+(host?'<button class="btn primary" id="again" type="button">Play again</button>':'<span class="empty">Waiting for the host to start another round…</span>')+'</div></div>'}
+const sfx=k=>{try{if(window.Sfx&&Sfx[k])Sfx[k]()}catch(e){}};
+function setBoard(){const b=boardHtml();if(b!==draw.b){draw.b=b;$('board').innerHTML=b;$('board').classList.toggle('home',!room)}}
 function draw(){const v=$('view'),inRoom=!!room;
- $('tag').hidden=$('leave').hidden=!inRoom;if(inRoom)$('tag').innerHTML='Room <b>'+esc(room)+'</b>';
- if(!ME){$('board').hidden=$('desks').hidden=$('dock').hidden=$('hint').hidden=true;return}
- if(!inRoom){$('board').hidden=$('desks').hidden=$('dock').hidden=$('hint').hidden=true;const a=document.activeElement;if(a&&a.id==='code'&&sig==='home')return drawRooms();sig='home';v.hidden=false;v.innerHTML=homeHtml();return}
- if(!S||S.phase==='closed'){$('board').hidden=$('desks').hidden=$('dock').hidden=$('hint').hidden=true;v.hidden=false;sig='';
+ $('leave').hidden=!inRoom;
+ if(!ME){$('room').hidden=$('dock').hidden=$('hint').hidden=true;return}
+ if(!inRoom){$('room').hidden=$('dock').hidden=$('hint').hidden=true;setBoard();const a=document.activeElement;if(a&&a.id==='code'&&sig==='home')return drawRooms();sig='home';v.hidden=false;v.innerHTML=homeHtml();return}
+ if(!S||S.phase==='closed'){$('room').hidden=$('dock').hidden=$('hint').hidden=true;v.hidden=false;sig='';setBoard();
   v.innerHTML='<div class="card"><p class="empty">'+(S?'This room has closed.':shown===-1?'No room with the code '+esc(room)+' is open right now.':'Looking for room '+esc(room)+'…')+'</p>'+(S||shown===-1?'<div class="acts"><button class="btn primary" id="home" type="button">Back to Pop Quiz</button></div>':'')+'</div>';return}
- const play=S.phase==='play',mine=play&&S.turn===ME.id,me=player(ME.id);
+ const play=S.phase==='play',mine=play&&S.turn===ME.id,me=player(ME.id),n=S.players.length;
  // cards (lobby, results): rebuilt only when something they show has changed, so open selects and focus survive the 2 s keepalive
  const vs=S.phase+'|'+S.host+'|'+S.players.map(p=>p.id+p.lives+(p.n||0)).join(',')+'|'+JSON.stringify(S.opts)+'|'+S.winner;
  if(vs!==draw.vs){draw.vs=vs;v.hidden=play;v.innerHTML=play?'':S.phase==='lobby'?lobbyHtml():overHtml()}
- $('board').hidden=S.phase==='lobby';if(S.phase!=='lobby'){const b=boardHtml();if(b!==draw.b){draw.b=b;$('board').innerHTML=b}}
- $('desks').hidden=false;const ds=S.phase+'|'+S.turn+'|'+S.host+'|'+S.winner+'|'+S.opts.lives+'|'+S.players.map(p=>p.id+p.lives+(p.gone||0)+p.name).join(',');
- if(ds!==draw.ds){draw.ds=ds;$('grid').innerHTML=desksHtml()}
+ setBoard();
+ const r=$('room');r.hidden=false;r.style.setProperty('--sc',n<=5?1:n<=7?.9:n<=8?.84:.78);r.classList.toggle('many',n>8);
+ const ds=S.phase+'|'+S.turn+'|'+S.host+'|'+S.winner+'|'+S.opts.lives+'|'+S.players.map(p=>p.id+p.lives+(p.gone||0)+p.name+p.av).join(',');
+ if(ds!==draw.ds){draw.ds=ds;$('seats').innerHTML=seatsHtml()}
  drawSay();movePencil();
- // the poke: once per event
+ // sounds and one-time moves
+ if(draw.ph&&draw.ph!==S.phase)sfx(S.phase==='play'?'go':S.phase==='over'?(S.winner?'fanfare':'over'):'');
+ if(S.phase==='lobby'&&draw.n&&n>draw.n)sfx('join');
+ draw.ph=S.phase;draw.n=n;
  const l=S.last;if(l&&l.at!==shown){shown=l.at;
-  if(l.k==='poke'){const pen=$('pencil'),d=document.querySelector('.desk[data-id="'+l.id+'"]');pen.classList.remove('poke');void pen.offsetWidth;pen.classList.add('poke');if(d){d.classList.remove('ouch');void d.offsetWidth;d.classList.add('ouch')}setTimeout(()=>pen.classList.remove('poke'),1400)}
+  if(l.k==='ok')sfx('tap');
+  if(l.k==='poke'){sfx('wrong');const pen=$('pencil'),d=document.querySelector('.stu[data-id="'+l.id+'"]');
+   setTimeout(()=>{pen.classList.remove('hop','poke');void pen.offsetWidth;pen.classList.add('poke');if(d){d.classList.remove('ouch');void d.offsetWidth;d.classList.add('ouch')}},320);
+   setTimeout(()=>pen.classList.remove('poke'),1700)}
   if((l.k==='bad'||l.k==='dup')&&l.id===ME.id){const i=$('inp');i.classList.remove('shake');void i.offsetWidth;i.classList.add('shake');setTimeout(()=>i.classList.remove('shake'),400)}}
  $('dock').hidden=!play||!me||!me.lives;const inp=$('inp');
  // the box stays usable between turns (a phone keeps its keyboard up, and you may type ahead); only Send waits for the pencil
  if(!$('dock').hidden){$('send').disabled=!mine;$('dock').classList.toggle('mine',mine);inp.placeholder=mine?'Type an answer':'Get one ready…';
   if(mine&&!wasTurn){try{inp.focus({preventScroll:true})}catch(e){}if(inp.value){typing={id:ME.id,x:inp.value.slice(0,40)};Net.send(T(),{t:'type',id:ME.id,x:typing.x});drawSay()}}}
  wasTurn=mine;
- const h=$('hint'),tp=player(S.turn);h.hidden=!play;h.classList.toggle('mine',mine);document.body.classList.toggle('playing',play);
- if(play)h.textContent=!me?'A round is on. You will get a desk in the next one.':!me.lives?'You are out. Watch how it ends.':mine?'Your turn! Type one and send it.':tp?first(tp.name)+' has the pencil.':''}
+ const h=$('hint'),tp=player(S.turn);h.hidden=!play;h.classList.toggle('mine',mine);
+ if(play)h.textContent=!me?'A round is on. You will get a desk in the next one.':!me.lives?'You are out. Watch how it ends.':mine?'Your turn! Type one and send it.':tp?'The pencil is at '+first(tp.name)+'’s desk.':''}
 function drawRooms(){const e=$('rooms');if(!e||room)return;const t=document.createElement('div');t.innerHTML=homeHtml();const n=t.querySelector('#rooms');if(n&&n.innerHTML!==e.innerHTML)e.innerHTML=n.innerHTML}
+function drawSound(){const b=$('sfxbtn'),on=!(window.Sfx&&Sfx.muted());b.innerHTML='<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="icons.svg#i-volume'+(on?'':'-off')+'"/></svg>';b.setAttribute('aria-label',on?'Sound is on. Turn sound off':'Sound is off. Turn sound on')}
 
 // ---- taps ----
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
@@ -319,6 +412,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  else if(b.dataset.room)enter(b.dataset.room,false);
  else if(b.id==='home'||b.id==='leave'){if(room)Net.send(T(),{t:'leave',id:ME.id});location.href='popquiz.html'+(LOCALNET?'?local=1&name='+encodeURIComponent(ME.name):'')}
  else if(b.id==='signin')Auth.signIn();
+ else if(b.id==='sfxbtn'){if(window.Sfx){Sfx.unlock();Sfx.toggle()}drawSound()}
  else if(b.id==='copy'){const u=new URL('popquiz.html?r='+room,location.href).href;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Invite link copied'),()=>toast('Share this code: '+room,4000))}
  else if(!isHost||!S)return;
  else if(b.id==='start')hostStart();
@@ -349,7 +443,7 @@ function myId(){let v='';try{v=sessionStorage.getItem('popquiz_id')||''}catch(e)
   Auth.cloud=CLOUD;let msg='';try{await Auth.finish()}catch(e){msg=e.message}
   if(Auth.ses()){await Auth.token();if(Auth.ses()){await Profile.refresh();who=Profile.me()}}
   if(!who){v.innerHTML='<div class="card"><h2>Sign in to play</h2><p>Pop Quiz shows your class name and picture at your desk, so it needs your account.</p><button class="btn primary wide" id="signin" type="button">'+(Auth.ended()?'Sign in again':'Sign in with Google')+'</button>'+(msg?'<p class="err">'+esc(msg)+'</p>':'')+'</div>';return}}
- ME=clean({id:myId(),name:who.name,av:who.av,url:who.url});
+ ME=clean({id:myId(),name:who.name,av:who.av,url:who.url});$('pencil').innerHTML=PEN;drawSound();
  Net.open(LOBBY,m=>{if(!m||typeof m!=='object'||room)return;const c=String(m.code||'');if(!/^[A-Z]{4}$/.test(c))return;
   if(m.t==='room')rooms[c]={host:first(String(m.host||'').slice(0,24)),n:Math.max(1,Math.min(MAXP,+m.n||1)),at:now()};else if(m.t==='gone')delete rooms[c];drawRooms()});
  setInterval(tick,250);setInterval(()=>{if(!room)drawRooms()},3000);
